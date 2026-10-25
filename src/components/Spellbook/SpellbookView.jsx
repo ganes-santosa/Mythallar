@@ -93,6 +93,19 @@ export default function SpellbookView({
         </div>
       )}
 
+      {/* Subheader saying "Spellbook" like the spell slot segment */}
+      <div className="flex items-center justify-between pb-1.5 mb-2.5 border-b border-dnd-border/60">
+        <div className="flex items-center space-x-1.5">
+          <BookMarked size={14} className="text-dnd-gold" />
+          <h3 className="text-xs font-semibold text-slate-200">
+            Spellbook
+          </h3>
+        </div>
+        <span className="text-[11px] text-slate-400">
+          {(character?.spells || []).length} spells
+        </span>
+      </div>
+
       {!hasAnySpells ? (
         <div className="flex flex-col items-center justify-center h-64 text-center text-slate-500 border border-dashed border-dnd-border rounded-xl p-8">
           <BookMarked size={40} className="mb-3 text-slate-600" />

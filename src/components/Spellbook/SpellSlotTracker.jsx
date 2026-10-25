@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, Sun, Settings2, Sparkles, Check, X, BookOpen, Pencil } from 'lucide-react';
+import { Moon, Sun, Settings2, Sparkles, Check, X, BookOpen, Pencil, ChevronDown } from 'lucide-react';
 import { getEffectiveMaxSlots, getEffectiveMaxPrepared } from '../../utils/spellSlots';
 import SlotLevelRow from './SlotLevelRow';
 
@@ -14,6 +14,7 @@ export default function SpellSlotTracker({
 }) {
   const [isEditingMax, setIsEditingMax] = useState(false);
   const [showLongRestConfirm, setShowLongRestConfirm] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Prepared max editing
   const [isEditingPrepared, setIsEditingPrepared] = useState(false);
@@ -57,16 +58,33 @@ export default function SpellSlotTracker({
   };
 
   return (
-    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel border border-dnd-border">
-      {/* Tracker Bar Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 pb-1.5 mb-1.5 border-b border-dnd-border/60">
+    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel border border-dnd-border transition-all">
+      {/* Tracker Bar Header / Accordion Trigger */}
+      <div
+        className={`flex flex-wrap items-center justify-between gap-2 ${
+          isCollapsed ? '' : 'pb-1.5 mb-1.5 border-b border-dnd-border/60'
+        }`}
+      >
         <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-1.5">
-            <Sparkles size={14} className="text-dnd-gold" />
-            <h3 className="text-xs font-semibold text-slate-200">
+          {/* Header click toggles accordion */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center space-x-1.5 text-left group focus:outline-none"
+            aria-label={isCollapsed ? 'Expand Spell Slots' : 'Collapse Spell Slots'}
+            title={isCollapsed ? 'Click to expand spell slots' : 'Click to collapse spell slots'}
+          >
+            <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
+            <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
               Spell Slots
             </h3>
-          </div>
+            <ChevronDown
+              size={13}
+              className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
+                isCollapsed ? '-rotate-90' : ''
+              }`}
+            />
+          </button>
 
           {/* Prepared Spells Button & Segment next to Spell Slots title */}
           <div className="flex items-center space-x-1 bg-dnd-card border border-dnd-border rounded-lg px-2 py-0.5 text-xs">
@@ -134,7 +152,10 @@ export default function SpellSlotTracker({
           {/* Edit Max Slots Toggle */}
           <button
             type="button"
-            onClick={() => setIsEditingMax(!isEditingMax)}
+            onClick={() => {
+              if (isCollapsed) setIsCollapsed(false);
+              setIsEditingMax(!isEditingMax);
+            }}
             className={`flex items-center px-2 py-0.5 rounded border transition-colors ${
               isEditingMax
                 ? 'bg-dnd-gold/20 border-dnd-gold text-dnd-gold'
@@ -195,35 +216,39 @@ export default function SpellSlotTracker({
         </div>
       </div>
 
-      {/* Rows Grid */}
-      {activeLevels.length === 0 ? (
-        <div className="text-center py-3 text-xs text-slate-500">
-          <p>No spell slots for {character?.className || 'this class'} at level {character?.level || 1}.</p>
-          <button
-            type="button"
-            onClick={() => {
-              setIsEditingMax(true);
-              onUpdateMaxSlot(1, 2);
-            }}
-            className="mt-1 text-dnd-gold underline hover:text-dnd-gold-light"
-          >
-            Add custom 1st level slots
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {activeLevels.map((lvl) => (
-            <SlotLevelRow
-              key={lvl}
-              level={lvl}
-              maxSlots={effectiveSlots[lvl]}
-              usedSlots={character?.slotsUsed?.[lvl] || 0}
-              isEditingMax={isEditingMax}
-              onUseSlot={onUseSlot}
-              onRestoreSlot={onRestoreSlot}
-              onUpdateMaxSlot={onUpdateMaxSlot}
-            />
-          ))}
+      {/* Rows Grid (Collapsible Accordion Body) */}
+      {!isCollapsed && (
+        <div className="animate-in fade-in duration-200">
+          {activeLevels.length === 0 ? (
+            <div className="text-center py-3 text-xs text-slate-500">
+              <p>No spell slots for {character?.className || 'this class'} at level {character?.level || 1}.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsEditingMax(true);
+                  onUpdateMaxSlot(1, 2);
+                }}
+                className="mt-1 text-dnd-gold underline hover:text-dnd-gold-light"
+              >
+                Add custom 1st level slots
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              {activeLevels.map((lvl) => (
+                <SlotLevelRow
+                  key={lvl}
+                  level={lvl}
+                  maxSlots={effectiveSlots[lvl]}
+                  usedSlots={character?.slotsUsed?.[lvl] || 0}
+                  isEditingMax={isEditingMax}
+                  onUseSlot={onUseSlot}
+                  onRestoreSlot={onRestoreSlot}
+                  onUpdateMaxSlot={onUpdateMaxSlot}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

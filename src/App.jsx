@@ -347,33 +347,31 @@ export default function App() {
         </div>
       )}
 
-      {/* Top Application Header */}
-      <header className="h-14 border-b border-dnd-border bg-dnd-panel/95 flex items-center justify-between px-4 sm:px-6 z-20 flex-shrink-0">
-        <div className="flex items-center space-x-3">
-          <span className="p-1.5 rounded-lg bg-dnd-gold/10 border border-dnd-gold/30 text-dnd-gold">
-            <BookOpen size={20} />
-          </span>
-          <div className="flex items-baseline space-x-2">
-            <h1 className="text-lg font-bold text-slate-100 tracking-tight">
-              D&D 5e Spellbook
-            </h1>
-            <span className="hidden sm:inline text-[11px] text-dnd-gold font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
-              Official 5e (2024 &amp; Legacy) + Homebrew
-            </span>
-          </div>
-        </div>
-
-        <div className="text-xs text-slate-400 flex items-center space-x-3">
-          <span className="hidden md:inline">
-            Click spells to expand details • Drag to Spellbook
-          </span>
-        </div>
-      </header>
-
       {/* Main Dual-Pane Body */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Left Pane: Spell Catalog */}
+        {/* Left Pane: Spell Catalog with Integrated Branding Header */}
         <section className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-dnd-border p-3 sm:p-4 overflow-hidden bg-dnd-panel/30">
+          {/* Integrated Header */}
+          <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-dnd-border/60 flex-shrink-0">
+            <div className="flex items-center space-x-2.5">
+              <span className="p-1.5 rounded-lg bg-dnd-gold/10 border border-dnd-gold/30 text-dnd-gold">
+                <BookOpen size={17} />
+              </span>
+              <div className="flex flex-wrap items-baseline gap-2">
+                <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-tight">
+                  D&D 5e Spellbook
+                </h1>
+                <span className="hidden sm:inline text-[11px] text-dnd-gold font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
+                  Official 5e (2024 &amp; Legacy) + Homebrew
+                </span>
+              </div>
+            </div>
+
+            <span className="hidden lg:inline text-[11px] text-slate-400">
+              Drag to Spellbook
+            </span>
+          </div>
+
           <FilterBar
             filters={filters}
             onChange={setFilters}
