@@ -247,10 +247,10 @@ export default function CharacterHeader({
                   <button
                     type="button"
                     onClick={handleOpenLevelUpModal}
-                    className="flex items-center px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-dnd-gold border border-dnd-border hover:border-dnd-gold text-xs font-normal transition-colors"
+                    className="flex items-center px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-dnd-gold border border-dnd-border hover:border-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0"
                     title="Level up this character"
                   >
-                    <ArrowUpCircle size={12} className="mr-1 text-slate-400" />
+                    <ArrowUpCircle size={12} className="mr-1 text-slate-400 flex-shrink-0" />
                     Level Up
                   </button>
                 )}
