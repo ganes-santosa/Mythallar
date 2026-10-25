@@ -86,6 +86,27 @@ describe('filterSpells', () => {
     expect(mat.map(s => s.name)).toEqual(['Fireball']);
   });
 
+  it('filters by homebrew only flag', () => {
+    const spellsWithHomebrew = [
+      ...MOCK_SPELLS,
+      { id: 'hb-1', name: 'Blood Spear', source: 'Homebrew', level: 2 },
+    ];
+    const hbRes = filterSpells(spellsWithHomebrew, { isHomebrewOnly: true });
+    expect(hbRes.map(s => s.name)).toEqual(['Blood Spear']);
+  });
+
+  it('filters by legacyMode (all, modern, legacy)', () => {
+    const spellsWithLegacy = [
+      { id: 'fireball', name: 'Fireball', isLegacy: false },
+      { id: 'fireball-legacy', name: 'Fireball', isLegacy: true },
+    ];
+    const modern = filterSpells(spellsWithLegacy, { legacyMode: 'modern' });
+    expect(modern.map(s => s.id)).toEqual(['fireball']);
+
+    const legacy = filterSpells(spellsWithLegacy, { legacyMode: 'legacy' });
+    expect(legacy.map(s => s.id)).toEqual(['fireball-legacy']);
+  });
+
   it('returns all spells when filters are empty or default', () => {
     const res = filterSpells(MOCK_SPELLS, {});
     expect(res.length).toBe(4);

@@ -4,16 +4,42 @@ import { useMemo } from 'react';
  * Pure filter function used by the hook and testable directly.
  */
 export function filterSpells(spells = [], filters = {}) {
-  const { search, level, school, className, concentration, ritual, compV, compS, compM } = filters;
+  const {
+    search,
+    level,
+    school,
+    className,
+    concentration,
+    ritual,
+    compV,
+    compS,
+    compM,
+    legacyMode = 'all', // 'all', 'modern', 'legacy'
+    isHomebrewOnly = false,
+  } = filters;
   const searchLower = (search || '').trim().toLowerCase();
 
   return spells.filter((spell) => {
-    // 1. Text Search (matches name, entries, school)
+    // 1. Homebrew Only filter
+    if (isHomebrewOnly && spell.source !== 'Homebrew' && spell.source !== 'Custom') {
+      return false;
+    }
+
+    // 2. Legacy / 2024 Version Filter
+    if (legacyMode === 'modern' && spell.isLegacy) {
+      return false;
+    }
+    if (legacyMode === 'legacy' && !spell.isLegacy) {
+      return false;
+    }
+
+    // 3. Text Search (matches name, entries, school, source)
     if (searchLower) {
       const matchName = spell.name?.toLowerCase().includes(searchLower);
       const matchSchool = spell.school?.toLowerCase().includes(searchLower);
+      const matchSource = spell.source?.toLowerCase().includes(searchLower);
       const matchEntries = spell.entries?.some((e) => e.toLowerCase().includes(searchLower));
-      if (!matchName && !matchSchool && !matchEntries) {
+      if (!matchName && !matchSchool && !matchSource && !matchEntries) {
         return false;
       }
     }

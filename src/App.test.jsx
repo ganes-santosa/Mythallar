@@ -122,16 +122,16 @@ describe('App End-to-End Integration', () => {
     });
   });
 
-  it('allows creating and cataloging a custom homebrew spell', async () => {
+  it('allows creating and cataloging a homebrew spell', async () => {
     render(<App />);
 
     await waitFor(() => {
       expect(screen.getByText('Fireball')).toBeInTheDocument();
     });
 
-    // Click "+ Custom Spell" button
-    const customBtn = screen.getByRole('button', { name: /Custom Spell/i });
-    fireEvent.click(customBtn);
+    // Click "+ Homebrew Spell" button
+    const homebrewBtn = screen.getByRole('button', { name: /Homebrew Spell/i });
+    fireEvent.click(homebrewBtn);
 
     // Fill modal form
     fireEvent.change(screen.getByLabelText(/Spell Name/i), {
@@ -144,7 +144,7 @@ describe('App End-to-End Integration', () => {
     // Save
     fireEvent.click(screen.getByRole('button', { name: /Save Spell/i }));
 
-    // Custom spell should appear in catalog
+    // Homebrew spell should appear in catalog
     await waitFor(() => {
       expect(screen.getByText('Shadow Lance')).toBeInTheDocument();
     });

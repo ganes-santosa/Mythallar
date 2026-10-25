@@ -69,9 +69,27 @@ export default function SpellbookCard({
           )}
 
           <div>
-            <span className="font-semibold text-sm text-slate-100 group-hover:text-dnd-gold transition-colors truncate block">
-              {spell.name}
-            </span>
+            <div className="flex items-center space-x-1.5">
+              <span className="font-semibold text-sm text-slate-100 group-hover:text-dnd-gold transition-colors truncate">
+                {spell.name}
+              </span>
+              {spell.isLegacy && (
+                <span
+                  className="text-[9px] uppercase font-bold tracking-wider px-1 py-0.2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300"
+                  title="2014 Legacy PHB version"
+                >
+                  Legacy
+                </span>
+              )}
+              {(spell.source === 'Homebrew' || spell.source === 'Custom') && (
+                <span
+                  className="text-[9px] uppercase font-bold tracking-wider px-1 py-0.2 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300"
+                  title="Homebrew spell"
+                >
+                  Homebrew
+                </span>
+              )}
+            </div>
             <div className="flex items-center space-x-2 text-xs text-slate-400">
               <span>{spell.time}</span>
               <span>•</span>

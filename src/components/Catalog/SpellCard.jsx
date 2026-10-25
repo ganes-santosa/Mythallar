@@ -81,6 +81,24 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
                 {spell.name}
               </span>
 
+              {spell.isLegacy && (
+                <span
+                  className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300"
+                  title="2014 Legacy PHB version"
+                >
+                  Legacy
+                </span>
+              )}
+
+              {(spell.source === 'Homebrew' || spell.source === 'Custom') && (
+                <span
+                  className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300"
+                  title="Homebrew spell"
+                >
+                  Homebrew
+                </span>
+              )}
+
               {isInSpellbook && (
                 <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-1.5 py-0.5 rounded font-mono">
                   <BookOpenCheck size={11} className="mr-1 inline" /> In Book

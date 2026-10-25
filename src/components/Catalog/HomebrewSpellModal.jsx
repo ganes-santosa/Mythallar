@@ -28,7 +28,7 @@ const ALL_CLASSES = [
   'Wizard',
 ];
 
-export default function CustomSpellModal({ isOpen, onClose, onSave }) {
+export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
   const [name, setName] = useState('');
   const [level, setLevel] = useState(1);
   const [school, setSchool] = useState('Evocation');
@@ -70,9 +70,9 @@ export default function CustomSpellModal({ isOpen, onClose, onSave }) {
       .filter(Boolean);
 
     const newSpell = {
-      id: `custom_${Date.now()}_${trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+      id: `homebrew_${Date.now()}_${trimmedName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
       name: trimmedName,
-      source: 'Custom',
+      source: 'Homebrew',
       level: Number(level),
       school,
       time: time.trim() || '1 action',
@@ -101,7 +101,7 @@ export default function CustomSpellModal({ isOpen, onClose, onSave }) {
         <div className="flex items-center justify-between p-4 border-b border-dnd-border bg-dnd-card">
           <div className="flex items-center space-x-2">
             <Sparkles size={18} className="text-dnd-gold" />
-            <h2 className="text-base font-bold text-slate-100">Create Custom Spell</h2>
+            <h2 className="text-base font-bold text-slate-100">Create Homebrew Spell</h2>
           </div>
           <button
             type="button"

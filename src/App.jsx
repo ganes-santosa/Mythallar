@@ -4,15 +4,15 @@ import {
   loadCharacterProfiles,
   saveCharacterProfiles,
   createDefaultProfile,
-  loadCustomSpells,
-  saveCustomSpells,
+  loadHomebrewSpells,
+  saveHomebrewSpells,
 } from './utils/storage';
 import { getEffectiveMaxSlots } from './utils/spellSlots';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
 import { useSpellFilter } from './hooks/useSpellFilter';
 import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
-import CustomSpellModal from './components/Catalog/CustomSpellModal';
+import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
 import CharacterHeader from './components/Header/CharacterHeader';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
@@ -31,13 +31,13 @@ export default function App() {
     saveCharacterProfiles(profileData);
   }, [profileData]);
 
-  // --- Custom Spells State ---
-  const [customSpells, setCustomSpells] = useState(() => loadCustomSpells());
-  const [isCustomSpellModalOpen, setIsCustomSpellModalOpen] = useState(false);
+  // --- Homebrew Spells State ---
+  const [homebrewSpells, setHomebrewSpells] = useState(() => loadHomebrewSpells());
+  const [isHomebrewSpellModalOpen, setIsHomebrewSpellModalOpen] = useState(false);
 
   useEffect(() => {
-    saveCustomSpells(customSpells);
-  }, [customSpells]);
+    saveHomebrewSpells(homebrewSpells);
+  }, [homebrewSpells]);
 
   // --- Spell Catalog State ---
   const [baseSpells, setBaseSpells] = useState([]);
@@ -69,10 +69,10 @@ export default function App() {
     };
   }, []);
 
-  // Merge base catalog spells + custom spells
+  // Merge base catalog spells + homebrew spells
   const allSpells = useMemo(() => {
-    return [...customSpells, ...baseSpells];
-  }, [customSpells, baseSpells]);
+    return [...homebrewSpells, ...baseSpells];
+  }, [homebrewSpells, baseSpells]);
 
   // Quick lookup dictionary: spell.id -> Spell
   const catalogMap = useMemo(() => {
@@ -100,6 +100,8 @@ export default function App() {
     level: 'all',
     className: 'all',
     school: 'all',
+    legacyMode: 'all', // 'all', 'modern', 'legacy'
+    isHomebrewOnly: false,
     concentration: false,
     ritual: false,
     compV: false,
@@ -162,10 +164,10 @@ export default function App() {
     showToast(`Imported ${character.name}!`, 'success');
   };
 
-  // --- Custom Spell Action ---
-  const handleSaveCustomSpell = (newSpell) => {
-    setCustomSpells((prev) => [newSpell, ...prev]);
-    showToast(`Created custom spell: ${newSpell.name}`, 'success');
+  // --- Homebrew Spell Action ---
+  const handleSaveHomebrewSpell = (newSpell) => {
+    setHomebrewSpells((prev) => [newSpell, ...prev]);
+    showToast(`Created homebrew spell: ${newSpell.name}`, 'success');
   };
 
   // --- Spell Management Actions ---
@@ -356,7 +358,7 @@ export default function App() {
               D&D 5e Spellbook
             </h1>
             <span className="hidden sm:inline text-[11px] text-dnd-gold font-mono font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
-              5e SRD + PHB + XGE + TCE
+              Official 5e (2024 &amp; Legacy) + Homebrew
             </span>
           </div>
         </div>
@@ -375,7 +377,7 @@ export default function App() {
           <FilterBar
             filters={filters}
             onChange={setFilters}
-            onOpenCustomSpellModal={() => setIsCustomSpellModalOpen(true)}
+            onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
           />
 
           {isLoadingSpells ? (
@@ -429,11 +431,11 @@ export default function App() {
         </section>
       </main>
 
-      {/* Custom Spell Modal */}
-      <CustomSpellModal
-        isOpen={isCustomSpellModalOpen}
-        onClose={() => setIsCustomSpellModalOpen(false)}
-        onSave={handleSaveCustomSpell}
+      {/* Homebrew Spell Modal */}
+      <HomebrewSpellModal
+        isOpen={isHomebrewSpellModalOpen}
+        onClose={() => setIsHomebrewSpellModalOpen(false)}
+        onSave={handleSaveHomebrewSpell}
       />
     </div>
   );

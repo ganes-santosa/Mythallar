@@ -87,48 +87,99 @@ async function run() {
     console.warn('Could not fetch sources.json, using fallback classes map', err);
   }
 
-  // Pre-index class mappings: spellName.toLowerCase() -> Set<string>
+  // Pre-index class mappings: (spellName.toLowerCase() + '|' + source) -> Set<string>
+  // Also fallback by spellName.toLowerCase()
   const spellClassMap = new Map();
+  const spellNameOnlyClassMap = new Map();
+
   for (const [sourceKey, spellMap] of Object.entries(sources)) {
     for (const [spellName, info] of Object.entries(spellMap)) {
       const lower = spellName.toLowerCase();
-      if (!spellClassMap.has(lower)) {
-        spellClassMap.set(lower, new Set());
+      const specificKey = `${lower}|${sourceKey.toLowerCase()}`;
+
+      if (!spellClassMap.has(specificKey)) {
+        spellClassMap.set(specificKey, new Set());
       }
-      const set = spellClassMap.get(lower);
-      if (Array.isArray(info.class)) {
-        for (const c of info.class) {
-          if (c && c.name) set.add(c.name);
+      if (!spellNameOnlyClassMap.has(lower)) {
+        spellNameOnlyClassMap.set(lower, new Set());
+      }
+
+      const specificSet = spellClassMap.get(specificKey);
+      const generalSet = spellNameOnlyClassMap.get(lower);
+
+      const addClasses = (arr) => {
+        if (!Array.isArray(arr)) return;
+        for (const c of arr) {
+          if (c && c.name) {
+            specificSet.add(c.name);
+            generalSet.add(c.name);
+          }
         }
-      }
-      if (Array.isArray(info.classVariant)) {
-        for (const c of info.classVariant) {
-          if (c && c.name) set.add(c.name);
-        }
-      }
+      };
+
+      addClasses(info.class);
+      addClasses(info.classVariant);
     }
   }
 
-  const spellFiles = ['spells-phb.json', 'spells-xge.json', 'spells-tce.json'];
+  console.log('Fetching index.json to discover all official spell sourcebooks...');
+  let indexMap = {};
+  try {
+    indexMap = await fetchJSON(`${BASE_URL}/index.json`);
+  } catch (err) {
+    console.error('Failed to load index.json', err);
+    return;
+  }
+
+  // Desired order: 2024 (XPHB) first, then PHB 2014, then other official supplements
+  const indexEntries = Object.entries(indexMap);
+  // Separate into XPHB, PHB, and others
+  const orderedFiles = [];
+  const xphbEntry = indexEntries.find(([k]) => k === 'XPHB');
+  if (xphbEntry) orderedFiles.push(xphbEntry);
+
+  const phbEntry = indexEntries.find(([k]) => k === 'PHB');
+  if (phbEntry) orderedFiles.push(phbEntry);
+
+  for (const entry of indexEntries) {
+    if (entry[0] !== 'XPHB' && entry[0] !== 'PHB') {
+      orderedFiles.push(entry);
+    }
+  }
+
   const allSpells = [];
   const seenIds = new Set();
 
-  for (const file of spellFiles) {
-    console.log(`Fetching ${file}...`);
+  for (const [bookSource, fileName] of orderedFiles) {
+    console.log(`Fetching ${bookSource} (${fileName})...`);
     try {
-      const data = await fetchJSON(`${BASE_URL}/${file}`);
+      const data = await fetchJSON(`${BASE_URL}/${fileName}`);
       const rawSpells = data.spell || [];
 
       for (const raw of rawSpells) {
-        const id = (raw.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const rawSource = raw.source || bookSource;
+        const isLegacy = rawSource === 'PHB' || Boolean(raw.isLegacy);
+        const baseSlug = (raw.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        
+        let id = baseSlug;
+        if (isLegacy && seenIds.has(baseSlug)) {
+          id = `${baseSlug}-legacy`;
+        } else if (seenIds.has(id)) {
+          id = `${baseSlug}-${rawSource.toLowerCase()}`;
+        }
         if (seenIds.has(id)) continue;
         seenIds.add(id);
 
-        const classes = Array.from(spellClassMap.get(raw.name.toLowerCase()) || []);
+        const lowerName = (raw.name || '').toLowerCase();
+        let classes = Array.from(spellClassMap.get(`${lowerName}|${rawSource.toLowerCase()}`) || []);
+        if (classes.length === 0) {
+          classes = Array.from(spellNameOnlyClassMap.get(lowerName) || []);
+        }
+
         // Fallback default classes if sources.json didn't have it
         if (classes.length === 0 && Array.isArray(raw.classes?.fromClassList)) {
           for (const c of raw.classes.fromClassList) {
-            classes.push(c.name);
+            if (c?.name) classes.push(c.name);
           }
         }
 
@@ -142,7 +193,8 @@ async function run() {
         allSpells.push({
           id,
           name: raw.name,
-          source: raw.source,
+          source: rawSource,
+          isLegacy,
           level: typeof raw.level === 'number' ? raw.level : 0,
           school: SCHOOL_MAP[raw.school] || raw.school || 'Universal',
           time: formatTime(raw.time),
@@ -157,12 +209,16 @@ async function run() {
         });
       }
     } catch (err) {
-      console.error(`Error loading ${file}:`, err);
+      console.error(`Error loading ${fileName}:`, err);
     }
   }
 
-  // Sort spells alphabetically
-  allSpells.sort((a, b) => a.name.localeCompare(b.name));
+  // Sort spells: alphabetically, legacy versions right after modern versions if names match
+  allSpells.sort((a, b) => {
+    const n = a.name.localeCompare(b.name);
+    if (n !== 0) return n;
+    return a.isLegacy ? 1 : -1;
+  });
 
   const outDir = path.join(__dirname, '..', 'public', 'data');
   fs.mkdirSync(outDir, { recursive: true });
