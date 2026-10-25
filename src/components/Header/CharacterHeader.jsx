@@ -95,172 +95,177 @@ export default function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-dnd-border">
-      {/* Left: Name, Class, and Level */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Permanent Character Name with Edit Pencil Button */}
-        {isEditingName ? (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSaveName();
-            }}
-            className="flex items-center space-x-1"
-          >
-            <input
-              type="text"
-              value={nameDraft}
-              onChange={(e) => setNameDraft(e.target.value)}
-              placeholder="Character Name"
-              autoFocus
-              className="bg-dnd-card border border-dnd-gold rounded-lg px-2.5 py-1 text-sm font-semibold text-slate-100 focus:outline-none w-36 sm:w-44 transition-colors"
-            />
-            <button
-              type="submit"
-              aria-label="Save Name"
-              className="p-1.5 rounded-lg bg-dnd-gold text-slate-100 hover:bg-dnd-gold-light hover:text-slate-950 transition-colors"
-              title="Save Name"
-            >
-              <Check size={14} />
-            </button>
-            <button
-              type="button"
-              aria-label="Cancel Edit Name"
-              onClick={() => {
-                setNameDraft(activeCharacter.name);
-                setIsEditingName(false);
+    <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 mb-2.5 border-b border-dnd-border">
+      {/* Left: Highlight Character Profile Card */}
+      <div className="flex-1 min-w-[260px] p-2.5 sm:p-3 rounded-xl bg-dnd-card border border-dnd-border shadow-sm">
+        {/* Name Title & Edit Button */}
+        <div className="flex items-center justify-between gap-2">
+          {isEditingName ? (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveName();
               }}
-              className="p-1.5 rounded-lg bg-dnd-card border border-dnd-border hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
-              title="Cancel"
+              className="flex items-center space-x-1.5 flex-1"
             >
-              <X size={14} />
-            </button>
-          </form>
-        ) : (
-          <div className="flex items-center space-x-1.5 bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1">
-            <span className="text-sm font-semibold text-slate-100 max-w-[140px] sm:max-w-[180px] truncate">
-              {activeCharacter.name}
-            </span>
-            <button
-              type="button"
-              aria-label="Edit Name"
-              onClick={() => {
-                setNameDraft(activeCharacter.name);
-                setIsEditingName(true);
-              }}
-              className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors"
-              title="Edit character name"
-            >
-              <Pencil size={12} />
-            </button>
-          </div>
-        )}
-
-        {/* Class Dropdown */}
-        <select
-          value={activeCharacter.className}
-          onChange={handleClassChange}
-          className="bg-dnd-card border border-dnd-border rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-dnd-gold cursor-pointer"
-          aria-label="Character Class"
-        >
-          {CASTER_CLASSES.map((cls) => (
-            <option key={cls} value={cls} className="bg-dnd-panel">
-              {cls}
-            </option>
-          ))}
-        </select>
-
-        {/* Level Controls: Lvl x + Direct Edit Pencil + Plus Button (+ Light Inverted Confirmation) */}
-        <div className="flex items-center space-x-1 bg-dnd-card border border-dnd-border rounded-lg px-2 py-1 text-xs">
-          {isEditingLevel ? (
-            <div className="flex items-center space-x-1">
-              <span className="text-slate-400">Lvl</span>
               <input
-                type="number"
-                min="1"
-                max="20"
-                value={levelDraft}
-                onChange={(e) => setLevelDraft(e.target.value)}
+                type="text"
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                placeholder="Character Name"
                 autoFocus
-                className="w-10 bg-slate-900 border border-dnd-gold rounded px-1 text-xs text-slate-100 text-center focus:outline-none"
+                className="bg-slate-900 border border-dnd-gold rounded-lg px-2.5 py-1 text-base sm:text-lg font-bold text-slate-100 focus:outline-none w-full max-w-xs transition-colors"
               />
               <button
-                type="button"
-                aria-label="Save Level"
-                onClick={() => handleSaveLevel(levelDraft)}
-                className="p-0.5 text-emerald-400 hover:text-emerald-300"
-                title="Save Level"
+                type="submit"
+                aria-label="Save Name"
+                className="p-1.5 rounded-lg bg-dnd-gold text-slate-100 hover:bg-dnd-gold-light hover:text-slate-950 transition-colors"
+                title="Save Name"
               >
-                <Check size={12} />
+                <Check size={14} />
               </button>
               <button
                 type="button"
-                aria-label="Cancel Edit Level"
-                onClick={() => setIsEditingLevel(false)}
-                className="p-0.5 text-slate-400 hover:text-slate-200"
+                aria-label="Cancel Edit Name"
+                onClick={() => {
+                  setNameDraft(activeCharacter.name);
+                  setIsEditingName(false);
+                }}
+                className="p-1.5 rounded-lg bg-slate-900 border border-dnd-border hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
                 title="Cancel"
               >
-                <X size={12} />
+                <X size={14} />
               </button>
-            </div>
+            </form>
           ) : (
-            <span className="font-semibold text-slate-200">
-              Lvl {activeCharacter.level}
-            </span>
-          )}
-
-          {!isEditingLevel && (
-            <button
-              type="button"
-              aria-label="Edit Level"
-              onClick={() => setIsEditingLevel(true)}
-              className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors"
-              title="Edit character level directly"
-            >
-              <Pencil size={11} />
-            </button>
-          )}
-
-          {/* Plus Level Up Button with Inverted Light Mode Confirmation */}
-          {showLevelConfirm ? (
-            <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-0.5 rounded-lg border border-slate-300 shadow-md text-xs animate-in fade-in">
-              <span className="text-[11px] font-semibold text-slate-900">Level Up?</span>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate max-w-[200px] sm:max-w-xs">
+                {activeCharacter.name}
+              </h2>
               <button
                 type="button"
-                aria-label="Confirm Level Up"
-                onClick={handleConfirmLevelUp}
-                className="p-0.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/80 rounded transition-colors"
-                title="Confirm level up"
+                aria-label="Edit Name"
+                onClick={() => {
+                  setNameDraft(activeCharacter.name);
+                  setIsEditingName(true);
+                }}
+                className="p-1 rounded text-slate-400 hover:text-dnd-gold transition-colors"
+                title="Edit character name"
               >
-                <Check size={13} strokeWidth={2.5} />
-              </button>
-              <button
-                type="button"
-                aria-label="Cancel Level Up"
-                onClick={() => setShowLevelConfirm(false)}
-                className="p-0.5 text-red-700 hover:text-red-900 hover:bg-red-100/80 rounded transition-colors"
-                title="Cancel"
-              >
-                <X size={13} strokeWidth={2.5} />
+                <Pencil size={13} />
               </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              aria-label="Level Up"
-              onClick={() => setShowLevelConfirm(true)}
-              disabled={activeCharacter.level >= 20}
-              className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors disabled:opacity-40"
-              title="Level Up (+1)"
-            >
-              <Plus size={13} />
-            </button>
           )}
+        </div>
+
+        {/* Sub-strip inside profile card: Class Dropdown and Level Controls */}
+        <div className="flex flex-wrap items-center gap-2 mt-1.5">
+          {/* Class Dropdown */}
+          <select
+            value={activeCharacter.className}
+            onChange={handleClassChange}
+            className="bg-slate-900/90 border border-dnd-border rounded-md px-2 py-0.5 text-xs font-medium text-slate-200 focus:outline-none focus:border-dnd-gold cursor-pointer"
+            aria-label="Character Class"
+          >
+            {CASTER_CLASSES.map((cls) => (
+              <option key={cls} value={cls} className="bg-dnd-panel">
+                {cls}
+              </option>
+            ))}
+          </select>
+
+          {/* Level Controls: Lvl x + Direct Edit Pencil + Plus Button */}
+          <div className="flex items-center space-x-1 bg-slate-900/90 border border-dnd-border rounded-md px-2 py-0.5 text-xs">
+            {isEditingLevel ? (
+              <div className="flex items-center space-x-1">
+                <span className="text-slate-400">Lvl</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={levelDraft}
+                  onChange={(e) => setLevelDraft(e.target.value)}
+                  autoFocus
+                  className="w-10 bg-slate-800 border border-dnd-gold rounded px-1 text-xs text-slate-100 text-center focus:outline-none"
+                />
+                <button
+                  type="button"
+                  aria-label="Save Level"
+                  onClick={() => handleSaveLevel(levelDraft)}
+                  className="p-0.5 text-emerald-400 hover:text-emerald-300"
+                  title="Save Level"
+                >
+                  <Check size={12} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Cancel Edit Level"
+                  onClick={() => setIsEditingLevel(false)}
+                  className="p-0.5 text-slate-400 hover:text-slate-200"
+                  title="Cancel"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <span className="font-semibold text-slate-200">
+                Lvl {activeCharacter.level}
+              </span>
+            )}
+
+            {!isEditingLevel && (
+              <button
+                type="button"
+                aria-label="Edit Level"
+                onClick={() => setIsEditingLevel(true)}
+                className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors"
+                title="Edit character level directly"
+              >
+                <Pencil size={11} />
+              </button>
+            )}
+
+            {/* Plus Level Up Button with Light Inverted Confirmation */}
+            {showLevelConfirm ? (
+              <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-0.5 rounded border border-slate-300 shadow-md text-xs animate-in fade-in">
+                <span className="text-[11px] font-semibold text-slate-900">Level Up?</span>
+                <button
+                  type="button"
+                  aria-label="Confirm Level Up"
+                  onClick={handleConfirmLevelUp}
+                  className="p-0.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/80 rounded transition-colors"
+                  title="Confirm level up"
+                >
+                  <Check size={13} strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="Cancel Level Up"
+                  onClick={() => setShowLevelConfirm(false)}
+                  className="p-0.5 text-red-700 hover:text-red-900 hover:bg-red-100/80 rounded transition-colors"
+                  title="Cancel"
+                >
+                  <X size={13} strokeWidth={2.5} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                aria-label="Level Up"
+                onClick={() => setShowLevelConfirm(true)}
+                disabled={activeCharacter.level >= 20}
+                className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors disabled:opacity-40"
+                title="Level Up (+1)"
+              >
+                <Plus size={13} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Right: Character Icon Dropdown, Export, Import */}
-      <div className="flex items-center space-x-2 text-xs">
+      <div className="flex items-center space-x-2 text-xs flex-shrink-0">
         <ProfileSelector
           profiles={profiles}
           activeId={activeCharacter.id}
