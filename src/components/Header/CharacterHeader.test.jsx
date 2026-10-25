@@ -251,4 +251,33 @@ describe('CharacterHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: /Export/i }));
     expect(handleExport).toHaveBeenCalled();
   });
+
+  it('opens CharacterManagerModal when manage characters button is clicked', () => {
+    const handleSelect = vi.fn();
+    const handleDelete = vi.fn();
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={vi.fn()}
+        onSelectProfile={handleSelect}
+        onCreateProfile={vi.fn()}
+        onDeleteProfile={handleDelete}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    // Click button to open character manager modal
+    const manageBtn = screen.getByRole('button', { name: /Manage Characters/i });
+    fireEvent.click(manageBtn);
+
+    // Modal is now open
+    expect(screen.getByRole('heading', { level: 3, name: /Character Grimoires/i })).toBeInTheDocument();
+
+    // Can select other character from modal
+    const switchBtn = screen.getByRole('button', { name: /Switch to Jareth/i });
+    fireEvent.click(switchBtn);
+    expect(handleSelect).toHaveBeenCalledWith('c2');
+  });
 });

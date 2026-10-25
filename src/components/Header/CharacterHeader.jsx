@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle } from 'lucide-react';
 import ProfileSelector from './ProfileSelector';
+import CharacterManagerModal from './CharacterManagerModal';
 import AuthStatus from './AuthStatus';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 
@@ -26,6 +27,7 @@ export default function CharacterHeader({
   onUpdateCharacter,
   onSelectProfile,
   onCreateProfile,
+  onDeleteProfile,
   onExport,
   onImport,
   user,
@@ -39,6 +41,9 @@ export default function CharacterHeader({
   // Single card edit mode
   const [isEditing, setIsEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState(activeCharacter?.name || '');
+
+  // Character Manager Modal
+  const [showManagerModal, setShowManagerModal] = useState(false);
 
   // Level Up popup modal
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
@@ -352,6 +357,7 @@ export default function CharacterHeader({
             activeId={activeCharacter.id}
             onSelectProfile={onSelectProfile}
             onCreateProfile={onCreateProfile}
+            onOpenManager={() => setShowManagerModal(true)}
           />
           <AuthStatus
             user={user}
@@ -392,6 +398,17 @@ export default function CharacterHeader({
           className="hidden"
         />
       </div>
+
+      {/* Character Manager Modal */}
+      <CharacterManagerModal
+        isOpen={showManagerModal}
+        onClose={() => setShowManagerModal(false)}
+        profiles={profiles}
+        activeId={activeCharacter.id}
+        onSelectProfile={onSelectProfile}
+        onCreateProfile={onCreateProfile}
+        onDeleteProfile={onDeleteProfile}
+      />
 
       {/* Level Up Selection Popup Modal */}
       {showLevelUpModal && (

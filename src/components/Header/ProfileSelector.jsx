@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { User, Plus, Check, X, ChevronDown } from 'lucide-react';
+import { User, Plus, Check, X, ChevronDown, Users } from 'lucide-react';
 
 export default function ProfileSelector({
   profiles,
   activeId,
   onSelectProfile,
   onCreateProfile,
+  onOpenManager,
 }) {
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -16,13 +17,13 @@ export default function ProfileSelector({
 
   return (
     <div className="flex items-center space-x-1">
-      {/* Compact dropdown pill */}
+      {/* Quick Dropdown Pill for Recent Switch */}
       <div className="relative flex items-center bg-slate-900/80 border border-dnd-border hover:border-dnd-gold rounded-md pl-2 pr-1.5 py-1 text-xs transition-colors">
         <User size={12} className="text-dnd-gold mr-1.5 flex-shrink-0" />
         <select
           value={activeId}
           onChange={(e) => onSelectProfile(e.target.value)}
-          className="bg-transparent text-slate-200 text-xs font-medium focus:outline-none cursor-pointer max-w-[110px] truncate pr-4 appearance-none"
+          className="bg-transparent text-slate-200 text-xs font-medium focus:outline-none cursor-pointer max-w-[100px] sm:max-w-[115px] truncate pr-4 appearance-none"
           aria-label="Select Character Profile"
         >
           {profiles.map((p) => (
@@ -33,6 +34,19 @@ export default function ProfileSelector({
         </select>
         <ChevronDown size={11} className="text-slate-400 pointer-events-none absolute right-1.5" />
       </div>
+
+      {/* Full Grimoire / Character Manager Modal Trigger */}
+      {onOpenManager && (
+        <button
+          type="button"
+          onClick={onOpenManager}
+          aria-label="Manage Characters"
+          title="Open character manager modal"
+          className="p-1 rounded-md bg-slate-900/80 border border-dnd-border hover:border-dnd-gold text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center"
+        >
+          <Users size={13} />
+        </button>
+      )}
 
       {/* New Hero Button */}
       {showConfirm ? (
