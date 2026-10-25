@@ -27,12 +27,22 @@ export default function SpellbookCard({
 
   return (
     <div
-      className={`mb-1.5 rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden ${
+      className={`relative mb-1.5 rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden pl-2 ${
         isPrepared
           ? 'border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
           : 'border-dnd-border hover:border-dnd-gold/60'
       } ${isExpanded ? (isPrepared ? 'border-white/45 shadow-[0_0_16px_rgba(255,255,255,0.12)]' : 'border-dnd-gold shadow-md shadow-black/40') : ''}`}
     >
+      {/* Left Bookmark Subdivision Strip: turns light Ivory/White glow when prepared */}
+      <div
+        data-testid="prepared-bookmark-strip"
+        aria-hidden="true"
+        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${
+          isPrepared
+            ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
+            : 'bg-transparent border-r border-slate-700/40'
+        }`}
+      />
       <div
         role="button"
         tabIndex={0}
