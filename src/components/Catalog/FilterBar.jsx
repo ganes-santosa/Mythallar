@@ -74,10 +74,10 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
           <button
             type="button"
             onClick={onOpenHomebrewSpellModal}
-            className="flex items-center px-3 py-2 rounded-lg bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-semibold text-xs transition-colors flex-shrink-0 shadow"
+            className="flex items-center px-2.5 py-2 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold font-medium text-xs transition-colors flex-shrink-0"
             title="Create a homebrew spell"
           >
-            <Plus size={15} className="mr-1" />
+            <Plus size={14} className="mr-1 text-dnd-gold" />
             <span className="hidden sm:inline">Homebrew Spell</span>
             <span className="sm:hidden">Homebrew</span>
           </button>
