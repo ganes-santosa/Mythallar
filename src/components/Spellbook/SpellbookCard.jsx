@@ -40,7 +40,7 @@ export default function SpellbookCard({
         className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${
           isPrepared
             ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
-            : 'bg-transparent border-r border-slate-700/40'
+            : 'bg-slate-700/60 border-r border-slate-600/40'
         }`}
       />
       <div
