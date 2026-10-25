@@ -418,6 +418,7 @@ export default function App() {
             onUpdateMaxSlot={handleUpdateMaxSlot}
             onLongRest={handleLongRest}
             onShortRest={handleShortRest}
+            onUpdateCharacter={updateActiveCharacter}
           />
 
           <div className="flex-1 min-h-[300px] flex flex-col">

@@ -16,12 +16,16 @@ export default function ProfileSelector({
 
   return (
     <div className="flex items-center space-x-1.5">
-      <div className="flex items-center space-x-1.5 bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1 text-xs">
-        <User size={13} className="text-dnd-gold" />
+      {/* Icon-only Character Profile Dropdown */}
+      <div
+        className="relative flex items-center justify-center p-1.5 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors"
+        title="Switch character profile"
+      >
+        <User size={15} className="text-dnd-gold pointer-events-none" />
         <select
           value={activeId}
           onChange={(e) => onSelectProfile(e.target.value)}
-          className="bg-transparent text-slate-200 focus:outline-none cursor-pointer pr-1"
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
           aria-label="Select Character Profile"
         >
           {profiles.map((p) => (
@@ -32,26 +36,27 @@ export default function ProfileSelector({
         </select>
       </div>
 
+      {/* New Character Button with Inverted Light Confirmation */}
       {showConfirm ? (
-        <div className="flex items-center space-x-1 bg-slate-900 px-2 py-1 rounded-lg border border-dnd-gold text-xs animate-in fade-in">
-          <span className="text-[11px] text-slate-300">New hero?</span>
+        <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-1 rounded-lg border border-slate-300 shadow-md text-xs animate-in fade-in">
+          <span className="text-[11px] font-semibold text-slate-900">New hero?</span>
           <button
             type="button"
             aria-label="Confirm Create Character"
             onClick={handleConfirm}
-            className="p-0.5 text-emerald-400 hover:text-emerald-300"
+            className="p-0.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/80 rounded transition-colors"
             title="Create character"
           >
-            <Check size={13} />
+            <Check size={13} strokeWidth={2.5} />
           </button>
           <button
             type="button"
             aria-label="Cancel Create Character"
             onClick={() => setShowConfirm(false)}
-            className="p-0.5 text-red-400 hover:text-red-300"
+            className="p-0.5 text-red-700 hover:text-red-900 hover:bg-red-100/80 rounded transition-colors"
             title="Cancel"
           >
-            <X size={13} />
+            <X size={13} strokeWidth={2.5} />
           </button>
         </div>
       ) : (

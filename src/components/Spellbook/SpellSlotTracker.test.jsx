@@ -115,4 +115,28 @@ describe('SpellSlotTracker', () => {
     fireEvent.click(plusBtn);
     expect(handleUpdateMax).toHaveBeenCalledWith(1, 5); // 4 + 1 = 5
   });
+
+  it('allows editing max prepared spells', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <SpellSlotTracker
+        character={mockCharacter}
+        onUseSlot={vi.fn()}
+        onRestoreSlot={vi.fn()}
+        onUpdateMaxSlot={vi.fn()}
+        onLongRest={vi.fn()}
+        onShortRest={vi.fn()}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
+    const prepInput = screen.getByPlaceholderText('Max');
+    fireEvent.change(prepInput, { target: { value: '12' } });
+    fireEvent.click(screen.getByLabelText(/Save Max Prepared/i));
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ customMaxPrepared: 12 })
+    );
+  });
 });

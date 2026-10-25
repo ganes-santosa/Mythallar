@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Pencil, Check, X, Plus, BookOpen } from 'lucide-react';
+import { Download, Upload, Pencil, Check, X, Plus } from 'lucide-react';
 import ProfileSelector from './ProfileSelector';
-import { getEffectiveMaxPrepared } from '../../utils/spellSlots';
 
 const CASTER_CLASSES = [
   'Artificer',
@@ -39,16 +38,6 @@ export default function CharacterHeader({
   const [levelDraft, setLevelDraft] = useState(activeCharacter?.level || 1);
   const [showLevelConfirm, setShowLevelConfirm] = useState(false);
 
-  // Prepared max editing
-  const [isEditingPrepared, setIsEditingPrepared] = useState(false);
-  const effectiveMaxPrepared = getEffectiveMaxPrepared(activeCharacter);
-  const [preparedDraft, setPreparedDraft] = useState(effectiveMaxPrepared ?? '');
-
-  // Count currently prepared level 1+ spells
-  const preparedCount = (activeCharacter?.spells || []).filter(
-    (s) => s.prepared
-  ).length;
-
   useEffect(() => {
     if (!isEditingName && activeCharacter) {
       setNameDraft(activeCharacter.name);
@@ -60,12 +49,6 @@ export default function CharacterHeader({
       setLevelDraft(activeCharacter.level);
     }
   }, [activeCharacter?.level, activeCharacter?.id, isEditingLevel]);
-
-  useEffect(() => {
-    if (!isEditingPrepared && activeCharacter) {
-      setPreparedDraft(effectiveMaxPrepared ?? '');
-    }
-  }, [effectiveMaxPrepared, activeCharacter?.id, isEditingPrepared]);
 
   const handleSaveName = () => {
     const trimmed = nameDraft.trim();
@@ -94,15 +77,6 @@ export default function CharacterHeader({
     setShowLevelConfirm(false);
   };
 
-  const handleSaveMaxPrepared = () => {
-    if (!activeCharacter) return;
-    const num = Number(preparedDraft);
-    if (!isNaN(num) && num >= 0) {
-      onUpdateCharacter({ ...activeCharacter, customMaxPrepared: num });
-    }
-    setIsEditingPrepared(false);
-  };
-
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -122,15 +96,8 @@ export default function CharacterHeader({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 pb-2 mb-2 border-b border-dnd-border">
-      {/* Profile & Name / Class / Level / Prepared Slots */}
+      {/* Left: Name, Class, and Level */}
       <div className="flex flex-wrap items-center gap-2">
-        <ProfileSelector
-          profiles={profiles}
-          activeId={activeCharacter.id}
-          onSelectProfile={onSelectProfile}
-          onCreateProfile={onCreateProfile}
-        />
-
         {/* Permanent Character Name with Edit Pencil Button */}
         {isEditingName ? (
           <form
@@ -193,7 +160,7 @@ export default function CharacterHeader({
         <select
           value={activeCharacter.className}
           onChange={handleClassChange}
-          className="bg-dnd-card border border-dnd-border rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-dnd-gold"
+          className="bg-dnd-card border border-dnd-border rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-dnd-gold cursor-pointer"
           aria-label="Character Class"
         >
           {CASTER_CLASSES.map((cls) => (
@@ -203,7 +170,7 @@ export default function CharacterHeader({
           ))}
         </select>
 
-        {/* Level Controls: Lvl x + Edit Pencil + Plus Button (+ Confirmation) */}
+        {/* Level Controls: Lvl x + Direct Edit Pencil + Plus Button (+ Light Inverted Confirmation) */}
         <div className="flex items-center space-x-1 bg-dnd-card border border-dnd-border rounded-lg px-2 py-1 text-xs">
           {isEditingLevel ? (
             <div className="flex items-center space-x-1">
@@ -254,27 +221,27 @@ export default function CharacterHeader({
             </button>
           )}
 
-          {/* Plus Level Up Button */}
+          {/* Plus Level Up Button with Inverted Light Mode Confirmation */}
           {showLevelConfirm ? (
-            <div className="flex items-center space-x-1 bg-slate-900 px-1.5 py-0.5 rounded border border-dnd-gold text-xs animate-in fade-in">
-              <span className="text-[11px] text-slate-300 font-medium">Level Up?</span>
+            <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-0.5 rounded-lg border border-slate-300 shadow-md text-xs animate-in fade-in">
+              <span className="text-[11px] font-semibold text-slate-900">Level Up?</span>
               <button
                 type="button"
                 aria-label="Confirm Level Up"
                 onClick={handleConfirmLevelUp}
-                className="p-0.5 text-emerald-400 hover:text-emerald-300"
+                className="p-0.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/80 rounded transition-colors"
                 title="Confirm level up"
               >
-                <Check size={12} />
+                <Check size={13} strokeWidth={2.5} />
               </button>
               <button
                 type="button"
                 aria-label="Cancel Level Up"
                 onClick={() => setShowLevelConfirm(false)}
-                className="p-0.5 text-red-400 hover:text-red-300"
+                className="p-0.5 text-red-700 hover:text-red-900 hover:bg-red-100/80 rounded transition-colors"
                 title="Cancel"
               >
-                <X size={12} />
+                <X size={13} strokeWidth={2.5} />
               </button>
             </div>
           ) : (
@@ -290,65 +257,17 @@ export default function CharacterHeader({
             </button>
           )}
         </div>
-
-        {/* Max Prepared Spells Badge with Edit Button */}
-        <div className="flex items-center space-x-1.5 bg-dnd-card border border-dnd-border rounded-lg px-2 py-1 text-xs">
-          <BookOpen size={12} className="text-dnd-gold" />
-          <span className="text-slate-400">Prepared:</span>
-          {isEditingPrepared ? (
-            <div className="flex items-center space-x-1">
-              <input
-                type="number"
-                min="0"
-                max="50"
-                value={preparedDraft}
-                onChange={(e) => setPreparedDraft(e.target.value)}
-                autoFocus
-                placeholder="Max"
-                className="w-12 bg-slate-900 border border-dnd-gold rounded px-1 text-xs text-slate-100 text-center focus:outline-none"
-              />
-              <button
-                type="button"
-                aria-label="Save Max Prepared"
-                onClick={handleSaveMaxPrepared}
-                className="p-0.5 text-emerald-400 hover:text-emerald-300"
-                title="Save Max Prepared"
-              >
-                <Check size={12} />
-              </button>
-              <button
-                type="button"
-                aria-label="Cancel Edit Max Prepared"
-                onClick={() => setIsEditingPrepared(false)}
-                className="p-0.5 text-slate-400 hover:text-slate-200"
-                title="Cancel"
-              >
-                <X size={12} />
-              </button>
-            </div>
-          ) : (
-            <span className="font-semibold text-slate-200">
-              {preparedCount}
-              {effectiveMaxPrepared !== null ? ` / ${effectiveMaxPrepared}` : ''}
-            </span>
-          )}
-
-          {!isEditingPrepared && (
-            <button
-              type="button"
-              aria-label="Edit Max Prepared"
-              onClick={() => setIsEditingPrepared(true)}
-              className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors"
-              title="Edit maximum prepared spells"
-            >
-              <Pencil size={11} />
-            </button>
-          )}
-        </div>
       </div>
 
-      {/* Export & Import Buttons */}
+      {/* Right: Character Icon Dropdown, Export, Import */}
       <div className="flex items-center space-x-2 text-xs">
+        <ProfileSelector
+          profiles={profiles}
+          activeId={activeCharacter.id}
+          onSelectProfile={onSelectProfile}
+          onCreateProfile={onCreateProfile}
+        />
+
         <button
           type="button"
           onClick={onExport}

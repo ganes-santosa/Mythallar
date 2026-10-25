@@ -88,30 +88,6 @@ describe('CharacterHeader', () => {
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ level: 6 }));
   });
 
-  it('allows editing max prepared spells', () => {
-    const handleUpdate = vi.fn();
-    render(
-      <CharacterHeader
-        activeCharacter={mockProfiles[0]}
-        profiles={mockProfiles}
-        onUpdateCharacter={handleUpdate}
-        onSelectProfile={vi.fn()}
-        onCreateProfile={vi.fn()}
-        onExport={vi.fn()}
-        onImport={vi.fn()}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
-    const prepInput = screen.getByPlaceholderText('Max');
-    fireEvent.change(prepInput, { target: { value: '12' } });
-    fireEvent.click(screen.getByLabelText(/Save Max Prepared/i));
-
-    expect(handleUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ customMaxPrepared: 12 })
-    );
-  });
-
   it('triggers onExport when export button clicked', () => {
     const handleExport = vi.fn();
     render(
