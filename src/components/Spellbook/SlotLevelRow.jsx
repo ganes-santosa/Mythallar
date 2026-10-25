@@ -47,12 +47,12 @@ export default function SlotLevelRow({
   return (
     <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-dnd-card border border-dnd-border">
       {/* Persistent Left Column: Level Label, Count, and Edit Controls underneath */}
-      <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-[74px]">
+      <div className="flex flex-col items-start justify-center flex-shrink-0 w-[100px]">
         <div className="flex items-center space-x-1.5">
           <span className="text-xs font-semibold text-dnd-ivory">
             {getLevelLabel(level)}
           </span>
-          <span className="text-[11px] font-medium px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700/80 text-dnd-pewter">
+          <span className="text-[11px] font-medium px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700/80 text-dnd-pewter tabular-nums">
             {remainingSlots} / {maxSlots}
           </span>
         </div>
@@ -97,17 +97,17 @@ export default function SlotLevelRow({
             className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800/80 active:scale-90 transition-all flex-shrink-0"
             title={`Set ${getLevelLabel(level)} slots to ${idx + 1}`}
           >
-            {/* Four-pointed star SVG */}
+            {/* Four-pointed star SVG: identical stroke width and sizing */}
             <svg
               viewBox="0 0 24 24"
-              className={`w-3.5 h-3.5 transition-all ${
+              className={`w-3.5 h-3.5 transition-colors ${
                 isAvailable
                   ? 'text-dnd-gold drop-shadow-[0_0_4px_rgba(75,97,112,0.6)]'
                   : 'text-slate-600 hover:text-slate-400'
               }`}
               fill={isAvailable ? 'currentColor' : 'none'}
               stroke="currentColor"
-              strokeWidth={isAvailable ? '0.75' : '1.75'}
+              strokeWidth="1.5"
               strokeLinejoin="round"
             >
               <path d="M12 2L14.4 9.6L22 12L14.4 14.4L12 22L9.6 14.4L2 12L9.6 9.6Z" />
