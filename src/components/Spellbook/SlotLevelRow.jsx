@@ -1,0 +1,95 @@
+import React from 'react';
+import { Plus, Minus } from 'lucide-react';
+
+function getLevelLabel(level) {
+  const ordinals = ['th', 'st', 'nd', 'rd'];
+  const v = level % 100;
+  const ord = ordinals[(v - 20) % 10] || ordinals[v] || ordinals[0];
+  return `${level}${ord} Level`;
+}
+
+export default function SlotLevelRow({
+  level,
+  maxSlots,
+  usedSlots = 0,
+  isEditingMax,
+  onUseSlot,
+  onRestoreSlot,
+  onUpdateMaxSlot,
+}) {
+  const remainingSlots = Math.max(0, maxSlots - usedSlots);
+
+  // Array of pips: index 0 to maxSlots - 1
+  // If index < remainingSlots -> available (filled)
+  // Else -> expended (empty)
+  const pips = [];
+  for (let i = 0; i < maxSlots; i++) {
+    const isAvailable = i < remainingSlots;
+    pips.push(isAvailable);
+  }
+
+  const handlePipClick = (index, isAvailable) => {
+    if (isAvailable) {
+      onUseSlot(level);
+    } else {
+      onRestoreSlot(level);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-2 rounded-lg bg-dnd-card border border-dnd-border">
+      <div className="w-24">
+        <span className="text-xs font-semibold text-slate-200 block">
+          {getLevelLabel(level)}
+        </span>
+        <span className="text-[11px] text-slate-400 font-mono">
+          {remainingSlots} / {maxSlots}
+        </span>
+      </div>
+
+      {/* Pips container */}
+      <div className="flex items-center space-x-1.5 flex-wrap flex-1 justify-center px-2">
+        {pips.map((isAvailable, idx) => (
+          <button
+            key={idx}
+            type="button"
+            aria-label={
+              isAvailable
+                ? `Use ${getLevelLabel(level)} slot`
+                : `Restore ${getLevelLabel(level)} slot`
+            }
+            onClick={() => handlePipClick(idx, isAvailable)}
+            className={`w-5 h-5 rounded transition-all transform active:scale-90 ${
+              isAvailable
+                ? 'bg-dnd-gold border border-dnd-gold-light shadow-[0_0_8px_rgba(224,168,56,0.3)] hover:bg-amber-400'
+                : 'bg-slate-800/80 border border-slate-700 hover:border-slate-500'
+            }`}
+            title={isAvailable ? 'Click to expend slot' : 'Click to restore slot'}
+          />
+        ))}
+      </div>
+
+      {/* Edit max controls */}
+      {isEditingMax && (
+        <div className="flex items-center space-x-1">
+          <button
+            type="button"
+            aria-label={`Decrease max ${getLevelLabel(level)} slots`}
+            onClick={() => onUpdateMaxSlot(level, Math.max(0, maxSlots - 1))}
+            className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
+          >
+            <Minus size={12} />
+          </button>
+          <button
+            type="button"
+            aria-label={`Increase max ${getLevelLabel(level)} slots`}
+            onClick={() => onUpdateMaxSlot(level, maxSlots + 1)}
+            className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300"
+          >
+            <Plus size={12} />
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
