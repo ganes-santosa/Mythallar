@@ -101,6 +101,7 @@ export default function App() {
     className: 'all',
     school: 'all',
     legacyMode: 'all', // 'all', 'modern', 'legacy'
+    source: 'all',
     isHomebrewOnly: false,
     concentration: false,
     ritual: false,
@@ -108,6 +109,14 @@ export default function App() {
     compS: false,
     compM: false,
   });
+
+  const availableSources = useMemo(() => {
+    const set = new Set();
+    for (const s of allSpells) {
+      if (s.source) set.add(s.source);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allSpells]);
 
   const filteredSpells = useSpellFilter(allSpells, filters);
 
@@ -169,6 +178,22 @@ export default function App() {
     setHomebrewSpells((prev) => [newSpell, ...prev]);
     showToast(`Created homebrew spell: ${newSpell.name}`, 'success');
   };
+
+  const handleDeleteHomebrewSpell = useCallback((spellId) => {
+    const spell = homebrewSpells.find((s) => s.id === spellId);
+    setHomebrewSpells((prev) => prev.filter((s) => s.id !== spellId));
+
+    // Also remove from all character profiles if they have it added
+    setProfileData((prev) => ({
+      ...prev,
+      profiles: prev.profiles.map((p) => ({
+        ...p,
+        spells: (p.spells || []).filter((s) => s.id !== spellId),
+      })),
+    }));
+
+    showToast(`Deleted homebrew spell${spell ? `: ${spell.name}` : ''}`, 'info');
+  }, [homebrewSpells, showToast]);
 
   // --- Spell Management Actions ---
   const handleAddSpell = useCallback(
@@ -289,21 +314,68 @@ export default function App() {
     [activeCharacter, updateActiveCharacter]
   );
 
+  const handleResetMaxSlot = useCallback(
+    (level) => {
+      if (!activeCharacter) return;
+      const nextCustom = { ...activeCharacter.customSlots };
+      delete nextCustom[level];
+      updateActiveCharacter({
+        ...activeCharacter,
+        customSlots: nextCustom,
+      });
+    },
+    [activeCharacter, updateActiveCharacter]
+  );
+
+  const handleUsePactSlot = useCallback(() => {
+    if (!activeCharacter) return;
+    const currentUsed = activeCharacter.pactSlotsUsed || 0;
+    updateActiveCharacter({
+      ...activeCharacter,
+      pactSlotsUsed: currentUsed + 1,
+    });
+  }, [activeCharacter, updateActiveCharacter]);
+
+  const handleRestorePactSlot = useCallback(() => {
+    if (!activeCharacter) return;
+    const currentUsed = activeCharacter.pactSlotsUsed || 0;
+    updateActiveCharacter({
+      ...activeCharacter,
+      pactSlotsUsed: Math.max(0, currentUsed - 1),
+    });
+  }, [activeCharacter, updateActiveCharacter]);
+
+  const handleSetPactSlotsUsed = useCallback(
+    (used) => {
+      if (!activeCharacter) return;
+      updateActiveCharacter({
+        ...activeCharacter,
+        pactSlotsUsed: Math.max(0, used),
+      });
+    },
+    [activeCharacter, updateActiveCharacter]
+  );
+
   const handleLongRest = useCallback(() => {
     if (!activeCharacter) return;
     updateActiveCharacter({
       ...activeCharacter,
       slotsUsed: {},
+      pactSlotsUsed: 0,
     });
     showToast('Long Rest completed: All spell slots restored!', 'success');
   }, [activeCharacter, updateActiveCharacter, showToast]);
 
   const handleShortRest = useCallback(() => {
     if (!activeCharacter) return;
-    if (activeCharacter.className === 'Warlock') {
+    const classes = activeCharacter.classes || [{ className: activeCharacter.className, level: activeCharacter.level }];
+    const hasWarlock = classes.some((c) => c.className === 'Warlock');
+    if (hasWarlock || activeCharacter.className === 'Warlock') {
       updateActiveCharacter({
         ...activeCharacter,
-        slotsUsed: {},
+        pactSlotsUsed: 0,
+        // Also restore standard slots if pure Warlock without pactSlotsUsed yet
+        slotsUsed: activeCharacter.className === 'Warlock' ? {} : activeCharacter.slotsUsed,
       });
       showToast('Short Rest completed: Pact Magic slots restored!', 'success');
     }
@@ -321,7 +393,8 @@ export default function App() {
       const maxSlots = getEffectiveMaxSlots(
         activeCharacter.className,
         activeCharacter.level,
-        activeCharacter.customSlots
+        activeCharacter.customSlots,
+        activeCharacter
       );
 
       // Find lowest available slot level >= spell.level
@@ -374,10 +447,10 @@ export default function App() {
               </span>
               <div className="flex flex-wrap items-baseline gap-2">
                 <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-tight">
-                  D&D 5e Spellbook
+                  Mythallar
                 </h1>
                 <span className="hidden sm:inline text-[11px] text-dnd-gold font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
-                  Official 5e (2024 &amp; Legacy) + Homebrew
+                  DnD 5e Spellbook
                 </span>
               </div>
             </div>
@@ -391,6 +464,7 @@ export default function App() {
             filters={filters}
             onChange={setFilters}
             onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
+            availableSources={availableSources}
           />
 
           {isLoadingSpells ? (
@@ -408,6 +482,7 @@ export default function App() {
               spells={filteredSpells}
               spellbookSpellIds={spellbookSpellIds}
               onAddToSpellbook={handleAddSpell}
+              onDeleteHomebrew={handleDeleteHomebrewSpell}
             />
           )}
         </section>
@@ -429,7 +504,11 @@ export default function App() {
             onUseSlot={handleUseSlot}
             onRestoreSlot={handleRestoreSlot}
             onSetSlotsUsed={handleSetSlotsUsed}
+            onUsePactSlot={handleUsePactSlot}
+            onRestorePactSlot={handleRestorePactSlot}
+            onSetPactSlotsUsed={handleSetPactSlotsUsed}
             onUpdateMaxSlot={handleUpdateMaxSlot}
+            onResetMaxSlot={handleResetMaxSlot}
             onLongRest={handleLongRest}
             onShortRest={handleShortRest}
             onUpdateCharacter={updateActiveCharacter}

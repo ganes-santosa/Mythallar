@@ -57,4 +57,31 @@ describe('SpellCard', () => {
     });
     expect(setData).toHaveBeenCalledWith('text/plain', 'fireball');
   });
+
+  it('renders and invokes delete button for homebrew spells', () => {
+    const handleDelete = vi.fn();
+    window.confirm = vi.fn(() => true);
+    const homebrewSpell = {
+      ...mockSpell,
+      id: 'hb_spell_1',
+      name: 'Void Dart',
+      source: 'Homebrew',
+    };
+    render(
+      <SpellCard
+        spell={homebrewSpell}
+        onSelect={vi.fn()}
+        onDeleteHomebrew={handleDelete}
+        isInSpellbook={false}
+      />
+    );
+
+    // Expand
+    fireEvent.click(screen.getByText('Void Dart'));
+    const deleteBtn = screen.getByRole('button', { name: /Delete homebrew spell Void Dart/i });
+    expect(deleteBtn).toBeInTheDocument();
+    fireEvent.click(deleteBtn);
+    expect(window.confirm).toHaveBeenCalled();
+    expect(handleDelete).toHaveBeenCalledWith('hb_spell_1');
+  });
 });

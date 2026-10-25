@@ -7,6 +7,7 @@ import {
   ChevronDown,
   BookPlus,
   Check,
+  Trash2,
 } from 'lucide-react';
 
 const SCHOOL_COLORS = {
@@ -20,8 +21,15 @@ const SCHOOL_COLORS = {
   Transmutation: 'text-yellow-300 border-yellow-400/30 bg-yellow-500/10',
 };
 
-export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpellbook }) {
+export default function SpellCard({
+  spell,
+  onSelect,
+  onAddToSpellbook,
+  onDeleteHomebrew,
+  isInSpellbook,
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isHomebrew = spell.source === 'Homebrew' || spell.source === 'Custom';
   const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 border-slate-500/30 bg-slate-500/10';
 
   const handleDragStart = (e) => {
@@ -150,7 +158,7 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
         <div className="overflow-hidden animate-in fade-in duration-200">
           <div className="p-3 bg-dnd-bg/80 border-t border-dnd-border/80 text-xs text-slate-300 space-y-2.5">
             {/* Quick stats strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 rounded bg-dnd-panel/70 border border-dnd-border/50 text-[11px]">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded bg-dnd-panel/70 border border-dnd-border/50 text-[11px]">
               <div>
                 <span className="text-slate-400 block font-medium">Casting Time</span>
                 <span className="text-slate-200 font-semibold">{spell.time}</span>
@@ -168,6 +176,10 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
                 <span className="text-slate-200 font-semibold">
                   {spell.concentration ? `Conc, ${spell.duration}` : spell.duration}
                 </span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Source</span>
+                <span className="text-dnd-gold font-semibold">{spell.source || 'PHB'}</span>
               </div>
             </div>
 
@@ -204,7 +216,27 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
             )}
 
             {/* Bottom Action Bar */}
-            <div className="pt-1.5 flex items-center justify-end">
+            <div className="pt-1.5 flex items-center justify-between">
+              {isHomebrew && onDeleteHomebrew ? (
+                <button
+                  type="button"
+                  aria-label={`Delete homebrew spell ${spell.name}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm(`Delete homebrew spell "${spell.name}" permanently?`)) {
+                      onDeleteHomebrew(spell.id);
+                    }
+                  }}
+                  className="flex items-center px-2 py-1 rounded bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/60 text-xs transition-colors"
+                  title="Delete this homebrew spell permanently"
+                >
+                  <Trash2 size={12} className="mr-1 text-red-400" />
+                  Delete Spell
+                </button>
+              ) : (
+                <div />
+              )}
+
               {isInSpellbook ? (
                 <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-2.5 py-1 rounded">
                   <Check size={14} className="mr-1" /> In Spellbook
@@ -216,7 +248,7 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
                     e.stopPropagation();
                     onAddToSpellbook?.(spell.id);
                   }}
-                  className="flex items-center px-3 py-1.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-100 hover:text-slate-950 font-semibold transition-colors shadow"
+                  className="flex items-center px-3 py-1.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-100 hover:text-slate-950 font-semibold transition-colors shadow text-xs"
                 >
                   <BookPlus size={14} className="mr-1.5" />
                   Add to Spellbook

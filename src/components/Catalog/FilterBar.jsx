@@ -28,7 +28,7 @@ const SCHOOLS = [
   'Transmutation',
 ];
 
-export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal }) {
+export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSources = [] }) {
   const update = (key, value) => {
     onChange({ ...filters, [key]: value });
   };
@@ -39,6 +39,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
       (filters.className && filters.className !== 'all') ||
       (filters.school && filters.school !== 'all') ||
       (filters.legacyMode && filters.legacyMode !== 'all') ||
+      (filters.source && filters.source !== 'all') ||
       filters.isHomebrewOnly ||
       filters.concentration ||
       filters.ritual ||
@@ -85,7 +86,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
       </div>
 
       {/* Select Dropdowns Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {/* Level */}
         <select
           value={filters.level !== undefined ? filters.level : 'all'}
@@ -139,9 +140,24 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
           className="bg-dnd-card border border-dnd-border rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-dnd-gold font-medium"
           aria-label="Filter 2024 or Legacy"
         >
-          <option value="all">All (2024 + Legacy)</option>
-          <option value="modern">2024 &amp; Modern</option>
-          <option value="legacy">Legacy (2014) Only</option>
+          <option value="all">All Editions</option>
+          <option value="modern">2024 Modern</option>
+          <option value="legacy">2014 Legacy</option>
+        </select>
+
+        {/* Source Material Filter */}
+        <select
+          value={filters.source || 'all'}
+          onChange={(e) => update('source', e.target.value)}
+          className="bg-dnd-card border border-dnd-border rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-dnd-gold col-span-2 sm:col-span-1"
+          aria-label="Filter by Source"
+        >
+          <option value="all">All Sources</option>
+          {availableSources.map((src) => (
+            <option key={src} value={src}>
+              {src}
+            </option>
+          ))}
         </select>
       </div>
 

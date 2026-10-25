@@ -19,6 +19,7 @@ const mockSpell = {
     'A bright streak flashes from your pointing finger to a point you choose.',
     'The fire spreads around corners.',
   ],
+  source: 'PHB',
   higherLevels: 'When you cast this spell using a spell slot of 4th level or higher...',
 };
 
@@ -34,6 +35,7 @@ describe('SpellDetailDrawer', () => {
     );
 
     expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.getByText('PHB')).toBeInTheDocument();
     expect(screen.getByText('3rd Level Evocation')).toBeInTheDocument();
     expect(screen.getByText('1 action')).toBeInTheDocument();
     expect(screen.getByText('150 feet')).toBeInTheDocument();

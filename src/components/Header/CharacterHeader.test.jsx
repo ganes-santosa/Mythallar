@@ -9,7 +9,7 @@ const mockProfiles = [
 ];
 
 describe('CharacterHeader', () => {
-  it('renders active character details and selectors', () => {
+  it('renders active character details and character level badge with edit button', () => {
     render(
       <CharacterHeader
         activeCharacter={mockProfiles[0]}
@@ -23,8 +23,9 @@ describe('CharacterHeader', () => {
     );
 
     expect(screen.getByRole('heading', { level: 2, name: 'Mordenkainen' })).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Wizard')).toBeInTheDocument();
-    expect(screen.getByText('Lvl 5')).toBeInTheDocument();
+    expect(screen.getByText('Wizard')).toBeInTheDocument();
+    expect(screen.getByText(/Character Level/i)).toBeInTheDocument();
+    expect(screen.getByLabelText('Edit Profile')).toBeInTheDocument();
   });
 
   it('triggers onUpdateCharacter when name is edited and saved', () => {
@@ -41,24 +42,19 @@ describe('CharacterHeader', () => {
       />
     );
 
-    // Click edit name button
-    const editBtn = screen.getByLabelText(/Edit Name/i);
-    fireEvent.click(editBtn);
+    // Click single Edit Profile button
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
 
     const nameInput = screen.getByPlaceholderText('Character Name');
     fireEvent.change(nameInput, { target: { value: 'Bigby' } });
 
-    // Save name
-    const saveBtn = screen.getByLabelText(/Save Name/i);
+    // Click Done (Save Profile) button
+    const saveBtn = screen.getByLabelText('Save Profile');
     fireEvent.click(saveBtn);
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bigby' }));
-
-    const classSelect = screen.getByDisplayValue('Wizard');
-    fireEvent.change(classSelect, { target: { value: 'Sorcerer' } });
-    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ className: 'Sorcerer' }));
   });
 
-  it('levels up with confirmation prompt and allows direct editing of level', () => {
+  it('allows editing class and level when card edit button is clicked', () => {
     const handleUpdate = vi.fn();
     render(
       <CharacterHeader
@@ -72,20 +68,170 @@ describe('CharacterHeader', () => {
       />
     );
 
-    // Direct editing level via edit pencil button
-    fireEvent.click(screen.getByLabelText(/Edit Level/i));
-    const levelInput = screen.getByRole('spinbutton');
-    fireEvent.change(levelInput, { target: { value: '8' } });
-    fireEvent.click(screen.getByLabelText(/Save Level/i));
-    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ level: 8 }));
+    // Click single Edit Profile button
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
 
-    // Click Level Up plus button directly next to it
-    fireEvent.click(screen.getByLabelText(/Level Up/i));
-    expect(screen.getByText(/Level Up\?/i)).toBeInTheDocument();
+    // Class dropdown is now visible
+    const classSelect = screen.getByLabelText('Character Class 1');
+    fireEvent.change(classSelect, { target: { value: 'Sorcerer' } });
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ className: 'Sorcerer' }));
 
-    // Confirm Level Up
-    fireEvent.click(screen.getByLabelText(/Confirm Level Up/i));
-    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ level: 6 }));
+    // Level dropdown is now visible
+    const levelSelect = screen.getByLabelText('Level for Wizard');
+    fireEvent.change(levelSelect, { target: { value: '8' } });
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 8,
+        classes: [{ className: 'Wizard', level: 8 }],
+      })
+    );
+
+    // Click Done to finish editing
+    fireEvent.click(screen.getByLabelText('Save Profile'));
+    expect(screen.queryByLabelText('Level for Wizard')).not.toBeInTheDocument();
+  });
+
+  it('levels up character using Level Up modal popup', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    // Click Level Up button on card
+    const levelUpBtn = screen.getByRole('button', { name: /^Level Up$/i });
+    fireEvent.click(levelUpBtn);
+
+    expect(screen.getByText(/Choose class for Level 6:/i)).toBeInTheDocument();
+
+    // Submit Level Up button inside modal
+    const modalLevelUpBtn = screen.getAllByRole('button', { name: /^Level Up$/i })[1];
+    fireEvent.click(modalLevelUpBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 6,
+        classes: [{ className: 'Wizard', level: 6 }],
+      })
+    );
+  });
+
+  it('allows multiclassing into a new class via Level Up modal popup', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^Level Up$/i }));
+
+    // Select + New Class (Multiclass)
+    const newClassRadio = screen.getByDisplayValue('__new_class__');
+    fireEvent.click(newClassRadio);
+
+    const multiclassSelect = screen.getByLabelText('Select new multiclass');
+    fireEvent.change(multiclassSelect, { target: { value: 'Paladin' } });
+
+    // Submit Level Up
+    const modalLevelUpBtn = screen.getAllByRole('button', { name: /^Level Up$/i })[1];
+    fireEvent.click(modalLevelUpBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 6,
+        classes: [
+          { className: 'Wizard', level: 5 },
+          { className: 'Paladin', level: 1 },
+        ],
+      })
+    );
+  });
+
+  it('supports adding and removing multiclass entries in edit mode', () => {
+    const handleUpdate = vi.fn();
+    const multiclassChar = {
+      id: 'c3',
+      name: 'Elminster',
+      className: 'Wizard',
+      level: 6,
+      classes: [
+        { className: 'Wizard', level: 4 },
+        { className: 'Cleric', level: 2 },
+      ],
+    };
+
+    const { rerender } = render(
+      <CharacterHeader
+        activeCharacter={multiclassChar}
+        profiles={[multiclassChar]}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    // Click single Edit Profile button
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
+
+    // Remove button exists and works
+    const removeBtn = screen.getByLabelText('Remove Cleric');
+    fireEvent.click(removeBtn);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 4,
+        classes: [{ className: 'Wizard', level: 4 }],
+      })
+    );
+
+    // Test add class button
+    const singleClassChar = {
+      id: 'c4',
+      name: 'Single',
+      className: 'Wizard',
+      level: 4,
+      classes: [{ className: 'Wizard', level: 4 }],
+    };
+
+    rerender(
+      <CharacterHeader
+        activeCharacter={singleClassChar}
+        profiles={[singleClassChar]}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
+    const addClassBtn = screen.getByRole('button', { name: /Add Class/i });
+    fireEvent.click(addClassBtn);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 5,
+        classes: expect.arrayContaining([
+          { className: 'Wizard', level: 4 },
+          expect.objectContaining({ level: 1 }),
+        ]),
+      })
+    );
   });
 
   it('triggers onExport when export button clicked', () => {
@@ -102,8 +248,7 @@ describe('CharacterHeader', () => {
       />
     );
 
-    const exportBtn = screen.getByRole('button', { name: /Export/i });
-    fireEvent.click(exportBtn);
+    fireEvent.click(screen.getByRole('button', { name: /Export/i }));
     expect(handleExport).toHaveBeenCalled();
   });
 });

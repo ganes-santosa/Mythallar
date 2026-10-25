@@ -27,7 +27,7 @@ export default function SpellbookCard({
 
   return (
     <div
-      className={`relative rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden pl-3 sm:pl-3.5 ${
+      className={`relative rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden ${
         isPrepared
           ? 'border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
           : 'border-dnd-border hover:border-dnd-gold/60'
@@ -37,7 +37,7 @@ export default function SpellbookCard({
       <div
         data-testid="prepared-bookmark-strip"
         aria-hidden="true"
-        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 ${
+        className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 z-10 ${
           isPrepared
             ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
             : 'bg-slate-700/60 border-r border-slate-600/40'
@@ -53,7 +53,7 @@ export default function SpellbookCard({
             toggleExpand();
           }
         }}
-        className="flex items-center justify-between p-2 sm:px-2.5 sm:py-2 hover:bg-dnd-hover transition-colors cursor-pointer group"
+        className="flex items-center justify-between py-2 pr-2 sm:pr-2.5 pl-5 sm:pl-6 hover:bg-dnd-hover transition-colors cursor-pointer group"
       >
         <div className="flex items-center space-x-2 overflow-hidden">
           <div>
@@ -160,8 +160,8 @@ export default function SpellbookCard({
       {/* Accordion Detail Body */}
       {isExpanded && (
         <div className="overflow-hidden animate-in fade-in duration-200">
-          <div className="p-3 bg-dnd-bg/80 border-t border-dnd-border/80 text-xs text-slate-300 space-y-2.5">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 rounded text-[11px] bg-dnd-panel/70 border border-dnd-border/50 text-slate-300">
+          <div className="py-3 pr-3 pl-5 sm:pl-6 bg-dnd-bg/80 border-t border-dnd-border/80 text-xs text-slate-300 space-y-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded text-[11px] bg-dnd-panel/70 border border-dnd-border/50 text-slate-300">
               <div>
                 <span className="block font-medium text-slate-400">Casting Time</span>
                 <span className="font-semibold text-slate-200">{spell.time}</span>
@@ -179,6 +179,10 @@ export default function SpellbookCard({
                 <span className="font-semibold text-slate-200">
                   {spell.concentration ? `Conc, ${spell.duration}` : spell.duration}
                 </span>
+              </div>
+              <div>
+                <span className="block font-medium text-slate-400">Source</span>
+                <span className="font-semibold text-dnd-gold">{spell.source || 'PHB'}</span>
               </div>
             </div>
 

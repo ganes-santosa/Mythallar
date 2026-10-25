@@ -48,7 +48,8 @@ describe('App End-to-End Integration', () => {
       expect(screen.getByText('Magic Missile')).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/D&D 5e Spellbook/i)).toBeInTheDocument();
+    expect(screen.getByText(/Mythallar/i)).toBeInTheDocument();
+    expect(screen.getByText(/DnD 5e Spellbook/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Mordenkainen' })).toBeInTheDocument();
   });
 

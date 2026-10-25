@@ -16,6 +16,7 @@ function CatalogLevelGroup({
   spellbookSpellIds,
   onSelectSpell,
   onAddToSpellbook,
+  onDeleteHomebrew,
 }) {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -47,6 +48,7 @@ function CatalogLevelGroup({
               spell={spell}
               onSelect={onSelectSpell}
               onAddToSpellbook={onAddToSpellbook}
+              onDeleteHomebrew={onDeleteHomebrew}
               isInSpellbook={spellbookSpellIds.has(spell.id)}
             />
           ))}
@@ -61,6 +63,7 @@ export default React.memo(function SpellList({
   spellbookSpellIds = new Set(),
   onSelectSpell,
   onAddToSpellbook,
+  onDeleteHomebrew,
 }) {
   // Group spells by level (0-9) and sort alphabetically within each level
   const groupedSpells = useMemo(() => {
@@ -110,6 +113,7 @@ export default React.memo(function SpellList({
               spellbookSpellIds={spellbookSpellIds}
               onSelectSpell={onSelectSpell}
               onAddToSpellbook={onAddToSpellbook}
+              onDeleteHomebrew={onDeleteHomebrew}
             />
           ))
         )}

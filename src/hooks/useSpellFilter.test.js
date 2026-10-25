@@ -107,6 +107,16 @@ describe('filterSpells', () => {
     expect(legacy.map(s => s.id)).toEqual(['fireball-legacy']);
   });
 
+  it('filters by source material', () => {
+    const spells = [
+      { id: 's1', name: 'Spell 1', source: 'TCoE' },
+      { id: 's2', name: 'Spell 2', source: 'XGE' },
+      { id: 's3', name: 'Spell 3', source: 'PHB' },
+    ];
+    const res = filterSpells(spells, { source: 'TCoE' });
+    expect(res.map(s => s.id)).toEqual(['s1']);
+  });
+
   it('returns all spells when filters are empty or default', () => {
     const res = filterSpells(MOCK_SPELLS, {});
     expect(res.length).toBe(4);

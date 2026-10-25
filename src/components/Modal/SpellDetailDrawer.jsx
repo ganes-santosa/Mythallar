@@ -42,7 +42,14 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
         {/* Header */}
         <div className="p-5 border-b border-dnd-border flex items-start justify-between bg-dnd-card/60">
           <div>
-            <h2 className="text-xl font-bold text-slate-100">{spell.name}</h2>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-bold text-slate-100">{spell.name}</h2>
+              {spell.source && (
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-dnd-gold">
+                  {spell.source}
+                </span>
+              )}
+            </div>
             <p className="text-sm text-dnd-gold font-medium mt-0.5">
               {formatSpellLevelSchool(spell.level, spell.school)}
               {spell.ritual && ' (Ritual)'}

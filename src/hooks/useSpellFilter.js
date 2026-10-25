@@ -15,11 +15,19 @@ export function filterSpells(spells = [], filters = {}) {
     compS,
     compM,
     legacyMode = 'all', // 'all', 'modern', 'legacy'
+    source = 'all',
     isHomebrewOnly = false,
   } = filters;
   const searchLower = (search || '').trim().toLowerCase();
 
   return spells.filter((spell) => {
+    // 0. Source Filter
+    if (source && source !== 'all') {
+      if (spell.source?.toLowerCase() !== source.toLowerCase()) {
+        return false;
+      }
+    }
+
     // 1. Homebrew Only filter
     if (isHomebrewOnly && spell.source !== 'Homebrew' && spell.source !== 'Custom') {
       return false;

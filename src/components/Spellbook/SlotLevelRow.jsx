@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { Plus, Minus, RotateCcw } from 'lucide-react';
 
 function getLevelLabel(level) {
   const ordinals = ['th', 'st', 'nd', 'rd'];
@@ -10,21 +10,24 @@ function getLevelLabel(level) {
 
 export default function SlotLevelRow({
   level,
-  maxSlots,
+  maxSlots = 0,
   usedSlots = 0,
   isEditingMax,
   onUseSlot,
   onRestoreSlot,
   onSetSlotsUsed,
   onUpdateMaxSlot,
+  onResetMaxSlot,
 }) {
-  const remainingSlots = Math.max(0, maxSlots - usedSlots);
+  const safeMax = Number.isFinite(maxSlots) ? Math.max(0, maxSlots) : 0;
+  const safeUsed = Number.isFinite(usedSlots) ? Math.max(0, usedSlots) : 0;
+  const remainingSlots = Math.max(0, safeMax - safeUsed);
 
-  // Array of pips: index 0 to maxSlots - 1
+  // Array of pips: index 0 to safeMax - 1
   // If index < remainingSlots -> available (filled)
   // Else -> expended (empty)
   const pips = [];
-  for (let i = 0; i < maxSlots; i++) {
+  for (let i = 0; i < safeMax; i++) {
     const isAvailable = i < remainingSlots;
     pips.push(isAvailable);
   }
@@ -33,7 +36,7 @@ export default function SlotLevelRow({
     // Directly sets the remaining slot count to clicked pip (1-indexed).
     // If clicking current boundary star, toggles down by 1.
     const targetRemaining = remainingSlots === index + 1 ? index : index + 1;
-    const newUsed = Math.max(0, maxSlots - targetRemaining);
+    const newUsed = Math.max(0, safeMax - targetRemaining);
 
     if (onSetSlotsUsed) {
       onSetSlotsUsed(level, newUsed);
@@ -47,43 +50,77 @@ export default function SlotLevelRow({
   return (
     <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-dnd-card border border-dnd-border">
       {/* Persistent Left Column: Level Label, Count, and Edit Controls underneath */}
-      <div className="flex flex-col items-start justify-center flex-shrink-0 w-[100px]">
-        <div className="flex items-center space-x-1.5">
-          <span className="text-xs font-semibold text-dnd-ivory">
+      <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-[105px]">
+        <div className="flex items-center space-x-1.5 whitespace-nowrap">
+          <span className="text-xs font-semibold text-dnd-ivory whitespace-nowrap">
             {getLevelLabel(level)}
           </span>
-          <span className="text-[11px] font-medium px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700/80 text-dnd-pewter tabular-nums">
-            {remainingSlots} / {maxSlots}
-          </span>
+          {isEditingMax ? (
+            <div className="flex items-center space-x-1">
+              <span className="text-[11px] text-dnd-pewter tabular-nums">
+                {remainingSlots} /
+              </span>
+              <input
+                type="number"
+                min="0"
+                max="20"
+                value={safeMax}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  onUpdateMaxSlot?.(level, isNaN(val) ? 0 : Math.max(0, val));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.target.blur();
+                }}
+                aria-label={`Max ${getLevelLabel(level)} slots`}
+                className="w-9 bg-slate-950 border border-dnd-gold rounded px-1 py-0 text-center text-xs text-dnd-gold font-medium focus:outline-none"
+              />
+            </div>
+          ) : (
+            <span className="text-[11px] font-medium px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700/80 text-dnd-pewter tabular-nums whitespace-nowrap">
+              {remainingSlots} / {safeMax}
+            </span>
+          )}
         </div>
 
         {/* Persistent edit buttons under text so position never jumps */}
         {isEditingMax && (
-          <div className="flex items-center space-x-1 mt-1">
+          <div className="flex items-center space-x-0.5 mt-1">
             <button
               type="button"
               aria-label={`Decrease max ${getLevelLabel(level)} slots`}
-              onClick={() => onUpdateMaxSlot(level, Math.max(0, maxSlots - 1))}
-              className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
+              onClick={() => onUpdateMaxSlot(level, Math.max(0, safeMax - 1))}
+              className="p-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
               title="Decrease max slots"
             >
-              <Minus size={11} />
+              <Minus size={10} />
             </button>
             <button
               type="button"
               aria-label={`Increase max ${getLevelLabel(level)} slots`}
-              onClick={() => onUpdateMaxSlot(level, maxSlots + 1)}
-              className="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
+              onClick={() => onUpdateMaxSlot(level, safeMax + 1)}
+              className="p-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
               title="Increase max slots"
             >
-              <Plus size={11} />
+              <Plus size={10} />
             </button>
+            {onResetMaxSlot && (
+              <button
+                type="button"
+                aria-label={`Reset max ${getLevelLabel(level)} slots to default`}
+                onClick={() => onResetMaxSlot(level)}
+                className="p-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
+                title="Reset to 5e rules"
+              >
+                <RotateCcw size={10} />
+              </button>
+            )}
           </div>
         )}
       </div>
 
-      {/* Pips container: 4-pointed stars aligned left */}
-      <div className="flex flex-wrap gap-1 items-center justify-start flex-1 px-1.5">
+      {/* Pips container: 4-pointed stars arranged in a compact 4-column grid */}
+      <div className="grid grid-cols-4 gap-1 items-center justify-items-center flex-shrink-0 px-1">
         {pips.map((isAvailable, idx) => (
           <button
             key={idx}

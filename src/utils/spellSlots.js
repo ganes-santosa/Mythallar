@@ -1,5 +1,5 @@
 // Standard 5e Full Caster Spell Slots Table (Level 1 - 20)
-const FULL_CASTER_TABLE = {
+export const FULL_CASTER_TABLE = {
   1: { 1: 2 },
   2: { 1: 3 },
   3: { 1: 4, 2: 2 },
@@ -23,7 +23,7 @@ const FULL_CASTER_TABLE = {
 };
 
 // Half Caster Progression (Paladin, Ranger)
-const HALF_CASTER_TABLE = {
+export const HALF_CASTER_TABLE = {
   1: {},
   2: { 1: 2 },
   3: { 1: 3 },
@@ -47,7 +47,7 @@ const HALF_CASTER_TABLE = {
 };
 
 // Warlock Pact Magic Progression
-const WARLOCK_TABLE = {
+export const WARLOCK_TABLE = {
   1: { 1: 1 },
   2: { 1: 2 },
   3: { 2: 2 },
@@ -74,8 +74,112 @@ export const FULL_CASTERS = new Set(['Wizard', 'Cleric', 'Druid', 'Sorcerer', 'B
 export const HALF_CASTERS = new Set(['Paladin', 'Ranger']);
 
 /**
+ * Normalizes character classes array from character object or fallback.
+ */
+export function getCharacterClasses(character) {
+  if (!character) return [{ className: 'Wizard', level: 1 }];
+  if (Array.isArray(character.classes) && character.classes.length > 0) {
+    return character.classes.map((c) => ({
+      className: c.className || 'Wizard',
+      level: Math.max(1, Number(c.level) || 1),
+    }));
+  }
+  return [
+    {
+      className: character.className || 'Wizard',
+      level: Math.max(1, Number(character.level) || 1),
+    },
+  ];
+}
+
+/**
+ * Calculates total character level across all classes (capped at 20).
+ */
+export function getTotalCharacterLevel(character) {
+  const classes = getCharacterClasses(character);
+  const sum = classes.reduce((acc, c) => acc + c.level, 0);
+  return Math.min(20, Math.max(1, sum));
+}
+
+/**
+ * Calculates multiclass spellcasting slots breakdown and effective caster level.
+ */
+export function calculateMulticlassSpellSlots(character) {
+  const classes = getCharacterClasses(character);
+
+  // Check if pure single-class non-multiclass
+  if (classes.length === 1) {
+    const single = classes[0];
+    if (single.className === 'Warlock') {
+      return {
+        sharedSlots: {},
+        casterLevel: 0,
+        sources: [],
+        pactSlots: { ...WARLOCK_TABLE[single.level] },
+        pactSource: { className: 'Warlock', level: single.level, slots: { ...WARLOCK_TABLE[single.level] } },
+      };
+    }
+    const shared = calculateDefaultSlots(single.className, single.level);
+    return {
+      sharedSlots: shared,
+      casterLevel: FULL_CASTERS.has(single.className) ? single.level : HALF_CASTERS.has(single.className) ? Math.floor(single.level / 2) : 0,
+      sources: [
+        {
+          className: single.className,
+          level: single.level,
+          contribution: single.level,
+        },
+      ],
+      pactSlots: {},
+      pactSource: null,
+    };
+  }
+
+  // Multiclass 5e rules:
+  // Full Casters: 1 per level
+  // Paladin, Ranger: Math.floor(level / 2)
+  // Artificer: Math.ceil(level / 2)
+  // Warlock: tracked separately as Pact Magic
+  let totalCasterLevel = 0;
+  const sources = [];
+  let pactSlots = {};
+  let pactSource = null;
+
+  for (const c of classes) {
+    const { className, level } = c;
+    if (FULL_CASTERS.has(className)) {
+      totalCasterLevel += level;
+      sources.push({ className, level, contribution: level, type: 'Full Caster' });
+    } else if (HALF_CASTERS.has(className)) {
+      const contrib = Math.floor(level / 2);
+      totalCasterLevel += contrib;
+      sources.push({ className, level, contribution: contrib, type: 'Half Caster' });
+    } else if (className === 'Artificer') {
+      const contrib = Math.ceil(level / 2);
+      totalCasterLevel += contrib;
+      sources.push({ className, level, contribution: contrib, type: 'Artificer' });
+    } else if (className === 'Warlock') {
+      pactSlots = { ...WARLOCK_TABLE[level] };
+      pactSource = { className: 'Warlock', level, slots: pactSlots };
+    } else {
+      sources.push({ className, level, contribution: 0, type: 'Non-Caster' });
+    }
+  }
+
+  totalCasterLevel = Math.min(20, totalCasterLevel);
+  const sharedSlots = totalCasterLevel > 0 ? { ...(FULL_CASTER_TABLE[totalCasterLevel] || {}) } : {};
+
+  return {
+    sharedSlots,
+    casterLevel: totalCasterLevel,
+    sources,
+    pactSlots,
+    pactSource,
+  };
+}
+
+/**
  * Calculates default max spell slots per level for a given class and character level (1-20).
- * Returns Record<number, number> e.g. { 1: 4, 2: 3, 3: 2 }
  */
 export function calculateDefaultSlots(className, level) {
   const lvl = Math.min(20, Math.max(1, Number(level) || 1));
@@ -94,7 +198,6 @@ export function calculateDefaultSlots(className, level) {
   }
 
   if (normClass === 'Artificer') {
-    // Artificer gets spells at level 1: Math.ceil(level / 2) as effective caster level
     const effLvl = Math.max(1, Math.ceil(lvl / 2));
     return { ...HALF_CASTER_TABLE[effLvl * 2] || HALF_CASTER_TABLE[2] };
   }
@@ -104,11 +207,6 @@ export function calculateDefaultSlots(className, level) {
 
 /**
  * Calculates standard 5e max prepared spells for prepared casters.
- * Cleric / Druid: Level + Mod (default mod assumption: +3). Minimum 1.
- * Wizard: Level + Int Mod (default mod: +3). Minimum 1.
- * Paladin: Math.floor(Level / 2) + Cha Mod (default mod: +3). Minimum 1.
- * Artificer: Math.max(1, Math.floor(Level / 2)) + Int Mod (default mod: +3). Minimum 1.
- * Non-prepared casters (Sorcerer, Bard, Warlock, Ranger) or martials return null (known spells / all known prepared).
  */
 export function calculateDefaultMaxPrepared(className, level, abilityMod = 3) {
   const lvl = Math.min(20, Math.max(1, Number(level) || 1));
@@ -130,24 +228,74 @@ export function calculateDefaultMaxPrepared(className, level, abilityMod = 3) {
 }
 
 /**
- * Resolves effective maximum prepared spells for a character.
+ * Resolves effective maximum prepared spells and per-class breakdown for a character.
  */
-export function getEffectiveMaxPrepared(character) {
-  if (!character) return null;
+export function getEffectiveMaxPreparedInfo(character) {
+  if (!character) return { total: null, breakdown: [], isCustom: false };
+
   if (typeof character.customMaxPrepared === 'number') {
-    return character.customMaxPrepared;
+    return {
+      total: character.customMaxPrepared,
+      breakdown: [],
+      isCustom: true,
+    };
   }
-  return calculateDefaultMaxPrepared(character.className, character.level);
+
+  const classes = getCharacterClasses(character);
+  const breakdown = [];
+  let total = 0;
+  let hasPreparedCaster = false;
+
+  for (const c of classes) {
+    const defaultMod = 3;
+    const abilityName =
+      c.className === 'Wizard' || c.className === 'Artificer'
+        ? 'INT'
+        : c.className === 'Cleric' || c.className === 'Druid'
+        ? 'WIS'
+        : 'CHA';
+
+    const preparedLimit = calculateDefaultMaxPrepared(c.className, c.level, defaultMod);
+    if (preparedLimit !== null) {
+      hasPreparedCaster = true;
+      total += preparedLimit;
+      breakdown.push({
+        className: c.className,
+        level: c.level,
+        amount: preparedLimit,
+        formula: `${c.className}: Level ${c.level} + ${defaultMod} ${abilityName}`,
+      });
+    }
+  }
+
+  return {
+    total: hasPreparedCaster ? total : null,
+    breakdown,
+    isCustom: false,
+  };
+}
+
+export function getEffectiveMaxPrepared(character) {
+  const info = getEffectiveMaxPreparedInfo(character);
+  return info.total;
 }
 
 /**
- * Resolves effective maximum slots by merging defaults with user custom slot overrides.
+ * Resolves effective maximum shared slots by merging calculated defaults with user custom slot overrides.
  */
-export function getEffectiveMaxSlots(className, level, customSlots = {}) {
-  const defaults = calculateDefaultSlots(className, level);
+export function getEffectiveMaxSlots(className, level, customSlots = {}, character = null) {
+  let defaults = {};
+
+  if (character) {
+    const multi = calculateMulticlassSpellSlots(character);
+    defaults = multi.sharedSlots;
+  } else {
+    defaults = calculateDefaultSlots(className, level);
+  }
+
   const result = { ...defaults };
 
-  for (const [lvlKey, maxVal] of Object.entries(customSlots)) {
+  for (const [lvlKey, maxVal] of Object.entries(customSlots || {})) {
     const numLevel = Number(lvlKey);
     const numMax = Number(maxVal);
     if (numMax > 0) {
