@@ -27,7 +27,7 @@ export default function ProfileSelector({
         >
           {profiles.map((p) => (
             <option key={p.id} value={p.id} className="bg-dnd-panel text-slate-200">
-              Hero: {p.name}
+              {p.name}
             </option>
           ))}
         </select>

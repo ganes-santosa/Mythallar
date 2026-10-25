@@ -22,7 +22,7 @@ describe('CharacterHeader', () => {
       />
     );
 
-    expect(screen.getByText('Mordenkainen')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Mordenkainen' })).toBeInTheDocument();
     expect(screen.getByDisplayValue('Wizard')).toBeInTheDocument();
     expect(screen.getByText('Lvl 5')).toBeInTheDocument();
   });

@@ -49,7 +49,7 @@ describe('App End-to-End Integration', () => {
     });
 
     expect(screen.getByText(/D&D 5e Spellbook/i)).toBeInTheDocument();
-    expect(screen.getByText('Mordenkainen')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Mordenkainen' })).toBeInTheDocument();
   });
 
   it('allows clicking a spell to expand accordion and adding it to spellbook', async () => {
