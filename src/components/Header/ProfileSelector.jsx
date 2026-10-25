@@ -16,16 +16,13 @@ export default function ProfileSelector({
 
   return (
     <div className="flex items-center space-x-1.5">
-      {/* Icon-only Character Profile Dropdown */}
-      <div
-        className="relative flex items-center justify-center p-1.5 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors"
-        title="Switch character profile"
-      >
-        <User size={15} className="text-dnd-gold pointer-events-none" />
+      {/* Character Profile Dropdown */}
+      <div className="flex items-center space-x-1.5 bg-dnd-card border border-dnd-border hover:border-dnd-gold rounded-lg px-2.5 py-1 text-xs transition-colors">
+        <User size={13} className="text-dnd-gold flex-shrink-0" />
         <select
           value={activeId}
           onChange={(e) => onSelectProfile(e.target.value)}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          className="bg-transparent text-slate-200 focus:outline-none cursor-pointer pr-1 max-w-[140px] sm:max-w-[190px] truncate"
           aria-label="Select Character Profile"
         >
           {profiles.map((p) => (
