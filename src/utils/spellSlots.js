@@ -103,6 +103,44 @@ export function calculateDefaultSlots(className, level) {
 }
 
 /**
+ * Calculates standard 5e max prepared spells for prepared casters.
+ * Cleric / Druid: Level + Mod (default mod assumption: +3). Minimum 1.
+ * Wizard: Level + Int Mod (default mod: +3). Minimum 1.
+ * Paladin: Math.floor(Level / 2) + Cha Mod (default mod: +3). Minimum 1.
+ * Artificer: Math.max(1, Math.floor(Level / 2)) + Int Mod (default mod: +3). Minimum 1.
+ * Non-prepared casters (Sorcerer, Bard, Warlock, Ranger) or martials return null (known spells / all known prepared).
+ */
+export function calculateDefaultMaxPrepared(className, level, abilityMod = 3) {
+  const lvl = Math.min(20, Math.max(1, Number(level) || 1));
+  const normClass = className ? className.trim() : '';
+
+  if (normClass === 'Cleric' || normClass === 'Druid' || normClass === 'Wizard') {
+    return Math.max(1, lvl + abilityMod);
+  }
+
+  if (normClass === 'Paladin') {
+    return Math.max(1, Math.floor(lvl / 2) + abilityMod);
+  }
+
+  if (normClass === 'Artificer') {
+    return Math.max(1, Math.floor(lvl / 2) + abilityMod);
+  }
+
+  return null;
+}
+
+/**
+ * Resolves effective maximum prepared spells for a character.
+ */
+export function getEffectiveMaxPrepared(character) {
+  if (!character) return null;
+  if (typeof character.customMaxPrepared === 'number') {
+    return character.customMaxPrepared;
+  }
+  return calculateDefaultMaxPrepared(character.className, character.level);
+}
+
+/**
  * Resolves effective maximum slots by merging defaults with user custom slot overrides.
  */
 export function getEffectiveMaxSlots(className, level, customSlots = {}) {

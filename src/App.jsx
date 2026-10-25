@@ -357,7 +357,7 @@ export default function App() {
             <h1 className="text-lg font-bold text-slate-100 tracking-tight">
               D&D 5e Spellbook
             </h1>
-            <span className="hidden sm:inline text-[11px] text-dnd-gold font-mono font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
+            <span className="hidden sm:inline text-[11px] text-dnd-gold font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
               Official 5e (2024 &amp; Legacy) + Homebrew
             </span>
           </div>

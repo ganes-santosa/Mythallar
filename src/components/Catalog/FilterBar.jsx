@@ -191,7 +191,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
         <button
           type="button"
           onClick={() => update('compV', !filters.compV)}
-          className={`px-2 py-1 rounded border font-mono font-bold transition-colors ${
+          className={`px-2 py-1 rounded border font-bold transition-colors ${
             filters.compV
               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
               : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
@@ -204,7 +204,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
         <button
           type="button"
           onClick={() => update('compS', !filters.compS)}
-          className={`px-2 py-1 rounded border font-mono font-bold transition-colors ${
+          className={`px-2 py-1 rounded border font-bold transition-colors ${
             filters.compS
               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
               : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
@@ -217,7 +217,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal 
         <button
           type="button"
           onClick={() => update('compM', !filters.compM)}
-          className={`px-2 py-1 rounded border font-mono font-bold transition-colors ${
+          className={`px-2 py-1 rounded border font-bold transition-colors ${
             filters.compM
               ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
               : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'

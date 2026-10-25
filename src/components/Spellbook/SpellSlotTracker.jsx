@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Moon, Sun, Settings2, Sparkles } from 'lucide-react';
+import { Moon, Sun, Settings2, Sparkles, Check, X } from 'lucide-react';
 import { getEffectiveMaxSlots } from '../../utils/spellSlots';
 import SlotLevelRow from './SlotLevelRow';
 
@@ -12,6 +12,7 @@ export default function SpellSlotTracker({
   onShortRest,
 }) {
   const [isEditingMax, setIsEditingMax] = useState(false);
+  const [showLongRestConfirm, setShowLongRestConfirm] = useState(false);
 
   const effectiveSlots = getEffectiveMaxSlots(
     character?.className,
@@ -26,6 +27,11 @@ export default function SpellSlotTracker({
         .map(Number)
         .filter((lvl) => effectiveSlots[lvl] > 0)
         .sort((a, b) => a - b);
+
+  const handleConfirmLongRest = () => {
+    onLongRest();
+    setShowLongRestConfirm(false);
+  };
 
   return (
     <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel border border-dnd-border">
@@ -58,24 +64,48 @@ export default function SpellSlotTracker({
             <button
               type="button"
               onClick={onShortRest}
-              className="flex items-center px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
+              className="flex items-center px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
               title="Reset Pact Magic slots on Short Rest"
             >
-              <Sun size={13} className="mr-1 text-amber-400" />
+              <Sun size={12} className="mr-1 text-amber-400" />
               Short Rest
             </button>
           )}
 
-          {/* Long Rest */}
-          <button
-            type="button"
-            onClick={onLongRest}
-            className="flex items-center px-2.5 py-1 rounded bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/60 transition-colors font-medium"
-            title="Reset all spell slots on Long Rest"
-          >
-            <Moon size={13} className="mr-1 text-blue-400" />
-            Long Rest
-          </button>
+          {/* Long Rest with Confirmation Popup */}
+          {showLongRestConfirm ? (
+            <div className="flex items-center space-x-1 bg-slate-900 px-2 py-0.5 rounded border border-dnd-gold text-xs animate-in fade-in">
+              <span className="text-[11px] text-slate-300">Long Rest?</span>
+              <button
+                type="button"
+                aria-label="Confirm Long Rest"
+                onClick={handleConfirmLongRest}
+                className="p-0.5 text-emerald-400 hover:text-emerald-300"
+                title="Confirm long rest"
+              >
+                <Check size={12} />
+              </button>
+              <button
+                type="button"
+                aria-label="Cancel Long Rest"
+                onClick={() => setShowLongRestConfirm(false)}
+                className="p-0.5 text-red-400 hover:text-red-300"
+                title="Cancel"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowLongRestConfirm(true)}
+              className="flex items-center px-2 py-0.5 rounded bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/60 transition-colors font-medium"
+              title="Reset all spell slots on Long Rest"
+            >
+              <Moon size={12} className="mr-1 text-blue-400" />
+              Long Rest
+            </button>
+          )}
         </div>
       </div>
 

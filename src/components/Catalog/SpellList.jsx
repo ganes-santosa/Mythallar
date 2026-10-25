@@ -9,7 +9,7 @@ export default function SpellList({
 }) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex justify-between items-center py-1 text-xs text-slate-400 font-mono">
+      <div className="flex justify-between items-center py-1 text-xs text-slate-400 font-medium">
         <span>Showing {spells.length} spells</span>
       </div>
 

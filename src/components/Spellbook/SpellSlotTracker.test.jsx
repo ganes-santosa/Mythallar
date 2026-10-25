@@ -73,7 +73,7 @@ describe('SpellSlotTracker', () => {
     expect(handleRestore).toHaveBeenCalledWith(1);
   });
 
-  it('calls onLongRest when Long Rest button is clicked', () => {
+  it('calls onLongRest with confirmation prompt when Long Rest button is clicked', () => {
     const handleLongRest = vi.fn();
     render(
       <SpellSlotTracker
@@ -88,6 +88,10 @@ describe('SpellSlotTracker', () => {
 
     const restBtn = screen.getByRole('button', { name: /Long Rest/i });
     fireEvent.click(restBtn);
+    expect(screen.getByText(/Long Rest\?/i)).toBeInTheDocument();
+
+    const confirmBtn = screen.getByLabelText(/Confirm Long Rest/i);
+    fireEvent.click(confirmBtn);
     expect(handleLongRest).toHaveBeenCalled();
   });
 

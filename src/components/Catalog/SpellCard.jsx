@@ -133,7 +133,7 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
           <span className={`text-[11px] px-1.5 py-0.2 rounded border font-medium ${schoolColor}`}>
             {spell.school}
           </span>
-          <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-300 font-mono">
+          <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-300 font-medium">
             {spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`}
           </span>
           <ChevronDown

@@ -38,7 +38,7 @@ export default function SpellbookLevelGroup({
           <span>{getLevelTitle(level)}</span>
         </div>
 
-        <span className="text-slate-400 font-mono font-normal">
+        <span className="text-slate-400 font-normal">
           {level > 0 ? `${preparedCount} / ${spells.length} prepared` : `${spells.length} cantrips`}
         </span>
       </button>

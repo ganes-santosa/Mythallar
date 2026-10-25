@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, Wand2, Trash2, ChevronDown } from 'lucide-react';
+import { Star, Wand2, Trash2, ChevronDown, BookCheck } from 'lucide-react';
 
 export default function SpellbookCard({
   spell,
@@ -27,9 +27,11 @@ export default function SpellbookCard({
 
   return (
     <div
-      className={`mb-1.5 rounded-lg bg-dnd-card border transition-all duration-200 select-none overflow-hidden ${
-        isExpanded ? 'border-dnd-gold shadow-md shadow-black/50' : 'border-dnd-border hover:border-dnd-gold/60'
-      }`}
+      className={`mb-1.5 rounded-lg border transition-all duration-200 select-none overflow-hidden ${
+        isPrepared
+          ? 'bg-[#37444F] border-[#617B8F] shadow-sm'
+          : 'bg-dnd-card border-dnd-border hover:border-dnd-gold/60'
+      } ${isExpanded ? 'ring-1 ring-dnd-pewter shadow-md shadow-black/40' : ''}`}
     >
       <div
         role="button"
@@ -41,36 +43,40 @@ export default function SpellbookCard({
             toggleExpand();
           }
         }}
-        className="flex items-center justify-between p-2 sm:px-2.5 sm:py-2 hover:bg-dnd-hover transition-colors cursor-pointer group"
+        className={`flex items-center justify-between p-2 sm:px-2.5 sm:py-2 transition-colors cursor-pointer group ${
+          isPrepared ? 'hover:bg-[#3E4C58]' : 'hover:bg-dnd-hover'
+        }`}
       >
         <div className="flex items-center space-x-2.5 overflow-hidden">
-          {/* Prepared Star Toggle (Only for level 1+ spells) */}
+          {/* Star indicator */}
           {spell.level > 0 ? (
             <button
               type="button"
-              aria-label={`Toggle Prepared for ${spell.name}`}
+              aria-label={`Star ${spell.name}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onTogglePrepare(spell.id);
               }}
               className={`p-1 rounded transition-colors ${
                 isPrepared
-                  ? 'text-dnd-gold hover:text-dnd-gold-light'
-                  : 'text-slate-600 hover:text-slate-400'
+                  ? 'text-dnd-gold-light hover:text-amber-300'
+                  : 'text-slate-500 hover:text-slate-300'
               }`}
               title={isPrepared ? 'Prepared (click to unprepare)' : 'Not prepared (click to prepare)'}
             >
               <Star size={15} fill={isPrepared ? 'currentColor' : 'none'} />
             </button>
           ) : (
-            <span className="p-1 text-slate-600" title="Cantrips are always prepared">
+            <span className="p-1 text-slate-500" title="Cantrips are always prepared">
               <Star size={15} className="opacity-30" />
             </span>
           )}
 
           <div>
             <div className="flex items-center space-x-1.5">
-              <span className="font-semibold text-sm text-slate-100 group-hover:text-dnd-gold-light transition-colors truncate">
+              <span className={`font-semibold text-sm transition-colors truncate ${
+                isPrepared ? 'text-white' : 'text-slate-100 group-hover:text-dnd-gold-light'
+              }`}>
                 {spell.name}
               </span>
               {spell.isLegacy && (
@@ -90,7 +96,7 @@ export default function SpellbookCard({
                 </span>
               )}
             </div>
-            <div className="flex items-center space-x-2 text-[11px] text-slate-400 mt-0.5">
+            <div className="flex items-center space-x-2 text-[11px] text-slate-300/80 mt-0.5">
               <span>{spell.time}</span>
               <span>•</span>
               <span>{spell.range}</span>
@@ -101,6 +107,24 @@ export default function SpellbookCard({
         </div>
 
         <div className="flex items-center space-x-1.5" onClick={(e) => e.stopPropagation()}>
+          {/* Prepare Button (Level 1+ spells) next to Cast */}
+          {spell.level > 0 && (
+            <button
+              type="button"
+              aria-label={`Toggle Prepared for ${spell.name}`}
+              onClick={() => onTogglePrepare(spell.id)}
+              className={`flex items-center px-2 py-1 rounded text-xs font-semibold border transition-colors ${
+                isPrepared
+                  ? 'bg-dnd-gold text-slate-100 border-dnd-gold-light hover:bg-[#5a7384]'
+                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-dnd-pewter hover:text-slate-100'
+              }`}
+              title={isPrepared ? 'Click to unprepare spell' : 'Click to prepare spell'}
+            >
+              <BookCheck size={12} className="mr-1" />
+              {isPrepared ? 'Prepared' : 'Prepare'}
+            </button>
+          )}
+
           {/* Quick Cast Button */}
           <button
             type="button"
@@ -118,7 +142,7 @@ export default function SpellbookCard({
             type="button"
             aria-label={`Remove ${spell.name} from spellbook`}
             onClick={() => onRemove(spell.id)}
-            className="p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+            className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
             title="Remove from spellbook"
           >
             <Trash2 size={14} />

@@ -113,9 +113,11 @@ describe('App End-to-End Integration', () => {
       expect(screen.getByText('1 / 2')).toBeInTheDocument();
     });
 
-    // Click Long Rest
+    // Click Long Rest and confirm
     const restBtn = screen.getByRole('button', { name: /Long Rest/i });
     fireEvent.click(restBtn);
+    const confirmBtn = screen.getByLabelText(/Confirm Long Rest/i);
+    fireEvent.click(confirmBtn);
 
     // Should reset to 2 / 2
     await waitFor(() => {

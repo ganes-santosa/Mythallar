@@ -58,7 +58,7 @@ describe('CharacterHeader', () => {
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ className: 'Sorcerer' }));
   });
 
-  it('levels up with confirmation prompt', () => {
+  it('levels up with confirmation prompt and allows direct editing of level', () => {
     const handleUpdate = vi.fn();
     render(
       <CharacterHeader
@@ -72,15 +72,44 @@ describe('CharacterHeader', () => {
       />
     );
 
-    // Click Edit Level
+    // Direct editing level via edit pencil button
     fireEvent.click(screen.getByLabelText(/Edit Level/i));
+    const levelInput = screen.getByRole('spinbutton');
+    fireEvent.change(levelInput, { target: { value: '8' } });
+    fireEvent.click(screen.getByLabelText(/Save Level/i));
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ level: 8 }));
 
-    // Click +1 Level Up
+    // Click Level Up plus button directly next to it
     fireEvent.click(screen.getByLabelText(/Level Up/i));
+    expect(screen.getByText(/Level Up\?/i)).toBeInTheDocument();
 
     // Confirm Level Up
     fireEvent.click(screen.getByLabelText(/Confirm Level Up/i));
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ level: 6 }));
+  });
+
+  it('allows editing max prepared spells', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
+    const prepInput = screen.getByPlaceholderText('Max');
+    fireEvent.change(prepInput, { target: { value: '12' } });
+    fireEvent.click(screen.getByLabelText(/Save Max Prepared/i));
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ customMaxPrepared: 12 })
+    );
   });
 
   it('triggers onExport when export button clicked', () => {

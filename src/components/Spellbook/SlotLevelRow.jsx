@@ -37,18 +37,19 @@ export default function SlotLevelRow({
   };
 
   return (
-    <div className="flex items-center justify-between p-1.5 rounded bg-dnd-card border border-dnd-border">
-      <div className="w-20">
-        <span className="text-xs font-semibold text-slate-200 block">
+    <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-dnd-card border border-dnd-border">
+      {/* Tidy, aligned level label and count */}
+      <div className="flex items-center space-x-2 flex-shrink-0">
+        <span className="text-xs font-semibold text-dnd-ivory">
           {getLevelLabel(level)}
         </span>
-        <span className="text-[11px] text-slate-400 font-mono">
+        <span className="text-[11px] font-medium px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700/80 text-dnd-pewter">
           {remainingSlots} / {maxSlots}
         </span>
       </div>
 
-      {/* Pips container: orderly grid without space-x margin asymmetry */}
-      <div className="flex flex-wrap gap-1.5 items-center justify-start flex-1 px-3">
+      {/* Pips container: orderly layout */}
+      <div className="flex flex-wrap gap-1.5 items-center justify-end flex-1 pl-1">
         {pips.map((isAvailable, idx) => (
           <button
             key={idx}
@@ -71,7 +72,7 @@ export default function SlotLevelRow({
 
       {/* Edit max controls */}
       {isEditingMax && (
-        <div className="flex items-center space-x-1">
+        <div className="flex items-center space-x-1 pl-1.5 border-l border-dnd-border">
           <button
             type="button"
             aria-label={`Decrease max ${getLevelLabel(level)} slots`}
