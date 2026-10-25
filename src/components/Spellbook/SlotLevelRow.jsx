@@ -15,6 +15,7 @@ export default function SlotLevelRow({
   isEditingMax,
   onUseSlot,
   onRestoreSlot,
+  onSetSlotsUsed,
   onUpdateMaxSlot,
 }) {
   const remainingSlots = Math.max(0, maxSlots - usedSlots);
@@ -29,17 +30,24 @@ export default function SlotLevelRow({
   }
 
   const handlePipClick = (index, isAvailable) => {
-    if (isAvailable) {
-      onUseSlot(level);
+    // Directly sets the remaining slot count to clicked pip (1-indexed).
+    // If clicking current boundary star, toggles down by 1.
+    const targetRemaining = remainingSlots === index + 1 ? index : index + 1;
+    const newUsed = Math.max(0, maxSlots - targetRemaining);
+
+    if (onSetSlotsUsed) {
+      onSetSlotsUsed(level, newUsed);
+    } else if (isAvailable) {
+      onUseSlot?.(level);
     } else {
-      onRestoreSlot(level);
+      onRestoreSlot?.(level);
     }
   };
 
   return (
     <div className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-dnd-card border border-dnd-border">
       {/* Persistent Left Column: Level Label, Count, and Edit Controls underneath */}
-      <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-[76px]">
+      <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-[74px]">
         <div className="flex items-center space-x-1.5">
           <span className="text-xs font-semibold text-dnd-ivory">
             {getLevelLabel(level)}
@@ -74,8 +82,8 @@ export default function SlotLevelRow({
         )}
       </div>
 
-      {/* Pips container: 4-pointed stars with generous clickable hitbox */}
-      <div className="flex flex-wrap gap-1 items-center justify-end flex-1 pl-1">
+      {/* Pips container: 4-pointed stars aligned left */}
+      <div className="flex flex-wrap gap-1 items-center justify-start flex-1 px-1.5">
         {pips.map((isAvailable, idx) => (
           <button
             key={idx}
@@ -86,15 +94,15 @@ export default function SlotLevelRow({
                 : `Restore ${getLevelLabel(level)} slot`
             }
             onClick={() => handlePipClick(idx, isAvailable)}
-            className="w-6 h-6 flex items-center justify-center rounded hover:bg-slate-800/80 active:scale-90 transition-all flex-shrink-0"
-            title={isAvailable ? 'Click to expend slot' : 'Click to restore slot'}
+            className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800/80 active:scale-90 transition-all flex-shrink-0"
+            title={`Set ${getLevelLabel(level)} slots to ${idx + 1}`}
           >
             {/* Four-pointed star SVG */}
             <svg
               viewBox="0 0 24 24"
-              className={`w-5 h-5 transition-all ${
+              className={`w-3.5 h-3.5 transition-all ${
                 isAvailable
-                  ? 'text-dnd-gold drop-shadow-[0_0_5px_rgba(75,97,112,0.7)]'
+                  ? 'text-dnd-gold drop-shadow-[0_0_4px_rgba(75,97,112,0.6)]'
                   : 'text-slate-600 hover:text-slate-400'
               }`}
               fill={isAvailable ? 'currentColor' : 'none'}

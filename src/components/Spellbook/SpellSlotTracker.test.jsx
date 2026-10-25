@@ -73,6 +73,26 @@ describe('SpellSlotTracker', () => {
     expect(handleRestore).toHaveBeenCalledWith(1);
   });
 
+  it('directly changes remaining slots to pip clicked via onSetSlotsUsed', () => {
+    const handleSetSlotsUsed = vi.fn();
+    render(
+      <SpellSlotTracker
+        character={mockCharacter}
+        onUseSlot={vi.fn()}
+        onRestoreSlot={vi.fn()}
+        onSetSlotsUsed={handleSetSlotsUsed}
+        onUpdateMaxSlot={vi.fn()}
+        onLongRest={vi.fn()}
+        onShortRest={vi.fn()}
+      />
+    );
+
+    // Click 2nd pip on 1st level (max 4 slots, clicking index 1 -> targetRemaining 2 -> used 2)
+    const pips = screen.getAllByLabelText(/Use 1st Level slot/i);
+    fireEvent.click(pips[1]);
+    expect(handleSetSlotsUsed).toHaveBeenCalledWith(1, 2);
+  });
+
   it('calls onLongRest with confirmation prompt when Long Rest button is clicked', () => {
     const handleLongRest = vi.fn();
     render(

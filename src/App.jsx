@@ -230,14 +230,15 @@ export default function App() {
 
   // --- Spell Slot Actions ---
   const handleUseSlot = useCallback(
-    (level) => {
+    (level, explicitUsed) => {
       if (!activeCharacter) return;
-      const used = activeCharacter.slotsUsed?.[level] || 0;
+      const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
+      const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : currentUsed + 1;
       updateActiveCharacter({
         ...activeCharacter,
         slotsUsed: {
           ...activeCharacter.slotsUsed,
-          [level]: used + 1,
+          [level]: nextUsed,
         },
       });
     },
@@ -245,15 +246,29 @@ export default function App() {
   );
 
   const handleRestoreSlot = useCallback(
-    (level) => {
+    (level, explicitUsed) => {
       if (!activeCharacter) return;
-      const used = activeCharacter.slotsUsed?.[level] || 0;
-      if (used <= 0) return;
+      const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
+      const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : Math.max(0, currentUsed - 1);
       updateActiveCharacter({
         ...activeCharacter,
         slotsUsed: {
           ...activeCharacter.slotsUsed,
-          [level]: Math.max(0, used - 1),
+          [level]: nextUsed,
+        },
+      });
+    },
+    [activeCharacter, updateActiveCharacter]
+  );
+
+  const handleSetSlotsUsed = useCallback(
+    (level, used) => {
+      if (!activeCharacter) return;
+      updateActiveCharacter({
+        ...activeCharacter,
+        slotsUsed: {
+          ...activeCharacter.slotsUsed,
+          [level]: Math.max(0, used),
         },
       });
     },
@@ -413,6 +428,7 @@ export default function App() {
             character={activeCharacter}
             onUseSlot={handleUseSlot}
             onRestoreSlot={handleRestoreSlot}
+            onSetSlotsUsed={handleSetSlotsUsed}
             onUpdateMaxSlot={handleUpdateMaxSlot}
             onLongRest={handleLongRest}
             onShortRest={handleShortRest}

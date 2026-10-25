@@ -7,6 +7,7 @@ export default function SpellSlotTracker({
   character,
   onUseSlot,
   onRestoreSlot,
+  onSetSlotsUsed,
   onUpdateMaxSlot,
   onLongRest,
   onShortRest,
@@ -244,6 +245,7 @@ export default function SpellSlotTracker({
                   isEditingMax={isEditingMax}
                   onUseSlot={onUseSlot}
                   onRestoreSlot={onRestoreSlot}
+                  onSetSlotsUsed={onSetSlotsUsed}
                   onUpdateMaxSlot={onUpdateMaxSlot}
                 />
               ))}

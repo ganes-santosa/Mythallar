@@ -264,8 +264,8 @@ export default function CharacterHeader({
         </div>
       </div>
 
-      {/* Right: Character Icon Dropdown, Export, Import */}
-      <div className="flex items-center space-x-2 text-xs flex-shrink-0">
+      {/* Right Column: Character Switcher/Creator on Top, Export/Import on Bottom */}
+      <div className="flex flex-col items-end space-y-1.5 text-xs flex-shrink-0">
         <ProfileSelector
           profiles={profiles}
           activeId={activeCharacter.id}
@@ -273,25 +273,27 @@ export default function CharacterHeader({
           onCreateProfile={onCreateProfile}
         />
 
-        <button
-          type="button"
-          onClick={onExport}
-          className="flex items-center px-2.5 py-1 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors"
-          title="Export character spellbook as JSON"
-        >
-          <Download size={13} className="mr-1" />
-          Export
-        </button>
+        <div className="flex items-center space-x-1.5">
+          <button
+            type="button"
+            onClick={onExport}
+            className="flex items-center px-2 py-0.5 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors text-[11px]"
+            title="Export character spellbook as JSON"
+          >
+            <Download size={12} className="mr-1" />
+            Export
+          </button>
 
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center px-2.5 py-1 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors"
-          title="Import character spellbook from JSON"
-        >
-          <Upload size={13} className="mr-1" />
-          Import
-        </button>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center px-2 py-0.5 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors text-[11px]"
+            title="Import character spellbook from JSON"
+          >
+            <Upload size={12} className="mr-1" />
+            Import
+          </button>
+        </div>
 
         <input
           ref={fileInputRef}
