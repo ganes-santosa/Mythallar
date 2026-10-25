@@ -1,7 +1,12 @@
 import React from 'react';
 import SpellCard from './SpellCard';
 
-export default function SpellList({ spells, spellbookSpellIds = new Set(), onSelectSpell }) {
+export default function SpellList({
+  spells,
+  spellbookSpellIds = new Set(),
+  onSelectSpell,
+  onAddToSpellbook,
+}) {
   return (
     <div className="flex flex-col h-full">
       <div className="flex justify-between items-center py-2 text-xs text-slate-400 font-mono">
@@ -20,6 +25,7 @@ export default function SpellList({ spells, spellbookSpellIds = new Set(), onSel
               key={spell.id}
               spell={spell}
               onSelect={onSelectSpell}
+              onAddToSpellbook={onAddToSpellbook}
               isInSpellbook={spellbookSpellIds.has(spell.id)}
             />
           ))

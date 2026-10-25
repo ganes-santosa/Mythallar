@@ -47,8 +47,8 @@ export default function SlotLevelRow({
         </span>
       </div>
 
-      {/* Pips container */}
-      <div className="flex items-center space-x-1.5 flex-wrap flex-1 justify-center px-2">
+      {/* Pips container: orderly grid without space-x margin asymmetry */}
+      <div className="flex flex-wrap gap-1.5 items-center justify-start flex-1 px-3">
         {pips.map((isAvailable, idx) => (
           <button
             key={idx}
@@ -59,10 +59,10 @@ export default function SlotLevelRow({
                 : `Restore ${getLevelLabel(level)} slot`
             }
             onClick={() => handlePipClick(idx, isAvailable)}
-            className={`w-5 h-5 rounded transition-all transform active:scale-90 ${
+            className={`w-5 h-5 rounded-md transition-all transform active:scale-90 flex-shrink-0 ${
               isAvailable
-                ? 'bg-dnd-gold border border-dnd-gold-light shadow-[0_0_8px_rgba(224,168,56,0.3)] hover:bg-amber-400'
-                : 'bg-slate-800/80 border border-slate-700 hover:border-slate-500'
+                ? 'bg-dnd-gold border border-dnd-gold-light shadow-[0_0_8px_rgba(224,168,56,0.25)] hover:bg-amber-400'
+                : 'bg-slate-800 border border-slate-700/80 hover:border-slate-500'
             }`}
             title={isAvailable ? 'Click to expend slot' : 'Click to restore slot'}
           />

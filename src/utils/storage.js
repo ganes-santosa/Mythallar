@@ -1,4 +1,32 @@
 export const STORAGE_KEY = 'dnd_spellbook_data';
+export const CUSTOM_SPELLS_KEY = 'dnd_custom_spells';
+
+/**
+ * Loads custom user spells from localStorage.
+ */
+export function loadCustomSpells() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_SPELLS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('Failed to parse custom spells', err);
+    return [];
+  }
+}
+
+/**
+ * Persists custom user spells to localStorage.
+ */
+export function saveCustomSpells(spells) {
+  try {
+    if (!Array.isArray(spells)) return;
+    localStorage.setItem(CUSTOM_SPELLS_KEY, JSON.stringify(spells));
+  } catch (err) {
+    console.error('Error saving custom spells', err);
+  }
+}
 
 /**
  * Creates a blank default character profile.

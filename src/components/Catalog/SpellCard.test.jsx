@@ -22,11 +22,25 @@ describe('SpellCard', () => {
     expect(screen.getByText('Evocation')).toBeInTheDocument();
   });
 
-  it('triggers onSelect when card clicked', () => {
-    const handleSelect = vi.fn();
-    render(<SpellCard spell={mockSpell} onSelect={handleSelect} isInSpellbook={false} />);
+  it('toggles accordion dropdown with spell details on click', () => {
+    const spellWithDetails = {
+      ...mockSpell,
+      entries: ['A bright streak flashes from your finger.'],
+      higherLevels: 'Damage increases by 1d6.',
+    };
+    render(<SpellCard spell={spellWithDetails} onSelect={vi.fn()} isInSpellbook={false} />);
+    
+    // Initially accordion details are hidden
+    expect(screen.queryByText(/A bright streak flashes/i)).not.toBeInTheDocument();
+
+    // Click card to expand accordion
     fireEvent.click(screen.getByText('Fireball'));
-    expect(handleSelect).toHaveBeenCalledWith(mockSpell);
+    expect(screen.getByText(/A bright streak flashes/i)).toBeInTheDocument();
+    expect(screen.getByText(/Damage increases by 1d6/i)).toBeInTheDocument();
+
+    // Click card again to collapse
+    fireEvent.click(screen.getByText('Fireball'));
+    expect(screen.queryByText(/A bright streak flashes/i)).not.toBeInTheDocument();
   });
 
   it('shows in-spellbook indicator when added', () => {

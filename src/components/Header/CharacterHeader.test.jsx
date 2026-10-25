@@ -22,12 +22,12 @@ describe('CharacterHeader', () => {
       />
     );
 
-    expect(screen.getByDisplayValue('Mordenkainen')).toBeInTheDocument();
+    expect(screen.getByText('Mordenkainen')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Wizard')).toBeInTheDocument();
     expect(screen.getByLabelText(/Character Level/i)).toHaveValue('5');
   });
 
-  it('triggers onUpdateCharacter when name or class changed', () => {
+  it('triggers onUpdateCharacter when name is edited and saved', () => {
     const handleUpdate = vi.fn();
     render(
       <CharacterHeader
@@ -41,8 +41,16 @@ describe('CharacterHeader', () => {
       />
     );
 
-    const nameInput = screen.getByDisplayValue('Mordenkainen');
+    // Click edit name button
+    const editBtn = screen.getByLabelText(/Edit Name/i);
+    fireEvent.click(editBtn);
+
+    const nameInput = screen.getByPlaceholderText('Character Name');
     fireEvent.change(nameInput, { target: { value: 'Bigby' } });
+
+    // Save name
+    const saveBtn = screen.getByLabelText(/Save Name/i);
+    fireEvent.click(saveBtn);
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ name: 'Bigby' }));
 
     const classSelect = screen.getByDisplayValue('Wizard');

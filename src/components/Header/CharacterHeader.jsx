@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { Download, Upload } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Download, Upload, Pencil, Check, X } from 'lucide-react';
 import ProfileSelector from './ProfileSelector';
 
 const CASTER_CLASSES = [
@@ -28,9 +28,21 @@ export default function CharacterHeader({
   onImport,
 }) {
   const fileInputRef = useRef(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState(activeCharacter?.name || '');
 
-  const handleNameChange = (e) => {
-    onUpdateCharacter({ ...activeCharacter, name: e.target.value });
+  useEffect(() => {
+    if (!isEditingName && activeCharacter) {
+      setNameDraft(activeCharacter.name);
+    }
+  }, [activeCharacter?.name, activeCharacter?.id, isEditingName]);
+
+  const handleSaveName = () => {
+    const trimmed = nameDraft.trim();
+    if (trimmed && activeCharacter) {
+      onUpdateCharacter({ ...activeCharacter, name: trimmed });
+    }
+    setIsEditingName(false);
   };
 
   const handleClassChange = (e) => {
@@ -69,14 +81,63 @@ export default function CharacterHeader({
           onCreateProfile={onCreateProfile}
         />
 
-        {/* Character Name Input */}
-        <input
-          type="text"
-          value={activeCharacter.name}
-          onChange={handleNameChange}
-          placeholder="Character Name"
-          className="bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1 text-sm font-semibold text-slate-100 focus:outline-none focus:border-dnd-gold w-36 sm:w-44 transition-colors"
-        />
+        {/* Permanent Character Name with Edit Pencil Button */}
+        {isEditingName ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSaveName();
+            }}
+            className="flex items-center space-x-1"
+          >
+            <input
+              type="text"
+              value={nameDraft}
+              onChange={(e) => setNameDraft(e.target.value)}
+              placeholder="Character Name"
+              autoFocus
+              className="bg-dnd-card border border-dnd-gold rounded-lg px-2.5 py-1 text-sm font-semibold text-slate-100 focus:outline-none w-36 sm:w-44 transition-colors"
+            />
+            <button
+              type="submit"
+              aria-label="Save Name"
+              className="p-1.5 rounded-lg bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors"
+              title="Save Name"
+            >
+              <Check size={14} />
+            </button>
+            <button
+              type="button"
+              aria-label="Cancel Edit Name"
+              onClick={() => {
+                setNameDraft(activeCharacter.name);
+                setIsEditingName(false);
+              }}
+              className="p-1.5 rounded-lg bg-dnd-card border border-dnd-border hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              title="Cancel"
+            >
+              <X size={14} />
+            </button>
+          </form>
+        ) : (
+          <div className="flex items-center space-x-1.5 bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1">
+            <span className="text-sm font-bold text-slate-100 max-w-[140px] sm:max-w-[180px] truncate">
+              {activeCharacter.name}
+            </span>
+            <button
+              type="button"
+              aria-label="Edit Name"
+              onClick={() => {
+                setNameDraft(activeCharacter.name);
+                setIsEditingName(true);
+              }}
+              className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors"
+              title="Edit character name"
+            >
+              <Pencil size={12} />
+            </button>
+          </div>
+        )}
 
         {/* Class Dropdown */}
         <select

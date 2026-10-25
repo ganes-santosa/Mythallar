@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, X, Sparkles, ScrollText } from 'lucide-react';
+import { Search, X, Sparkles, ScrollText, Plus } from 'lucide-react';
 
 const CLASSES = [
   'Artificer',
@@ -28,29 +28,44 @@ const SCHOOLS = [
   'Transmutation',
 ];
 
-export default function FilterBar({ filters, onChange }) {
+export default function FilterBar({ filters, onChange, onOpenCustomSpellModal }) {
   const update = (key, value) => {
     onChange({ ...filters, [key]: value });
   };
 
   return (
     <div className="space-y-3 pb-3 border-b border-dnd-border">
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
-        <input
-          type="text"
-          value={filters.search || ''}
-          onChange={(e) => update('search', e.target.value)}
-          placeholder="Search spells, text, schools..."
-          className="w-full bg-dnd-card border border-dnd-border rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-dnd-gold transition-colors"
-        />
-        {filters.search && (
+      {/* Search Bar + Custom Spell Button */}
+      <div className="flex items-center space-x-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 text-slate-400" size={16} />
+          <input
+            type="text"
+            value={filters.search || ''}
+            onChange={(e) => update('search', e.target.value)}
+            placeholder="Search spells, text, schools..."
+            className="w-full bg-dnd-card border border-dnd-border rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-dnd-gold transition-colors"
+          />
+          {filters.search && (
+            <button
+              onClick={() => update('search', '')}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200"
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+
+        {onOpenCustomSpellModal && (
           <button
-            onClick={() => update('search', '')}
-            className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200"
+            type="button"
+            onClick={onOpenCustomSpellModal}
+            className="flex items-center px-3 py-2 rounded-lg bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-semibold text-xs transition-colors flex-shrink-0 shadow"
+            title="Create a custom / homebrew spell"
           >
-            <X size={16} />
+            <Plus size={15} className="mr-1" />
+            <span className="hidden sm:inline">Custom Spell</span>
+            <span className="sm:hidden">Custom</span>
           </button>
         )}
       </div>

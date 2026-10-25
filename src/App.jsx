@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { BookOpen, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { loadCharacterProfiles, saveCharacterProfiles, createDefaultProfile } from './utils/storage';
+import {
+  loadCharacterProfiles,
+  saveCharacterProfiles,
+  createDefaultProfile,
+  loadCustomSpells,
+  saveCustomSpells,
+} from './utils/storage';
 import { getEffectiveMaxSlots } from './utils/spellSlots';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
 import { useSpellFilter } from './hooks/useSpellFilter';
 import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
+import CustomSpellModal from './components/Catalog/CustomSpellModal';
 import CharacterHeader from './components/Header/CharacterHeader';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
-import SpellDetailDrawer from './components/Modal/SpellDetailDrawer';
 
 export default function App() {
   // --- Character & Profile State ---
@@ -20,13 +26,21 @@ export default function App() {
     return profiles.find((p) => p.id === activeId) || profiles[0];
   }, [profiles, activeId]);
 
-  // Persist on profile change
+  // Persist profiles on change
   useEffect(() => {
     saveCharacterProfiles(profileData);
   }, [profileData]);
 
+  // --- Custom Spells State ---
+  const [customSpells, setCustomSpells] = useState(() => loadCustomSpells());
+  const [isCustomSpellModalOpen, setIsCustomSpellModalOpen] = useState(false);
+
+  useEffect(() => {
+    saveCustomSpells(customSpells);
+  }, [customSpells]);
+
   // --- Spell Catalog State ---
-  const [allSpells, setAllSpells] = useState([]);
+  const [baseSpells, setBaseSpells] = useState([]);
   const [isLoadingSpells, setIsLoadingSpells] = useState(true);
   const [spellError, setSpellError] = useState(null);
 
@@ -39,7 +53,7 @@ export default function App() {
       })
       .then((data) => {
         if (mounted) {
-          setAllSpells(Array.isArray(data) ? data : []);
+          setBaseSpells(Array.isArray(data) ? data : []);
           setIsLoadingSpells(false);
         }
       })
@@ -54,6 +68,11 @@ export default function App() {
       mounted = false;
     };
   }, []);
+
+  // Merge base catalog spells + custom spells
+  const allSpells = useMemo(() => {
+    return [...customSpells, ...baseSpells];
+  }, [customSpells, baseSpells]);
 
   // Quick lookup dictionary: spell.id -> Spell
   const catalogMap = useMemo(() => {
@@ -83,12 +102,12 @@ export default function App() {
     school: 'all',
     concentration: false,
     ritual: false,
+    compV: false,
+    compS: false,
+    compM: false,
   });
 
   const filteredSpells = useSpellFilter(allSpells, filters);
-
-  // --- Modal / Drawer State ---
-  const [selectedSpell, setSelectedSpell] = useState(null);
 
   // --- Toast Notification State ---
   const [toast, setToast] = useState(null);
@@ -141,6 +160,12 @@ export default function App() {
       activeId: character.id,
     }));
     showToast(`Imported ${character.name}!`, 'success');
+  };
+
+  // --- Custom Spell Action ---
+  const handleSaveCustomSpell = (newSpell) => {
+    setCustomSpells((prev) => [newSpell, ...prev]);
+    showToast(`Created custom spell: ${newSpell.name}`, 'success');
   };
 
   // --- Spell Management Actions ---
@@ -338,7 +363,7 @@ export default function App() {
 
         <div className="text-xs text-slate-400 flex items-center space-x-3">
           <span className="hidden md:inline">
-            Drag cards from Catalog into Spellbook
+            Click spells to expand details • Drag to Spellbook
           </span>
         </div>
       </header>
@@ -347,7 +372,11 @@ export default function App() {
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog */}
         <section className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-dnd-border p-4 overflow-hidden bg-dnd-panel/30">
-          <FilterBar filters={filters} onChange={setFilters} />
+          <FilterBar
+            filters={filters}
+            onChange={setFilters}
+            onOpenCustomSpellModal={() => setIsCustomSpellModalOpen(true)}
+          />
 
           {isLoadingSpells ? (
             <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
@@ -363,7 +392,7 @@ export default function App() {
             <SpellList
               spells={filteredSpells}
               spellbookSpellIds={spellbookSpellIds}
-              onSelectSpell={setSelectedSpell}
+              onAddToSpellbook={handleAddSpell}
             />
           )}
         </section>
@@ -396,20 +425,16 @@ export default function App() {
             onCastSpell={handleCastSpell}
             onRemoveSpell={handleRemoveSpell}
             onAddSpell={handleAddSpell}
-            onSelectSpell={setSelectedSpell}
           />
         </section>
       </main>
 
-      {/* Slide-over Spell Detail Drawer */}
-      {selectedSpell && (
-        <SpellDetailDrawer
-          spell={selectedSpell}
-          isInSpellbook={spellbookSpellIds.has(selectedSpell.id)}
-          onAddToSpellbook={handleAddSpell}
-          onClose={() => setSelectedSpell(null)}
-        />
-      )}
+      {/* Custom Spell Modal */}
+      <CustomSpellModal
+        isOpen={isCustomSpellModalOpen}
+        onClose={() => setIsCustomSpellModalOpen(false)}
+        onSave={handleSaveCustomSpell}
+      />
     </div>
   );
 }
