@@ -29,9 +29,9 @@ export default function SpellbookCard({
     <div
       className={`mb-1.5 rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden ${
         isPrepared
-          ? 'border-amber-400 ring-1 ring-amber-400/80 shadow-[0_0_12px_rgba(251,191,36,0.18)]'
+          ? 'border-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.08)]'
           : 'border-dnd-border hover:border-dnd-gold/60'
-      } ${isExpanded ? (isPrepared ? 'ring-2 ring-amber-400' : 'border-dnd-gold shadow-md shadow-black/40') : ''}`}
+      } ${isExpanded ? (isPrepared ? 'border-amber-400/60 shadow-[0_0_14px_rgba(251,191,36,0.12)]' : 'border-dnd-gold shadow-md shadow-black/40') : ''}`}
     >
       <div
         role="button"
@@ -90,7 +90,7 @@ export default function SpellbookCard({
         </div>
 
         <div className="flex items-center space-x-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          {/* Prepare Button (Level 1+ spells) with Yellow Outline when Prepared */}
+          {/* Prepare Button (Level 1+ spells) with Subtle Glow when Prepared */}
           {spell.level > 0 && (
             <button
               type="button"
@@ -98,7 +98,7 @@ export default function SpellbookCard({
               onClick={() => onTogglePrepare(spell.id)}
               className={`flex items-center px-2 py-1 rounded text-xs font-semibold border transition-colors ${
                 isPrepared
-                  ? 'bg-dnd-card text-amber-300 border-amber-400 ring-1 ring-amber-400/80 shadow-[0_0_8px_rgba(251,191,36,0.2)] hover:bg-amber-400/10'
+                  ? 'bg-amber-500/10 text-amber-300 border-amber-400/50 shadow-[0_0_6px_rgba(251,191,36,0.12)] hover:bg-amber-500/20'
                   : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-dnd-pewter hover:text-slate-100'
               }`}
               title={isPrepared ? 'Click to unprepare spell' : 'Click to prepare spell'}
