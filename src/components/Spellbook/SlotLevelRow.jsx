@@ -94,13 +94,13 @@ export default function SlotLevelRow({
                 : `Restore ${getLevelLabel(level)} slot`
             }
             onClick={() => handlePipClick(idx, isAvailable)}
-            className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800/80 active:scale-90 transition-all flex-shrink-0"
+            className="w-5 h-5 flex items-center justify-center rounded hover:bg-slate-800/80 active:scale-95 flex-shrink-0"
             title={`Set ${getLevelLabel(level)} slots to ${idx + 1}`}
           >
-            {/* Four-pointed star SVG: identical stroke width and sizing */}
+            {/* Four-pointed star SVG: instant color update without transition lag */}
             <svg
               viewBox="0 0 24 24"
-              className={`w-3.5 h-3.5 transition-colors ${
+              className={`w-3.5 h-3.5 ${
                 isAvailable
                   ? 'text-dnd-gold drop-shadow-[0_0_4px_rgba(75,97,112,0.6)]'
                   : 'text-slate-600 hover:text-slate-400'

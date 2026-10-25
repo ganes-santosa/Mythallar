@@ -56,7 +56,7 @@ function CatalogLevelGroup({
   );
 }
 
-export default function SpellList({
+export default React.memo(function SpellList({
   spells,
   spellbookSpellIds = new Set(),
   onSelectSpell,
@@ -116,4 +116,4 @@ export default function SpellList({
       </div>
     </div>
   );
-}
+});
