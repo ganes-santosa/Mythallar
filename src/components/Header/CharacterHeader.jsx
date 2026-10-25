@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle } from 'lucide-react';
 import ProfileSelector from './ProfileSelector';
+import AuthStatus from './AuthStatus';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 
 const CASTER_CLASSES = [
@@ -27,6 +28,11 @@ export default function CharacterHeader({
   onCreateProfile,
   onExport,
   onImport,
+  user,
+  syncStatus,
+  onSignIn,
+  onSignOut,
+  onSyncNow,
 }) {
   const fileInputRef = useRef(null);
 
@@ -340,12 +346,21 @@ export default function CharacterHeader({
 
       {/* Right: Unified Character & File Actions Card */}
       <div className="flex flex-col items-end justify-center p-2 rounded-xl bg-dnd-card border border-dnd-border shadow-sm space-y-1.5 flex-shrink-0">
-        <ProfileSelector
-          profiles={profiles}
-          activeId={activeCharacter.id}
-          onSelectProfile={onSelectProfile}
-          onCreateProfile={onCreateProfile}
-        />
+        <div className="flex items-center space-x-1.5 w-full justify-between">
+          <ProfileSelector
+            profiles={profiles}
+            activeId={activeCharacter.id}
+            onSelectProfile={onSelectProfile}
+            onCreateProfile={onCreateProfile}
+          />
+          <AuthStatus
+            user={user}
+            syncStatus={syncStatus}
+            onSignIn={onSignIn}
+            onSignOut={onSignOut}
+            onSyncNow={onSyncNow}
+          />
+        </div>
 
         <div className="flex items-center space-x-1 w-full justify-end">
           <button
