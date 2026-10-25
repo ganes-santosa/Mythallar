@@ -3,11 +3,15 @@ import { Search, X, Sparkles, ScrollText } from 'lucide-react';
 
 const CLASSES = [
   'Artificer',
+  'Barbarian',
   'Bard',
   'Cleric',
   'Druid',
+  'Fighter',
+  'Monk',
   'Paladin',
   'Ranger',
+  'Rogue',
   'Sorcerer',
   'Warlock',
   'Wizard',
@@ -98,11 +102,11 @@ export default function FilterBar({ filters, onChange }) {
       </div>
 
       {/* Filter Chips Toggles */}
-      <div className="flex items-center space-x-2 text-xs">
+      <div className="flex items-center flex-wrap gap-1.5 text-xs">
         <button
           type="button"
           onClick={() => update('concentration', !filters.concentration)}
-          className={`flex items-center px-2.5 py-1 rounded border transition-colors ${
+          className={`flex items-center px-2 py-1 rounded border transition-colors ${
             filters.concentration
               ? 'bg-amber-500/20 border-amber-500 text-amber-300'
               : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
@@ -115,7 +119,7 @@ export default function FilterBar({ filters, onChange }) {
         <button
           type="button"
           onClick={() => update('ritual', !filters.ritual)}
-          className={`flex items-center px-2.5 py-1 rounded border transition-colors ${
+          className={`flex items-center px-2 py-1 rounded border transition-colors ${
             filters.ritual
               ? 'bg-blue-500/20 border-blue-500 text-blue-300'
               : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
@@ -125,7 +129,54 @@ export default function FilterBar({ filters, onChange }) {
           Ritual
         </button>
 
-        {(filters.search || filters.level !== 'all' || filters.className !== 'all' || filters.school !== 'all' || filters.concentration || filters.ritual) && (
+        <button
+          type="button"
+          onClick={() => update('compV', !filters.compV)}
+          className={`px-2 py-1 rounded border font-mono font-bold transition-colors ${
+            filters.compV
+              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+              : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
+          }`}
+          title="Verbal Component"
+        >
+          V
+        </button>
+
+        <button
+          type="button"
+          onClick={() => update('compS', !filters.compS)}
+          className={`px-2 py-1 rounded border font-mono font-bold transition-colors ${
+            filters.compS
+              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+              : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
+          }`}
+          title="Somatic Component"
+        >
+          S
+        </button>
+
+        <button
+          type="button"
+          onClick={() => update('compM', !filters.compM)}
+          className={`px-2 py-1 rounded border font-mono font-bold transition-colors ${
+            filters.compM
+              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+              : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
+          }`}
+          title="Material Component"
+        >
+          M
+        </button>
+
+        {(filters.search ||
+          filters.level !== 'all' ||
+          filters.className !== 'all' ||
+          filters.school !== 'all' ||
+          filters.concentration ||
+          filters.ritual ||
+          filters.compV ||
+          filters.compS ||
+          filters.compM) && (
           <button
             onClick={() =>
               onChange({
@@ -135,6 +186,9 @@ export default function FilterBar({ filters, onChange }) {
                 school: 'all',
                 concentration: false,
                 ritual: false,
+                compV: false,
+                compS: false,
+                compM: false,
               })
             }
             className="text-xs text-slate-400 hover:text-dnd-gold ml-auto"

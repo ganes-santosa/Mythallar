@@ -10,6 +10,7 @@ const MOCK_SPELLS = [
     classes: ['Sorcerer', 'Wizard'],
     concentration: false,
     ritual: false,
+    components: { v: true, s: true, m: false },
     entries: ['You hurl a bubble of acid.'],
   },
   {
@@ -20,6 +21,7 @@ const MOCK_SPELLS = [
     classes: ['Sorcerer', 'Wizard'],
     concentration: false,
     ritual: false,
+    components: { v: true, s: true, m: 'guano' },
     entries: ['A bright streak flashes from your finger.'],
   },
   {
@@ -77,6 +79,11 @@ describe('filterSpells', () => {
 
     const rit = filterSpells(MOCK_SPELLS, { ritual: true });
     expect(rit.map(s => s.name)).toEqual(['Detect Magic']);
+  });
+
+  it('filters by V, S, M components', () => {
+    const mat = filterSpells(MOCK_SPELLS, { compM: true });
+    expect(mat.map(s => s.name)).toEqual(['Fireball']);
   });
 
   it('returns all spells when filters are empty or default', () => {

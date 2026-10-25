@@ -71,6 +71,8 @@ export default function SpellbookView({
 
   return (
     <div
+      role="region"
+      aria-label="Character Spellbook Drop Zone"
       data-testid="spellbook-dropzone"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}

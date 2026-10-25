@@ -19,11 +19,13 @@ export default function SpellSlotTracker({
     character?.customSlots
   );
 
-  // Active levels that have slots (> 0)
-  const activeLevels = Object.keys(effectiveSlots)
-    .map(Number)
-    .filter((lvl) => effectiveSlots[lvl] > 0)
-    .sort((a, b) => a - b);
+  // Active levels: in normal mode, only levels with slots (> 0); in edit mode, show levels 1-9 so user can customize
+  const activeLevels = isEditingMax
+    ? [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    : Object.keys(effectiveSlots)
+        .map(Number)
+        .filter((lvl) => effectiveSlots[lvl] > 0)
+        .sort((a, b) => a - b);
 
   return (
     <div className="p-3 mb-4 rounded-xl bg-dnd-panel border border-dnd-border">

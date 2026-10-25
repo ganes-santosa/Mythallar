@@ -20,12 +20,22 @@ export default function SpellCard({ spell, onSelect, isInSpellbook }) {
     e.dataTransfer.effectAllowed = 'copy';
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onSelect && onSelect(spell);
+    }
+  };
+
   return (
     <div
       draggable
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
       onDragStart={handleDragStart}
       onClick={() => onSelect && onSelect(spell)}
-      className="group flex items-center justify-between p-3 mb-2 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold/60 hover:bg-dnd-hover transition-all cursor-pointer select-none"
+      className="group flex items-center justify-between p-3 mb-2 rounded-lg bg-dnd-card border border-dnd-border hover:border-dnd-gold/60 hover:bg-dnd-hover focus:outline-none focus:ring-1 focus:ring-dnd-gold transition-all cursor-pointer select-none"
     >
       <div className="flex items-center space-x-3 overflow-hidden">
         <span

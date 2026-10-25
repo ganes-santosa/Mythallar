@@ -269,7 +269,7 @@ export default function App() {
 
   const handleCastSpell = useCallback(
     (spell) => {
-      if (!spell) return;
+      if (!activeCharacter || !spell) return;
       if (spell.level === 0) {
         showToast(`Cast ${spell.name} (Cantrip, at will)`, 'info');
         return;

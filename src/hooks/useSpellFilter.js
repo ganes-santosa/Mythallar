@@ -4,7 +4,7 @@ import { useMemo } from 'react';
  * Pure filter function used by the hook and testable directly.
  */
 export function filterSpells(spells = [], filters = {}) {
-  const { search, level, school, className, concentration, ritual } = filters;
+  const { search, level, school, className, concentration, ritual, compV, compS, compM } = filters;
   const searchLower = (search || '').trim().toLowerCase();
 
   return spells.filter((spell) => {
@@ -46,6 +46,17 @@ export function filterSpells(spells = [], filters = {}) {
 
     // 6. Ritual
     if (ritual === true && !spell.ritual) {
+      return false;
+    }
+
+    // 7. Component Filters (V, S, M)
+    if (compV === true && !spell.components?.v) {
+      return false;
+    }
+    if (compS === true && !spell.components?.s) {
+      return false;
+    }
+    if (compM === true && !spell.components?.m) {
       return false;
     }
 
