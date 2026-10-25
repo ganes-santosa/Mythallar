@@ -24,7 +24,7 @@ describe('CharacterHeader', () => {
 
     expect(screen.getByText('Mordenkainen')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Wizard')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Character Level/i)).toHaveValue('5');
+    expect(screen.getByText('Lvl 5')).toBeInTheDocument();
   });
 
   it('triggers onUpdateCharacter when name is edited and saved', () => {
@@ -56,6 +56,31 @@ describe('CharacterHeader', () => {
     const classSelect = screen.getByDisplayValue('Wizard');
     fireEvent.change(classSelect, { target: { value: 'Sorcerer' } });
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ className: 'Sorcerer' }));
+  });
+
+  it('levels up with confirmation prompt', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    // Click Edit Level
+    fireEvent.click(screen.getByLabelText(/Edit Level/i));
+
+    // Click +1 Level Up
+    fireEvent.click(screen.getByLabelText(/Level Up/i));
+
+    // Confirm Level Up
+    fireEvent.click(screen.getByLabelText(/Confirm Level Up/i));
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ level: 6 }));
   });
 
   it('triggers onExport when export button clicked', () => {

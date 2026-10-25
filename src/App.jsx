@@ -373,7 +373,7 @@ export default function App() {
       {/* Main Dual-Pane Body */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog */}
-        <section className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-dnd-border p-4 overflow-hidden bg-dnd-panel/30">
+        <section className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-dnd-border p-3 sm:p-4 overflow-hidden bg-dnd-panel/30">
           <FilterBar
             filters={filters}
             onChange={setFilters}
@@ -399,8 +399,8 @@ export default function App() {
           )}
         </section>
 
-        {/* Right Pane: Character Spellbook & Slots */}
-        <section className="w-full md:w-1/2 flex flex-col p-4 overflow-hidden bg-dnd-panel/10">
+        {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
+        <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-y-auto bg-dnd-panel/10">
           <CharacterHeader
             activeCharacter={activeCharacter}
             profiles={profiles}
@@ -420,14 +420,16 @@ export default function App() {
             onShortRest={handleShortRest}
           />
 
-          <SpellbookView
-            character={activeCharacter}
-            catalog={catalogMap}
-            onTogglePrepare={handleTogglePrepare}
-            onCastSpell={handleCastSpell}
-            onRemoveSpell={handleRemoveSpell}
-            onAddSpell={handleAddSpell}
-          />
+          <div className="flex-1 min-h-[300px] flex flex-col">
+            <SpellbookView
+              character={activeCharacter}
+              catalog={catalogMap}
+              onTogglePrepare={handleTogglePrepare}
+              onCastSpell={handleCastSpell}
+              onRemoveSpell={handleRemoveSpell}
+              onAddSpell={handleAddSpell}
+            />
+          </div>
         </section>
       </main>
 

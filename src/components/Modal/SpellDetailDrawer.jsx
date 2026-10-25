@@ -105,7 +105,7 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
 
           {spell.higherLevels && (
             <div className="mt-4 pt-3 border-t border-dnd-border/60">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-dnd-gold mb-1">
+              <h4 className="text-xs font-semibold text-dnd-gold mb-1">
                 At Higher Levels
               </h4>
               <p className="text-slate-300">{spell.higherLevels}</p>

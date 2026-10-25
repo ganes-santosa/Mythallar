@@ -83,8 +83,8 @@ describe('App End-to-End Integration', () => {
 
     // Add Magic Missile (1st level) via accordion
     fireEvent.click(screen.getByText('Magic Missile'));
-    const addBtn = await screen.findByRole('button', { name: /Add to Spellbook/i });
-    fireEvent.click(addBtn);
+    const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
+    fireEvent.click(addBtns[0]);
 
     // Find Cast button in the spellbook
     const castBtn = await screen.findByLabelText(/Quick-Cast Magic Missile/i);
@@ -105,7 +105,8 @@ describe('App End-to-End Integration', () => {
 
     // Add and cast
     fireEvent.click(screen.getByText('Magic Missile'));
-    fireEvent.click(await screen.findByRole('button', { name: /Add to Spellbook/i }));
+    const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
+    fireEvent.click(addBtns[0]);
 
     fireEvent.click(await screen.findByLabelText(/Quick-Cast Magic Missile/i));
     await waitFor(() => {

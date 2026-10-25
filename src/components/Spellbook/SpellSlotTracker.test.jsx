@@ -91,7 +91,7 @@ describe('SpellSlotTracker', () => {
     expect(handleLongRest).toHaveBeenCalled();
   });
 
-  it('allows editing max slots when Edit Max is toggled', () => {
+  it('allows editing max slots when Edit is toggled', () => {
     const handleUpdateMax = vi.fn();
     render(
       <SpellSlotTracker
@@ -104,7 +104,7 @@ describe('SpellSlotTracker', () => {
       />
     );
 
-    const editToggle = screen.getByRole('button', { name: /Edit Max/i });
+    const editToggle = screen.getByRole('button', { name: /^Edit$/i });
     fireEvent.click(editToggle);
 
     const plusBtn = screen.getByLabelText(/Increase max 1st Level slots/i);

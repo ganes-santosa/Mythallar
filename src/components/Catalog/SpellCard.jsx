@@ -10,14 +10,14 @@ import {
 } from 'lucide-react';
 
 const SCHOOL_COLORS = {
-  Abjuration: 'text-blue-400 border-blue-500/30 bg-blue-500/10',
-  Conjuration: 'text-amber-400 border-amber-500/30 bg-amber-500/10',
-  Divination: 'text-purple-400 border-purple-500/30 bg-purple-500/10',
-  Enchantment: 'text-pink-400 border-pink-500/30 bg-pink-500/10',
-  Evocation: 'text-red-400 border-red-500/30 bg-red-500/10',
-  Illusion: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10',
-  Necromancy: 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10',
-  Transmutation: 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10',
+  Abjuration: 'text-blue-300 border-blue-400/30 bg-blue-500/10',
+  Conjuration: 'text-amber-300 border-amber-400/30 bg-amber-500/10',
+  Divination: 'text-purple-300 border-purple-400/30 bg-purple-500/10',
+  Enchantment: 'text-pink-300 border-pink-400/30 bg-pink-500/10',
+  Evocation: 'text-red-300 border-red-400/30 bg-red-500/10',
+  Illusion: 'text-indigo-300 border-indigo-400/30 bg-indigo-500/10',
+  Necromancy: 'text-emerald-300 border-emerald-400/30 bg-emerald-500/10',
+  Transmutation: 'text-yellow-300 border-yellow-400/30 bg-yellow-500/10',
 };
 
 export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpellbook }) {
@@ -54,8 +54,8 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
     <div
       draggable
       onDragStart={handleDragStart}
-      className={`mb-2 rounded-lg bg-dnd-card border transition-all select-none overflow-hidden ${
-        isExpanded ? 'border-dnd-gold shadow-lg shadow-black/40' : 'border-dnd-border hover:border-dnd-gold/60'
+      className={`mb-1.5 rounded-lg bg-dnd-card border transition-all duration-200 select-none overflow-hidden ${
+        isExpanded ? 'border-dnd-gold shadow-md shadow-black/50' : 'border-dnd-border hover:border-dnd-gold/60'
       }`}
     >
       {/* Header Row (Click to toggle accordion) */}
@@ -64,26 +64,26 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onClick={toggleExpand}
-        className="group flex items-center justify-between p-3 hover:bg-dnd-hover focus:outline-none focus:ring-1 focus:ring-dnd-gold transition-colors cursor-pointer"
+        className="group flex items-center justify-between p-2 sm:px-2.5 sm:py-2 hover:bg-dnd-hover focus:outline-none focus:ring-1 focus:ring-dnd-gold transition-colors cursor-pointer"
       >
-        <div className="flex items-center space-x-3 overflow-hidden">
+        <div className="flex items-center space-x-2.5 overflow-hidden">
           <span
-            className="text-slate-500 group-hover:text-dnd-gold cursor-grab active:cursor-grabbing p-1"
+            className="text-slate-500 group-hover:text-dnd-gold cursor-grab active:cursor-grabbing p-0.5"
             title="Drag to spellbook"
             onClick={(e) => e.stopPropagation()}
           >
-            <GripVertical size={16} />
+            <GripVertical size={14} />
           </span>
 
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-semibold text-slate-100 group-hover:text-dnd-gold transition-colors truncate">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5">
+              <span className="font-semibold text-sm text-slate-100 group-hover:text-dnd-gold-light transition-colors truncate">
                 {spell.name}
               </span>
 
               {spell.isLegacy && (
                 <span
-                  className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300"
+                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300"
                   title="2014 Legacy PHB version"
                 >
                   Legacy
@@ -92,7 +92,7 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
 
               {(spell.source === 'Homebrew' || spell.source === 'Custom') && (
                 <span
-                  className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300"
+                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300"
                   title="Homebrew spell"
                 >
                   Homebrew
@@ -100,19 +100,19 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
               )}
 
               {isInSpellbook && (
-                <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-1.5 py-0.5 rounded font-mono">
+                <span className="flex items-center text-[11px] text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-1.5 py-0.2 rounded">
                   <BookOpenCheck size={11} className="mr-1 inline" /> In Book
                 </span>
               )}
             </div>
 
-            <div className="flex items-center space-x-3 text-xs text-slate-400 mt-1">
+            <div className="flex items-center space-x-2.5 text-[11px] text-slate-400 mt-0.5">
               <span className="flex items-center">
-                <Clock size={12} className="mr-1" />
+                <Clock size={11} className="mr-1" />
                 {spell.time}
               </span>
               <span className="flex items-center">
-                <Compass size={12} className="mr-1" />
+                <Compass size={11} className="mr-1" />
                 {spell.range}
               </span>
               {spell.concentration && (
@@ -129,17 +129,17 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 flex-shrink-0">
-          <span className={`text-xs px-2 py-0.5 rounded border font-medium ${schoolColor}`}>
+        <div className="flex items-center space-x-1.5 flex-shrink-0">
+          <span className={`text-[11px] px-1.5 py-0.2 rounded border font-medium ${schoolColor}`}>
             {spell.school}
           </span>
-          <span className="text-xs px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono">
+          <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-300 font-mono">
             {spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`}
           </span>
           <ChevronDown
-            size={16}
-            className={`text-slate-400 transition-transform duration-200 ${
-              isExpanded ? 'rotate-180 text-dnd-gold' : ''
+            size={15}
+            className={`text-slate-400 transition-transform duration-300 ease-out ${
+              isExpanded ? 'rotate-180 text-dnd-gold-light' : ''
             }`}
           />
         </div>
@@ -147,80 +147,82 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
 
       {/* Accordion Detail Body */}
       {isExpanded && (
-        <div className="p-3.5 bg-dnd-bg/70 border-t border-dnd-border/80 text-xs text-slate-300 space-y-3 animate-in fade-in duration-150">
-          {/* Quick stats strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 rounded bg-dnd-panel/60 border border-dnd-border/50 text-[11px]">
-            <div>
-              <span className="text-slate-400 block font-medium">Casting Time</span>
-              <span className="text-slate-200 font-semibold">{spell.time}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block font-medium">Range</span>
-              <span className="text-slate-200 font-semibold">{spell.range}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block font-medium">Components</span>
-              <span className="text-slate-200 font-semibold">{compList.join(', ') || 'None'}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block font-medium">Duration</span>
-              <span className="text-slate-200 font-semibold">
-                {spell.concentration ? `Conc, ${spell.duration}` : spell.duration}
-              </span>
-            </div>
-          </div>
-
-          {/* Classes */}
-          {Array.isArray(spell.classes) && spell.classes.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1 text-[11px]">
-              <span className="text-slate-400 font-medium mr-1">Classes:</span>
-              {spell.classes.map((cls) => (
-                <span
-                  key={cls}
-                  className="px-1.5 py-0.2 rounded bg-slate-800 border border-slate-700 text-slate-300"
-                >
-                  {cls}
+        <div className="overflow-hidden animate-in fade-in duration-200">
+          <div className="p-3 bg-dnd-bg/80 border-t border-dnd-border/80 text-xs text-slate-300 space-y-2.5">
+            {/* Quick stats strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 p-2 rounded bg-dnd-panel/70 border border-dnd-border/50 text-[11px]">
+              <div>
+                <span className="text-slate-400 block font-medium">Casting Time</span>
+                <span className="text-slate-200 font-semibold">{spell.time}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Range</span>
+                <span className="text-slate-200 font-semibold">{spell.range}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Components</span>
+                <span className="text-slate-200 font-semibold">{compList.join(', ') || 'None'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Duration</span>
+                <span className="text-slate-200 font-semibold">
+                  {spell.concentration ? `Conc, ${spell.duration}` : spell.duration}
                 </span>
+              </div>
+            </div>
+
+            {/* Classes */}
+            {Array.isArray(spell.classes) && spell.classes.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1 text-[11px]">
+                <span className="text-slate-400 font-medium mr-1">Classes:</span>
+                {spell.classes.map((cls) => (
+                  <span
+                    key={cls}
+                    className="px-1.5 py-0.2 rounded bg-slate-800 border border-slate-700 text-slate-300"
+                  >
+                    {cls}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Description entries */}
+            <div className="space-y-1.5 text-slate-300 leading-relaxed text-xs">
+              {spell.entries?.map((p, idx) => (
+                <p key={idx}>{p}</p>
               ))}
             </div>
-          )}
 
-          {/* Description entries */}
-          <div className="space-y-2 text-slate-300 leading-relaxed text-xs">
-            {spell.entries?.map((p, idx) => (
-              <p key={idx}>{p}</p>
-            ))}
-          </div>
-
-          {/* Higher levels */}
-          {spell.higherLevels && (
-            <div className="pt-2 border-t border-dnd-border/60">
-              <span className="font-bold text-dnd-gold block mb-0.5 uppercase tracking-wide text-[10px]">
-                At Higher Levels
-              </span>
-              <p className="text-slate-300">{spell.higherLevels}</p>
-            </div>
-          )}
-
-          {/* Bottom Action Bar */}
-          <div className="pt-2 flex items-center justify-end">
-            {isInSpellbook ? (
-              <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-2.5 py-1 rounded">
-                <Check size={14} className="mr-1" /> In Spellbook
-              </span>
-            ) : (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToSpellbook?.(spell.id);
-                }}
-                className="flex items-center px-3 py-1.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-semibold transition-colors shadow"
-              >
-                <BookPlus size={14} className="mr-1.5" />
-                Add to Spellbook
-              </button>
+            {/* Higher levels */}
+            {spell.higherLevels && (
+              <div className="pt-2 border-t border-dnd-border/60">
+                <span className="font-semibold text-dnd-gold-light block mb-0.5 text-[11px]">
+                  At Higher Levels
+                </span>
+                <p className="text-slate-300">{spell.higherLevels}</p>
+              </div>
             )}
+
+            {/* Bottom Action Bar */}
+            <div className="pt-1.5 flex items-center justify-end">
+              {isInSpellbook ? (
+                <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-2.5 py-1 rounded">
+                  <Check size={14} className="mr-1" /> In Spellbook
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToSpellbook?.(spell.id);
+                  }}
+                  className="flex items-center px-3 py-1.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-100 hover:text-slate-950 font-semibold transition-colors shadow"
+                >
+                  <BookPlus size={14} className="mr-1.5" />
+                  Add to Spellbook
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

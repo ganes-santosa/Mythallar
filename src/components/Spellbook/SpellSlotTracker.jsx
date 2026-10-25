@@ -28,12 +28,12 @@ export default function SpellSlotTracker({
         .sort((a, b) => a - b);
 
   return (
-    <div className="p-3 mb-4 rounded-xl bg-dnd-panel border border-dnd-border">
+    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel border border-dnd-border">
       {/* Tracker Bar Header */}
-      <div className="flex items-center justify-between pb-2 mb-2 border-b border-dnd-border/60">
-        <div className="flex items-center space-x-2">
-          <Sparkles size={16} className="text-dnd-gold" />
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+      <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-dnd-border/60">
+        <div className="flex items-center space-x-1.5">
+          <Sparkles size={14} className="text-dnd-gold" />
+          <h3 className="text-xs font-semibold text-slate-200">
             Spell Slots
           </h3>
         </div>
@@ -43,14 +43,14 @@ export default function SpellSlotTracker({
           <button
             type="button"
             onClick={() => setIsEditingMax(!isEditingMax)}
-            className={`flex items-center px-2 py-1 rounded border transition-colors ${
+            className={`flex items-center px-2 py-0.5 rounded border transition-colors ${
               isEditingMax
                 ? 'bg-dnd-gold/20 border-dnd-gold text-dnd-gold'
                 : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
             }`}
           >
-            <Settings2 size={13} className="mr-1" />
-            Edit Max
+            <Settings2 size={12} className="mr-1" />
+            Edit
           </button>
 
           {/* Short Rest (Pact Magic / Warlock) */}

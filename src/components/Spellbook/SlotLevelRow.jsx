@@ -37,8 +37,8 @@ export default function SlotLevelRow({
   };
 
   return (
-    <div className="flex items-center justify-between p-2 rounded-lg bg-dnd-card border border-dnd-border">
-      <div className="w-24">
+    <div className="flex items-center justify-between p-1.5 rounded bg-dnd-card border border-dnd-border">
+      <div className="w-20">
         <span className="text-xs font-semibold text-slate-200 block">
           {getLevelLabel(level)}
         </span>
@@ -59,10 +59,10 @@ export default function SlotLevelRow({
                 : `Restore ${getLevelLabel(level)} slot`
             }
             onClick={() => handlePipClick(idx, isAvailable)}
-            className={`w-5 h-5 rounded-md transition-all transform active:scale-90 flex-shrink-0 ${
+            className={`w-4 h-4 rounded transition-all transform active:scale-90 flex-shrink-0 ${
               isAvailable
-                ? 'bg-dnd-gold border border-dnd-gold-light shadow-[0_0_8px_rgba(224,168,56,0.25)] hover:bg-amber-400'
-                : 'bg-slate-800 border border-slate-700/80 hover:border-slate-500'
+                ? 'bg-dnd-gold border border-dnd-gold-light shadow-[0_0_6px_rgba(75,97,112,0.35)] hover:bg-[#5a7384]'
+                : 'bg-slate-900 border border-slate-700/80 hover:border-slate-500'
             }`}
             title={isAvailable ? 'Click to expend slot' : 'Click to restore slot'}
           />

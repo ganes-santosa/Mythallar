@@ -8,16 +8,20 @@ export default {
     extend: {
       colors: {
         dnd: {
-          bg: '#0f1115',
-          panel: '#181b22',
-          card: '#222631',
-          hover: '#2d3342',
-          border: '#333b4e',
-          gold: '#e0a838',
-          'gold-light': '#f5c862',
-          'gold-dark': '#9c6f1a',
+          bg: '#17181B', // Obsidian Black
+          panel: '#202227', // Slate Obsidian tint
+          card: '#292B32', // Elevated dark surface
+          hover: '#363942', // Interactive hover
+          border: '#434A50', // Cathedral Slate
+          gold: '#4B6170', // Storm Blue (Primary Accent)
+          'gold-light': '#979DA1', // Antique Pewter (Secondary Accent / Highlight)
+          'gold-dark': '#32414B', // Deep Storm Blue
+          ivory: '#EFE9E0', // Moonstone Ivory (Text Primary)
+          pewter: '#979DA1', // Antique Pewter
+          slate: '#434A50', // Cathedral Slate
+          obsidian: '#17181B', // Obsidian Black
           red: '#c53b3b',
-          blue: '#3b82c5',
+          blue: '#4B6170',
           green: '#3bc56c',
         }
       }

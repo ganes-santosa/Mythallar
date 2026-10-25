@@ -31,7 +31,7 @@ export default function SpellbookLevelGroup({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full py-1.5 px-2 mb-1.5 text-xs font-bold uppercase tracking-wider text-slate-300 hover:text-dnd-gold bg-slate-900/40 rounded border border-dnd-border/60 transition-colors"
+        className="flex items-center justify-between w-full py-1 px-2 mb-1 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-slate-900/50 rounded border border-dnd-border/60 transition-colors"
       >
         <div className="flex items-center space-x-1.5">
           {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
