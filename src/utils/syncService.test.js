@@ -108,4 +108,26 @@ describe('syncService', () => {
       expect(upsertMock).toHaveBeenCalled();
     });
   });
+
+  describe('deleteCloudCharacter', () => {
+    it('deletes character from characters table by id and user_id', async () => {
+      const eqUserMock = vi.fn(() => Promise.resolve({ error: null }));
+      const eqIdMock = vi.fn(() => ({ eq: eqUserMock }));
+      const deleteMock = vi.fn(() => ({ eq: eqIdMock }));
+      const mockClient = {
+        from: vi.fn(() => ({
+          delete: deleteMock,
+        })),
+      };
+
+      const { deleteCloudCharacter } = await import('./syncService');
+      const res = await deleteCloudCharacter(mockClient, 'user-123', 'char-1');
+
+      expect(res.success).toBe(true);
+      expect(mockClient.from).toHaveBeenCalledWith('characters');
+      expect(deleteMock).toHaveBeenCalled();
+      expect(eqIdMock).toHaveBeenCalledWith('id', 'char-1');
+      expect(eqUserMock).toHaveBeenCalledWith('user_id', 'user-123');
+    });
+  });
 });

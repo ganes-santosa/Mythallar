@@ -124,3 +124,25 @@ export async function syncHomebrewToCloud(client, userId, spells = []) {
     return { success: false, error };
   }
 }
+
+/**
+ * Deletes a character record from Supabase.
+ */
+export async function deleteCloudCharacter(client, userId, characterId) {
+  if (!client || !userId || !characterId) {
+    return { success: true };
+  }
+
+  try {
+    const { error } = await client
+      .from('characters')
+      .delete()
+      .eq('id', characterId)
+      .eq('user_id', userId);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('deleteCloudCharacter error:', error);
+    return { success: false, error };
+  }
+}

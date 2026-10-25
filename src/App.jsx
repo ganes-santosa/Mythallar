@@ -15,6 +15,7 @@ import {
   fetchCloudData,
   syncCharactersToCloud,
   syncHomebrewToCloud,
+  deleteCloudCharacter,
   mergeLocalAndCloud,
 } from './utils/syncService';
 import FilterBar from './components/Catalog/FilterBar';
@@ -283,6 +284,32 @@ export default function App() {
     }));
     showToast(`Created new profile: ${newChar.name}`, 'success');
   };
+
+  const handleDeleteCharacter = useCallback(
+    async (charId) => {
+      if (profileData.profiles.length <= 1) {
+        showToast('Cannot delete only character profile', 'error');
+        return;
+      }
+
+      const deletedChar = profileData.profiles.find((p) => p.id === charId);
+      const remainingProfiles = profileData.profiles.filter((p) => p.id !== charId);
+      const nextActiveId =
+        profileData.activeId === charId ? remainingProfiles[0]?.id : profileData.activeId;
+
+      setProfileData({
+        profiles: remainingProfiles,
+        activeId: nextActiveId,
+      });
+
+      if (supabase && user) {
+        deleteCloudCharacter(supabase, user.id, charId);
+      }
+
+      showToast(`Deleted ${deletedChar?.name || 'character'}`, 'info');
+    },
+    [profileData, supabase, user, showToast]
+  );
 
   const handleExport = () => {
     if (activeCharacter) {
@@ -626,6 +653,7 @@ export default function App() {
             onUpdateCharacter={updateActiveCharacter}
             onSelectProfile={handleSelectProfile}
             onCreateProfile={handleCreateProfile}
+            onDeleteProfile={handleDeleteCharacter}
             onExport={handleExport}
             onImport={handleImport}
             user={user}
