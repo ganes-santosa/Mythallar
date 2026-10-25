@@ -402,7 +402,7 @@ export default function SpellSlotTracker({
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-2">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
                 {activeLevels.map((lvl) => (
                   <SlotLevelRow
                     key={lvl}

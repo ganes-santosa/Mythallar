@@ -13,9 +13,9 @@ export default {
           card: '#292B32', // Elevated dark surface
           hover: '#363942', // Interactive hover
           border: '#434A50', // Cathedral Slate
-          gold: '#4B6170', // Storm Blue (Primary Accent)
-          'gold-light': '#979DA1', // Antique Pewter (Secondary Accent / Highlight)
-          'gold-dark': '#32414B', // Deep Storm Blue
+          gold: '#e0a838', // Amber Gold (Primary Accent)
+          'gold-light': '#f5c862', // Warm Gold Light (Highlight)
+          'gold-dark': '#9c6f1a', // Deep Gold
           ivory: '#EFE9E0', // Moonstone Ivory (Text Primary)
           pewter: '#979DA1', // Antique Pewter
           slate: '#434A50', // Cathedral Slate
