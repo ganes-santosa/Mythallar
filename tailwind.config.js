@@ -24,6 +24,10 @@ export default {
           blue: '#4B6170',
           green: '#3bc56c',
         }
+      },
+      fontFamily: {
+        display: ['"Funnel Display"', 'system-ui', 'sans-serif'],
+        sans: ['"Funnel Sans"', 'system-ui', 'sans-serif'],
       }
     },
   },
