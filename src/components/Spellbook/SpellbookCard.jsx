@@ -27,7 +27,7 @@ export default function SpellbookCard({
 
   return (
     <div
-      className={`relative mb-1.5 rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden pl-3 sm:pl-3.5 ${
+      className={`relative rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden pl-3 sm:pl-3.5 ${
         isPrepared
           ? 'border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
           : 'border-dnd-border hover:border-dnd-gold/60'

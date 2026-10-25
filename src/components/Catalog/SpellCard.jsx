@@ -54,7 +54,7 @@ export default function SpellCard({ spell, onSelect, onAddToSpellbook, isInSpell
     <div
       draggable
       onDragStart={handleDragStart}
-      className={`mb-1.5 rounded-lg bg-dnd-card border transition-all duration-200 select-none overflow-hidden ${
+      className={`rounded-lg bg-dnd-card border transition-all duration-200 select-none overflow-hidden ${
         isExpanded ? 'border-dnd-gold shadow-md shadow-black/50' : 'border-dnd-border hover:border-dnd-gold/60'
       }`}
     >
