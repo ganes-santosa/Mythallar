@@ -424,7 +424,7 @@ export default function App() {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-dnd-bg text-slate-200">
+    <div className="flex flex-col h-screen w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
       {/* Toast Banner */}
       {toast && (
         <div className="fixed top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-dnd-border">
