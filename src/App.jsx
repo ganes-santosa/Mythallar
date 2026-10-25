@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { BookOpen, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 import {
   loadCharacterProfiles,
@@ -10,6 +10,13 @@ import {
 import { getEffectiveMaxSlots } from './utils/spellSlots';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
 import { useSpellFilter } from './hooks/useSpellFilter';
+import { getSupabase, signInWithGoogle, signOut } from './utils/supabase';
+import {
+  fetchCloudData,
+  syncCharactersToCloud,
+  syncHomebrewToCloud,
+  mergeLocalAndCloud,
+} from './utils/syncService';
 import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
 import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
@@ -38,6 +45,130 @@ export default function App() {
   useEffect(() => {
     saveHomebrewSpells(homebrewSpells);
   }, [homebrewSpells]);
+
+  // --- Auth & Cloud Sync State ---
+  const [user, setUser] = useState(null);
+  const [syncStatus, setSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'saved' | 'error' | 'offline'
+  const debounceSyncTimer = useRef(null);
+  const supabase = getSupabase();
+
+  // Listen to Supabase auth state change
+  useEffect(() => {
+    if (!supabase) return;
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [supabase]);
+
+  // Pull cloud data on user login
+  useEffect(() => {
+    if (!supabase || !user) return;
+
+    let cancelled = false;
+    setSyncStatus('syncing');
+
+    fetchCloudData(supabase, user.id)
+      .then(({ characters: cloudChars, homebrewSpells: cloudHb }) => {
+        if (cancelled) return;
+
+        // Merge cloud characters with local profiles
+        setProfileData((prev) => {
+          const merged = mergeLocalAndCloud(prev.profiles, cloudChars);
+          return {
+            ...prev,
+            profiles: merged.length > 0 ? merged : prev.profiles,
+          };
+        });
+
+        // Merge homebrew spells
+        setHomebrewSpells((prev) => mergeLocalAndCloud(prev, cloudHb));
+
+        setSyncStatus('saved');
+        showToast('Characters synced with cloud', 'success');
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('Initial cloud sync error:', err);
+        setSyncStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user, supabase]);
+
+  // Debounced push to cloud when local profileData or homebrew changes
+  useEffect(() => {
+    if (!supabase || !user) return;
+
+    if (debounceSyncTimer.current) {
+      clearTimeout(debounceSyncTimer.current);
+    }
+
+    setSyncStatus('syncing');
+
+    debounceSyncTimer.current = setTimeout(async () => {
+      const [charRes, hbRes] = await Promise.all([
+        syncCharactersToCloud(supabase, user.id, profileData.profiles),
+        syncHomebrewToCloud(supabase, user.id, homebrewSpells),
+      ]);
+
+      if (charRes.success && hbRes.success) {
+        setSyncStatus('saved');
+      } else {
+        setSyncStatus('error');
+      }
+    }, 1500);
+
+    return () => {
+      if (debounceSyncTimer.current) clearTimeout(debounceSyncTimer.current);
+    };
+  }, [profileData.profiles, homebrewSpells, user, supabase]);
+
+  const handleSignIn = useCallback(async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      showToast(error.message, 'error');
+    }
+  }, []);
+
+  const handleSignOut = useCallback(async () => {
+    const { error } = await signOut();
+    if (error) {
+      showToast(error.message, 'error');
+    } else {
+      setUser(null);
+      setSyncStatus('idle');
+      showToast('Signed out', 'info');
+    }
+  }, []);
+
+  const handleManualSyncNow = useCallback(async () => {
+    if (!supabase || !user) return;
+    setSyncStatus('syncing');
+    const [cRes, hRes] = await Promise.all([
+      syncCharactersToCloud(supabase, user.id, profileData.profiles),
+      syncHomebrewToCloud(supabase, user.id, homebrewSpells),
+    ]);
+    if (cRes.success && hRes.success) {
+      setSyncStatus('saved');
+      showToast('Cloud sync complete', 'success');
+    } else {
+      setSyncStatus('error');
+      showToast('Cloud sync failed', 'error');
+    }
+  }, [supabase, user, profileData.profiles, homebrewSpells]);
 
   // --- Spell Catalog State ---
   const [baseSpells, setBaseSpells] = useState([]);
@@ -497,6 +628,11 @@ export default function App() {
             onCreateProfile={handleCreateProfile}
             onExport={handleExport}
             onImport={handleImport}
+            user={user}
+            syncStatus={syncStatus}
+            onSignIn={handleSignIn}
+            onSignOut={handleSignOut}
+            onSyncNow={handleManualSyncNow}
           />
 
           <SpellSlotTracker
