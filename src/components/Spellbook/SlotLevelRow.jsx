@@ -48,7 +48,7 @@ export default function SlotLevelRow({
   };
 
   return (
-    <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-lg bg-dnd-card border border-dnd-border min-w-0">
+    <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-lg bg-dnd-card min-w-0">
       {/* Persistent Left Column: Level Label, Count, and Edit Controls underneath */}
       <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-[95px] sm:min-w-[105px]">
         <div className="flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap">
@@ -73,11 +73,11 @@ export default function SlotLevelRow({
                   if (e.key === 'Enter') e.target.blur();
                 }}
                 aria-label={`Max ${getLevelLabel(level)} slots`}
-                className="w-9 bg-slate-950 border border-dnd-gold rounded px-1 py-0 text-center text-xs text-dnd-gold font-medium focus:outline-none"
+                className="w-9 bg-dnd-panel rounded px-1 py-0 text-center text-xs text-dnd-gold font-medium focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
           ) : (
-            <span className="text-[10px] sm:text-[11px] font-medium px-1 sm:px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700/80 text-dnd-pewter tabular-nums whitespace-nowrap">
+            <span className="text-[10px] sm:text-[11px] font-medium px-1 sm:px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter tabular-nums whitespace-nowrap">
               {remainingSlots} / {safeMax}
             </span>
           )}
@@ -90,7 +90,7 @@ export default function SlotLevelRow({
               type="button"
               aria-label={`Decrease max ${getLevelLabel(level)} slots`}
               onClick={() => onUpdateMaxSlot(level, Math.max(0, safeMax - 1))}
-              className="p-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
+              className="p-0.5 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-300 transition-colors"
               title="Decrease max slots"
             >
               <Minus size={10} />
@@ -99,7 +99,7 @@ export default function SlotLevelRow({
               type="button"
               aria-label={`Increase max ${getLevelLabel(level)} slots`}
               onClick={() => onUpdateMaxSlot(level, safeMax + 1)}
-              className="p-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
+              className="p-0.5 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-300 transition-colors"
               title="Increase max slots"
             >
               <Plus size={10} />
@@ -109,7 +109,7 @@ export default function SlotLevelRow({
                 type="button"
                 aria-label={`Reset max ${getLevelLabel(level)} slots to default`}
                 onClick={() => onResetMaxSlot(level)}
-                className="p-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 hover:border-dnd-gold transition-colors"
+                className="p-0.5 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-300 transition-colors"
                 title="Reset to 5e rules"
               >
                 <RotateCcw size={10} />
@@ -134,12 +134,12 @@ export default function SlotLevelRow({
             className="w-[18px] h-[18px] sm:w-5 sm:h-5 flex items-center justify-center rounded hover:bg-slate-800/80 active:scale-95 flex-shrink-0"
             title={`Set ${getLevelLabel(level)} slots to ${idx + 1}`}
           >
-            {/* Four-pointed star SVG: instant color update without transition lag */}
+            {/* Four-pointed star SVG: follows theme palette stars token */}
             <svg
               viewBox="0 0 24 24"
-              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${
+              className={`w-3 h-3 sm:w-3.5 sm:h-3.5 transition-colors ${
                 isAvailable
-                  ? 'text-dnd-gold drop-shadow-[0_0_6px_rgba(224,168,56,0.65)]'
+                  ? 'text-dnd-stars drop-shadow-[0_0_6px_currentColor]'
                   : 'text-slate-600 hover:text-slate-400'
               }`}
               fill={isAvailable ? 'currentColor' : 'none'}

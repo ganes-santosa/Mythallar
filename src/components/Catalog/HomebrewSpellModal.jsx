@@ -95,10 +95,10 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4 animate-in fade-in">
-      <div className="relative w-full max-w-2xl bg-dnd-panel border border-dnd-border rounded-xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in">
+      <div className="relative w-full max-w-2xl bg-dnd-panel rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-dnd-border bg-dnd-card">
+        <div className="flex items-center justify-between p-4 bg-dnd-card">
           <div className="flex items-center space-x-2">
             <Sparkles size={18} className="text-dnd-gold" />
             <h2 className="text-base font-bold text-slate-100">Create Homebrew Spell</h2>
@@ -116,7 +116,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
         {/* Scrollable Form */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
           {error && (
-            <div className="p-2 rounded bg-red-500/20 border border-red-500/40 text-red-300">
+            <div className="p-2 rounded bg-red-500/20 text-red-300">
               {error}
             </div>
           )}
@@ -136,7 +136,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
               }}
               placeholder="e.g. Eldritch Nova"
               required
-              className="w-full bg-dnd-card border border-dnd-border rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:border-dnd-gold"
+              className="w-full bg-dnd-card rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-white/20"
             />
           </div>
 
@@ -150,7 +150,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 id="custom-spell-level"
                 value={level}
                 onChange={(e) => setLevel(Number(e.target.value))}
-                className="w-full bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-dnd-gold"
+                className="w-full bg-dnd-card rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
               >
                 <option value={0}>Cantrip (Level 0)</option>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
@@ -169,7 +169,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 id="custom-spell-school"
                 value={school}
                 onChange={(e) => setSchool(e.target.value)}
-                className="w-full bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:border-dnd-gold"
+                className="w-full bg-dnd-card rounded-lg px-2.5 py-2 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
               >
                 {SCHOOLS.map((s) => (
                   <option key={s} value={s}>
@@ -192,7 +192,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
                 placeholder="1 action"
-                className="w-full bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-dnd-gold"
+                className="w-full bg-dnd-card rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
 
@@ -206,7 +206,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 value={range}
                 onChange={(e) => setRange(e.target.value)}
                 placeholder="60 feet"
-                className="w-full bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-dnd-gold"
+                className="w-full bg-dnd-card rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
 
@@ -220,7 +220,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="Instantaneous"
-                className="w-full bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-dnd-gold"
+                className="w-full bg-dnd-card rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
           </div>
@@ -232,7 +232,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 type="checkbox"
                 checked={concentration}
                 onChange={(e) => setConcentration(e.target.checked)}
-                className="rounded border-dnd-border text-dnd-gold focus:ring-0"
+                className="rounded text-dnd-gold focus:ring-0"
               />
               <span>Concentration</span>
             </label>
@@ -242,7 +242,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 type="checkbox"
                 checked={ritual}
                 onChange={(e) => setRitual(e.target.checked)}
-                className="rounded border-dnd-border text-dnd-gold focus:ring-0"
+                className="rounded text-dnd-gold focus:ring-0"
               />
               <span>Ritual</span>
             </label>
@@ -286,7 +286,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 value={materialText}
                 onChange={(e) => setMaterialText(e.target.value)}
                 placeholder="Material description (e.g. a pinch of phosphorus)"
-                className="w-full bg-dnd-card border border-dnd-border rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:border-dnd-gold mt-1.5"
+                className="w-full bg-dnd-card rounded-lg px-2.5 py-1.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20 mt-1.5"
               />
             )}
           </div>
@@ -302,10 +302,10 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                     key={cls}
                     type="button"
                     onClick={() => toggleClass(cls)}
-                    className={`px-2 py-0.5 rounded text-[11px] border transition-colors ${
+                    className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
                       isSelected
-                        ? 'bg-dnd-gold/20 border-dnd-gold text-dnd-gold font-medium'
-                        : 'bg-dnd-card border-dnd-border text-slate-400 hover:text-slate-200'
+                        ? 'bg-white/10 text-white shadow-[0_0_8px_rgba(255,255,255,0.08)] font-semibold'
+                        : 'bg-dnd-card text-slate-400 hover:text-slate-200'
                     }`}
                   >
                     {cls}
@@ -327,7 +327,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
               onChange={(e) => setEntriesText(e.target.value)}
               placeholder="Describe the spell effects, damage, saves..."
               required
-              className="w-full bg-dnd-card border border-dnd-border rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-dnd-gold leading-relaxed"
+              className="w-full bg-dnd-card rounded-lg p-2.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20 leading-relaxed"
             />
           </div>
 
@@ -342,16 +342,16 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
               value={higherLevels}
               onChange={(e) => setHigherLevels(e.target.value)}
               placeholder="e.g. When you cast this spell using a spell slot of 3rd level or higher..."
-              className="w-full bg-dnd-card border border-dnd-border rounded-lg p-2.5 text-slate-200 focus:outline-none focus:border-dnd-gold"
+              className="w-full bg-dnd-card rounded-lg p-2.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
             />
           </div>
 
           {/* Submit & Cancel Buttons */}
-          <div className="pt-3 border-t border-dnd-border flex items-center justify-end space-x-2">
+          <div className="pt-3 flex items-center justify-end space-x-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-dnd-card border border-dnd-border hover:bg-slate-800 text-slate-300 transition-colors"
+              className="px-4 py-2 rounded-lg bg-dnd-card hover:bg-dnd-hover text-slate-300 transition-colors"
             >
               Cancel
             </button>

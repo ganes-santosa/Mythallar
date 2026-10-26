@@ -113,13 +113,13 @@ export default function SpellSlotTracker({
   };
 
   return (
-    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel border border-dnd-border transition-all space-y-2">
+    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* ================= SHARED SPELL SLOTS SECTION ================= */}
       <div>
         {/* Header / Accordion Trigger */}
         <div
           className={`flex flex-wrap items-center justify-between gap-2 ${
-            isCollapsed ? '' : 'pb-1.5 mb-1.5 border-b border-dnd-border/60'
+            isCollapsed ? '' : 'pb-1.5 mb-1.5'
           }`}
         >
           <div className="flex items-center space-x-2">
@@ -156,8 +156,8 @@ export default function SpellSlotTracker({
               </button>
 
               {showSlotsHint && (
-                <div className="absolute left-0 top-6 z-30 w-64 p-2.5 rounded-lg bg-slate-900 border border-dnd-gold/60 shadow-xl text-xs text-slate-200 animate-in fade-in">
-                  <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-slate-800">
+                <div className="absolute left-0 top-6 z-30 w-64 p-2.5 rounded-lg bg-dnd-card shadow-xl text-xs text-slate-200 animate-in fade-in ring-1 ring-white/10">
+                  <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-white/5">
                     <span className="font-semibold text-dnd-gold text-[11px]">
                       Caster Level Breakdown
                     </span>
@@ -184,7 +184,7 @@ export default function SpellSlotTracker({
                           </span>
                         </div>
                       ))}
-                      <div className="pt-1 mt-1 border-t border-slate-800 flex justify-between font-semibold text-dnd-gold">
+                      <div className="pt-1 mt-1 border-t border-white/5 flex justify-between font-semibold text-dnd-gold">
                         <span>Total Caster Level:</span>
                         <span>{multiclassInfo.casterLevel}</span>
                       </div>
@@ -195,7 +195,7 @@ export default function SpellSlotTracker({
             </div>
 
             {/* Prepared Spells Button & Segment */}
-            <div className="flex items-center space-x-1 bg-dnd-card border border-dnd-border rounded-lg px-2 py-0.5 text-xs">
+            <div className="flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs">
               <BookOpen size={11} className="text-dnd-gold" />
               <span className="text-[11px] text-slate-400">Prepared:</span>
               {isEditingPrepared ? (
@@ -212,7 +212,7 @@ export default function SpellSlotTracker({
                     }}
                     autoFocus
                     placeholder="Max"
-                    className="w-10 bg-slate-900 border border-dnd-gold rounded px-1 text-[11px] text-slate-100 text-center focus:outline-none"
+                    className="w-10 bg-dnd-panel rounded px-1 text-[11px] text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-white/20"
                   />
                   <button
                     type="button"
@@ -268,8 +268,8 @@ export default function SpellSlotTracker({
                 </button>
 
                 {showPreparedHint && (
-                  <div className="absolute left-0 top-5 z-30 w-56 p-2 rounded-lg bg-slate-900 border border-dnd-gold/60 shadow-xl text-xs text-slate-200 animate-in fade-in">
-                    <div className="flex items-center justify-between pb-1 mb-1 border-b border-slate-800">
+                  <div className="absolute left-0 top-5 z-30 w-56 p-2 rounded-lg bg-dnd-card shadow-xl text-xs text-slate-200 animate-in fade-in ring-1 ring-white/10">
+                    <div className="flex items-center justify-between pb-1 mb-1 border-b border-white/5">
                       <span className="font-semibold text-dnd-gold text-[11px]">
                         Prepared Limit per Class
                       </span>
@@ -339,7 +339,7 @@ export default function SpellSlotTracker({
                   if (isCollapsed) setIsCollapsed(false);
                   setIsEditingMax(true);
                 }}
-                className="flex items-center px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-dnd-gold border border-dnd-border hover:border-dnd-gold text-xs font-normal transition-colors"
+                className="flex items-center px-2 py-0.5 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
                 title="Edit maximum spell slots"
               >
                 <Settings2 size={12} className="mr-1 text-slate-400" />
@@ -349,7 +349,7 @@ export default function SpellSlotTracker({
 
             {/* Long Rest with Inverted Light Mode Confirmation Popup */}
             {showLongRestConfirm ? (
-              <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-0.5 rounded-lg border border-slate-300 shadow-md text-xs animate-in fade-in">
+              <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-0.5 rounded-lg shadow-md text-xs animate-in fade-in">
                 <span className="text-[11px] font-semibold text-slate-900">Long Rest?</span>
                 <button
                   type="button"
@@ -374,7 +374,7 @@ export default function SpellSlotTracker({
               <button
                 type="button"
                 onClick={() => setShowLongRestConfirm(true)}
-                className="flex items-center px-2 py-0.5 rounded bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 border border-blue-800/60 transition-colors font-medium"
+                className="flex items-center px-2 py-0.5 rounded bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 transition-colors font-medium"
                 title="Reset all spell slots on Long Rest"
               >
                 <Moon size={12} className="mr-1 text-blue-400" />
@@ -425,7 +425,7 @@ export default function SpellSlotTracker({
 
       {/* ================= PACT MAGIC ACCORDION (WARLOCK) ================= */}
       {hasPactMagic && (
-        <div className="pt-2 border-t border-dnd-border/60">
+        <div className="pt-2">
           <div
             className={`flex flex-wrap items-center justify-between gap-2 ${
               isPactCollapsed ? '' : 'pb-1.5 mb-1.5'
@@ -464,8 +464,8 @@ export default function SpellSlotTracker({
                 </button>
 
                 {showPactHint && (
-                  <div className="absolute left-0 top-6 z-30 w-56 p-2.5 rounded-lg bg-slate-900 border border-purple-500/60 shadow-xl text-xs text-slate-200 animate-in fade-in">
-                    <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-slate-800">
+                  <div className="absolute left-0 top-6 z-30 w-56 p-2.5 rounded-lg bg-dnd-card shadow-xl text-xs text-slate-200 animate-in fade-in ring-1 ring-white/10">
+                    <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-white/5">
                       <span className="font-semibold text-purple-300 text-[11px]">
                         Pact Magic Slots
                       </span>
@@ -505,7 +505,7 @@ export default function SpellSlotTracker({
             <button
               type="button"
               onClick={onShortRest}
-              className="flex items-center px-2 py-0.5 rounded bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 border border-purple-800/60 transition-colors text-xs font-medium"
+              className="flex items-center px-2 py-0.5 rounded bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 transition-colors text-xs font-medium"
               title="Reset Pact Magic slots on Short Rest"
             >
               <Sun size={12} className="mr-1 text-amber-400" />

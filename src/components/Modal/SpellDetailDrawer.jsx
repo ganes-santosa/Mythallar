@@ -38,14 +38,14 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
       {/* Background click to dismiss */}
       <div className="absolute inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-dnd-panel border-l border-dnd-border h-full shadow-2xl flex flex-col z-10 overflow-hidden">
+      <div className="relative w-full max-w-lg bg-dnd-panel h-full shadow-2xl flex flex-col z-10 overflow-hidden">
         {/* Header */}
-        <div className="p-5 border-b border-dnd-border flex items-start justify-between bg-dnd-card/60">
+        <div className="p-5 flex items-start justify-between bg-dnd-card/60">
           <div>
             <div className="flex items-center space-x-2">
               <h2 className="text-xl font-bold text-slate-100">{spell.name}</h2>
               {spell.source && (
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-dnd-gold">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-dnd-card text-dnd-gold">
                   {spell.source}
                 </span>
               )}
@@ -58,14 +58,14 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
           >
             <X size={20} />
           </button>
         </div>
 
         {/* Quick Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 p-4 bg-dnd-bg/40 border-b border-dnd-border text-xs">
+        <div className="grid grid-cols-2 gap-3 p-4 bg-dnd-panel/40 text-xs">
           <div>
             <span className="text-slate-400 block font-medium">Casting Time</span>
             <span className="text-slate-200 font-semibold">{spell.time}</span>
@@ -91,12 +91,12 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
 
         {/* Classes Bar */}
         {Array.isArray(spell.classes) && spell.classes.length > 0 && (
-          <div className="px-5 py-2.5 bg-slate-900/50 border-b border-dnd-border text-xs flex flex-wrap items-center gap-1.5">
+          <div className="px-5 py-2.5 bg-dnd-panel/60 text-xs flex flex-wrap items-center gap-1.5">
             <span className="text-slate-400 mr-1 font-medium">Classes:</span>
             {spell.classes.map((cls) => (
               <span
                 key={cls}
-                className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700/60"
+                className="px-2 py-0.5 rounded bg-dnd-panel text-slate-300"
               >
                 {cls}
               </span>
@@ -111,7 +111,7 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
           ))}
 
           {spell.higherLevels && (
-            <div className="mt-4 pt-3 border-t border-dnd-border/60">
+            <div className="mt-4 pt-3">
               <h4 className="text-xs font-semibold text-dnd-gold mb-1">
                 At Higher Levels
               </h4>
@@ -121,9 +121,9 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-dnd-border bg-dnd-card flex items-center justify-between">
+        <div className="p-4 bg-dnd-card flex items-center justify-between">
           {isInSpellbook ? (
-            <div className="flex items-center text-xs text-dnd-gold font-medium bg-dnd-gold/10 border border-dnd-gold/30 px-3 py-2 rounded-lg">
+            <div className="flex items-center text-xs text-dnd-gold font-medium bg-dnd-gold/10 px-3 py-2 rounded-lg">
               <Check size={16} className="mr-1.5" />
               Already in Spellbook
             </div>

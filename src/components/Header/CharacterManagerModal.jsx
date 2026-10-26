@@ -76,12 +76,12 @@ export default function CharacterManagerModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
-      <div className="bg-dnd-card border border-slate-700/80 rounded-2xl p-4 sm:p-5 max-w-xl w-full shadow-[0_0_35px_rgba(0,0,0,0.8)] space-y-4 max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+      <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
         {/* Modal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-dnd-border flex-shrink-0">
-          <div className="flex items-center space-x-2">
-            <span className="p-1.5 rounded-lg bg-dnd-gold/10 border border-dnd-gold/30 text-dnd-gold">
+        <div className="flex items-center justify-between pb-3 flex-shrink-0">
+          <div className="flex items-center space-x-2.5">
+            <span className="p-1.5 rounded-lg bg-dnd-panel text-dnd-gold">
               <User size={18} />
             </span>
             <div>
@@ -97,7 +97,7 @@ export default function CharacterManagerModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
             title="Close modal"
           >
             <X size={16} />
@@ -113,12 +113,12 @@ export default function CharacterManagerModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Filter by name or class..."
-              className="w-full bg-slate-900 border border-dnd-border rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-dnd-gold transition-colors"
+              className="w-full bg-dnd-panel/70 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors"
             />
           </div>
 
           <div className="flex items-center space-x-2">
-            <div className="relative flex items-center bg-slate-900 border border-dnd-border rounded-lg px-2 py-1.5 text-xs">
+            <div className="relative flex items-center bg-dnd-panel/70 rounded-lg px-2 py-1.5 text-xs">
               <ArrowUpDown size={12} className="text-slate-400 mr-1.5 flex-shrink-0" />
               <select
                 aria-label="Sort Characters"
@@ -126,10 +126,10 @@ export default function CharacterManagerModal({
                 onChange={(e) => setSortBy(e.target.value)}
                 className="bg-transparent text-slate-200 text-xs focus:outline-none cursor-pointer"
               >
-                <option value="level-desc" className="bg-slate-900">Highest Level</option>
-                <option value="level-asc" className="bg-slate-900">Lowest Level</option>
-                <option value="name-asc" className="bg-slate-900">Name (A-Z)</option>
-                <option value="name-desc" className="bg-slate-900">Name (Z-A)</option>
+                <option value="level-desc" className="bg-dnd-panel">Highest Level</option>
+                <option value="level-asc" className="bg-dnd-panel">Lowest Level</option>
+                <option value="name-asc" className="bg-dnd-panel">Name (A-Z)</option>
+                <option value="name-desc" className="bg-dnd-panel">Name (Z-A)</option>
               </select>
             </div>
 
@@ -163,15 +163,15 @@ export default function CharacterManagerModal({
               return (
                 <div
                   key={char.id}
-                  className={`p-3 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                  className={`p-3 rounded-xl transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
                     isActive
-                      ? 'bg-dnd-gold/10 border-dnd-gold/60 shadow-[0_0_15px_rgba(224,168,56,0.1)]'
-                      : 'bg-slate-900/70 border-dnd-border hover:border-slate-600'
+                      ? 'bg-dnd-panel/90 shadow-[0_0_16px_rgba(255,255,255,0.08)] ring-1 ring-white/25'
+                      : 'bg-dnd-panel/40 hover:bg-dnd-panel/70'
                   }`}
                 >
                   {/* Left Info Column */}
                   <div className="flex items-start space-x-3">
-                    <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex flex-col items-center justify-center flex-shrink-0">
+                    <div className="w-10 h-10 rounded-lg bg-dnd-card/80 flex flex-col items-center justify-center flex-shrink-0">
                       <span className="text-[10px] uppercase text-dnd-gold font-bold">Lvl</span>
                       <span className="text-sm font-bold text-slate-100 tabular-nums leading-none">
                         {lvl}
@@ -206,7 +206,7 @@ export default function CharacterManagerModal({
                   {/* Actions Column */}
                   <div className="flex items-center space-x-2 self-end sm:self-center">
                     {isConfirmingDelete ? (
-                      <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-1 rounded-lg border border-slate-300 shadow-md text-xs animate-in fade-in">
+                      <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-1 rounded-lg shadow-md text-xs animate-in fade-in">
                         <ShieldAlert size={12} className="text-red-600" />
                         <span className="text-[11px] font-bold text-slate-900">Delete?</span>
                         <button
@@ -233,7 +233,7 @@ export default function CharacterManagerModal({
                             type="button"
                             aria-label={`Switch to ${char.name}`}
                             onClick={() => handleSelect(char.id)}
-                            className="px-2.5 py-1 rounded-md bg-slate-800 hover:bg-dnd-gold hover:text-slate-950 text-slate-200 border border-slate-700 text-xs font-semibold transition-colors"
+                            className="px-2.5 py-1 rounded-md bg-dnd-card/80 hover:bg-dnd-card hover:text-white text-slate-300 text-xs font-semibold transition-colors"
                           >
                             Switch
                           </button>

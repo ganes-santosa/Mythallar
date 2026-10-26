@@ -18,7 +18,7 @@ export default function ProfileSelector({
   return (
     <div className="flex items-center space-x-1">
       {/* Quick Dropdown Pill for Recent Switch */}
-      <div className="relative flex items-center bg-slate-900/80 border border-dnd-border hover:border-dnd-gold rounded-md pl-2 pr-1.5 py-1 text-xs transition-colors">
+      <div className="relative flex items-center bg-dnd-panel/60 hover:bg-dnd-panel rounded-md pl-2 pr-1.5 py-1 text-xs transition-colors">
         <User size={12} className="text-dnd-gold mr-1.5 flex-shrink-0" />
         <select
           value={activeId}
@@ -42,7 +42,7 @@ export default function ProfileSelector({
           onClick={onOpenManager}
           aria-label="Manage Characters"
           title="Open character manager modal"
-          className="p-1 rounded-md bg-slate-900/80 border border-dnd-border hover:border-dnd-gold text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center"
+          className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-white transition-colors flex items-center justify-center"
         >
           <Users size={13} />
         </button>
@@ -50,7 +50,7 @@ export default function ProfileSelector({
 
       {/* New Hero Button */}
       {showConfirm ? (
-        <div className="flex items-center space-x-1 bg-[#EFE9E0] text-slate-900 px-1.5 py-0.5 rounded-md border border-slate-300 shadow-md text-xs animate-in fade-in">
+        <div className="flex items-center space-x-1 bg-[#EFE9E0] text-slate-900 px-1.5 py-0.5 rounded-md shadow-md text-xs animate-in fade-in">
           <span className="text-[10px] font-semibold text-slate-900">New?</span>
           <button
             type="button"
@@ -77,7 +77,7 @@ export default function ProfileSelector({
           onClick={() => setShowConfirm(true)}
           aria-label="New Character"
           title="Create new character profile"
-          className="p-1 rounded-md bg-slate-900/80 border border-dnd-border hover:border-dnd-gold text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center"
+          className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-white transition-colors flex items-center justify-center"
         >
           <Plus size={13} />
         </button>

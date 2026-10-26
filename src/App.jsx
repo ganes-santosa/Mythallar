@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { BookOpen, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -18,10 +18,13 @@ import {
   deleteCloudCharacter,
   mergeLocalAndCloud,
 } from './utils/syncService';
+import { getStoredThemeId, setTheme, applyTheme } from './utils/themeService';
 import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
 import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
 import CharacterHeader from './components/Header/CharacterHeader';
+import SettingsModal from './components/Header/SettingsModal';
+import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
 
@@ -46,6 +49,19 @@ export default function App() {
   useEffect(() => {
     saveHomebrewSpells(homebrewSpells);
   }, [homebrewSpells]);
+
+  // --- Settings & Theme State ---
+  const [activeThemeId, setActiveThemeId] = useState(() => getStoredThemeId());
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    applyTheme(activeThemeId);
+  }, [activeThemeId]);
+
+  const handleSelectTheme = (themeId) => {
+    setTheme(themeId);
+    setActiveThemeId(themeId);
+  };
 
   // --- Auth & Cloud Sync State ---
   const [user, setUser] = useState(null);
@@ -585,7 +601,7 @@ export default function App() {
     <div className="flex flex-col h-screen w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
       {/* Toast Banner */}
       {toast && (
-        <div className="fixed top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-dnd-border">
+        <div className="fixed top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card">
           {toast.type === 'success' && <CheckCircle2 size={16} className="text-emerald-400" />}
           {toast.type === 'error' && <AlertCircle size={16} className="text-red-400" />}
           {toast.type === 'info' && <Sparkles size={16} className="text-dnd-gold" />}
@@ -596,26 +612,37 @@ export default function App() {
       {/* Main Dual-Pane Body */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
-        <section className="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-dnd-border p-3 sm:p-4 overflow-hidden bg-dnd-panel/30">
+        <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-hidden bg-dnd-panel/30">
           {/* Integrated Header */}
-          <div className="flex items-center justify-between pb-2.5 mb-2 border-b border-dnd-border/60 flex-shrink-0">
+          <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
             <div className="flex items-center space-x-2.5">
-              <span className="p-1.5 rounded-lg bg-dnd-gold/10 border border-dnd-gold/30 text-dnd-gold">
-                <BookOpen size={17} />
-              </span>
-              <div className="flex flex-wrap items-baseline gap-2">
-                <h1 className="text-base sm:text-lg font-bold text-slate-100 tracking-tight">
+              <div className="w-8 h-8 rounded-lg bg-dnd-card/70 flex items-center justify-center p-1">
+                <MythallarLogo className="w-5 h-5" />
+              </div>
+              <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
+                <h1 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display">
                   Mythallar
                 </h1>
-                <span className="hidden sm:inline text-[11px] text-dnd-gold font-medium px-1.5 py-0.2 rounded bg-dnd-gold/10 border border-dnd-gold/20">
-                  DnD 5e Spellbook
-                </span>
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[11px] text-dnd-gold font-medium px-1.5 py-0.5 rounded bg-dnd-gold/10">
+                    DnD 5e Spellbook
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-mono tracking-tight select-none">
+                    v1.2.0
+                  </span>
+                </div>
               </div>
             </div>
 
-            <span className="hidden lg:inline text-[11px] text-slate-400">
-              Drag to Spellbook
-            </span>
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              aria-label="Open settings"
+              title="Appearance & Theme Settings"
+              className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card hover:text-white text-slate-400 transition-colors flex items-center justify-center"
+            >
+              <Settings size={15} />
+            </button>
           </div>
 
           <FilterBar
@@ -696,6 +723,14 @@ export default function App() {
         isOpen={isHomebrewSpellModalOpen}
         onClose={() => setIsHomebrewSpellModalOpen(false)}
         onSave={handleSaveHomebrewSpell}
+      />
+
+      {/* Settings & Theme Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        activeThemeId={activeThemeId}
+        onSelectTheme={handleSelectTheme}
       />
     </div>
   );

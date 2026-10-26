@@ -1,4 +1,14 @@
 /** @type {import('tailwindcss').Config} */
+function withOpacity(variableName, fallback) {
+  return ({ opacityValue }) => {
+    const varRef = fallback ? `var(${variableName}, ${fallback})` : `var(${variableName})`;
+    if (opacityValue !== undefined) {
+      return `color-mix(in srgb, ${varRef} calc(${opacityValue} * 100%), transparent)`;
+    }
+    return varRef;
+  };
+}
+
 export default {
   content: [
     "./index.html",
@@ -8,18 +18,19 @@ export default {
     extend: {
       colors: {
         dnd: {
-          bg: '#17181B', // Obsidian Black
-          panel: '#202227', // Slate Obsidian tint
-          card: '#292B32', // Elevated dark surface
-          hover: '#363942', // Interactive hover
-          border: '#434A50', // Cathedral Slate
-          gold: '#e0a838', // Amber Gold (Primary Accent)
-          'gold-light': '#f5c862', // Warm Gold Light (Highlight)
-          'gold-dark': '#9c6f1a', // Deep Gold
-          ivory: '#EFE9E0', // Moonstone Ivory (Text Primary)
-          pewter: '#979DA1', // Antique Pewter
-          slate: '#434A50', // Cathedral Slate
-          obsidian: '#17181B', // Obsidian Black
+          bg: withOpacity('--color-bg', '#17181B'),
+          panel: withOpacity('--color-panel', '#202227'),
+          card: withOpacity('--color-card', '#272930'),
+          hover: withOpacity('--color-hover', '#32353E'),
+          border: withOpacity('--color-border', 'transparent'),
+          gold: withOpacity('--color-gold', '#e0a838'),
+          'gold-light': withOpacity('--color-gold-light', '#f5c862'),
+          'gold-dark': withOpacity('--color-gold-dark', '#9c6f1a'),
+          stars: withOpacity('--color-stars', 'var(--color-gold, #e0a838)'),
+          ivory: withOpacity('--color-ivory', '#EFE9E0'),
+          pewter: withOpacity('--color-muted', '#979DA1'),
+          slate: withOpacity('--color-border', 'transparent'),
+          obsidian: withOpacity('--color-bg', '#17181B'),
           red: '#c53b3b',
           blue: '#4B6170',
           green: '#3bc56c',
@@ -27,7 +38,7 @@ export default {
       },
       fontFamily: {
         display: ['"Funnel Display"', 'system-ui', 'sans-serif'],
-        sans: ['"Funnel Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Funnel Display"', 'system-ui', 'sans-serif'],
       }
     },
   },

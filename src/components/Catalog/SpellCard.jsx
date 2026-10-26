@@ -11,14 +11,14 @@ import {
 } from 'lucide-react';
 
 const SCHOOL_COLORS = {
-  Abjuration: 'text-blue-300 border-blue-400/30 bg-blue-500/10',
-  Conjuration: 'text-amber-300 border-amber-400/30 bg-amber-500/10',
-  Divination: 'text-purple-300 border-purple-400/30 bg-purple-500/10',
-  Enchantment: 'text-pink-300 border-pink-400/30 bg-pink-500/10',
-  Evocation: 'text-red-300 border-red-400/30 bg-red-500/10',
-  Illusion: 'text-indigo-300 border-indigo-400/30 bg-indigo-500/10',
-  Necromancy: 'text-emerald-300 border-emerald-400/30 bg-emerald-500/10',
-  Transmutation: 'text-yellow-300 border-yellow-400/30 bg-yellow-500/10',
+  Abjuration: 'text-blue-300 bg-blue-500/15',
+  Conjuration: 'text-amber-300 bg-amber-500/15',
+  Divination: 'text-purple-300 bg-purple-500/15',
+  Enchantment: 'text-pink-300 bg-pink-500/15',
+  Evocation: 'text-red-300 bg-red-500/15',
+  Illusion: 'text-indigo-300 bg-indigo-500/15',
+  Necromancy: 'text-emerald-300 bg-emerald-500/15',
+  Transmutation: 'text-yellow-300 bg-yellow-500/15',
 };
 
 export default function SpellCard({
@@ -30,7 +30,7 @@ export default function SpellCard({
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isHomebrew = spell.source === 'Homebrew' || spell.source === 'Custom';
-  const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 border-slate-500/30 bg-slate-500/10';
+  const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 bg-slate-500/15';
 
   const handleDragStart = (e) => {
     e.dataTransfer.setData('text/plain', spell.id);
@@ -62,8 +62,8 @@ export default function SpellCard({
     <div
       draggable
       onDragStart={handleDragStart}
-      className={`rounded-lg bg-dnd-card border transition-all duration-200 select-none overflow-hidden ${
-        isExpanded ? 'border-dnd-gold shadow-md shadow-black/50' : 'border-dnd-border hover:border-dnd-gold/60'
+      className={`rounded-lg bg-dnd-card transition-all duration-200 select-none overflow-hidden ${
+        isExpanded ? 'shadow-[0_0_18px_rgba(255,255,255,0.12)] ring-1 ring-white/30' : 'hover:bg-dnd-hover/80'
       }`}
     >
       {/* Header Row (Click to toggle accordion) */}
@@ -72,7 +72,7 @@ export default function SpellCard({
         tabIndex={0}
         onKeyDown={handleKeyDown}
         onClick={toggleExpand}
-        className="group flex items-center justify-between p-2 sm:px-2.5 sm:py-2 hover:bg-dnd-hover focus:outline-none focus:ring-1 focus:ring-dnd-gold transition-colors cursor-pointer"
+        className="group flex items-center justify-between p-2 sm:px-2.5 sm:py-2 hover:bg-dnd-hover focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors cursor-pointer"
       >
         <div className="flex items-center space-x-2.5 overflow-hidden">
           <span
@@ -91,7 +91,7 @@ export default function SpellCard({
 
               {spell.isLegacy && (
                 <span
-                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300"
+                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300"
                   title="2014 Legacy PHB version"
                 >
                   Legacy
@@ -100,7 +100,7 @@ export default function SpellCard({
 
               {(spell.source === 'Homebrew' || spell.source === 'Custom') && (
                 <span
-                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300"
+                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300"
                   title="Homebrew spell"
                 >
                   Homebrew
@@ -108,7 +108,7 @@ export default function SpellCard({
               )}
 
               {isInSpellbook && (
-                <span className="flex items-center text-[11px] text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-1.5 py-0.2 rounded">
+                <span className="flex items-center text-[11px] text-dnd-gold bg-dnd-gold/10 px-1.5 py-0.2 rounded">
                   <BookOpenCheck size={11} className="mr-1 inline" /> In Book
                 </span>
               )}
@@ -138,10 +138,10 @@ export default function SpellCard({
         </div>
 
         <div className="flex items-center space-x-1.5 flex-shrink-0">
-          <span className={`text-[11px] px-1.5 py-0.2 rounded border font-medium ${schoolColor}`}>
+          <span className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${schoolColor}`}>
             {spell.school}
           </span>
-          <span className="text-[11px] px-1.5 py-0.2 rounded bg-slate-900 border border-slate-700 text-slate-300 font-medium">
+          <span className="text-[11px] px-1.5 py-0.2 rounded bg-dnd-panel/80 text-slate-300 font-medium">
             {spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`}
           </span>
           <ChevronDown
@@ -156,9 +156,9 @@ export default function SpellCard({
       {/* Accordion Detail Body */}
       {isExpanded && (
         <div className="overflow-hidden animate-in fade-in duration-200">
-          <div className="p-3 bg-dnd-bg/80 border-t border-dnd-border/80 text-xs text-slate-300 space-y-2.5">
+          <div className="p-3 bg-dnd-panel/40 text-xs text-slate-300 space-y-2.5">
             {/* Quick stats strip */}
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded bg-dnd-panel/70 border border-dnd-border/50 text-[11px]">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded bg-dnd-panel/60 text-[11px]">
               <div>
                 <span className="text-slate-400 block font-medium">Casting Time</span>
                 <span className="text-slate-200 font-semibold">{spell.time}</span>
@@ -190,7 +190,7 @@ export default function SpellCard({
                 {spell.classes.map((cls) => (
                   <span
                     key={cls}
-                    className="px-1.5 py-0.2 rounded bg-slate-800 border border-slate-700 text-slate-300"
+                    className="px-1.5 py-0.2 rounded bg-dnd-panel/80 text-slate-300"
                   >
                     {cls}
                   </span>
@@ -207,7 +207,7 @@ export default function SpellCard({
 
             {/* Higher levels */}
             {spell.higherLevels && (
-              <div className="pt-2 border-t border-dnd-border/60">
+              <div className="pt-2">
                 <span className="font-semibold text-dnd-gold-light block mb-0.5 text-[11px]">
                   At Higher Levels
                 </span>
@@ -227,7 +227,7 @@ export default function SpellCard({
                       onDeleteHomebrew(spell.id);
                     }
                   }}
-                  className="flex items-center px-2 py-1 rounded bg-red-950/40 hover:bg-red-900/60 text-red-300 border border-red-800/60 text-xs transition-colors"
+                  className="flex items-center px-2 py-1 rounded bg-red-950/40 hover:bg-red-900/60 text-red-300 text-xs transition-colors"
                   title="Delete this homebrew spell permanently"
                 >
                   <Trash2 size={12} className="mr-1 text-red-400" />
@@ -238,7 +238,7 @@ export default function SpellCard({
               )}
 
               {isInSpellbook ? (
-                <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 border border-dnd-gold/30 px-2.5 py-1 rounded">
+                <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 px-2.5 py-1 rounded">
                   <Check size={14} className="mr-1" /> In Spellbook
                 </span>
               ) : (

@@ -27,11 +27,11 @@ export default function SpellbookCard({
 
   return (
     <div
-      className={`relative rounded-lg bg-dnd-card text-slate-100 border transition-all duration-200 select-none overflow-hidden ${
+      className={`relative rounded-lg bg-dnd-card text-slate-100 transition-all duration-200 select-none overflow-hidden ${
         isPrepared
-          ? 'border-white/30 shadow-[0_0_12px_rgba(255,255,255,0.08)]'
-          : 'border-dnd-border hover:border-dnd-gold/60'
-      } ${isExpanded ? (isPrepared ? 'border-white/45 shadow-[0_0_16px_rgba(255,255,255,0.12)]' : 'border-dnd-gold shadow-md shadow-black/40') : ''}`}
+          ? 'ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
+          : 'hover:bg-dnd-hover/80'
+      } ${isExpanded ? 'shadow-[0_0_18px_rgba(255,255,255,0.12)] ring-1 ring-white/30' : ''}`}
     >
       {/* Left Bookmark Subdivision Strip: turns light Ivory/White glow when prepared */}
       <div
@@ -40,7 +40,7 @@ export default function SpellbookCard({
         className={`absolute left-0 top-0 bottom-0 w-1.5 transition-all duration-300 z-10 ${
           isPrepared
             ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
-            : 'bg-slate-700/60 border-r border-slate-600/40'
+            : 'bg-white/10'
         }`}
       />
       <div
@@ -58,13 +58,13 @@ export default function SpellbookCard({
         <div className="flex items-center space-x-2 overflow-hidden">
           <div>
             <div className="flex items-center space-x-1.5">
-              <span className="font-semibold text-sm text-slate-100 group-hover:text-dnd-gold-light transition-colors truncate">
+              <span className="font-semibold text-sm text-slate-100 group-hover:text-white transition-colors truncate">
                 {spell.name}
               </span>
 
               {spell.isLegacy && (
                 <span
-                  className="text-[9px] font-medium tracking-wide px-1 py-0.2 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300"
+                  className="text-[9px] font-medium tracking-wide px-1 py-0.2 rounded bg-amber-500/15 text-amber-300"
                   title="2014 Legacy PHB version"
                 >
                   Legacy
@@ -73,7 +73,7 @@ export default function SpellbookCard({
 
               {(spell.source === 'Homebrew' || spell.source === 'Custom') && (
                 <span
-                  className="text-[9px] font-medium tracking-wide px-1 py-0.2 rounded bg-purple-500/20 border border-purple-500/40 text-purple-300"
+                  className="text-[9px] font-medium tracking-wide px-1 py-0.2 rounded bg-purple-500/20 text-purple-300"
                   title="Homebrew spell"
                 >
                   Homebrew
@@ -100,16 +100,16 @@ export default function SpellbookCard({
         </div>
 
         <div className="flex items-center space-x-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          {/* Prepare Button (Level 1+ spells) with Subtle White Glow when Prepared */}
+          {/* Prepare Button (Level 1+ spells) */}
           {spell.level > 0 && (
             <button
               type="button"
               aria-label={`Toggle Prepared for ${spell.name}`}
               onClick={() => onTogglePrepare(spell.id)}
-              className={`flex items-center px-2 py-1 rounded text-xs font-semibold border transition-colors ${
+              className={`flex items-center px-2 py-1 rounded text-xs font-semibold transition-colors ${
                 isPrepared
-                  ? 'bg-slate-900 text-slate-100 border-white/40 shadow-[0_0_8px_rgba(255,255,255,0.10)] hover:bg-slate-800'
-                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-dnd-pewter hover:text-slate-100'
+                  ? 'bg-white/10 text-white shadow-[0_0_8px_rgba(255,255,255,0.12)] ring-1 ring-white/20'
+                  : 'bg-dnd-panel/60 text-slate-400 hover:text-slate-100'
               }`}
               title={isPrepared ? 'Click to unprepare spell' : 'Click to prepare spell'}
             >
@@ -123,7 +123,7 @@ export default function SpellbookCard({
             type="button"
             aria-label={`Quick-Cast ${spell.name}`}
             onClick={() => onCast(spell)}
-            className="flex items-center px-2 py-1 rounded text-xs font-semibold bg-slate-900 hover:bg-dnd-gold hover:text-slate-100 text-slate-300 border border-slate-700 transition-colors"
+            className="flex items-center px-2 py-1 rounded text-xs font-semibold bg-dnd-panel hover:bg-white/10 text-slate-300 hover:text-white transition-colors"
             title={`Cast ${spell.name}`}
           >
             <Wand2 size={12} className="mr-1" />
@@ -160,8 +160,8 @@ export default function SpellbookCard({
       {/* Accordion Detail Body */}
       {isExpanded && (
         <div className="overflow-hidden animate-in fade-in duration-200">
-          <div className="py-3 pr-3 pl-5 sm:pl-6 bg-dnd-bg/80 border-t border-dnd-border/80 text-xs text-slate-300 space-y-2.5">
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded text-[11px] bg-dnd-panel/70 border border-dnd-border/50 text-slate-300">
+          <div className="py-3 pr-3 pl-5 sm:pl-6 bg-dnd-panel/40 text-xs text-slate-300 space-y-2.5">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded text-[11px] bg-dnd-panel/60 text-slate-300">
               <div>
                 <span className="block font-medium text-slate-400">Casting Time</span>
                 <span className="font-semibold text-slate-200">{spell.time}</span>
@@ -195,7 +195,7 @@ export default function SpellbookCard({
             )}
 
             {spell.higherLevels && (
-              <div className="pt-2 border-t border-dnd-border/60">
+              <div className="pt-2">
                 <span className="block mb-0.5 text-[11px] font-semibold text-dnd-gold-light">
                   At Higher Levels
                 </span>

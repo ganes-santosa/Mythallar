@@ -184,9 +184,9 @@ export default function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 mb-2.5 border-b border-dnd-border">
+    <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 mb-2.5">
       {/* Left: Highlight Character Profile Card */}
-      <div className="flex-1 min-w-[280px] p-2.5 sm:p-3 rounded-xl bg-dnd-card border border-dnd-border shadow-sm">
+      <div className="flex-1 min-w-[280px] p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
         {/* Name Title & Header Actions */}
         <div className="flex items-center justify-between gap-3">
           {/* Left: Name & Character Level next to it */}
@@ -198,10 +198,10 @@ export default function CharacterHeader({
                 onChange={(e) => setNameDraft(e.target.value)}
                 placeholder="Character Name"
                 autoFocus
-                className="bg-slate-900 border border-dnd-gold rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none w-44 sm:w-56 transition-colors"
+                className="bg-dnd-panel rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
               />
             ) : (
-              <h2 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate max-w-[180px] sm:max-w-xs">
+              <h2 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate max-w-[180px] sm:max-w-xs font-display">
                 {activeCharacter.name}
               </h2>
             )}
@@ -229,7 +229,7 @@ export default function CharacterHeader({
                   type="button"
                   aria-label="Cancel Edit Profile"
                   onClick={handleCancelEdit}
-                  className="p-1 rounded-md bg-slate-900 border border-dnd-border hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+                  className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors"
                   title="Cancel editing"
                 >
                   <X size={12} />
@@ -241,7 +241,7 @@ export default function CharacterHeader({
                   type="button"
                   aria-label="Edit Profile"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-dnd-gold border border-dnd-border hover:border-dnd-gold text-xs font-normal transition-colors"
+                  className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
                   title="Edit character name and classes"
                 >
                   <Pencil size={11} className="mr-1 text-slate-400" />
@@ -252,7 +252,7 @@ export default function CharacterHeader({
                   <button
                     type="button"
                     onClick={handleOpenLevelUpModal}
-                    className="flex items-center px-2 py-0.5 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-dnd-gold border border-dnd-border hover:border-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0"
+                    className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0"
                     title="Level up this character"
                   >
                     <ArrowUpCircle size={12} className="mr-1 text-slate-400 flex-shrink-0" />
@@ -273,7 +273,7 @@ export default function CharacterHeader({
                 return (
                   <div
                     key={idx}
-                    className="flex items-center space-x-1 bg-slate-900/95 border border-dnd-border rounded-md px-1.5 py-0.5 text-xs animate-in fade-in"
+                    className="flex items-center space-x-1 bg-dnd-panel rounded-md px-1.5 py-0.5 text-xs animate-in fade-in"
                   >
                     {/* Class Dropdown */}
                     <select
@@ -290,12 +290,12 @@ export default function CharacterHeader({
                     </select>
 
                     {/* Class Level Dropdown */}
-                    <div className="flex items-center space-x-1 pl-1 border-l border-slate-700/60">
+                    <div className="flex items-center space-x-1 pl-1">
                       <span className="text-[11px] text-slate-400">Lvl</span>
                       <select
                         value={clsItem.level}
                         onChange={(e) => handleSetClassLevel(idx, e.target.value)}
-                        className="bg-slate-800 border border-slate-700 rounded px-1 py-0.5 text-[11px] text-slate-100 font-normal focus:outline-none focus:border-dnd-gold cursor-pointer"
+                        className="bg-dnd-panel/80 rounded px-1 py-0.5 text-[11px] text-slate-100 font-normal focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
                         aria-label={`Level for ${clsItem.className}`}
                       >
                         {Array.from({ length: maxLvlForThisClass }, (_, i) => i + 1).map((lvl) => (
@@ -327,7 +327,7 @@ export default function CharacterHeader({
                 <button
                   type="button"
                   onClick={handleAddClass}
-                  className="flex items-center px-2 py-0.5 rounded-md bg-slate-900/60 border border-dashed border-slate-700 hover:border-dnd-gold text-slate-400 hover:text-dnd-gold text-xs transition-colors"
+                  className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs transition-colors"
                   title="Add another class for multiclassing"
                 >
                   <Plus size={12} className="mr-1" />
@@ -339,7 +339,7 @@ export default function CharacterHeader({
             classes.map((clsItem, idx) => (
               <div
                 key={idx}
-                className="flex items-center space-x-1.5 bg-slate-900/90 border border-dnd-border rounded-md px-2 py-0.5 text-xs text-slate-200"
+                className="flex items-center space-x-1.5 bg-dnd-panel/60 rounded-md px-2 py-0.5 text-xs text-slate-200"
               >
                 <span className="font-normal text-slate-200">{clsItem.className}</span>
                 <span className="text-[11px] text-dnd-gold font-normal">Lvl {clsItem.level}</span>
@@ -350,7 +350,7 @@ export default function CharacterHeader({
       </div>
 
       {/* Right: Unified Character & File Actions Card */}
-      <div className="flex flex-col items-end justify-center p-2 rounded-xl bg-dnd-card border border-dnd-border shadow-sm space-y-1.5 flex-shrink-0">
+      <div className="flex flex-col items-end justify-center p-2 rounded-xl bg-dnd-card shadow-sm space-y-1.5 flex-shrink-0">
         <div className="flex items-center space-x-1.5 w-full justify-between">
           <ProfileSelector
             profiles={profiles}
@@ -372,7 +372,7 @@ export default function CharacterHeader({
           <button
             type="button"
             onClick={onExport}
-            className="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-slate-900/80 border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors text-[11px] font-medium"
+            className="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-[11px] font-medium"
             title="Export character spellbook as JSON"
           >
             <Download size={11} className="mr-1" />
@@ -382,7 +382,7 @@ export default function CharacterHeader({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-slate-900/80 border border-dnd-border hover:border-dnd-gold text-slate-300 hover:text-dnd-gold transition-colors text-[11px] font-medium"
+            className="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-[11px] font-medium"
             title="Import character spellbook from JSON"
           >
             <Upload size={11} className="mr-1" />
@@ -412,9 +412,9 @@ export default function CharacterHeader({
 
       {/* Level Up Selection Popup Modal */}
       {showLevelUpModal && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-dnd-card border border-slate-700/80 rounded-xl p-4 sm:p-5 max-w-sm w-full shadow-[0_0_30px_rgba(212,175,55,0.12)] space-y-3.5">
-            <div className="flex items-center justify-between pb-2 border-b border-dnd-border">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-sm w-full shadow-2xl space-y-3.5">
+            <div className="flex items-center justify-between pb-2">
               <div className="flex items-center space-x-2">
                 <ArrowUpCircle size={18} className="text-dnd-gold" />
                 <h3 className="text-sm sm:text-base font-bold text-dnd-ivory">
@@ -440,10 +440,10 @@ export default function CharacterHeader({
                 {classes.map((c) => (
                   <label
                     key={c.className}
-                    className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all text-xs ${
+                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all text-xs ${
                       levelUpTarget === c.className
-                        ? 'bg-dnd-gold/10 border-slate-600 shadow-[0_0_12px_rgba(212,175,55,0.1)] text-dnd-ivory'
-                        : 'bg-slate-900/80 border-dnd-border text-slate-300 hover:border-slate-700'
+                        ? 'bg-dnd-panel/90 shadow-[0_0_15px_rgba(255,255,255,0.08)] ring-1 ring-white/25 text-dnd-ivory'
+                        : 'bg-dnd-panel/40 text-slate-300 hover:bg-dnd-panel/70'
                     }`}
                   >
                     <div className="flex items-center space-x-2">
@@ -466,10 +466,10 @@ export default function CharacterHeader({
                 {/* Multiclass into new class option */}
                 {unselectedClasses.length > 0 && (
                   <label
-                    className={`flex flex-col gap-1.5 p-2 rounded-lg border cursor-pointer transition-all text-xs ${
+                    className={`flex flex-col gap-1.5 p-2 rounded-lg cursor-pointer transition-all text-xs ${
                       levelUpTarget === '__new_class__'
-                        ? 'bg-dnd-gold/10 border-slate-600 shadow-[0_0_12px_rgba(212,175,55,0.1)] text-dnd-ivory'
-                        : 'bg-slate-900/80 border-dnd-border text-slate-300 hover:border-slate-700'
+                        ? 'bg-dnd-panel/90 shadow-[0_0_15px_rgba(255,255,255,0.08)] ring-1 ring-white/25 text-dnd-ivory'
+                        : 'bg-dnd-panel/40 text-slate-300 hover:bg-dnd-panel/70'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -491,7 +491,7 @@ export default function CharacterHeader({
                       <select
                         value={newMulticlassChoice}
                         onChange={(e) => setNewMulticlassChoice(e.target.value)}
-                        className="mt-1 w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:border-dnd-gold cursor-pointer"
+                        className="mt-1 w-full bg-dnd-panel rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
                         aria-label="Select new multiclass"
                       >
                         {unselectedClasses.map((cls) => (
@@ -506,11 +506,11 @@ export default function CharacterHeader({
               </div>
             </div>
 
-            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-dnd-border">
+            <div className="flex items-center justify-end space-x-2 pt-2">
               <button
                 type="button"
                 onClick={() => setShowLevelUpModal(false)}
-                className="px-3 py-1.5 rounded-lg bg-slate-900 border border-dnd-border hover:bg-slate-800 text-slate-300 text-xs transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 text-xs transition-colors"
               >
                 Cancel
               </button>

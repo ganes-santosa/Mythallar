@@ -26,7 +26,7 @@ export default function AuthStatus({
       <button
         type="button"
         onClick={onSignIn}
-        className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-slate-900/80 hover:bg-slate-800 text-slate-200 hover:text-dnd-gold border border-dnd-border hover:border-dnd-gold transition-colors text-xs font-medium"
+        className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-200 hover:text-dnd-gold transition-colors text-xs font-medium"
         title="Sign in with Google to sync characters across devices"
         aria-label="Sign in with Google"
       >
@@ -45,7 +45,7 @@ export default function AuthStatus({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={user.email}
-        className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-slate-900/80 hover:bg-slate-800 border border-dnd-border hover:border-dnd-gold transition-colors text-xs text-slate-200"
+        className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel transition-colors text-xs text-slate-200"
       >
         {syncStatus === 'syncing' ? (
           <RefreshCw size={12} className="text-dnd-gold animate-spin" />
@@ -61,8 +61,8 @@ export default function AuthStatus({
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-8 z-50 w-52 rounded-lg bg-slate-900 border border-dnd-border shadow-xl py-1.5 px-1 text-xs text-slate-200 animate-in fade-in">
-          <div className="px-2 py-1 border-b border-slate-800 mb-1">
+        <div className="absolute right-0 top-8 z-50 w-52 rounded-lg bg-dnd-card ring-1 ring-white/10 shadow-xl py-1.5 px-1 text-xs text-slate-200 animate-in fade-in">
+          <div className="px-2 py-1 border-b border-white/5 mb-1">
             <p className="text-[11px] text-slate-400 truncate">Signed in as</p>
             <p className="font-semibold text-slate-100 truncate">{user.email}</p>
           </div>
@@ -74,7 +74,7 @@ export default function AuthStatus({
                 onSyncNow();
                 setIsOpen(false);
               }}
-              className="flex items-center w-full px-2 py-1 rounded hover:bg-slate-800 text-left transition-colors text-slate-300 hover:text-dnd-gold"
+              className="flex items-center w-full px-2 py-1 rounded hover:bg-white/5 text-left transition-colors text-slate-300 hover:text-dnd-gold"
             >
               <RefreshCw size={12} className="mr-2 text-slate-400" />
               Sync Now

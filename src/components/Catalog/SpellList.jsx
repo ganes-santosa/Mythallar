@@ -28,7 +28,7 @@ function CatalogLevelGroup({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between w-full py-1 px-2.5 mb-1.5 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-slate-900/60 rounded border border-dnd-border/60 transition-colors"
+        className="flex items-center justify-between w-full py-1 px-2.5 mb-1.5 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
       >
         <div className="flex items-center space-x-1.5">
           {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
