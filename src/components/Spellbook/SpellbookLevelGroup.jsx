@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import SpellbookCard from './SpellbookCard';
 
@@ -13,14 +13,14 @@ function getLevelTitle(level) {
 export default function SpellbookLevelGroup({
   level,
   spells,
+  isOpen,
+  onToggle,
   preparedMap,
   onTogglePrepare,
   onCast,
   onRemove,
   onSelect,
 }) {
-  const [isOpen, setIsOpen] = useState(true);
-
   if (!spells || spells.length === 0) return null;
 
   const preparedCount = spells.filter((s) => preparedMap[s.id]).length;
@@ -30,7 +30,7 @@ export default function SpellbookLevelGroup({
       {/* Group Header */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         className="flex items-center justify-between w-full py-1 px-2 mb-1 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
       >
         <div className="flex items-center space-x-1.5">

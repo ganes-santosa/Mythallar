@@ -612,7 +612,7 @@ export default function App() {
       {/* Main Dual-Pane Body */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
-        <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-hidden bg-dnd-panel/30">
+        <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-hidden bg-dnd-panel/40">
           {/* Integrated Header */}
           <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
             <div className="flex items-center space-x-2.5">
@@ -673,7 +673,7 @@ export default function App() {
         </section>
 
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
-        <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-y-auto bg-dnd-panel/10">
+        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/5">
           <CharacterHeader
             activeCharacter={activeCharacter}
             profiles={profiles}
@@ -713,6 +713,7 @@ export default function App() {
               onCastSpell={handleCastSpell}
               onRemoveSpell={handleRemoveSpell}
               onAddSpell={handleAddSpell}
+              onUpdateCharacter={updateActiveCharacter}
             />
           </div>
         </section>

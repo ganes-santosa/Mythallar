@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle } from 'lucide-react';
+import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound } from 'lucide-react';
 import ProfileSelector from './ProfileSelector';
 import CharacterManagerModal from './CharacterManagerModal';
 import AuthStatus from './AuthStatus';
@@ -47,6 +47,7 @@ export default function CharacterHeader({
 
   // Level Up popup modal
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const [levelUpTarget, setLevelUpTarget] = useState('');
   const [newMulticlassChoice, setNewMulticlassChoice] = useState('');
 
@@ -184,13 +185,28 @@ export default function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 pb-2.5 mb-2.5">
+    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all">
+      <div className={`flex items-center gap-2 ${isCollapsed ? '' : 'pb-1.5 mb-1.5'}`}>
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center space-x-1.5 text-left group focus:outline-none"
+          aria-label={isCollapsed ? 'Expand Character' : 'Collapse Character'}
+          title={isCollapsed ? 'Click to expand character' : 'Click to collapse character'}
+        >
+          <UserRound size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
+          <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Character</h3>
+          <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+        </button>
+      </div>
+
+      {!isCollapsed && <div className="flex flex-wrap items-center justify-between gap-3">
       {/* Left: Highlight Character Profile Card */}
       <div className="flex-1 min-w-[280px] p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
         {/* Name Title & Header Actions */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           {/* Left: Name & Character Level next to it */}
-          <div className="flex items-center space-x-2.5 flex-wrap gap-y-1">
+          <div className="flex min-w-0 flex-1 items-center space-x-2.5 flex-wrap gap-y-1">
             {isEditing ? (
               <input
                 type="text"
@@ -212,7 +228,7 @@ export default function CharacterHeader({
           </div>
 
           {/* Right: Edit & Level Up Actions (aligned right) */}
-          <div className="flex items-center space-x-1.5 ml-auto">
+          <div className="flex shrink-0 items-center space-x-1.5 ml-auto">
             {isEditing ? (
               <>
                 <button
@@ -398,6 +414,7 @@ export default function CharacterHeader({
           className="hidden"
         />
       </div>
+      </div>}
 
       {/* Character Manager Modal */}
       <CharacterManagerModal

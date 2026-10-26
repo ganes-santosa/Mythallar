@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Moon,
   Sun,
@@ -6,8 +6,6 @@ import {
   Sparkles,
   Check,
   X,
-  BookOpen,
-  Pencil,
   ChevronDown,
   HelpCircle,
   Flame,
@@ -15,7 +13,6 @@ import {
 } from 'lucide-react';
 import {
   getEffectiveMaxSlots,
-  getEffectiveMaxPreparedInfo,
   calculateMulticlassSpellSlots,
 } from '../../utils/spellSlots';
 import SlotLevelRow from './SlotLevelRow';
@@ -41,43 +38,7 @@ export default function SpellSlotTracker({
 
   // Hints popovers
   const [showSlotsHint, setShowSlotsHint] = useState(false);
-  const [showPreparedHint, setShowPreparedHint] = useState(false);
   const [showPactHint, setShowPactHint] = useState(false);
-
-  // Prepared max editing
-  const [isEditingPrepared, setIsEditingPrepared] = useState(false);
-  const preparedInfo = getEffectiveMaxPreparedInfo(character);
-  const effectiveMaxPrepared = Number.isFinite(preparedInfo.total)
-    ? preparedInfo.total
-    : preparedInfo.total === null
-    ? null
-    : 0;
-  const [preparedDraft, setPreparedDraft] = useState(effectiveMaxPrepared ?? '');
-
-  const preparedCount = (character?.spells || []).filter((s) => s.prepared).length;
-
-  useEffect(() => {
-    if (!isEditingPrepared && character) {
-      setPreparedDraft(effectiveMaxPrepared ?? '');
-    }
-  }, [effectiveMaxPrepared, character?.id, isEditingPrepared]);
-
-  const handleSaveMaxPrepared = () => {
-    if (!character || !onUpdateCharacter) return;
-    const num = Number(preparedDraft);
-    if (!isNaN(num) && num >= 0) {
-      onUpdateCharacter({ ...character, customMaxPrepared: num });
-    }
-    setIsEditingPrepared(false);
-  };
-
-  const handleResetMaxPrepared = () => {
-    if (!character || !onUpdateCharacter) return;
-    const nextChar = { ...character };
-    delete nextChar.customMaxPrepared;
-    onUpdateCharacter(nextChar);
-    setIsEditingPrepared(false);
-  };
 
   const multiclassInfo = calculateMulticlassSpellSlots(character);
   const effectiveSlots = getEffectiveMaxSlots(
@@ -191,131 +152,6 @@ export default function SpellSlotTracker({
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* Prepared Spells Button & Segment */}
-            <div className="flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs">
-              <BookOpen size={11} className="text-dnd-gold" />
-              <span className="text-[11px] text-slate-400">Prepared:</span>
-              {isEditingPrepared ? (
-                <div className="flex items-center space-x-1">
-                  <input
-                    type="number"
-                    min="0"
-                    max="50"
-                    value={preparedDraft}
-                    onChange={(e) => setPreparedDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSaveMaxPrepared();
-                      if (e.key === 'Escape') setIsEditingPrepared(false);
-                    }}
-                    autoFocus
-                    placeholder="Max"
-                    className="w-10 bg-dnd-panel rounded px-1 text-[11px] text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-white/20"
-                  />
-                  <button
-                    type="button"
-                    aria-label="Save Max Prepared"
-                    onClick={handleSaveMaxPrepared}
-                    className="p-0.5 text-emerald-400 hover:text-emerald-300"
-                    title="Save Max Prepared"
-                  >
-                    <Check size={11} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Reset Max Prepared"
-                    onClick={handleResetMaxPrepared}
-                    className="p-0.5 text-slate-400 hover:text-dnd-gold"
-                    title="Reset to 5e rules"
-                  >
-                    <RotateCcw size={11} />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Cancel Edit Max Prepared"
-                    onClick={() => setIsEditingPrepared(false)}
-                    className="p-0.5 text-slate-400 hover:text-slate-200"
-                    title="Cancel"
-                  >
-                    <X size={11} />
-                  </button>
-                </div>
-              ) : (
-                <span
-                  className={`font-semibold text-[11px] ${
-                    effectiveMaxPrepared !== null && preparedCount > effectiveMaxPrepared
-                      ? 'text-amber-400'
-                      : 'text-slate-200'
-                  }`}
-                >
-                  {preparedCount}
-                  {effectiveMaxPrepared !== null ? ` / ${effectiveMaxPrepared}` : ''}
-                </span>
-              )}
-
-              {/* Tiny Hint for Prepared Spells Amount */}
-              <div className="relative inline-flex items-center">
-                <button
-                  type="button"
-                  aria-label="Prepared spells limit breakdown"
-                  onClick={() => setShowPreparedHint((prev) => !prev)}
-                  className="p-0.5 text-slate-400 hover:text-dnd-gold transition-colors"
-                  title="View prepared spells source breakdown"
-                >
-                  <HelpCircle size={10} />
-                </button>
-
-                {showPreparedHint && (
-                  <div className="absolute left-0 top-5 z-30 w-56 p-2 rounded-lg bg-dnd-card shadow-xl text-xs text-slate-200 animate-in fade-in ring-1 ring-white/10">
-                    <div className="flex items-center justify-between pb-1 mb-1 border-b border-white/5">
-                      <span className="font-semibold text-dnd-gold text-[11px]">
-                        Prepared Limit per Class
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowPreparedHint(false)}
-                        className="text-slate-400 hover:text-slate-200 p-0.5"
-                      >
-                        <X size={10} />
-                      </button>
-                    </div>
-
-                    {preparedInfo.isCustom ? (
-                      <p className="text-[11px] text-amber-300">
-                        Manually set to {preparedInfo.total} spells.
-                      </p>
-                    ) : preparedInfo.breakdown.length === 0 ? (
-                      <p className="text-[11px] text-slate-400">
-                        No prepared caster classes (casts known spells).
-                      </p>
-                    ) : (
-                      <div className="space-y-1 text-[11px]">
-                        {preparedInfo.breakdown.map((b, i) => (
-                          <div key={i} className="flex justify-between items-center text-slate-300">
-                            <span>{b.formula}</span>
-                            <span className="font-semibold text-dnd-ivory">
-                              {b.amount} spells
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {!isEditingPrepared && (
-                <button
-                  type="button"
-                  aria-label="Edit Max Prepared"
-                  onClick={() => setIsEditingPrepared(true)}
-                  className="p-0.5 rounded text-slate-400 hover:text-dnd-gold transition-colors"
-                  title="Edit maximum prepared spells"
-                >
-                  <Pencil size={10} />
-                </button>
               )}
             </div>
           </div>
@@ -514,7 +350,7 @@ export default function SpellSlotTracker({
           </div>
 
           {!isPactCollapsed && (
-            <div className="max-w-xs">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
               <SlotLevelRow
                 level={pactSlotLevel}
                 maxSlots={maxPactSlots}
@@ -531,3 +367,6 @@ export default function SpellSlotTracker({
     </div>
   );
 }
+
+
+

@@ -156,38 +156,13 @@ describe('SpellSlotTracker', () => {
     expect(handleResetMax).toHaveBeenCalledWith(1);
   });
 
-  it('allows editing and resetting max prepared spells', () => {
-    const handleUpdate = vi.fn();
-    render(
-      <SpellSlotTracker
-        character={{ ...mockCharacter, customMaxPrepared: 15 }}
-        onUseSlot={vi.fn()}
-        onRestoreSlot={vi.fn()}
-        onUpdateMaxSlot={vi.fn()}
-        onLongRest={vi.fn()}
-        onShortRest={vi.fn()}
-        onUpdateCharacter={handleUpdate}
-      />
-    );
 
-    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
-    const prepInput = screen.getByPlaceholderText('Max');
-    fireEvent.change(prepInput, { target: { value: '12' } });
-    fireEvent.click(screen.getByLabelText(/Save Max Prepared/i));
-
-    expect(handleUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ customMaxPrepared: 12 })
-    );
-
-    // Reset prepared
-    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
-    fireEvent.click(screen.getByLabelText(/Reset Max Prepared/i));
-    expect(handleUpdate).toHaveBeenCalledWith(
-      expect.not.objectContaining({ customMaxPrepared: expect.anything() })
-    );
+  it('renders spell slots without prepared controls', () => {
+    render(<SpellSlotTracker character={mockCharacter} onLongRest={vi.fn()} onShortRest={vi.fn()} />);
+    expect(screen.queryByLabelText(/Edit Max Prepared/i)).not.toBeInTheDocument();
   });
 
-  it('toggles hints for spell slot breakdown and prepared limits', () => {
+  it('toggles hints for spell slot breakdown', () => {
     render(
       <SpellSlotTracker
         character={{
@@ -213,10 +188,6 @@ describe('SpellSlotTracker', () => {
     expect(screen.getByText(/Wizard \(Level 4\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Cleric \(Level 2\)/i)).toBeInTheDocument();
 
-    // Prepared limits hint
-    const prepHintBtn = screen.getByLabelText(/Prepared spells limit breakdown/i);
-    fireEvent.click(prepHintBtn);
-    expect(screen.getByText(/Prepared Limit per Class/i)).toBeInTheDocument();
   });
 
   it('displays separate Pact Magic accordion when character has Warlock levels', () => {
@@ -276,27 +247,6 @@ describe('SpellSlotTracker', () => {
     expect(screen.queryByRole('spinbutton', { name: /^Max 1st Level slots$/i })).not.toBeInTheDocument();
   });
 
-  it('saves max prepared spells on Enter key press', () => {
-    const handleUpdate = vi.fn();
-    render(
-      <SpellSlotTracker
-        character={mockCharacter}
-        onUseSlot={vi.fn()}
-        onRestoreSlot={vi.fn()}
-        onUpdateMaxSlot={vi.fn()}
-        onLongRest={vi.fn()}
-        onShortRest={vi.fn()}
-        onUpdateCharacter={handleUpdate}
-      />
-    );
-
-    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
-    const prepInput = screen.getByPlaceholderText('Max');
-    fireEvent.change(prepInput, { target: { value: '8' } });
-    fireEvent.keyDown(prepInput, { key: 'Enter', code: 'Enter' });
-
-    expect(handleUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ customMaxPrepared: 8 })
-    );
-  });
 });
+
+

@@ -132,4 +132,13 @@ describe('SpellbookView', () => {
 
     expect(handleAdd).toHaveBeenCalledWith('shield');
   });
+  it('allows editing and resetting max prepared spells in Spellbook', () => {
+    const handleUpdate = vi.fn();
+    render(<SpellbookView character={{ ...mockCharacter, customMaxPrepared: 15 }} catalog={mockCatalog} onUpdateCharacter={handleUpdate} />);
+    fireEvent.click(screen.getByLabelText(/Edit Max Prepared/i));
+    const input = screen.getByRole('spinbutton');
+    fireEvent.change(input, { target: { value: '12' } });
+    fireEvent.click(screen.getByLabelText(/Save Max Prepared/i));
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ customMaxPrepared: 12 }));
+  });
 });

@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
-import { BookMarked, Download } from 'lucide-react';
+import { BookMarked, Download, ChevronDown } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
+import PreparedSpellSummary from './PreparedSpellSummary';
+import { getSpellcastingHints } from './spellcastingHints';
+import { HelpCircle, X } from 'lucide-react';
 
 export default function SpellbookView({
   character,
@@ -10,8 +13,12 @@ export default function SpellbookView({
   onRemoveSpell,
   onAddSpell,
   onSelectSpell,
+  onUpdateCharacter,
 }) {
+  const [showSpellHint, setShowSpellHint] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [openLevel, setOpenLevel] = useState(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -77,11 +84,9 @@ export default function SpellbookView({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative flex-1 h-full overflow-y-auto p-4 rounded-xl transition-all ${
-        isDragOver
-          ? 'bg-white/5 ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]'
-          : 'bg-dnd-panel/40'
-      }`}
+      className={`relative p-2.5 rounded-lg bg-dnd-panel transition-all flex flex-col min-h-0 ${
+        isCollapsed ? '' : 'flex-1 h-full'
+      } ${isDragOver ? 'ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]' : ''}`}
     >
       {/* Drop overlay badge when dragging */}
       {isDragOver && (
@@ -93,19 +98,35 @@ export default function SpellbookView({
         </div>
       )}
 
-      {/* Subheader saying "Spellbook" like the spell slot segment */}
-      <div className="flex items-center justify-between pb-1.5 mb-2.5">
-        <div className="flex items-center space-x-1.5">
-          <BookMarked size={14} className="text-dnd-gold" />
-          <h3 className="text-xs font-semibold text-slate-200">
-            Spellbook
-          </h3>
+      {/* Accordion header matching Spell Slots */}
+      <div className={`relative z-20 flex-shrink-0 flex flex-wrap items-center justify-between gap-2 bg-dnd-panel ${isCollapsed ? '' : 'pb-1.5 mb-1.5'}`}>
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center space-x-1.5 text-left group focus:outline-none"
+          aria-label={isCollapsed ? 'Expand Spellbook' : 'Collapse Spellbook'}
+          title={isCollapsed ? 'Click to expand spellbook' : 'Click to collapse spellbook'}
+        >
+          <BookMarked size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
+          <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Spellbook</h3>
+          <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+        </button>
+        <div className="flex items-center gap-2">
+          <PreparedSpellSummary character={character} onUpdateCharacter={onUpdateCharacter} />
+          <span className="text-[11px] text-slate-400">{(character?.spells || []).length} spells</span>
+          <div className="relative">
+            <button type="button" aria-label="Spell learning hint" onClick={() => setShowSpellHint(!showSpellHint)} className="p-1 text-slate-400 hover:text-dnd-gold" title="How this class gains spells">
+              <HelpCircle size={13} />
+            </button>
+            {showSpellHint && <div className="absolute right-0 top-7 z-30 w-80 max-w-[calc(100vw-2rem)] p-2.5 rounded-lg bg-dnd-card shadow-xl text-[11px] text-slate-200 ring-1 ring-white/10">
+              <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-white/5"><span className="font-semibold text-dnd-gold">How to gain spells</span><button type="button" aria-label="Close spell learning hint" onClick={() => setShowSpellHint(false)}><X size={11} /></button></div>
+              <div className="space-y-2">{getSpellcastingHints(character).map((item) => <div key={item.className}><div className="font-semibold text-slate-200">{item.className}</div><p className="text-slate-400">{item.hint}</p></div>)}</div>
+            </div>}
+          </div>
         </div>
-        <span className="text-[11px] text-slate-400">
-          {(character?.spells || []).length} spells
-        </span>
       </div>
 
+      {!isCollapsed && <div className="flex-1 min-h-0 overflow-y-auto px-1 pr-3">
       {!hasAnySpells ? (
         <div className="flex flex-col items-center justify-center h-64 text-center text-slate-500 rounded-xl p-8 bg-dnd-card/40">
           <BookMarked size={40} className="mb-3 text-slate-600" />
@@ -121,6 +142,8 @@ export default function SpellbookView({
               key={lvl}
               level={lvl}
               spells={spellsByLevel[lvl]}
+               isOpen={openLevel === null || openLevel === lvl}
+               onToggle={() => setOpenLevel(openLevel === lvl ? null : lvl)}
               preparedMap={preparedMap}
               onTogglePrepare={onTogglePrepare}
               onCast={onCastSpell}
@@ -130,6 +153,13 @@ export default function SpellbookView({
           ))}
         </div>
       )}
+      </div>}
     </div>
   );
 }
+
+
+
+
+
+

@@ -13,13 +13,13 @@ function getLevelTitle(level) {
 function CatalogLevelGroup({
   level,
   spells,
+  isOpen,
+  onToggle,
   spellbookSpellIds,
   onSelectSpell,
   onAddToSpellbook,
   onDeleteHomebrew,
 }) {
-  const [isOpen, setIsOpen] = useState(true);
-
   if (!spells || spells.length === 0) return null;
 
   return (
@@ -27,7 +27,7 @@ function CatalogLevelGroup({
       {/* Level Divider / Accordion Trigger */}
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={onToggle}
         className="flex items-center justify-between w-full py-1 px-2.5 mb-1.5 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
       >
         <div className="flex items-center space-x-1.5">
@@ -85,6 +85,8 @@ export default React.memo(function SpellList({
     return groups;
   }, [spells]);
 
+  const [openLevel, setOpenLevel] = useState(null);
+
   const activeLevels = useMemo(() => {
     return Object.keys(groupedSpells)
       .map(Number)
@@ -98,7 +100,7 @@ export default React.memo(function SpellList({
         <span>Showing {spells.length} spells</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto pr-0.5 space-y-1">
+      <div className="flex-1 overflow-y-auto px-1 pr-1.5 space-y-1">
         {spells.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center text-slate-500">
             <p className="text-sm">No spells match your search or filter.</p>
@@ -110,6 +112,8 @@ export default React.memo(function SpellList({
               key={lvl}
               level={lvl}
               spells={groupedSpells[lvl]}
+               isOpen={openLevel === null || openLevel === lvl}
+               onToggle={() => setOpenLevel(openLevel === lvl ? null : lvl)}
               spellbookSpellIds={spellbookSpellIds}
               onSelectSpell={onSelectSpell}
               onAddToSpellbook={onAddToSpellbook}
@@ -121,3 +125,8 @@ export default React.memo(function SpellList({
     </div>
   );
 });
+
+
+
+
+

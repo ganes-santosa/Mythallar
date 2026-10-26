@@ -27,3 +27,27 @@ body {
 h1, h2, h3, h4, .font-display {
   font-family: 'Funnel Display', system-ui, -apple-system, sans-serif;
 }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-muted) var(--color-bg);
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-muted);
+  border: 2px solid var(--color-bg);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ivory);
+}

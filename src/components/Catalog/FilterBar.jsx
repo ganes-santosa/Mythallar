@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, X, Sparkles, ScrollText, Plus, Flame } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, X, Sparkles, ScrollText, Plus, Flame, ChevronDown } from 'lucide-react';
 
 const CLASSES = [
   'Artificer',
@@ -29,6 +29,7 @@ const SCHOOLS = [
 ];
 
 export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSources = [] }) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const update = (key, value) => {
     onChange({ ...filters, [key]: value });
   };
@@ -49,7 +50,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
   );
 
   return (
-    <div className="space-y-2.5 pb-3">
+    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* Search Bar + Homebrew Spell Button */}
       <div className="flex items-center space-x-2">
         <div className="relative flex-1">
@@ -85,6 +86,20 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
         )}
       </div>
 
+      <div className={`flex flex-wrap items-center justify-between gap-2 ${isCollapsed ? '' : 'pb-1.5 mb-1.5'}`}>
+      <button
+        type="button"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="flex items-center space-x-1.5 text-left group focus:outline-none"
+        aria-label={isCollapsed ? 'Expand Filters' : 'Collapse Filters'}
+      >
+        <Flame size={13} className="text-dnd-gold" />
+        <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Filters</h3>
+        <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+      </button>
+      </div>
+
+      {!isCollapsed && <>
       {/* Select Dropdowns Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {/* Level */}
@@ -267,6 +282,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
           </button>
         )}
       </div>
+      </>}
     </div>
   );
 }
