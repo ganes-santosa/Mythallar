@@ -19,6 +19,8 @@ function CatalogLevelGroup({
   onSelectSpell,
   onAddToSpellbook,
   onDeleteHomebrew,
+  expandedSpellId,
+  onToggleSpell,
 }) {
   if (!spells || spells.length === 0) return null;
 
@@ -50,7 +52,9 @@ function CatalogLevelGroup({
               onAddToSpellbook={onAddToSpellbook}
               onDeleteHomebrew={onDeleteHomebrew}
               isInSpellbook={spellbookSpellIds.has(spell.id)}
-            />
+               isExpanded={expandedSpellId === spell.id}
+               onToggleExpand={onToggleSpell}
+             />
           ))}
         </div>
       )}
@@ -86,6 +90,7 @@ export default React.memo(function SpellList({
   }, [spells]);
 
   const [openLevel, setOpenLevel] = useState(null);
+  const [expandedSpellId, setExpandedSpellId] = useState(null);
 
   const activeLevels = useMemo(() => {
     return Object.keys(groupedSpells)
@@ -118,6 +123,8 @@ export default React.memo(function SpellList({
               onSelectSpell={onSelectSpell}
               onAddToSpellbook={onAddToSpellbook}
               onDeleteHomebrew={onDeleteHomebrew}
+               expandedSpellId={expandedSpellId}
+               onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
             />
           ))
         )}
@@ -125,6 +132,9 @@ export default React.memo(function SpellList({
     </div>
   );
 });
+
+
+
 
 
 

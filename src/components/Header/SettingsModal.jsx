@@ -100,7 +100,7 @@ export default function SettingsModal({
 
         {/* Modal Footer with version info */}
         <div className="pt-3 flex items-center justify-between text-xs text-slate-400 flex-shrink-0">
-          <span className="text-[11px] font-mono text-slate-400">v1.2.0</span>
+          <span className="text-[11px] font-mono text-slate-400">v1.2.4</span>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Wand2, Trash2, ChevronDown, BookCheck } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Wand2, Trash2, ChevronDown, BookCheck, X } from 'lucide-react';
 
 export default function SpellbookCard({
   spell,
@@ -8,11 +8,22 @@ export default function SpellbookCard({
   onCast,
   onRemove,
   onSelect,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const [removeArmed, setRemoveArmed] = useState(false);
+  const isExpanded = controlledExpanded ?? localExpanded;
+
+  useEffect(() => {
+    if (!removeArmed) return undefined;
+    const timeoutId = window.setTimeout(() => setRemoveArmed(false), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [removeArmed]);
 
   const toggleExpand = () => {
-    setIsExpanded((prev) => !prev);
+    if (onToggleExpand) onToggleExpand(spell.id);
+    else setLocalExpanded((prev) => !prev);
     onSelect?.(spell);
   };
 
@@ -62,7 +73,13 @@ export default function SpellbookCard({
                 {spell.name}
               </span>
 
-              {spell.isLegacy && (
+              {spell.specializations?.map((specialization) => (
+                    <span key={specialization} className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold">
+                      {specialization}
+                    </span>
+                  ))}
+
+                  {spell.isLegacy && (
                 <span
                   className="text-[9px] font-medium tracking-wide px-1 py-0.2 rounded bg-amber-500/15 text-amber-300"
                   title="2014 Legacy PHB version"
@@ -130,17 +147,21 @@ export default function SpellbookCard({
             Cast
           </button>
 
-          {/* Remove Spell Button */}
-          <button
-            type="button"
-            aria-label={`Remove ${spell.name} from spellbook`}
-            onClick={() => onRemove(spell.id)}
-            className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-            title="Remove from spellbook"
-          >
-            <Trash2 size={14} />
-          </button>
-
+           {/* Remove Spell Button */}
+           <button
+             type="button"
+             aria-label={removeArmed ? `Click again to remove ${spell.name}` : `Remove ${spell.name} from spellbook`}
+             onClick={() => {
+               if (removeArmed) {
+                 onRemove(spell.id);
+                 setRemoveArmed(false);
+               } else setRemoveArmed(true);
+             }}
+             className={`p-1 rounded transition-colors ${removeArmed ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60' : 'text-slate-400 hover:text-red-400 hover:bg-red-500/10'}`}
+             title={removeArmed ? 'Click again to remove' : 'Remove from spellbook'}
+           >
+             <Trash2 size={14} />
+           </button>
           <button
             type="button"
             onClick={toggleExpand}
@@ -208,3 +229,6 @@ export default function SpellbookCard({
     </div>
   );
 }
+
+
+

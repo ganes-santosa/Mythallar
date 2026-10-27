@@ -19,6 +19,7 @@ export default function SpellbookView({
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [openLevel, setOpenLevel] = useState(null);
+  const [expandedSpellId, setExpandedSpellId] = useState(null);
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -149,7 +150,9 @@ export default function SpellbookView({
               onCast={onCastSpell}
               onRemove={onRemoveSpell}
               onSelect={onSelectSpell}
-            />
+               expandedSpellId={expandedSpellId}
+               onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
+             />
           ))}
         </div>
       )}
@@ -157,6 +160,7 @@ export default function SpellbookView({
     </div>
   );
 }
+
 
 
 

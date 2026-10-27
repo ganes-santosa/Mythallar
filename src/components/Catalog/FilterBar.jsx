@@ -146,7 +146,10 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
               {s}
             </option>
           ))}
-        </select>
+                   <option disabled>────────────</option>
+           <option value="Chronurgy">Chronurgy</option>
+           <option value="Graviturgy">Graviturgy</option>
+         </select>
 
         {/* 2024 / Legacy Version Filter */}
         <select
@@ -286,3 +289,5 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
     </div>
   );
 }
+
+

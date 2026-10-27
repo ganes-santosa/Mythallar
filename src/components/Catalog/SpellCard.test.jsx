@@ -60,7 +60,6 @@ describe('SpellCard', () => {
 
   it('renders and invokes delete button for homebrew spells', () => {
     const handleDelete = vi.fn();
-    window.confirm = vi.fn(() => true);
     const homebrewSpell = {
       ...mockSpell,
       id: 'hb_spell_1',
@@ -81,7 +80,10 @@ describe('SpellCard', () => {
     const deleteBtn = screen.getByRole('button', { name: /Delete homebrew spell Void Dart/i });
     expect(deleteBtn).toBeInTheDocument();
     fireEvent.click(deleteBtn);
-    expect(window.confirm).toHaveBeenCalled();
+    // After first click, button is armed with two-click confirmation
+    const armedBtn = screen.getByRole('button', { name: /Click again to delete Void Dart/i });
+    expect(armedBtn).toHaveClass('text-red-500', 'bg-red-950/70');
+    fireEvent.click(armedBtn);
     expect(handleDelete).toHaveBeenCalledWith('hb_spell_1');
   });
 });

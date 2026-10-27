@@ -25,7 +25,7 @@ describe('SettingsModal', () => {
     expect(screen.getByText('Eerie Sparkle')).toBeInTheDocument();
     expect(screen.getByText('Burnt Sienna')).toBeInTheDocument();
     expect(screen.getByText('Space Cadet')).toBeInTheDocument();
-    expect(screen.getByText(/v1.2.0/i)).toBeInTheDocument();
+    expect(screen.getByText(/v1.2.4/i)).toBeInTheDocument();
   });
 
   it('triggers onSelectTheme when a palette is clicked', () => {

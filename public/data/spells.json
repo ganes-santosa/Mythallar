@@ -5828,6 +5828,7 @@
     "isLegacy": false,
     "level": 8,
     "school": "Evocation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "150 feet",
     "components": {
@@ -11114,6 +11115,7 @@
     "isLegacy": false,
     "level": 1,
     "school": "Divination",
+    "specializations": ["Chronurgy"],
     "time": "1 minute",
     "range": "Touch",
     "components": {
@@ -11474,6 +11476,7 @@
     "isLegacy": false,
     "level": 6,
     "school": "Evocation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "100 feet",
     "components": {
@@ -11498,6 +11501,7 @@
     "isLegacy": false,
     "level": 4,
     "school": "Evocation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "120 feet",
     "components": {
@@ -13498,6 +13502,7 @@
     "isLegacy": false,
     "level": 2,
     "school": "Transmutation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "Touch",
     "components": {
@@ -15722,6 +15727,7 @@
     "isLegacy": false,
     "level": 1,
     "school": "Transmutation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "60 feet",
     "components": {
@@ -19399,6 +19405,7 @@
     "isLegacy": false,
     "level": 3,
     "school": "Evocation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "30 feet",
     "components": {
@@ -19652,6 +19659,7 @@
     "isLegacy": false,
     "level": 9,
     "school": "Evocation",
+    "specializations": ["Graviturgy"],
     "time": "1 action",
     "range": "1000 feet",
     "components": {
@@ -19838,6 +19846,7 @@
     "isLegacy": false,
     "level": 8,
     "school": "Conjuration",
+    "specializations": ["Chronurgy"],
     "time": "1 action",
     "range": "60 feet",
     "components": {
@@ -24484,6 +24493,7 @@
     "isLegacy": false,
     "level": 5,
     "school": "Transmutation",
+    "specializations": ["Chronurgy"],
     "time": "1 reaction",
     "range": "120 feet",
     "components": {
@@ -24956,6 +24966,7 @@
     "isLegacy": false,
     "level": 9,
     "school": "Necromancy",
+    "specializations": ["Chronurgy"],
     "time": "1 action",
     "range": "90 feet",
     "components": {
@@ -27267,6 +27278,7 @@
     "isLegacy": false,
     "level": 2,
     "school": "Conjuration",
+    "specializations": ["Chronurgy"],
     "time": "1 action",
     "range": "Self",
     "components": {
@@ -27419,3 +27431,4 @@
     "higherLevels": ""
   }
 ]
+

@@ -20,6 +20,8 @@ export default function SpellbookLevelGroup({
   onCast,
   onRemove,
   onSelect,
+  expandedSpellId,
+  onToggleSpell,
 }) {
   if (!spells || spells.length === 0) return null;
 
@@ -55,10 +57,13 @@ export default function SpellbookLevelGroup({
               onCast={onCast}
               onRemove={onRemove}
               onSelect={onSelect}
-            />
+               isExpanded={expandedSpellId === spell.id}
+               onToggleExpand={onToggleSpell}
+             />
           ))}
         </div>
       )}
     </div>
   );
 }
+

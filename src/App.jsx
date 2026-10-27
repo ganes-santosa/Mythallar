@@ -615,9 +615,9 @@ export default function App() {
         <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-hidden bg-dnd-panel/40">
           {/* Integrated Header */}
           <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
-            <div className="flex items-center space-x-2.5">
+            <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-dnd-card/70 flex items-center justify-center p-1">
-                <MythallarLogo className="w-5 h-5" />
+                <MythallarLogo className="w-8 h-8 max-w-none max-h-none" />
               </div>
               <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                 <h1 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display">
@@ -628,7 +628,7 @@ export default function App() {
                     DnD 5e Spellbook
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono tracking-tight select-none">
-                    v1.2.0
+                    v1.2.4
                   </span>
                 </div>
               </div>

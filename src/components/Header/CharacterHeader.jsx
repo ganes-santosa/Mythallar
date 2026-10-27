@@ -200,11 +200,11 @@ export default function CharacterHeader({
         </button>
       </div>
 
-      {!isCollapsed && <div className="flex flex-wrap items-center justify-between gap-3">
+      {!isCollapsed && <div className="flex flex-wrap items-stretch justify-between gap-3">
       {/* Left: Highlight Character Profile Card */}
-      <div className="flex-1 min-w-[280px] p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
+      <div className="character-profile-card flex-1 min-w-[280px] min-w-0 p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
         {/* Name Title & Header Actions */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           {/* Left: Name & Character Level next to it */}
           <div className="flex min-w-0 flex-1 items-center space-x-2.5 flex-wrap gap-y-1">
             {isEditing ? (
@@ -222,13 +222,13 @@ export default function CharacterHeader({
               </h2>
             )}
 
-            <span className="text-xs text-slate-400 font-normal whitespace-nowrap select-none">
+            <span className="character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none">
               Character Level <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
             </span>
           </div>
 
           {/* Right: Edit & Level Up Actions (aligned right) */}
-          <div className="flex shrink-0 items-center space-x-1.5 ml-auto">
+          <div className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
             {isEditing ? (
               <>
                 <button
@@ -366,7 +366,7 @@ export default function CharacterHeader({
       </div>
 
       {/* Right: Unified Character & File Actions Card */}
-      <div className="flex flex-col items-end justify-center p-2 rounded-xl bg-dnd-card shadow-sm space-y-1.5 flex-shrink-0">
+      <div className="flex min-w-[220px] flex-col items-end justify-center self-stretch p-2 rounded-xl bg-dnd-card shadow-sm space-y-1.5 flex-shrink-0">
         <div className="flex items-center space-x-1.5 w-full justify-between">
           <ProfileSelector
             profiles={profiles}
@@ -545,3 +545,6 @@ export default function CharacterHeader({
     </div>
   );
 }
+
+
+

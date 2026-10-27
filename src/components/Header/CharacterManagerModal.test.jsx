@@ -112,11 +112,22 @@ describe('CharacterManagerModal', () => {
     const deleteBtn = screen.getByRole('button', { name: /Delete Astarion/i });
     fireEvent.click(deleteBtn);
 
-    // Confirmation appears
-    const confirmBtn = screen.getByRole('button', { name: /Confirm Delete Astarion/i });
-    expect(confirmBtn).toBeInTheDocument();
+    const armedBtn = screen.getByRole('button', { name: /Click again to delete Astarion/i });
+    expect(armedBtn).toHaveClass('text-red-500', 'bg-red-950/70');
 
-    fireEvent.click(confirmBtn);
+    fireEvent.click(armedBtn);
     expect(handleDelete).toHaveBeenCalledWith('c2');
+  });
+
+  it('requires two clicks before creating a character', () => {
+    const handleCreate = vi.fn();
+    render(<CharacterManagerModal isOpen={true} onClose={vi.fn()} profiles={mockProfiles} activeId="c1" onSelectProfile={vi.fn()} onCreateProfile={handleCreate} onDeleteProfile={vi.fn()} />);
+
+    const createBtn = screen.getByRole('button', { name: /New Character/i });
+    fireEvent.click(createBtn);
+    expect(handleCreate).not.toHaveBeenCalled();
+    expect(createBtn).toHaveClass('bg-green-400');
+    fireEvent.click(screen.getByRole('button', { name: /Click again to create character/i }));
+    expect(handleCreate).toHaveBeenCalledOnce();
   });
 });

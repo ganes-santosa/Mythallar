@@ -61,7 +61,10 @@ export function filterSpells(spells = [], filters = {}) {
 
     // 3. School
     if (school && school !== 'all') {
-      if (spell.school?.toLowerCase() !== school.toLowerCase()) {
+      const schoolMatch = spell.school?.toLowerCase() === school.toLowerCase();
+      const specializationMatch = Array.isArray(spell.specializations)
+        && spell.specializations.some((item) => item.toLowerCase() === school.toLowerCase());
+      if (!schoolMatch && !specializationMatch) {
         return false;
       }
     }

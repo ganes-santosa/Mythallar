@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import {
   GripVertical,
   Clock,
@@ -27,8 +28,12 @@ export default function SpellCard({
   onAddToSpellbook,
   onDeleteHomebrew,
   isInSpellbook,
+  isExpanded: controlledExpanded,
+  onToggleExpand,
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [localExpanded, setLocalExpanded] = useState(false);
+  const isExpanded = controlledExpanded ?? localExpanded;
+  const { armed: deleteArmed, handleClick: handleDeleteClick } = useTwoClickConfirm(() => onDeleteHomebrew?.(spell.id));
   const isHomebrew = spell.source === 'Homebrew' || spell.source === 'Custom';
   const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 bg-slate-500/15';
 
@@ -38,7 +43,8 @@ export default function SpellCard({
   };
 
   const toggleExpand = () => {
-    setIsExpanded((prev) => !prev);
+    if (onToggleExpand) onToggleExpand(spell.id);
+    else setLocalExpanded((prev) => !prev);
     onSelect?.(spell);
   };
 
@@ -141,6 +147,9 @@ export default function SpellCard({
           <span className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${schoolColor}`}>
             {spell.school}
           </span>
+           {spell.specializations?.map((specialization) => (
+             <span key={specialization} className="text-[11px] px-1.5 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold font-medium">{specialization}</span>
+           ))}
           <span className="text-[11px] px-1.5 py-0.2 rounded bg-dnd-panel/80 text-slate-300 font-medium">
             {spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`}
           </span>
@@ -218,28 +227,22 @@ export default function SpellCard({
             {/* Bottom Action Bar */}
             <div className="pt-1.5 flex items-center justify-between">
               {isHomebrew && onDeleteHomebrew ? (
-                <button
-                  type="button"
-                  aria-label={`Delete homebrew spell ${spell.name}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.confirm(`Delete homebrew spell "${spell.name}" permanently?`)) {
-                      onDeleteHomebrew(spell.id);
-                    }
-                  }}
-                  className="flex items-center px-2 py-1 rounded bg-red-950/40 hover:bg-red-900/60 text-red-300 text-xs transition-colors"
-                  title="Delete this homebrew spell permanently"
-                >
-                  <Trash2 size={12} className="mr-1 text-red-400" />
-                  Delete Spell
-                </button>
+                 <button
+                   type="button"
+                   aria-label={deleteArmed ? `Click again to delete ${spell.name}` : `Delete homebrew spell ${spell.name}`}
+                   onClick={(e) => { e.stopPropagation(); handleDeleteClick(); }}
+                   className={`p-1 rounded-md transition-colors ${deleteArmed ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60' : 'text-slate-400 hover:text-red-400 hover:bg-red-950/30'}`}
+                   title={deleteArmed ? 'Click again to delete' : 'Delete this homebrew spell permanently'}
+                 >
+                   <Trash2 size={14} />
+                 </button>
               ) : (
                 <div />
               )}
 
               {isInSpellbook ? (
-                <span className="flex items-center text-xs text-dnd-gold bg-dnd-gold/10 px-2.5 py-1 rounded">
-                  <Check size={14} className="mr-1" /> In Spellbook
+                <span className="flex items-center text-[10px] font-medium bg-dnd-gold/15 text-dnd-gold px-1.5 py-0.5 rounded">
+                  <Check size={11} className="mr-0.5" /> In Spellbook
                 </span>
               ) : (
                 <button
@@ -248,9 +251,9 @@ export default function SpellCard({
                     e.stopPropagation();
                     onAddToSpellbook?.(spell.id);
                   }}
-                  className="flex items-center px-3 py-1.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-100 hover:text-slate-950 font-semibold transition-colors shadow text-xs"
+                  className="flex items-center px-1.5 py-0.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-100 hover:text-slate-950 font-medium transition-colors text-[10px]"
                 >
-                  <BookPlus size={14} className="mr-1.5" />
+                  <BookPlus size={11} className="mr-0.5" />
                   Add to Spellbook
                 </button>
               )}
@@ -261,3 +264,5 @@ export default function SpellCard({
     </div>
   );
 }
+
+

@@ -107,6 +107,9 @@ describe('SpellbookView', () => {
 
     const removeBtn = screen.getByLabelText(/Remove Fireball from spellbook/i);
     fireEvent.click(removeBtn);
+    expect(handleRemove).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/Click again to remove Fireball/i)).toHaveClass('text-red-500', 'bg-red-950/70');
+    fireEvent.click(screen.getByLabelText(/Click again to remove Fireball/i));
     expect(handleRemove).toHaveBeenCalledWith('fireball');
   });
 

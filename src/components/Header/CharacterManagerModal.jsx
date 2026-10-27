@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import {
   X,
   User,
@@ -9,9 +10,24 @@ import {
   ArrowUpDown,
   Sparkles,
   BookMarked,
-  ShieldAlert,
 } from 'lucide-react';
 import { getTotalCharacterLevel, getCharacterClasses } from '../../utils/spellSlots';
+
+// ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
+function CharacterDeleteButton({ name, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(onDelete);
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${name}` : `Delete ${name}`}
+      onClick={handleClick}
+      className={`p-1 rounded-md transition-colors ${armed ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60' : 'text-slate-400 hover:text-red-400 hover:bg-red-950/30'}`}
+      title={armed ? 'Click again to delete' : `Delete ${name}`}
+    >
+      <Trash2 size={14} />
+    </button>
+  );
+}
 
 export default function CharacterManagerModal({
   isOpen,
@@ -24,7 +40,6 @@ export default function CharacterManagerModal({
 }) {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('level-desc'); // 'level-desc', 'level-asc', 'name-asc', 'name-desc'
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const filteredAndSortedProfiles = useMemo(() => {
     let list = profiles.filter((p) => {
@@ -58,21 +73,18 @@ export default function CharacterManagerModal({
     return list;
   }, [profiles, search, sortBy]);
 
-  if (!isOpen) return null;
-
-  const handleSelect = (id) => {
-    onSelectProfile(id);
-    onClose();
-  };
-
   const handleCreateNew = () => {
     onCreateProfile();
     onClose();
   };
 
-  const handleDeleteConfirm = (id) => {
-    onDeleteProfile(id);
-    setDeleteConfirmId(null);
+  const { armed: createArmed, handleClick: handleCreateClick } = useTwoClickConfirm(handleCreateNew);
+
+  if (!isOpen) return null;
+
+  const handleSelect = (id) => {
+    onSelectProfile(id);
+    onClose();
   };
 
   return (
@@ -135,9 +147,10 @@ export default function CharacterManagerModal({
 
             <button
               type="button"
-              onClick={handleCreateNew}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-semibold text-xs transition-colors shadow-sm whitespace-nowrap"
-              title="Create a new character profile"
+              onClick={handleCreateClick}
+              aria-label={createArmed ? 'Click again to create character' : 'New Character'}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm whitespace-nowrap ${createArmed ? 'bg-green-400 text-slate-950 ring-1 ring-green-300' : 'bg-dnd-gold hover:bg-dnd-gold-light text-slate-950'}`}
+              title={createArmed ? 'Click again to create character' : 'Create a new character profile'}
             >
               <Plus size={13} />
               <span>New Character</span>
@@ -146,7 +159,7 @@ export default function CharacterManagerModal({
         </div>
 
         {/* Character Cards List */}
-        <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[220px]">
+        <div className="flex-1 overflow-y-auto space-y-2 p-1 min-h-[220px]">
           {filteredAndSortedProfiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-slate-400 text-xs">
               <Sparkles size={20} className="text-slate-500 mb-1.5" />
@@ -158,7 +171,6 @@ export default function CharacterManagerModal({
               const lvl = getTotalCharacterLevel(char);
               const classes = getCharacterClasses(char);
               const spellCount = (char.spells || []).length;
-              const isConfirmingDelete = deleteConfirmId === char.id;
 
               return (
                 <div
@@ -194,7 +206,7 @@ export default function CharacterManagerModal({
                         <span>
                           {classes.map((c) => `${c.className} ${c.level}`).join(' / ')}
                         </span>
-                        <span>•</span>
+                        <span>·</span>
                         <span className="flex items-center space-x-1">
                           <BookMarked size={11} className="text-slate-400" />
                           <span>{spellCount} {spellCount === 1 ? 'spell' : 'spells'}</span>
@@ -205,53 +217,22 @@ export default function CharacterManagerModal({
 
                   {/* Actions Column */}
                   <div className="flex items-center space-x-2 self-end sm:self-center">
-                    {isConfirmingDelete ? (
-                      <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-1 rounded-lg shadow-md text-xs animate-in fade-in">
-                        <ShieldAlert size={12} className="text-red-600" />
-                        <span className="text-[11px] font-bold text-slate-900">Delete?</span>
+                    <>
+                      {!isActive && (
                         <button
                           type="button"
-                          aria-label={`Confirm Delete ${char.name}`}
-                          onClick={() => handleDeleteConfirm(char.id)}
-                          className="px-1.5 py-0.5 rounded bg-red-600 text-white hover:bg-red-700 text-[11px] font-bold transition-colors"
+                          aria-label={`Switch to ${char.name}`}
+                          onClick={() => handleSelect(char.id)}
+                          className="px-2.5 py-1 rounded-md bg-dnd-card/80 hover:bg-dnd-card hover:text-white text-slate-300 text-xs font-semibold transition-colors"
                         >
-                          Delete
+                          Switch
                         </button>
-                        <button
-                          type="button"
-                          aria-label="Cancel Delete"
-                          onClick={() => setDeleteConfirmId(null)}
-                          className="p-0.5 text-slate-700 hover:text-slate-900"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        {!isActive && (
-                          <button
-                            type="button"
-                            aria-label={`Switch to ${char.name}`}
-                            onClick={() => handleSelect(char.id)}
-                            className="px-2.5 py-1 rounded-md bg-dnd-card/80 hover:bg-dnd-card hover:text-white text-slate-300 text-xs font-semibold transition-colors"
-                          >
-                            Switch
-                          </button>
-                        )}
+                      )}
 
-                        {profiles.length > 1 && (
-                          <button
-                            type="button"
-                            aria-label={`Delete ${char.name}`}
-                            onClick={() => setDeleteConfirmId(char.id)}
-                            className="p-1 rounded-md text-slate-400 hover:text-red-400 hover:bg-red-950/30 transition-colors"
-                            title={`Delete ${char.name}`}
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </>
-                    )}
+                      {profiles.length > 1 && (
+                        <CharacterDeleteButton name={char.name} onDelete={() => onDeleteProfile(char.id)} />
+                      )}
+                    </>
                   </div>
                 </div>
               );
