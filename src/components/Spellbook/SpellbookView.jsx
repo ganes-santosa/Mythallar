@@ -1,14 +1,57 @@
 import React, { useState } from 'react';
-import { BookMarked, Download, ChevronDown } from 'lucide-react';
+import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Flame, BookCheck, Sparkles, ScrollText } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
-import { HelpCircle, X } from 'lucide-react';
+import { isWizardCharacter } from '../../utils/spellSlots';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+
+const CLASSES = [
+  'Artificer',
+  'Barbarian',
+  'Bard',
+  'Cleric',
+  'Druid',
+  'Fighter',
+  'Monk',
+  'Paladin',
+  'Ranger',
+  'Rogue',
+  'Sorcerer',
+  'Warlock',
+  'Wizard',
+];
+
+const SCHOOLS = [
+  'Abjuration',
+  'Conjuration',
+  'Divination',
+  'Enchantment',
+  'Evocation',
+  'Illusion',
+  'Necromancy',
+  'Transmutation',
+];
+
+const INITIAL_FILTERS = {
+  level: 'all',
+  className: 'all',
+  school: 'all',
+  prepared: false,
+  copying: false,
+  concentration: false,
+  ritual: false,
+  compV: false,
+  compS: false,
+  compM: false,
+};
 
 export default function SpellbookView({
   character,
   catalog,
   onTogglePrepare,
+  onFinishCopying,
+  onFinishCopyingAll,
   onCastSpell,
   onRemoveSpell,
   onAddSpell,
@@ -18,8 +61,27 @@ export default function SpellbookView({
   const [showSpellHint, setShowSpellHint] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openLevel, setOpenLevel] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [collapsedLevels, setCollapsedLevels] = useState({});
   const [expandedSpellId, setExpandedSpellId] = useState(null);
+  const { armed: finishAllArmed, handleClick: handleFinishAllClick } = useTwoClickConfirm(() => onFinishCopyingAll?.());
+  const isWizard = isWizardCharacter(character);
+
+  const updateFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
+
+  const isFiltered = Boolean(
+    filters.level !== 'all' ||
+      filters.className !== 'all' ||
+      filters.school !== 'all' ||
+      filters.prepared ||
+      filters.copying ||
+      filters.concentration ||
+      filters.ritual ||
+      filters.compV ||
+      filters.compS ||
+      filters.compM
+  );
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -45,6 +107,9 @@ export default function SpellbookView({
 
   // Group spells by level
   const preparedMap = {};
+  const copyingMap = {};
+  let hasCopyingSpells = false;
+  let visibleSpellCount = 0;
   const spellsByLevel = {
     0: [],
     1: [],
@@ -64,8 +129,25 @@ export default function SpellbookView({
       const spell = catalog[item.id];
       if (spell) {
         const lvl = typeof spell.level === 'number' ? spell.level : 0;
+        const copying = Boolean(isWizard && item.copying && lvl > 0);
+        const effectivePrepared = Boolean(item.prepared && !copying);
+        copyingMap[item.id] = copying;
+        if (copying) hasCopyingSpells = true;
+
+        if (filters.level !== 'all' && lvl !== filters.level) continue;
+        if (filters.className !== 'all' && (!Array.isArray(spell.classes) || !spell.classes.includes(filters.className))) continue;
+        if (filters.school !== 'all' && spell.school !== filters.school && (!Array.isArray(spell.specializations) || !spell.specializations.includes(filters.school))) continue;
+        if (filters.prepared && !effectivePrepared) continue;
+        if (filters.copying && !copying) continue;
+        if (filters.concentration && !spell.concentration) continue;
+        if (filters.ritual && !spell.ritual) continue;
+        if (filters.compV && !spell.components?.v) continue;
+        if (filters.compS && !spell.components?.s) continue;
+        if (filters.compM && !spell.components?.m) continue;
+
         if (!spellsByLevel[lvl]) spellsByLevel[lvl] = [];
         spellsByLevel[lvl].push(spell);
+        visibleSpellCount++;
       }
     }
   }
@@ -112,8 +194,37 @@ export default function SpellbookView({
           <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Spellbook</h3>
           <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
         </button>
-        <div className="flex items-center gap-2">
-          <PreparedSpellSummary character={character} onUpdateCharacter={onUpdateCharacter} />
+        <div className="flex flex-wrap items-center gap-2">
+          {isWizard && hasCopyingSpells && (
+            <button
+              type="button"
+              aria-label={finishAllArmed ? 'Click again to finish copying all spells' : 'Finish copying all spells'}
+              onClick={handleFinishAllClick}
+              className={`relative flex items-center space-x-1 rounded-lg px-2 py-0.5 text-xs font-semibold transition-colors ${
+                finishAllArmed
+                  ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                  : 'bg-dnd-card text-slate-300 hover:text-slate-100'
+              }`}
+              title={finishAllArmed ? 'Click again to confirm all copying spells are complete' : 'Finish copying all spells currently in progress'}
+            >
+              <Feather size={11} className={finishAllArmed ? 'text-green-400' : 'text-dnd-gold'} />
+              <span className="text-[11px]">Finish Copying All</span>
+            </button>
+          )}
+          <button
+            type="button"
+            aria-label="Toggle Spellbook Filters"
+            onClick={() => setShowFilters((prev) => !prev)}
+            className={`relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs transition-colors ${
+              isFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+            }`}
+            title="Filter spells in spellbook"
+          >
+            <Flame size={11} className="text-dnd-gold" />
+            <span className="text-[11px] font-semibold text-slate-200">Filters</span>
+            <ChevronDown size={10} className={`text-slate-400 transition-transform duration-200 ${showFilters ? '' : '-rotate-90'}`} />
+          </button>
+          <PreparedSpellSummary character={character} catalog={catalog} onUpdateCharacter={onUpdateCharacter} />
           <span className="text-[11px] text-slate-400">{(character?.spells || []).length} spells</span>
           <div className="relative">
             <button type="button" aria-label="Spell learning hint" onClick={() => setShowSpellHint(!showSpellHint)} className="p-1 text-slate-400 hover:text-dnd-gold" title="How this class gains spells">
@@ -127,6 +238,162 @@ export default function SpellbookView({
         </div>
       </div>
 
+      {/* Expandable Spellbook Filter Accordion */}
+      {!isCollapsed && showFilters && (
+        <div className="flex-shrink-0 mb-2 space-y-2 pb-2 border-b border-white/5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <select
+              value={filters.level}
+              onChange={(e) => updateFilter('level', e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="bg-dnd-card rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
+              aria-label="Filter Spellbook by Level"
+            >
+              <option value="all">All Levels</option>
+              <option value="0">Cantrips</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
+                <option key={lvl} value={lvl}>
+                  Level {lvl}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.className}
+              onChange={(e) => updateFilter('className', e.target.value)}
+              className="bg-dnd-card rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
+              aria-label="Filter Spellbook by Class"
+            >
+              <option value="all">All Classes</option>
+              {CLASSES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={filters.school}
+              onChange={(e) => updateFilter('school', e.target.value)}
+              className="bg-dnd-card rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
+              aria-label="Filter Spellbook by School"
+            >
+              <option value="all">All Schools</option>
+              {SCHOOLS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+              <option disabled>────────────</option>
+              <option value="Chronurgy">Chronurgy</option>
+              <option value="Graviturgy">Graviturgy</option>
+            </select>
+          </div>
+
+          <div className="flex items-center flex-wrap gap-1.5 text-xs">
+            <button
+              type="button"
+              onClick={() => updateFilter('prepared', !filters.prepared)}
+              className={`flex items-center px-2 py-1 rounded transition-colors ${
+                filters.prepared
+                  ? 'bg-white/15 text-white ring-1 ring-white/20'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <BookCheck size={12} className="mr-1" />
+              Prepared
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('copying', !filters.copying)}
+              className={`flex items-center px-2 py-1 rounded transition-colors ${
+                filters.copying
+                  ? 'bg-white/15 text-white ring-1 ring-white/20'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Feather size={12} className="mr-1" />
+              Copying
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('concentration', !filters.concentration)}
+              className={`flex items-center px-2 py-1 rounded transition-colors ${
+                filters.concentration
+                  ? 'bg-amber-500/20 text-amber-300'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sparkles size={12} className="mr-1" />
+              Concentration
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('ritual', !filters.ritual)}
+              className={`flex items-center px-2 py-1 rounded transition-colors ${
+                filters.ritual
+                  ? 'bg-blue-500/20 text-blue-300'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ScrollText size={12} className="mr-1" />
+              Ritual
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('compV', !filters.compV)}
+              className={`px-2 py-1 rounded font-bold transition-colors ${
+                filters.compV
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+              title="Verbal Component"
+            >
+              V
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('compS', !filters.compS)}
+              className={`px-2 py-1 rounded font-bold transition-colors ${
+                filters.compS
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+              title="Somatic Component"
+            >
+              S
+            </button>
+
+            <button
+              type="button"
+              onClick={() => updateFilter('compM', !filters.compM)}
+              className={`px-2 py-1 rounded font-bold transition-colors ${
+                filters.compM
+                  ? 'bg-emerald-500/20 text-emerald-300'
+                  : 'bg-dnd-card text-slate-400 hover:text-slate-200'
+              }`}
+              title="Material Component"
+            >
+              M
+            </button>
+
+            {isFiltered && (
+              <button
+                type="button"
+                onClick={() => setFilters(INITIAL_FILTERS)}
+                className="text-xs text-slate-400 hover:text-dnd-gold ml-auto"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {!isCollapsed && <div className="flex-1 min-h-0 overflow-y-auto px-1 pr-3">
       {!hasAnySpells ? (
         <div className="flex flex-col items-center justify-center h-64 text-center text-slate-500 rounded-xl p-8 bg-dnd-card/40">
@@ -136,6 +403,10 @@ export default function SpellbookView({
             Drag and drop spells from the catalog on the left, or click "Add to Spellbook" in the spell detail drawer.
           </p>
         </div>
+      ) : visibleSpellCount === 0 ? (
+        <div className="flex flex-col items-center justify-center h-40 text-center text-slate-500 rounded-xl p-6 bg-dnd-card/40">
+          <p className="text-xs text-slate-400">No spells match the active filters.</p>
+        </div>
       ) : (
         <div>
           {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
@@ -143,16 +414,18 @@ export default function SpellbookView({
               key={lvl}
               level={lvl}
               spells={spellsByLevel[lvl]}
-               isOpen={openLevel === null || openLevel === lvl}
-               onToggle={() => setOpenLevel(openLevel === lvl ? null : lvl)}
+              isOpen={!collapsedLevels[lvl]}
+              onToggle={() => setCollapsedLevels((prev) => ({ ...prev, [lvl]: !prev[lvl] }))}
               preparedMap={preparedMap}
+              copyingMap={copyingMap}
               onTogglePrepare={onTogglePrepare}
+              onFinishCopying={onFinishCopying}
               onCast={onCastSpell}
               onRemove={onRemoveSpell}
               onSelect={onSelectSpell}
-               expandedSpellId={expandedSpellId}
-               onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
-             />
+              expandedSpellId={expandedSpellId}
+              onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
+            />
           ))}
         </div>
       )}
@@ -160,10 +433,4 @@ export default function SpellbookView({
     </div>
   );
 }
-
-
-
-
-
-
 

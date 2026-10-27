@@ -4,6 +4,25 @@ import ProfileSelector from './ProfileSelector';
 import CharacterManagerModal from './CharacterManagerModal';
 import AuthStatus from './AuthStatus';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+
+// ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
+function ClassDeleteButton({ className, onRemove }) {
+  const { armed, handleClick } = useTwoClickConfirm(onRemove);
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to remove ${className}` : `Remove ${className}`}
+      onClick={handleClick}
+      className={`p-0.5 rounded transition-colors ml-0.5 ${
+        armed ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60' : 'text-slate-500 hover:text-red-400'
+      }`}
+      title={armed ? `Click again to remove ${className}` : `Remove ${className}`}
+    >
+      <Trash2 size={11} />
+    </button>
+  );
+}
 
 const CASTER_CLASSES = [
   'Artificer',
@@ -324,15 +343,10 @@ export default function CharacterHeader({
 
                     {/* Remove Class button (only if > 1 class) */}
                     {classes.length > 1 && (
-                      <button
-                        type="button"
-                        aria-label={`Remove ${clsItem.className}`}
-                        onClick={() => handleRemoveClass(idx)}
-                        className="p-0.5 text-slate-500 hover:text-red-400 transition-colors ml-0.5"
-                        title={`Remove ${clsItem.className}`}
-                      >
-                        <Trash2 size={11} />
-                      </button>
+                      <ClassDeleteButton
+                        className={clsItem.className}
+                        onRemove={() => handleRemoveClass(idx)}
+                      />
                     )}
                   </div>
                 );

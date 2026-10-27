@@ -7,7 +7,7 @@ import {
   loadHomebrewSpells,
   saveHomebrewSpells,
 } from './utils/storage';
-import { getEffectiveMaxSlots } from './utils/spellSlots';
+import { getEffectiveMaxSlots, isWizardCharacter } from './utils/spellSlots';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
 import { useSpellFilter } from './hooks/useSpellFilter';
 import { getSupabase, signInWithGoogle, signOut } from './utils/supabase';
@@ -382,9 +382,10 @@ export default function App() {
         return;
       }
 
+      const shouldCopy = isWizardCharacter(activeCharacter) && spell.level > 0;
       const updatedSpells = [
         ...(activeCharacter.spells || []),
-        { id: spellId, prepared: spell.level === 0 },
+        { id: spellId, prepared: spell.level === 0, copying: shouldCopy },
       ];
 
       updateActiveCharacter({
@@ -392,10 +393,43 @@ export default function App() {
         spells: updatedSpells,
       });
 
-      showToast(`Added ${spell.name} to spellbook`, 'success');
+      showToast(
+        shouldCopy ? `Added ${spell.name} to spellbook (Copying)` : `Added ${spell.name} to spellbook`,
+        'success'
+      );
     },
     [activeCharacter, catalogMap, updateActiveCharacter, showToast]
   );
+
+  const handleFinishCopying = useCallback(
+    (spellId) => {
+      if (!activeCharacter) return;
+      const spell = catalogMap[spellId];
+      const updatedSpells = (activeCharacter.spells || []).map((s) =>
+        s.id === spellId ? { ...s, copying: false } : s
+      );
+      updateActiveCharacter({
+        ...activeCharacter,
+        spells: updatedSpells,
+      });
+      if (spell) {
+        showToast(`Finished copying ${spell.name}`, 'success');
+      }
+    },
+    [activeCharacter, catalogMap, updateActiveCharacter, showToast]
+  );
+
+  const handleFinishCopyingAll = useCallback(() => {
+    if (!activeCharacter) return;
+    const updatedSpells = (activeCharacter.spells || []).map((s) =>
+      s.copying ? { ...s, copying: false } : s
+    );
+    updateActiveCharacter({
+      ...activeCharacter,
+      spells: updatedSpells,
+    });
+    showToast('Finished copying all spells!', 'success');
+  }, [activeCharacter, updateActiveCharacter, showToast]);
 
   const handleRemoveSpell = useCallback(
     (spellId) => {
@@ -612,7 +646,7 @@ export default function App() {
       {/* Main Dual-Pane Body */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
-        <section className="w-full md:w-1/2 flex flex-col p-3 sm:p-4 overflow-hidden bg-dnd-panel/40">
+        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/40">
           {/* Integrated Header */}
           <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
             <div className="flex items-center space-x-2">
@@ -628,7 +662,7 @@ export default function App() {
                     DnD 5e Spellbook
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono tracking-tight select-none">
-                    v1.2.4
+                    v{__APP_VERSION__}
                   </span>
                 </div>
               </div>
@@ -710,6 +744,8 @@ export default function App() {
               character={activeCharacter}
               catalog={catalogMap}
               onTogglePrepare={handleTogglePrepare}
+              onFinishCopying={handleFinishCopying}
+              onFinishCopyingAll={handleFinishCopyingAll}
               onCastSpell={handleCastSpell}
               onRemoveSpell={handleRemoveSpell}
               onAddSpell={handleAddSpell}

@@ -189,9 +189,13 @@ describe('CharacterHeader', () => {
     // Click single Edit Profile button
     fireEvent.click(screen.getByLabelText('Edit Profile'));
 
-    // Remove button exists and works
+    // Remove button uses two-click confirmation
     const removeBtn = screen.getByLabelText('Remove Cleric');
     fireEvent.click(removeBtn);
+    expect(handleUpdate).not.toHaveBeenCalled();
+    const armedBtn = screen.getByLabelText('Click again to remove Cleric');
+    expect(armedBtn).toHaveClass('text-red-500', 'bg-red-950/70', 'ring-1', 'ring-red-500/60');
+    fireEvent.click(armedBtn);
     expect(handleUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         level: 4,

@@ -16,7 +16,9 @@ export default function SpellbookLevelGroup({
   isOpen,
   onToggle,
   preparedMap,
+  copyingMap = {},
   onTogglePrepare,
+  onFinishCopying,
   onCast,
   onRemove,
   onSelect,
@@ -25,7 +27,7 @@ export default function SpellbookLevelGroup({
 }) {
   if (!spells || spells.length === 0) return null;
 
-  const preparedCount = spells.filter((s) => preparedMap[s.id]).length;
+  const preparedCount = spells.filter((s) => preparedMap[s.id] && !copyingMap[s.id]).length;
 
   return (
     <div className="mb-4">
@@ -53,7 +55,9 @@ export default function SpellbookLevelGroup({
               key={spell.id}
               spell={spell}
               isPrepared={Boolean(preparedMap[spell.id])}
+              isCopying={Boolean(copyingMap[spell.id])}
               onTogglePrepare={onTogglePrepare}
+              onFinishCopying={onFinishCopying}
               onCast={onCast}
               onRemove={onRemove}
               onSelect={onSelect}

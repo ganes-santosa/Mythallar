@@ -21,6 +21,25 @@ describe('validateAndImportCharacterJSON', () => {
     expect(result.character.id).toBeDefined();
   });
 
+  it('preserves copying state on imported spells', () => {
+    const validJson = JSON.stringify({
+      name: 'Raistlin',
+      className: 'Wizard',
+      level: 7,
+      spells: [
+        { id: 'fireball', prepared: false, copying: true },
+        { id: 'shield', prepared: true },
+      ],
+    });
+
+    const result = validateAndImportCharacterJSON(validJson);
+    expect(result.error).toBeUndefined();
+    expect(result.character.spells).toEqual([
+      { id: 'fireball', prepared: false, copying: true },
+      { id: 'shield', prepared: true, copying: false },
+    ]);
+  });
+
   it('rejects malformed JSON', () => {
     const badJson = '{ invalid json';
     const result = validateAndImportCharacterJSON(badJson);

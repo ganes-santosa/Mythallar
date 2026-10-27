@@ -3,6 +3,7 @@ import {
   calculateDefaultSlots,
   calculateMulticlassSpellSlots,
   getEffectiveMaxPreparedInfo,
+  getEffectiveMaxKnownInfo,
   getTotalCharacterLevel,
 } from './spellSlots';
 
@@ -105,6 +106,32 @@ describe('Multiclass Spell Slots Calculation', () => {
       level: 2,
       amount: 5,
       formula: 'Cleric: Level 2 + 3 WIS',
+    });
+  });
+
+  it('calculates per-class known spell limits for Bard, Sorcerer, Ranger, and Warlock', () => {
+    const bard5 = { className: 'Bard', level: 5 };
+    const bardInfo = getEffectiveMaxKnownInfo(bard5);
+    expect(bardInfo.total).toBe(8);
+    expect(bardInfo.hasKnownCaster).toBe(true);
+    expect(bardInfo.breakdown).toEqual([
+      { className: 'Bard', level: 5, amount: 8, formula: 'Bard: Level 5' },
+    ]);
+
+    const multiKnown = {
+      classes: [
+        { className: 'Bard', level: 3 }, // 6
+        { className: 'Warlock', level: 2 }, // 3
+      ],
+    };
+    expect(getEffectiveMaxKnownInfo(multiKnown).total).toBe(9);
+
+    const pureWizard = { className: 'Wizard', level: 5 };
+    expect(getEffectiveMaxKnownInfo(pureWizard)).toEqual({
+      total: null,
+      breakdown: [],
+      isCustom: false,
+      hasKnownCaster: false,
     });
   });
 });

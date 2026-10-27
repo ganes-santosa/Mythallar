@@ -22,6 +22,7 @@ export function validateAndImportCharacterJSON(jsonString) {
         ? data.spells.map((s) => ({
             id: s.id,
             prepared: Boolean(s.prepared),
+            copying: Boolean(s.copying),
           }))
         : [],
       slotsUsed: typeof data.slotsUsed === 'object' && data.slotsUsed !== null ? data.slotsUsed : {},

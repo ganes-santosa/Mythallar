@@ -87,6 +87,10 @@ describe('App End-to-End Integration', () => {
     const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
     fireEvent.click(addBtns[0]);
 
+    // Finish copying so the spell can be cast
+    fireEvent.click(await screen.findByLabelText(/Finish copying Magic Missile/i));
+    fireEvent.click(screen.getByLabelText(/Click again to finish copying Magic Missile/i));
+
     // Find Cast button in the spellbook
     const castBtn = await screen.findByLabelText(/Quick-Cast Magic Missile/i);
     fireEvent.click(castBtn);
@@ -104,10 +108,13 @@ describe('App End-to-End Integration', () => {
       expect(screen.getByText('Magic Missile')).toBeInTheDocument();
     });
 
-    // Add and cast
+    // Add, finish copying, and cast
     fireEvent.click(screen.getByText('Magic Missile'));
     const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
     fireEvent.click(addBtns[0]);
+
+    fireEvent.click(await screen.findByLabelText(/Finish copying Magic Missile/i));
+    fireEvent.click(screen.getByLabelText(/Click again to finish copying Magic Missile/i));
 
     fireEvent.click(await screen.findByLabelText(/Quick-Cast Magic Missile/i));
     await waitFor(() => {
@@ -151,6 +158,40 @@ describe('App End-to-End Integration', () => {
     // Homebrew spell should appear in catalog
     await waitFor(() => {
       expect(screen.getByText('Shadow Lance')).toBeInTheDocument();
+    });
+  });
+
+  it('places newly added leveled spells into Copying state for Wizards until confirmed finished', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Magic Missile')).toBeInTheDocument();
+    });
+
+    // Default character Mordenkainen is a Wizard. Add 1st-level Magic Missile.
+    fireEvent.click(screen.getByText('Magic Missile'));
+    const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
+    fireEvent.click(addBtns[0]);
+
+    // Enters copying state: Copying badge & Finish Copying button visible; Prepare button absent
+    expect(await screen.findByText('Copying')).toBeInTheDocument();
+    expect(screen.queryByLabelText(/Toggle Prepared for Magic Missile/i)).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Finish copying all spells/i)).toBeInTheDocument();
+
+    // Check 1st-level copying requirements (2 hours, 50 gp)
+    fireEvent.click(screen.getByLabelText(/Copying requirements for Magic Missile/i));
+    expect(screen.getByText(/2 hours/i)).toBeInTheDocument();
+    expect(screen.getByText(/50 gp/i)).toBeInTheDocument();
+
+    // Two-click confirm Finish Copying
+    fireEvent.click(screen.getByLabelText(/Finish copying Magic Missile/i));
+    fireEvent.click(screen.getByLabelText(/Click again to finish copying Magic Missile/i));
+
+    // Copying badge and Finish Copying All disappear; Prepare button is restored
+    await waitFor(() => {
+      expect(screen.queryByText('Copying')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/Finish copying all spells/i)).not.toBeInTheDocument();
+      expect(screen.getByLabelText(/Toggle Prepared for Magic Missile/i)).toBeInTheDocument();
     });
   });
 });

@@ -92,6 +92,10 @@ export function getCharacterClasses(character) {
   ];
 }
 
+export function isWizardCharacter(character) {
+  return getCharacterClasses(character).some((c) => c.className === 'Wizard');
+}
+
 /**
  * Calculates total character level across all classes (capped at 20).
  */
@@ -205,6 +209,15 @@ export function calculateDefaultSlots(className, level) {
   return {};
 }
 
+const PREPARED_CASTERS = new Set(['Cleric', 'Druid', 'Wizard', 'Paladin', 'Artificer']);
+
+const KNOWN_SPELLS_TABLE = {
+  Bard: [4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 15, 16, 18, 19, 19, 20, 22, 22, 22],
+  Sorcerer: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 12, 13, 13, 14, 14, 15, 15, 15, 15],
+  Warlock: [2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15],
+  Ranger: [0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11],
+};
+
 /**
  * Calculates standard 5e max prepared spells for prepared casters.
  */
@@ -228,23 +241,35 @@ export function calculateDefaultMaxPrepared(className, level, abilityMod = 3) {
 }
 
 /**
+ * Calculates standard 5e max known spells for known casters (Bard, Sorcerer, Ranger, Warlock).
+ */
+export function calculateDefaultMaxKnown(className, level) {
+  const lvl = Math.min(20, Math.max(1, Number(level) || 1));
+  const normClass = className ? className.trim() : '';
+  const table = KNOWN_SPELLS_TABLE[normClass];
+  return Array.isArray(table) ? table[lvl - 1] : null;
+}
+
+/**
  * Resolves effective maximum prepared spells and per-class breakdown for a character.
  */
 export function getEffectiveMaxPreparedInfo(character) {
-  if (!character) return { total: null, breakdown: [], isCustom: false };
+  if (!character) return { total: null, breakdown: [], isCustom: false, hasPreparedCaster: false };
+
+  const classes = getCharacterClasses(character);
+  const hasPreparedCaster = classes.some((c) => PREPARED_CASTERS.has(c.className));
 
   if (typeof character.customMaxPrepared === 'number') {
     return {
       total: character.customMaxPrepared,
       breakdown: [],
       isCustom: true,
+      hasPreparedCaster,
     };
   }
 
-  const classes = getCharacterClasses(character);
   const breakdown = [];
   let total = 0;
-  let hasPreparedCaster = false;
 
   for (const c of classes) {
     const defaultMod = 3;
@@ -257,7 +282,6 @@ export function getEffectiveMaxPreparedInfo(character) {
 
     const preparedLimit = calculateDefaultMaxPrepared(c.className, c.level, defaultMod);
     if (preparedLimit !== null) {
-      hasPreparedCaster = true;
       total += preparedLimit;
       breakdown.push({
         className: c.className,
@@ -272,6 +296,49 @@ export function getEffectiveMaxPreparedInfo(character) {
     total: hasPreparedCaster ? total : null,
     breakdown,
     isCustom: false,
+    hasPreparedCaster,
+  };
+}
+
+/**
+ * Resolves effective maximum known spells and per-class breakdown for a character.
+ */
+export function getEffectiveMaxKnownInfo(character) {
+  if (!character) return { total: null, breakdown: [], isCustom: false, hasKnownCaster: false };
+
+  const classes = getCharacterClasses(character);
+  const hasKnownCaster = classes.some((c) => Object.prototype.hasOwnProperty.call(KNOWN_SPELLS_TABLE, c.className));
+
+  if (typeof character.customMaxKnown === 'number') {
+    return {
+      total: character.customMaxKnown,
+      breakdown: [],
+      isCustom: true,
+      hasKnownCaster,
+    };
+  }
+
+  const breakdown = [];
+  let total = 0;
+
+  for (const c of classes) {
+    const knownLimit = calculateDefaultMaxKnown(c.className, c.level);
+    if (knownLimit !== null) {
+      total += knownLimit;
+      breakdown.push({
+        className: c.className,
+        level: c.level,
+        amount: knownLimit,
+        formula: `${c.className}: Level ${c.level}`,
+      });
+    }
+  }
+
+  return {
+    total: hasKnownCaster ? total : null,
+    breakdown,
+    isCustom: false,
+    hasKnownCaster,
   };
 }
 

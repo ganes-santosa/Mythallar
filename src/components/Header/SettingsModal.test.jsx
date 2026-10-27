@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import SettingsModal from './SettingsModal';
+import pkg from '../../../package.json';
 
 describe('SettingsModal', () => {
   it('renders all palette choices and app version', () => {
@@ -25,7 +26,7 @@ describe('SettingsModal', () => {
     expect(screen.getByText('Eerie Sparkle')).toBeInTheDocument();
     expect(screen.getByText('Burnt Sienna')).toBeInTheDocument();
     expect(screen.getByText('Space Cadet')).toBeInTheDocument();
-    expect(screen.getByText(/v1.2.4/i)).toBeInTheDocument();
+    expect(screen.getByText(`v${pkg.version}`)).toBeInTheDocument();
   });
 
   it('triggers onSelectTheme when a palette is clicked', () => {

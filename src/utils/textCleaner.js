@@ -63,15 +63,31 @@ export function parseEntries(entries) {
     if (typeof entry === 'string') {
       result.push(clean5eText(entry));
     } else if (entry && typeof entry === 'object') {
-      if (entry.type === 'entries' && entry.entries) {
+      if (entry.type === 'entries' && Array.isArray(entry.entries)) {
         if (entry.name) {
-          result.push(`${entry.name}: ${clean5eText(entry.entries.map(e => typeof e === 'string' ? e : '').join(' '))}`);
+          const strParts = [];
+          const rest = [];
+          for (const child of entry.entries) {
+            if (typeof child === 'string' && rest.length === 0) strParts.push(child);
+            else rest.push(child);
+          }
+          const head = clean5eText(strParts.join(' '));
+          result.push(head ? `${clean5eText(entry.name)}: ${head}` : `${clean5eText(entry.name)}:`);
+          if (rest.length > 0) result.push(...parseEntries(rest));
         } else {
           result.push(...parseEntries(entry.entries));
         }
       } else if (entry.type === 'list' && Array.isArray(entry.items)) {
         for (const item of entry.items) {
-          result.push(`• ${clean5eText(typeof item === 'string' ? item : item.entry || '')}`);
+          if (typeof item === 'string') {
+            result.push(`• ${clean5eText(item)}`);
+          } else if (item && typeof item === 'object') {
+            const body = item.entry
+              ? clean5eText(item.entry)
+              : parseEntries(item.entries).join(' ');
+            const prefix = item.name ? `${clean5eText(item.name)}: ` : '';
+            result.push(`• ${prefix}${body}`.trimEnd());
+          }
         }
       } else if (entry.type === 'table') {
         const caption = entry.caption ? `${entry.caption}: ` : '';
