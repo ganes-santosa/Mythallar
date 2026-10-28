@@ -4,6 +4,8 @@ import {
   calculateMulticlassSpellSlots,
   getEffectiveMaxPreparedInfo,
   getEffectiveMaxKnownInfo,
+  calculateDefaultMaxCantrips,
+  getEffectiveMaxCantripsInfo,
   getTotalCharacterLevel,
 } from './spellSlots';
 
@@ -132,6 +134,72 @@ describe('Multiclass Spell Slots Calculation', () => {
       breakdown: [],
       isCustom: false,
       hasKnownCaster: false,
+    });
+  });
+
+  it('calculates 5e cantrip limits per class and multiclass', () => {
+    // Single class
+    expect(calculateDefaultMaxCantrips('Wizard', 1)).toBe(3);
+    expect(calculateDefaultMaxCantrips('Wizard', 4)).toBe(4);
+    expect(calculateDefaultMaxCantrips('Wizard', 10)).toBe(5);
+    expect(calculateDefaultMaxCantrips('Sorcerer', 1)).toBe(4);
+    expect(calculateDefaultMaxCantrips('Sorcerer', 4)).toBe(5);
+    expect(calculateDefaultMaxCantrips('Sorcerer', 10)).toBe(6);
+    expect(calculateDefaultMaxCantrips('Cleric', 1)).toBe(3);
+    expect(calculateDefaultMaxCantrips('Cleric', 4)).toBe(4);
+    expect(calculateDefaultMaxCantrips('Cleric', 10)).toBe(5);
+    expect(calculateDefaultMaxCantrips('Druid', 1)).toBe(2);
+    expect(calculateDefaultMaxCantrips('Druid', 4)).toBe(3);
+    expect(calculateDefaultMaxCantrips('Druid', 10)).toBe(4);
+    expect(calculateDefaultMaxCantrips('Bard', 1)).toBe(2);
+    expect(calculateDefaultMaxCantrips('Bard', 4)).toBe(3);
+    expect(calculateDefaultMaxCantrips('Bard', 10)).toBe(4);
+    expect(calculateDefaultMaxCantrips('Warlock', 1)).toBe(2);
+    expect(calculateDefaultMaxCantrips('Warlock', 4)).toBe(3);
+    expect(calculateDefaultMaxCantrips('Warlock', 10)).toBe(4);
+    expect(calculateDefaultMaxCantrips('Artificer', 1)).toBe(2);
+    expect(calculateDefaultMaxCantrips('Artificer', 10)).toBe(3);
+    expect(calculateDefaultMaxCantrips('Artificer', 14)).toBe(4);
+    // Non-cantrip casters
+    expect(calculateDefaultMaxCantrips('Paladin', 5)).toBe(null);
+    expect(calculateDefaultMaxCantrips('Ranger', 5)).toBe(null);
+    expect(calculateDefaultMaxCantrips('Fighter', 5)).toBe(null);
+
+    // Multiclass cantrip calculation
+    const multi = {
+      classes: [
+        { className: 'Wizard', level: 1 }, // 3
+        { className: 'Bard', level: 1 }, // 2
+      ],
+    };
+    const cantripInfo = getEffectiveMaxCantripsInfo(multi);
+    expect(cantripInfo.total).toBe(5);
+    expect(cantripInfo.hasCantripCaster).toBe(true);
+    expect(cantripInfo.breakdown).toHaveLength(2);
+    expect(cantripInfo.breakdown[0]).toEqual({
+      className: 'Wizard',
+      level: 1,
+      amount: 3,
+      formula: 'Wizard: Level 1',
+    });
+    expect(cantripInfo.breakdown[1]).toEqual({
+      className: 'Bard',
+      level: 1,
+      amount: 2,
+      formula: 'Bard: Level 1',
+    });
+
+    // Custom cantrip override
+    const custom = {
+      className: 'Wizard',
+      level: 1,
+      customMaxCantrips: 6,
+    };
+    expect(getEffectiveMaxCantripsInfo(custom)).toEqual({
+      total: 6,
+      breakdown: [],
+      isCustom: true,
+      hasCantripCaster: true,
     });
   });
 });

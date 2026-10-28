@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings } from 'lucide-react';
+import { BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings, Plus } from 'lucide-react';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -24,6 +24,7 @@ import SpellList from './components/Catalog/SpellList';
 import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
 import CharacterHeader from './components/Header/CharacterHeader';
 import SettingsModal from './components/Header/SettingsModal';
+import CreateCharacterModal from './components/Modal/CreateCharacterModal';
 import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
@@ -31,10 +32,11 @@ import SpellbookView from './components/Spellbook/SpellbookView';
 export default function App() {
   // --- Character & Profile State ---
   const [profileData, setProfileData] = useState(() => loadCharacterProfiles());
+  const [isCreateCharacterModalOpen, setIsCreateCharacterModalOpen] = useState(false);
   const { profiles, activeId } = profileData;
 
   const activeCharacter = useMemo(() => {
-    return profiles.find((p) => p.id === activeId) || profiles[0];
+    return profiles.find((p) => p.id === activeId) || profiles[0] || null;
   }, [profiles, activeId]);
 
   // Persist profiles on change
@@ -242,6 +244,19 @@ export default function App() {
     return ids;
   }, [activeCharacter?.spells]);
 
+  // Spell notes map for active character
+  const spellNotesMap = useMemo(() => {
+    const map = {};
+    if (activeCharacter?.spells) {
+      for (const item of activeCharacter.spells) {
+        if (item.note) {
+          map[item.id] = item.note;
+        }
+      }
+    }
+    return map;
+  }, [activeCharacter?.spells]);
+
   // --- Filter State ---
   const [filters, setFilters] = useState({
     search: '',
@@ -292,26 +307,26 @@ export default function App() {
     setProfileData((prev) => ({ ...prev, activeId: id }));
   };
 
-  const handleCreateProfile = () => {
-    const newChar = createDefaultProfile(`Adventurer ${profiles.length + 1}`, 'Wizard');
+  const handleOpenCreateCharacter = () => {
+    setIsCreateCharacterModalOpen(true);
+  };
+
+  const handleSaveNewCharacter = ({ name, className }) => {
+    const newChar = createDefaultProfile(name, className);
     setProfileData((prev) => ({
       profiles: [...prev.profiles, newChar],
       activeId: newChar.id,
     }));
+    setIsCreateCharacterModalOpen(false);
     showToast(`Created new profile: ${newChar.name}`, 'success');
   };
 
   const handleDeleteCharacter = useCallback(
     async (charId) => {
-      if (profileData.profiles.length <= 1) {
-        showToast('Cannot delete only character profile', 'error');
-        return;
-      }
-
       const deletedChar = profileData.profiles.find((p) => p.id === charId);
       const remainingProfiles = profileData.profiles.filter((p) => p.id !== charId);
       const nextActiveId =
-        profileData.activeId === charId ? remainingProfiles[0]?.id : profileData.activeId;
+        profileData.activeId === charId ? (remainingProfiles[0]?.id || null) : profileData.activeId;
 
       setProfileData({
         profiles: remainingProfiles,
@@ -459,6 +474,36 @@ export default function App() {
       });
     },
     [activeCharacter, updateActiveCharacter]
+  );
+
+  const handleUpdateSpellNote = useCallback(
+    (spellId, note) => {
+      if (!activeCharacter) return;
+      const existing = (activeCharacter.spells || []).find((s) => s.id === spellId);
+      let updatedSpells;
+      if (existing) {
+        updatedSpells = activeCharacter.spells.map((s) =>
+          s.id === spellId ? { ...s, note: note.trim() } : s
+        );
+      } else {
+        const spell = catalogMap[spellId];
+        const shouldCopy = isWizardCharacter(activeCharacter) && spell && spell.level > 0;
+        updatedSpells = [
+          ...(activeCharacter.spells || []),
+          {
+            id: spellId,
+            prepared: false,
+            copying: shouldCopy,
+            note: note.trim(),
+          },
+        ];
+      }
+      updateActiveCharacter({
+        ...activeCharacter,
+        spells: updatedSpells,
+      });
+    },
+    [activeCharacter, catalogMap, updateActiveCharacter]
   );
 
   // --- Spell Slot Actions ---
@@ -700,60 +745,96 @@ export default function App() {
             <SpellList
               spells={filteredSpells}
               spellbookSpellIds={spellbookSpellIds}
+              notesMap={spellNotesMap}
               onAddToSpellbook={handleAddSpell}
               onDeleteHomebrew={handleDeleteHomebrewSpell}
+              onUpdateNote={activeCharacter ? handleUpdateSpellNote : null}
             />
           )}
         </section>
 
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
         <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/5">
-          <CharacterHeader
-            activeCharacter={activeCharacter}
-            profiles={profiles}
-            onUpdateCharacter={updateActiveCharacter}
-            onSelectProfile={handleSelectProfile}
-            onCreateProfile={handleCreateProfile}
-            onDeleteProfile={handleDeleteCharacter}
-            onExport={handleExport}
-            onImport={handleImport}
-            user={user}
-            syncStatus={syncStatus}
-            onSignIn={handleSignIn}
-            onSignOut={handleSignOut}
-            onSyncNow={handleManualSyncNow}
-          />
+          {activeCharacter ? (
+            <>
+              <CharacterHeader
+                activeCharacter={activeCharacter}
+                profiles={profiles}
+                onUpdateCharacter={updateActiveCharacter}
+                onSelectProfile={handleSelectProfile}
+                onCreateProfile={handleOpenCreateCharacter}
+                onDeleteProfile={handleDeleteCharacter}
+                onExport={handleExport}
+                onImport={handleImport}
+                user={user}
+                syncStatus={syncStatus}
+                onSignIn={handleSignIn}
+                onSignOut={handleSignOut}
+                onSyncNow={handleManualSyncNow}
+              />
 
-          <SpellSlotTracker
-            character={activeCharacter}
-            onUseSlot={handleUseSlot}
-            onRestoreSlot={handleRestoreSlot}
-            onSetSlotsUsed={handleSetSlotsUsed}
-            onUsePactSlot={handleUsePactSlot}
-            onRestorePactSlot={handleRestorePactSlot}
-            onSetPactSlotsUsed={handleSetPactSlotsUsed}
-            onUpdateMaxSlot={handleUpdateMaxSlot}
-            onResetMaxSlot={handleResetMaxSlot}
-            onLongRest={handleLongRest}
-            onShortRest={handleShortRest}
-            onUpdateCharacter={updateActiveCharacter}
-          />
+              <SpellSlotTracker
+                character={activeCharacter}
+                onUseSlot={handleUseSlot}
+                onRestoreSlot={handleRestoreSlot}
+                onSetSlotsUsed={handleSetSlotsUsed}
+                onUsePactSlot={handleUsePactSlot}
+                onRestorePactSlot={handleRestorePactSlot}
+                onSetPactSlotsUsed={handleSetPactSlotsUsed}
+                onUpdateMaxSlot={handleUpdateMaxSlot}
+                onResetMaxSlot={handleResetMaxSlot}
+                onLongRest={handleLongRest}
+                onShortRest={handleShortRest}
+                onUpdateCharacter={updateActiveCharacter}
+              />
 
-          <div className="flex-1 min-h-[300px] flex flex-col">
-            <SpellbookView
-              character={activeCharacter}
-              catalog={catalogMap}
-              onTogglePrepare={handleTogglePrepare}
-              onFinishCopying={handleFinishCopying}
-              onFinishCopyingAll={handleFinishCopyingAll}
-              onCastSpell={handleCastSpell}
-              onRemoveSpell={handleRemoveSpell}
-              onAddSpell={handleAddSpell}
-              onUpdateCharacter={updateActiveCharacter}
-            />
-          </div>
+              <div className="flex-1 min-h-[300px] flex flex-col">
+                <SpellbookView
+                  character={activeCharacter}
+                  catalog={catalogMap}
+                  onTogglePrepare={handleTogglePrepare}
+                  onFinishCopying={handleFinishCopying}
+                  onFinishCopyingAll={handleFinishCopyingAll}
+                  onCastSpell={handleCastSpell}
+                  onRemoveSpell={handleRemoveSpell}
+                  onAddSpell={handleAddSpell}
+                  onUpdateCharacter={updateActiveCharacter}
+                  onUpdateNote={handleUpdateSpellNote}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-2xl bg-dnd-panel/60 border border-white/5 space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center text-dnd-gold shadow-lg ring-1 ring-white/10">
+                <Sparkles size={32} />
+              </div>
+              <div className="max-w-sm space-y-1.5">
+                <h3 className="text-lg font-bold text-dnd-ivory font-display tracking-tight">
+                  No Character Selected
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Begin your journey by creating your first character profile to manage spell slots and maintain your grimoire.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleOpenCreateCharacter}
+                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-xs shadow-lg transition-all"
+              >
+                <Plus size={15} />
+                <span>Create First Character</span>
+              </button>
+            </div>
+          )}
         </section>
       </main>
+
+      {/* Create Character Modal */}
+      <CreateCharacterModal
+        isOpen={isCreateCharacterModalOpen}
+        onClose={() => setIsCreateCharacterModalOpen(false)}
+        onCreate={handleSaveNewCharacter}
+      />
 
       {/* Homebrew Spell Modal */}
       <HomebrewSpellModal

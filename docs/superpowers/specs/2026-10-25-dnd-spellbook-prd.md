@@ -57,6 +57,10 @@ The **D&D 5e Spellbook App** is a fast, responsive, client-side web application 
    - Visual indicator if spell is already in the active character's spellbook.
 
 ### 4.2 Right Segment: Active Character Spellbook
+0. **Empty State & First Character Creation**:
+   - New sessions/users start with no default character profile.
+   - Right pane presents an onboarding prompt: "Create First Character".
+   - Opens the Character Creation modal asking for character name and starting level 1 class (with roadmap for future expansion into full character creator).
 1. **Character Header Bar**:
    - Character Name (editable).
    - Class selector (determines default slot progression).

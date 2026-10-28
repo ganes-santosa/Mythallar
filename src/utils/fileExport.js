@@ -19,11 +19,17 @@ export function validateAndImportCharacterJSON(jsonString) {
       className: String(data.className).trim() || 'Wizard',
       level: Math.min(20, Math.max(1, Number(data.level) || 1)),
       spells: Array.isArray(data.spells)
-        ? data.spells.map((s) => ({
-            id: s.id,
-            prepared: Boolean(s.prepared),
-            copying: Boolean(s.copying),
-          }))
+        ? data.spells.map((s) => {
+            const item = {
+              id: s.id,
+              prepared: Boolean(s.prepared),
+              copying: Boolean(s.copying),
+            };
+            if (typeof s.note === 'string' && s.note.length > 0) {
+              item.note = s.note;
+            }
+            return item;
+          })
         : [],
       slotsUsed: typeof data.slotsUsed === 'object' && data.slotsUsed !== null ? data.slotsUsed : {},
       customSlots: typeof data.customSlots === 'object' && data.customSlots !== null ? data.customSlots : {},

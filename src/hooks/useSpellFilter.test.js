@@ -73,6 +73,21 @@ describe('filterSpells', () => {
     expect(res.map(s => s.name)).toEqual(['Detect Magic']);
   });
 
+  it('filters Dunamancy specializations via school filter', () => {
+    const dunamancySpells = [
+      { id: 'gift-of-alacrity', name: 'Gift of Alacrity', school: 'Divination', specializations: ['Chronurgy'] },
+      { id: 'magnify-gravity', name: 'Magnify Gravity', school: 'Transmutation', specializations: ['Graviturgy'] },
+      { id: 'wristpocket', name: 'Wristpocket', school: 'Conjuration', specializations: ['Chronurgy', 'Graviturgy'] },
+      { id: 'fireball', name: 'Fireball', school: 'Evocation' },
+    ];
+
+    const chronurgy = filterSpells(dunamancySpells, { school: 'Chronurgy' });
+    expect(chronurgy.map(s => s.name)).toEqual(['Gift of Alacrity', 'Wristpocket']);
+
+    const graviturgy = filterSpells(dunamancySpells, { school: 'Graviturgy' });
+    expect(graviturgy.map(s => s.name)).toEqual(['Magnify Gravity', 'Wristpocket']);
+  });
+
   it('filters by concentration and ritual', () => {
     const conc = filterSpells(MOCK_SPELLS, { concentration: true });
     expect(conc.map(s => s.name)).toEqual(['Detect Magic']);

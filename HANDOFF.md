@@ -1,15 +1,17 @@
 # HANDOFF
 
-## Current state (since v1.2.4)
-- **Wizard Spell Copying & Obfuscation:** Leveled spells added by Wizards start in `copying: true` (`prepared: false`). While copying: greyed-out spell name, `Copying` badge + `HelpCircle` time/cost popover, `'???'` metadata masking, runic/alchemical/occult glyph obfuscation (`MAGICAL_GLYPHS` / `obfuscateMagicalText`) on descriptions, hidden `Cast` button, and two-click `Finish Copying` / `Finish Copying All`.
-- **Prepared vs. Known Spell Limits:** `PreparedSpellSummary.jsx` shows `Prepared: X / Y` for prepared casters (`Wizard`, `Cleric`, `Druid`, `Paladin`, `Artificer`), `Known: X / Y` (`KNOWN_SPELLS_TABLE`) for known casters (`Bard`, `Sorcerer`, `Ranger`, `Warlock`), and both for multiclass; turns `text-red-500` when `X > Y`. Cantrips (`level === 0`) and copying spells are excluded from limit counts.
-- **Spellbook Filters & Card Details:** Expandable `Filters` button/accordion in `SpellbookView.jsx` (level, class, school, prepared, copying, concentration, ritual, V/S/M, reset), independent level group accordions (`collapsedLevels`), and `Classes:` badges in expanded `SpellbookCard.jsx`.
-- **Two-Click Confirmations:** Multiclass `ClassDeleteButton` in `CharacterHeader.jsx` uses `useTwoClickConfirm`; all armed buttons keep identical text and icons.
-- **Bug Fixes & Build:** Fixed `SpellList.jsx` scrollbar clipping, fixed `textCleaner.js` bullet item parsing + regenerated `public/data/spells.json`, and injected `__APP_VERSION__` from `package.json` via `vite.config.js`.
-- **Verification:** 21 test files (114 tests) green; `npm.cmd run build` green.
+## Current state (v1.2.6)
+- **First-Time User Character Onboarding & Empty State:** Removed default placeholder Mordenkainen. Fresh installations start with zero characters and an onboarding prompt ("Create First Character"). Users can delete the last remaining character from `CharacterManagerModal`, automatically closing the modal and reverting the right pane to the onboarding screen.
+- **Character Creator Modal:** `CreateCharacterModal.jsx` prompts for name and 1st-level class, with single-click X/close and Cancel buttons, and "Adventure awaits" subtitle.
+- **Cantrip & Leveled Spell Counters:** Cantrip accordion header calculates 5e max cantrips known (`x / max cantrips`) with full multiclassing support and turns red on overflow. Leveled spell groups show `${preparedCount} prepared`.
+- **Wizard Spell Copying & Obfuscation:** Leveled spells added by Wizards start in `copying: true`. Obfuscated with glyphs, masked metadata, two-click confirmation.
+- **Spell Notes:** Added spell note feature to opened spell accordions (`SpellNoteSection.jsx`). Appears at end of description after "At Higher Levels" with small "Add Note" button on right. Inline textarea to add/save/cancel. Saved notes display with non-italic `Note: <content>` and edit/delete actions.
+- **Chronurgy & Graviturgy Specializations:** Restored `specializations` and Wizard class assignment for all 15 Dunamancy spells in `public/data/spells.json` and `scripts/fetch-spells.mjs`. Render subtle purple badge chips before school when accordion is open; filterable via School dropdowns.
+- **Verification:** 23 test files (129 tests) green; `npm.cmd run build` green. Dev server live at http://localhost:5173.
 
 ## Next up
-- When ready to release: bump MINOR to `v1.3.0` (`npm.cmd version minor --no-git-tag-version`), test, build, commit, tag `v1.3.0`, and push without `[skip netlify]`.
+- Expand character creator into full builder (abilities, subclass, race, equipment) when ready.
+- Cloud sync / homebrew library enhancements.
 
 ## Open questions
-- Remove scratch files committed in `v1.2.4` (`extract_sqlite_logo.cjs`, `extracted_logo_16.png`, `test-output.txt`)?
+- Remove scratch files from v1.2.4 (`extract_sqlite_logo.cjs`, `extracted_logo_16.png`, `test-output.txt`)?

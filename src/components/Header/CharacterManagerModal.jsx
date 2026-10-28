@@ -163,7 +163,7 @@ export default function CharacterManagerModal({
           {filteredAndSortedProfiles.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-slate-400 text-xs">
               <Sparkles size={20} className="text-slate-500 mb-1.5" />
-              <span>No characters match your search.</span>
+              <span>{profiles.length === 0 ? 'No characters saved.' : 'No characters match your search.'}</span>
             </div>
           ) : (
             filteredAndSortedProfiles.map((char) => {
@@ -229,9 +229,15 @@ export default function CharacterManagerModal({
                         </button>
                       )}
 
-                      {profiles.length > 1 && (
-                        <CharacterDeleteButton name={char.name} onDelete={() => onDeleteProfile(char.id)} />
-                      )}
+                      <CharacterDeleteButton
+                        name={char.name}
+                        onDelete={() => {
+                          onDeleteProfile(char.id);
+                          if (profiles.length <= 1) {
+                            onClose();
+                          }
+                        }}
+                      />
                     </>
                   </div>
                 </div>

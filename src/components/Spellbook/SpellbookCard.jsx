@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Wand2, Trash2, ChevronDown, BookCheck, Feather, HelpCircle, X } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import SpellNoteSection from '../Common/SpellNoteSection';
 
 // Runic, alchemical/planetary, and occult BMP glyphs verified to render in the app font stack
 export const MAGICAL_GLYPHS = [
@@ -30,11 +31,13 @@ export default function SpellbookCard({
   spell,
   isPrepared,
   isCopying = false,
+  note = '',
   onTogglePrepare,
   onFinishCopying,
   onCast,
   onRemove,
   onSelect,
+  onUpdateNote,
   isExpanded: controlledExpanded,
   onToggleExpand,
 }) {
@@ -162,8 +165,8 @@ export default function SpellbookCard({
                 </div>
               )}
 
-              {spell.specializations?.map((specialization) => (
-                    <span key={specialization} className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold">
+              {isExpanded && spell.specializations?.map((specialization) => (
+                    <span key={specialization} className="text-[8px] leading-tight tracking-wide px-1 py-0.5 rounded bg-purple-500/10 text-purple-300/70">
                       {specialization}
                     </span>
                   ))}
@@ -342,6 +345,14 @@ export default function SpellbookCard({
                 </span>
                 <p className={isCopying ? 'text-slate-500' : 'text-slate-300'}>{formatText(spell.higherLevels, 51)}</p>
               </div>
+            )}
+
+            {onUpdateNote && (
+              <SpellNoteSection
+                note={note}
+                spellName={spell.name}
+                onSaveNote={(newNote) => onUpdateNote(spell.id, newNote)}
+              />
             )}
           </div>
         </div>

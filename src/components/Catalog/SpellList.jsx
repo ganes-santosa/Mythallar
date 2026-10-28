@@ -16,9 +16,11 @@ function CatalogLevelGroup({
   isOpen,
   onToggle,
   spellbookSpellIds,
+  notesMap = {},
   onSelectSpell,
   onAddToSpellbook,
   onDeleteHomebrew,
+  onUpdateNote,
   expandedSpellId,
   onToggleSpell,
 }) {
@@ -51,10 +53,12 @@ function CatalogLevelGroup({
               onSelect={onSelectSpell}
               onAddToSpellbook={onAddToSpellbook}
               onDeleteHomebrew={onDeleteHomebrew}
+              onUpdateNote={onUpdateNote}
+              note={notesMap[spell.id] || ''}
               isInSpellbook={spellbookSpellIds.has(spell.id)}
-               isExpanded={expandedSpellId === spell.id}
-               onToggleExpand={onToggleSpell}
-             />
+              isExpanded={expandedSpellId === spell.id}
+              onToggleExpand={onToggleSpell}
+            />
           ))}
         </div>
       )}
@@ -65,9 +69,11 @@ function CatalogLevelGroup({
 export default React.memo(function SpellList({
   spells,
   spellbookSpellIds = new Set(),
+  notesMap = {},
   onSelectSpell,
   onAddToSpellbook,
   onDeleteHomebrew,
+  onUpdateNote,
 }) {
   // Group spells by level (0-9) and sort alphabetically within each level
   const groupedSpells = useMemo(() => {
@@ -117,14 +123,16 @@ export default React.memo(function SpellList({
               key={lvl}
               level={lvl}
               spells={groupedSpells[lvl]}
-               isOpen={openLevel === null || openLevel === lvl}
-               onToggle={() => setOpenLevel(openLevel === lvl ? null : lvl)}
+              isOpen={openLevel === null || openLevel === lvl}
+              onToggle={() => setOpenLevel(openLevel === lvl ? null : lvl)}
               spellbookSpellIds={spellbookSpellIds}
+              notesMap={notesMap}
               onSelectSpell={onSelectSpell}
               onAddToSpellbook={onAddToSpellbook}
               onDeleteHomebrew={onDeleteHomebrew}
-               expandedSpellId={expandedSpellId}
-               onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
+              onUpdateNote={onUpdateNote}
+              expandedSpellId={expandedSpellId}
+              onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
             />
           ))
         )}

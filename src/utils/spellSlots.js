@@ -218,6 +218,16 @@ const KNOWN_SPELLS_TABLE = {
   Ranger: [0, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11],
 };
 
+const CANTRIPS_KNOWN_TABLE = {
+  Wizard: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+  Cleric: [3, 3, 3, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+  Druid: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  Bard: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  Warlock: [2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+  Sorcerer: [4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+  Artificer: [2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4],
+};
+
 /**
  * Calculates standard 5e max prepared spells for prepared casters.
  */
@@ -247,6 +257,16 @@ export function calculateDefaultMaxKnown(className, level) {
   const lvl = Math.min(20, Math.max(1, Number(level) || 1));
   const normClass = className ? className.trim() : '';
   const table = KNOWN_SPELLS_TABLE[normClass];
+  return Array.isArray(table) ? table[lvl - 1] : null;
+}
+
+/**
+ * Calculates standard 5e max cantrips known for cantrip casters.
+ */
+export function calculateDefaultMaxCantrips(className, level) {
+  const lvl = Math.min(20, Math.max(1, Number(level) || 1));
+  const normClass = className ? className.trim() : '';
+  const table = CANTRIPS_KNOWN_TABLE[normClass];
   return Array.isArray(table) ? table[lvl - 1] : null;
 }
 
@@ -339,6 +359,48 @@ export function getEffectiveMaxKnownInfo(character) {
     breakdown,
     isCustom: false,
     hasKnownCaster,
+  };
+}
+
+/**
+ * Resolves effective maximum cantrips and per-class breakdown for a character.
+ */
+export function getEffectiveMaxCantripsInfo(character) {
+  if (!character) return { total: null, breakdown: [], isCustom: false, hasCantripCaster: false };
+
+  const classes = getCharacterClasses(character);
+  const hasCantripCaster = classes.some((c) => Object.prototype.hasOwnProperty.call(CANTRIPS_KNOWN_TABLE, c.className));
+
+  if (typeof character.customMaxCantrips === 'number') {
+    return {
+      total: character.customMaxCantrips,
+      breakdown: [],
+      isCustom: true,
+      hasCantripCaster,
+    };
+  }
+
+  const breakdown = [];
+  let total = 0;
+
+  for (const c of classes) {
+    const cantripLimit = calculateDefaultMaxCantrips(c.className, c.level);
+    if (cantripLimit !== null) {
+      total += cantripLimit;
+      breakdown.push({
+        className: c.className,
+        level: c.level,
+        amount: cantripLimit,
+        formula: `${c.className}: Level ${c.level}`,
+      });
+    }
+  }
+
+  return {
+    total: hasCantripCaster ? total : null,
+    breakdown,
+    isCustom: false,
+    hasCantripCaster,
   };
 }
 

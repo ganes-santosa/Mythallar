@@ -51,38 +51,33 @@ export function loadCharacterProfiles() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      const defaultChar = createDefaultProfile('Mordenkainen', 'Wizard');
-      const initialData = {
-        profiles: [defaultChar],
-        activeId: defaultChar.id,
+      return {
+        profiles: [],
+        activeId: null,
       };
-      saveCharacterProfiles(initialData);
-      return initialData;
     }
 
     const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.profiles) || parsed.profiles.length === 0) {
-      const defaultChar = createDefaultProfile('Mordenkainen', 'Wizard');
+    if (!parsed || !Array.isArray(parsed.profiles)) {
       return {
-        profiles: [defaultChar],
-        activeId: defaultChar.id,
+        profiles: [],
+        activeId: null,
       };
     }
 
     const activeId = parsed.activeId && parsed.profiles.some(p => p.id === parsed.activeId)
       ? parsed.activeId
-      : parsed.profiles[0].id;
+      : (parsed.profiles[0]?.id || null);
 
     return {
       profiles: parsed.profiles,
       activeId,
     };
   } catch (err) {
-    console.warn('Failed to parse character storage data, falling back to default profile', err);
-    const defaultChar = createDefaultProfile('Mordenkainen', 'Wizard');
+    console.warn('Failed to parse character storage data, returning empty profiles', err);
     return {
-      profiles: [defaultChar],
-      activeId: defaultChar.id,
+      profiles: [],
+      activeId: null,
     };
   }
 }

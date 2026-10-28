@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import SpellNoteSection from '../Common/SpellNoteSection';
 import {
   GripVertical,
   Clock,
@@ -27,6 +28,8 @@ export default function SpellCard({
   onSelect,
   onAddToSpellbook,
   onDeleteHomebrew,
+  onUpdateNote,
+  note = '',
   isInSpellbook,
   isExpanded: controlledExpanded,
   onToggleExpand,
@@ -144,12 +147,17 @@ export default function SpellCard({
         </div>
 
         <div className="flex items-center space-x-1.5 flex-shrink-0">
+          {isExpanded && spell.specializations?.map((specialization) => (
+            <span
+              key={specialization}
+              className="text-[8px] leading-tight px-1 py-0.5 rounded bg-purple-500/10 text-purple-300/70 tracking-wide"
+            >
+              {specialization}
+            </span>
+          ))}
           <span className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${schoolColor}`}>
             {spell.school}
           </span>
-           {spell.specializations?.map((specialization) => (
-             <span key={specialization} className="text-[11px] px-1.5 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold font-medium">{specialization}</span>
-           ))}
           <span className="text-[11px] px-1.5 py-0.2 rounded bg-dnd-panel/80 text-slate-300 font-medium">
             {spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`}
           </span>
@@ -222,6 +230,15 @@ export default function SpellCard({
                 </span>
                 <p className="text-slate-300">{spell.higherLevels}</p>
               </div>
+            )}
+
+            {/* Note Section */}
+            {onUpdateNote && (
+              <SpellNoteSection
+                note={note}
+                spellName={spell.name}
+                onSaveNote={(text) => onUpdateNote(spell.id, text)}
+              />
             )}
 
             {/* Bottom Action Bar */}

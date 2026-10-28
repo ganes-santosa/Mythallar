@@ -3,7 +3,7 @@ import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Flame, BookC
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
-import { isWizardCharacter } from '../../utils/spellSlots';
+import { isWizardCharacter, getEffectiveMaxCantripsInfo } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 
 const CLASSES = [
@@ -57,6 +57,7 @@ export default function SpellbookView({
   onAddSpell,
   onSelectSpell,
   onUpdateCharacter,
+  onUpdateNote,
 }) {
   const [showSpellHint, setShowSpellHint] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -67,6 +68,7 @@ export default function SpellbookView({
   const [expandedSpellId, setExpandedSpellId] = useState(null);
   const { armed: finishAllArmed, handleClick: handleFinishAllClick } = useTwoClickConfirm(() => onFinishCopyingAll?.());
   const isWizard = isWizardCharacter(character);
+  const cantripsInfo = getEffectiveMaxCantripsInfo(character);
 
   const updateFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -108,6 +110,7 @@ export default function SpellbookView({
   // Group spells by level
   const preparedMap = {};
   const copyingMap = {};
+  const notesMap = {};
   let hasCopyingSpells = false;
   let visibleSpellCount = 0;
   const spellsByLevel = {
@@ -126,6 +129,7 @@ export default function SpellbookView({
   if (character && Array.isArray(character.spells)) {
     for (const item of character.spells) {
       preparedMap[item.id] = item.prepared;
+      if (item.note) notesMap[item.id] = item.note;
       const spell = catalog[item.id];
       if (spell) {
         const lvl = typeof spell.level === 'number' ? spell.level : 0;
@@ -418,11 +422,14 @@ export default function SpellbookView({
               onToggle={() => setCollapsedLevels((prev) => ({ ...prev, [lvl]: !prev[lvl] }))}
               preparedMap={preparedMap}
               copyingMap={copyingMap}
+              notesMap={notesMap}
+              maxCantrips={lvl === 0 ? cantripsInfo.total : null}
               onTogglePrepare={onTogglePrepare}
               onFinishCopying={onFinishCopying}
               onCast={onCastSpell}
               onRemove={onRemoveSpell}
               onSelect={onSelectSpell}
+              onUpdateNote={onUpdateNote}
               expandedSpellId={expandedSpellId}
               onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
             />

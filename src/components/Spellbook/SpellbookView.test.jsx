@@ -374,6 +374,36 @@ describe('SpellbookView', () => {
     expect(screen.getByText('1 / 0')).toHaveClass('text-red-500');
   });
 
+  it('displays cantrips count as x / max cantrips and turns red when exceeding limit', () => {
+    // mockCharacter is Wizard level 5 -> max 4 cantrips (from CANTRIPS_KNOWN_TABLE)
+    // mockCharacter currently has 1 cantrip (acid-splash)
+    render(
+      <SpellbookView
+        character={mockCharacter}
+        catalog={mockCatalog}
+      />
+    );
+
+    const cantripHeaderCount = screen.getByText('1 / 4 cantrips');
+    expect(cantripHeaderCount).toBeInTheDocument();
+    expect(cantripHeaderCount).not.toHaveClass('text-red-500');
+
+    // Over the limit: customMaxCantrips set to 0 or 2 cantrips when max is 1
+    const overLimitChar = {
+      ...mockCharacter,
+      customMaxCantrips: 0,
+    };
+    render(
+      <SpellbookView
+        character={overLimitChar}
+        catalog={mockCatalog}
+      />
+    );
+    const overCount = screen.getByText('1 / 0 cantrips');
+    expect(overCount).toBeInTheDocument();
+    expect(overCount).toHaveClass('text-red-500');
+  });
+
   it('shows spell classes in expanded spellbook card detail view', () => {
     const catalogWithClasses = {
       ...mockCatalog,
@@ -493,5 +523,43 @@ describe('SpellbookView', () => {
     fireEvent.click(screen.getByRole('button', { name: 'M' }));
     expect(screen.getByText('Fireball')).toBeInTheDocument();
     expect(screen.queryByText('Detect Magic')).not.toBeInTheDocument();
+  });
+
+  it('renders spell note and allows adding/editing note for spell', () => {
+    const handleUpdateNote = vi.fn();
+    const charWithNote = {
+      id: 'char_note',
+      name: 'Mordenkainen',
+      className: 'Wizard',
+      level: 5,
+      spells: [
+        { id: 'fireball', prepared: true, note: 'Save for boss room' },
+        { id: 'acid-splash', prepared: false },
+      ],
+    };
+
+    render(
+      <SpellbookView
+        character={charWithNote}
+        catalog={mockCatalog}
+        onUpdateNote={handleUpdateNote}
+      />
+    );
+
+    // Expand Fireball accordion
+    fireEvent.click(screen.getByText('Fireball'));
+
+    // Note should be visible
+    expect(screen.getByText('Note:')).toBeInTheDocument();
+    expect(screen.getByText('Save for boss room')).toBeInTheDocument();
+
+    // Edit note
+    fireEvent.click(screen.getByRole('button', { name: /Edit note for Fireball/i }));
+    const textarea = screen.getByPlaceholderText(/Add a note for this spell/i);
+    expect(textarea.value).toBe('Save for boss room');
+    fireEvent.change(textarea, { target: { value: 'Save for undead boss' } });
+    fireEvent.click(screen.getByRole('button', { name: /Save Note/i }));
+
+    expect(handleUpdateNote).toHaveBeenCalledWith('fireball', 'Save for undead boss');
   });
 });

@@ -19,6 +19,24 @@ const SCHOOL_MAP = {
   T: 'Transmutation',
 };
 
+const DUNAMANCY_SPECIALIZATIONS = {
+  'Gift of Alacrity': ['Chronurgy'],
+  'Temporal Shunt': ['Chronurgy'],
+  'Reality Break': ['Chronurgy'],
+  'Time Ravage': ['Chronurgy'],
+  'Magnify Gravity': ['Graviturgy'],
+  'Immovable Object': ['Graviturgy'],
+  'Gravity Sinkhole': ['Graviturgy'],
+  'Gravity Fissure': ['Graviturgy'],
+  'Dark Star': ['Graviturgy'],
+  'Ravenous Void': ['Graviturgy'],
+  'Sapping Sting': ['Chronurgy', 'Graviturgy'],
+  'Fortune\'s Favor': ['Chronurgy', 'Graviturgy'],
+  'Wristpocket': ['Chronurgy', 'Graviturgy'],
+  'Pulse Wave': ['Chronurgy', 'Graviturgy'],
+  'Tether Essence': ['Chronurgy', 'Graviturgy'],
+};
+
 function formatTime(timeList) {
   if (!Array.isArray(timeList) || timeList.length === 0) return 'Special';
   const t = timeList[0];
@@ -183,6 +201,11 @@ async function run() {
           }
         }
 
+        const specializations = DUNAMANCY_SPECIALIZATIONS[raw.name];
+        if (specializations && !classes.includes('Wizard')) {
+          classes.push('Wizard');
+        }
+
         const entries = parseEntries(raw.entries);
         let higherLevels = '';
         if (Array.isArray(raw.entriesHigherLevel) && raw.entriesHigherLevel.length > 0) {
@@ -190,7 +213,7 @@ async function run() {
           higherLevels = parseEntries(hl.entries).join('\n');
         }
 
-        allSpells.push({
+        const spellObj = {
           id,
           name: raw.name,
           source: rawSource,
@@ -206,7 +229,13 @@ async function run() {
           classes,
           entries,
           higherLevels,
-        });
+        };
+
+        if (specializations) {
+          spellObj.specializations = specializations;
+        }
+
+        allSpells.push(spellObj);
       }
     } catch (err) {
       console.error(`Error loading ${fileName}:`, err);

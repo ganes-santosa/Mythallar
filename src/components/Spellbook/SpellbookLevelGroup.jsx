@@ -17,17 +17,24 @@ export default function SpellbookLevelGroup({
   onToggle,
   preparedMap,
   copyingMap = {},
+  notesMap = {},
+  maxCantrips = null,
   onTogglePrepare,
   onFinishCopying,
   onCast,
   onRemove,
   onSelect,
+  onUpdateNote,
   expandedSpellId,
   onToggleSpell,
 }) {
   if (!spells || spells.length === 0) return null;
 
   const preparedCount = spells.filter((s) => preparedMap[s.id] && !copyingMap[s.id]).length;
+  const isCantripOver = level === 0 && typeof maxCantrips === 'number' && spells.length > maxCantrips;
+  const cantripText = typeof maxCantrips === 'number'
+    ? `${spells.length} / ${maxCantrips} cantrips`
+    : `${spells.length} cantrips`;
 
   return (
     <div className="mb-4">
@@ -42,8 +49,8 @@ export default function SpellbookLevelGroup({
           <span>{getLevelTitle(level)}</span>
         </div>
 
-        <span className="text-slate-400 font-normal">
-          {level > 0 ? `${preparedCount} / ${spells.length} prepared` : `${spells.length} cantrips`}
+        <span className={`font-normal ${isCantripOver ? 'text-red-500 font-semibold' : 'text-slate-400'}`}>
+          {level > 0 ? `${preparedCount} prepared` : cantripText}
         </span>
       </button>
 
@@ -56,14 +63,16 @@ export default function SpellbookLevelGroup({
               spell={spell}
               isPrepared={Boolean(preparedMap[spell.id])}
               isCopying={Boolean(copyingMap[spell.id])}
+              note={notesMap[spell.id] || ''}
               onTogglePrepare={onTogglePrepare}
               onFinishCopying={onFinishCopying}
               onCast={onCast}
               onRemove={onRemove}
               onSelect={onSelect}
-               isExpanded={expandedSpellId === spell.id}
-               onToggleExpand={onToggleSpell}
-             />
+              onUpdateNote={onUpdateNote}
+              isExpanded={expandedSpellId === spell.id}
+              onToggleExpand={onToggleSpell}
+            />
           ))}
         </div>
       )}

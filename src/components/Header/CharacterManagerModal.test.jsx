@@ -130,4 +130,32 @@ describe('CharacterManagerModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /Click again to create character/i }));
     expect(handleCreate).toHaveBeenCalledOnce();
   });
+
+  it('allows deleting character when only one profile exists and closes modal', () => {
+    const handleDelete = vi.fn();
+    const handleClose = vi.fn();
+    const singleProfile = [{ id: 'c1', name: 'Lone Adventurer', className: 'Wizard', level: 1 }];
+
+    render(
+      <CharacterManagerModal
+        isOpen={true}
+        onClose={handleClose}
+        profiles={singleProfile}
+        activeId="c1"
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onDeleteProfile={handleDelete}
+      />
+    );
+
+    const deleteBtn = screen.getByRole('button', { name: /Delete Lone Adventurer/i });
+    expect(deleteBtn).toBeInTheDocument();
+
+    fireEvent.click(deleteBtn);
+    const armedBtn = screen.getByRole('button', { name: /Click again to delete Lone Adventurer/i });
+    fireEvent.click(armedBtn);
+
+    expect(handleDelete).toHaveBeenCalledWith('c1');
+    expect(handleClose).toHaveBeenCalled();
+  });
 });

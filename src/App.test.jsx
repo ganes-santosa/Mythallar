@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
 import App from './App';
+import { STORAGE_KEY, createDefaultProfile } from './utils/storage';
 
 const MOCK_SPELLS = [
   {
@@ -34,6 +35,14 @@ const MOCK_SPELLS = [
 describe('App End-to-End Integration', () => {
   beforeEach(() => {
     localStorage.clear();
+    const defaultChar = createDefaultProfile('Mordenkainen', 'Wizard');
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        profiles: [defaultChar],
+        activeId: defaultChar.id,
+      })
+    );
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => MOCK_SPELLS,
@@ -192,6 +201,56 @@ describe('App End-to-End Integration', () => {
       expect(screen.queryByText('Copying')).not.toBeInTheDocument();
       expect(screen.queryByLabelText(/Finish copying all spells/i)).not.toBeInTheDocument();
       expect(screen.getByLabelText(/Toggle Prepared for Magic Missile/i)).toBeInTheDocument();
+    });
+  });
+
+  it('starts with no character and prompts creation when storage is empty', async () => {
+    localStorage.clear();
+    render(<App />);
+
+    expect(await screen.findByText('No Character Selected')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Create First Character/i })).toBeInTheDocument();
+
+    // Click button to open modal
+    fireEvent.click(screen.getByRole('button', { name: /Create First Character/i }));
+    expect(screen.getByRole('heading', { name: 'Create Character' })).toBeInTheDocument();
+
+    // Fill form and create
+    fireEvent.change(screen.getByLabelText(/Character Name/i), {
+      target: { value: 'Gandalf the Grey' },
+    });
+    fireEvent.change(screen.getByLabelText(/Starting Class/i), {
+      target: { value: 'Wizard' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Create Character/i }));
+
+    // Character created and active
+    expect(await screen.findByRole('heading', { level: 2, name: 'Gandalf the Grey' })).toBeInTheDocument();
+    expect(screen.queryByText('No Character Selected')).not.toBeInTheDocument();
+  });
+
+  it('allows deleting the sole character via CharacterManagerModal and reverts to empty state', async () => {
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Mordenkainen' })).toBeInTheDocument();
+
+    // Open CharacterManagerModal
+    const manageBtn = screen.getByRole('button', { name: /Manage Characters/i });
+    fireEvent.click(manageBtn);
+
+    expect(screen.getByRole('heading', { name: 'Character Grimoires' })).toBeInTheDocument();
+
+    // Delete Mordenkainen (armed then confirm)
+    const deleteBtn = screen.getByRole('button', { name: /Delete Mordenkainen/i });
+    fireEvent.click(deleteBtn);
+    const armedBtn = screen.getByRole('button', { name: /Click again to delete Mordenkainen/i });
+    fireEvent.click(armedBtn);
+
+    // Modal closes and empty state displays
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Character Grimoires' })).not.toBeInTheDocument();
+      expect(screen.getByText('No Character Selected')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Create First Character/i })).toBeInTheDocument();
     });
   });
 });

@@ -16,10 +16,10 @@ describe('storage', () => {
     expect(char.customSlots).toEqual({});
   });
 
-  it('returns a new default profile when localStorage is empty', () => {
+  it('returns empty profiles and null activeId when localStorage is empty', () => {
     const data = loadCharacterProfiles();
-    expect(data.profiles.length).toBe(1);
-    expect(data.activeId).toBe(data.profiles[0].id);
+    expect(data.profiles).toEqual([]);
+    expect(data.activeId).toBeNull();
   });
 
   it('saves and reloads profiles accurately', () => {
@@ -37,7 +37,7 @@ describe('storage', () => {
   it('recovers with fallback when localStorage JSON is corrupted', () => {
     localStorage.setItem(STORAGE_KEY, '{invalid-json');
     const data = loadCharacterProfiles();
-    expect(data.profiles.length).toBe(1);
-    expect(data.activeId).toBe(data.profiles[0].id);
+    expect(data.profiles).toEqual([]);
+    expect(data.activeId).toBeNull();
   });
 });
