@@ -14,4 +14,4 @@
 - Cloud sync / homebrew library enhancements.
 
 ## Open questions
-- Remove scratch files from v1.2.4 (`extract_sqlite_logo.cjs`, `extracted_logo_16.png`, `test-output.txt`)?
+- (none)
