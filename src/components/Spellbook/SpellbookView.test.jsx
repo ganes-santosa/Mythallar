@@ -562,4 +562,15 @@ describe('SpellbookView', () => {
 
     expect(handleUpdateNote).toHaveBeenCalledWith('fireball', 'Save for undead boss');
   });
+
+  it('renders MythallarLogo in the empty spellbook state', () => {
+    render(
+      <SpellbookView
+        character={{ ...mockCharacter, spells: [] }}
+        catalog={mockCatalog}
+      />
+    );
+    expect(screen.getByText('Your Spellbook is Empty')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Mythallar Logo' })).toHaveClass('bg-slate-300');
+  });
 });

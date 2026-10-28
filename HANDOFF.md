@@ -1,13 +1,11 @@
 # HANDOFF
 
-## Current state (v1.2.6)
-- **First-Time User Character Onboarding & Empty State:** Removed default placeholder Mordenkainen. Fresh installations start with zero characters and an onboarding prompt ("Create First Character"). Users can delete the last remaining character from `CharacterManagerModal`, automatically closing the modal and reverting the right pane to the onboarding screen.
-- **Character Creator Modal:** `CreateCharacterModal.jsx` prompts for name and 1st-level class, with single-click X/close and Cancel buttons, and "Adventure awaits" subtitle.
-- **Cantrip & Leveled Spell Counters:** Cantrip accordion header calculates 5e max cantrips known (`x / max cantrips`) with full multiclassing support and turns red on overflow. Leveled spell groups show `${preparedCount} prepared`.
-- **Wizard Spell Copying & Obfuscation:** Leveled spells added by Wizards start in `copying: true`. Obfuscated with glyphs, masked metadata, two-click confirmation.
-- **Spell Notes:** Added spell note feature to opened spell accordions (`SpellNoteSection.jsx`). Appears at end of description after "At Higher Levels" with small "Add Note" button on right. Inline textarea to add/save/cancel. Saved notes display with non-italic `Note: <content>` and edit/delete actions.
-- **Chronurgy & Graviturgy Specializations:** Restored `specializations` and Wizard class assignment for all 15 Dunamancy spells in `public/data/spells.json` and `scripts/fetch-spells.mjs`. Render subtle purple badge chips before school when accordion is open; filterable via School dropdowns.
-- **Verification:** 23 test files (129 tests) green; `npm.cmd run build` green. Dev server live at http://localhost:5173.
+## Current state (v1.3.0)
+- **Theme Roster & Background Textures:** Overhauled theme system in `themeService.js` and `SettingsModal.jsx`. 8 distinct themes + custom editor: Mythallar Classic (solid legacy UI), The Weave (celestial compass chart), Space Cadet (45k starfield canvas), Underdark (limewash plaster), Desert Dunes (limewash plaster), Woodland Olive (limewash plaster, darkened umber browns), Gunmetal (clean charcoal/ash), Blood God (darkened/desaturated greens and crimson).
+- **Custom Theme Creator:** Full-width bottom card in `SettingsModal` supporting real-time custom palette editing and background texture selection.
+- **Empty States & Branding Iconography:** Empty spellbook logo centered with slate-300 mask. "No Character Selected" empty state features enlarged `w-11 h-11` `bg-dnd-ivory` masked logo. Main header branding logo masked with matching `bg-dnd-ivory`.
+- **Outline & Glow Clipping:** Modal container and grid wrapped with `p-2 -mx-2` and `p-1` padding to eliminate clipped rings.
+- **Verification:** 23 test files (134 tests) green; `npm.cmd run build` clean.
 
 ## Next up
 - Expand character creator into full builder (abilities, subclass, race, equipment) when ready.

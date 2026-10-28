@@ -398,10 +398,24 @@ export default function SpellbookView({
         </div>
       )}
 
-      {!isCollapsed && <div className="flex-1 min-h-0 overflow-y-auto px-1 pr-3">
+      {!isCollapsed && <div className="flex-1 min-h-0 flex flex-col overflow-y-auto px-1 pb-1">
       {!hasAnySpells ? (
-        <div className="flex flex-col items-center justify-center h-64 text-center text-slate-500 rounded-xl p-8 bg-dnd-card/40">
-          <BookMarked size={40} className="mb-3 text-slate-600" />
+        <div className="flex-1 flex flex-col items-center justify-center pb-20 pt-4 px-8 text-center text-slate-500 rounded-xl bg-dnd-card/40">
+          <div
+            role="img"
+            aria-label="Mythallar Logo"
+            className="w-16 h-16 mb-1 bg-slate-300 select-none pointer-events-none"
+            style={{
+              WebkitMaskImage: "url('/mythallar_logo.png')",
+              WebkitMaskSize: 'contain',
+              WebkitMaskRepeat: 'no-repeat',
+              WebkitMaskPosition: 'center',
+              maskImage: "url('/mythallar_logo.png')",
+              maskSize: 'contain',
+              maskRepeat: 'no-repeat',
+              maskPosition: 'center',
+            }}
+          />
           <h3 className="font-semibold text-slate-300 text-base">Your Spellbook is Empty</h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xs">
             Drag and drop spells from the catalog on the left, or click "Add to Spellbook" in the spell detail drawer.

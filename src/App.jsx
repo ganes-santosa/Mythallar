@@ -18,7 +18,7 @@ import {
   deleteCloudCharacter,
   mergeLocalAndCloud,
 } from './utils/syncService';
-import { getStoredThemeId, setTheme, applyTheme } from './utils/themeService';
+import { getStoredThemeId, setTheme, applyTheme, getActiveTheme } from './utils/themeService';
 import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
 import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
@@ -55,11 +55,58 @@ export default function App() {
 
   // --- Settings & Theme State ---
   const [activeThemeId, setActiveThemeId] = useState(() => getStoredThemeId());
+  const [customThemeRev, setCustomThemeRev] = useState(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const starCanvasRef = useRef(null);
+
+  const activeTheme = useMemo(
+    () => getActiveTheme(activeThemeId),
+    [activeThemeId, customThemeRev]
+  );
+  const activeTexture = activeTheme?.texture || 'none';
 
   useEffect(() => {
     applyTheme(activeThemeId);
-  }, [activeThemeId]);
+  }, [activeThemeId, customThemeRev]);
+
+  useEffect(() => {
+    if (activeTexture !== 'stars') return;
+    if (typeof navigator !== 'undefined' && /jsdom/i.test(navigator.userAgent)) return;
+    const canvas = starCanvasRef.current;
+    if (!canvas || typeof canvas.getContext !== 'function') return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const w = 1920;
+    const h = 1080;
+    canvas.width = w;
+    canvas.height = h;
+    ctx.clearRect(0, 0, w, h);
+
+    let s = 91827364;
+    const rand = () => {
+      s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+
+    for (let i = 0; i < 45000; i++) {
+      const x = rand() * w;
+      const y = rand() * h;
+      const roll = rand();
+      const alpha = roll > 0.94 ? 0.65 + rand() * 0.35 : 0.1 + rand() * 0.45;
+      ctx.fillStyle = `rgba(255,255,255,${alpha.toFixed(2)})`;
+
+      if (roll > 0.985) {
+        ctx.beginPath();
+        ctx.arc(x, y, 1.05 + rand() * 0.55, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (roll > 0.82) {
+        ctx.fillRect(x, y, 1.35, 1.35);
+      } else {
+        ctx.fillRect(x, y, 0.85, 0.85);
+      }
+    }
+  }, [activeTexture]);
 
   const handleSelectTheme = (themeId) => {
     setTheme(themeId);
@@ -678,7 +725,53 @@ export default function App() {
   );
 
   return (
-    <div className="flex flex-col h-screen w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
+    <div className="relative flex flex-col h-screen w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
+      {/* Per-Theme Background Texture Overlay (z-0, behind opaque panels) */}
+      {activeTexture === 'celestial' && (
+        <div
+          data-testid="theme-bg-celestial"
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.14]"
+        >
+          <img
+            src="/celestial_bg.png?t=1730134579"
+            alt=""
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-auto min-h-full min-w-full object-cover"
+            draggable="false"
+          />
+        </div>
+      )}
+      {activeTexture === 'stars' && (
+        <canvas
+          ref={starCanvasRef}
+          data-testid="theme-bg-stars"
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 h-full w-full object-cover opacity-[0.45]"
+        />
+      )}
+      {activeTexture === 'limewash' && (
+        <svg
+          data-testid="theme-bg-limewash"
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 h-full w-full opacity-[0.18]"
+        >
+          <filter id="limewash-plaster">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.0035"
+              numOctaves="5"
+              seed="14"
+              result="noise"
+            />
+            <feColorMatrix
+              type="matrix"
+              values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0.85 0 0 0 -0.2"
+              in="noise"
+            />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#limewash-plaster)" />
+        </svg>
+      )}
       {/* Toast Banner */}
       {toast && (
         <div className="fixed top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card">
@@ -690,14 +783,28 @@ export default function App() {
       )}
 
       {/* Main Dual-Pane Body */}
-      <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
+      <main className="relative z-10 flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
-        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/40">
+        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/25">
           {/* Integrated Header */}
           <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 rounded-lg bg-dnd-card/70 flex items-center justify-center p-1">
-                <MythallarLogo className="w-8 h-8 max-w-none max-h-none" />
+                <div
+                  role="img"
+                  aria-label="Mythallar Logo"
+                  className="w-6 h-6 bg-dnd-ivory select-none pointer-events-none"
+                  style={{
+                    WebkitMaskImage: "url('/mythallar_logo.png')",
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: "url('/mythallar_logo.png')",
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  }}
+                />
               </div>
               <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
                 <h1 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display">
@@ -755,7 +862,7 @@ export default function App() {
         </section>
 
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
-        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/5">
+        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10">
           {activeCharacter ? (
             <>
               <CharacterHeader
@@ -806,8 +913,22 @@ export default function App() {
             </>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-2xl bg-dnd-panel/60 border border-white/5 space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center text-dnd-gold shadow-lg ring-1 ring-white/10">
-                <Sparkles size={32} />
+              <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center shadow-lg ring-1 ring-white/10 p-2.5">
+                <div
+                  role="img"
+                  aria-label="Mythallar Logo"
+                  className="w-11 h-11 bg-dnd-ivory select-none pointer-events-none"
+                  style={{
+                    WebkitMaskImage: "url('/mythallar_logo.png')",
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: "url('/mythallar_logo.png')",
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  }}
+                />
               </div>
               <div className="max-w-sm space-y-1.5">
                 <h3 className="text-lg font-bold text-dnd-ivory font-display tracking-tight">
@@ -850,6 +971,7 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         activeThemeId={activeThemeId}
         onSelectTheme={handleSelectTheme}
+        onUpdateCustomTheme={() => setCustomThemeRev((r) => r + 1)}
       />
     </div>
   );

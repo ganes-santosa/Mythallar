@@ -5,3 +5,6 @@ dist/
 .DS_Store
 .env*.local
 .env.local
+*.png
+!public/*.png
+!src/**/*.png

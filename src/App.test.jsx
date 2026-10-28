@@ -60,6 +60,12 @@ describe('App End-to-End Integration', () => {
     expect(screen.getByText(/Mythallar/i)).toBeInTheDocument();
     expect(screen.getByText(/DnD 5e Spellbook/i)).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: 'Mordenkainen' })).toBeInTheDocument();
+
+    // Main branding header logo matches text-dnd-ivory
+    const brandingHeader = screen.getByRole('heading', { level: 1, name: 'Mythallar' }).closest('div');
+    const headerLogo = brandingHeader.parentElement.querySelector('div[role="img"][aria-label="Mythallar Logo"]');
+    expect(headerLogo).toBeInTheDocument();
+    expect(headerLogo).toHaveClass('bg-dnd-ivory');
   });
 
   it('allows clicking a spell to expand accordion and adding it to spellbook', async () => {
@@ -211,6 +217,13 @@ describe('App End-to-End Integration', () => {
     expect(await screen.findByText('No Character Selected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Create First Character/i })).toBeInTheDocument();
 
+    // Renders MythallarLogo with color matching the text (bg-dnd-ivory) in empty container, sized ~15% larger
+    const emptyStateContainer = screen.getByText('No Character Selected').closest('div');
+    const logo = emptyStateContainer.parentElement.querySelector('div[role="img"][aria-label="Mythallar Logo"]');
+    expect(logo).toBeInTheDocument();
+    expect(logo).toHaveClass('bg-dnd-ivory');
+    expect(logo).toHaveClass('w-11', 'h-11');
+
     // Click button to open modal
     fireEvent.click(screen.getByRole('button', { name: /Create First Character/i }));
     expect(screen.getByRole('heading', { name: 'Create Character' })).toBeInTheDocument();
@@ -252,5 +265,39 @@ describe('App End-to-End Integration', () => {
       expect(screen.getByText('No Character Selected')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Create First Character/i })).toBeInTheDocument();
     });
+  });
+
+  it('switches background texture overlay based on selected theme', async () => {
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    // Mythallar Classic (default) has no texture overlay
+    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-testid="theme-bg-stars"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-testid="theme-bg-limewash"]')).not.toBeInTheDocument();
+
+    // Open Settings & Themes modal
+    fireEvent.click(screen.getByRole('button', { name: /Open settings/i }));
+
+    // Select The Weave -> celestial background
+    fireEvent.click(screen.getByText('The Weave'));
+    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).toBeInTheDocument();
+
+    // Select Space Cadet -> stars background
+    fireEvent.click(screen.getByText('Space Cadet'));
+    expect(container.querySelector('[data-testid="theme-bg-stars"]')).toBeInTheDocument();
+
+    // Select Desert Dunes -> limewash background
+    fireEvent.click(screen.getByText('Desert Dunes'));
+    expect(container.querySelector('[data-testid="theme-bg-limewash"]')).toBeInTheDocument();
+
+    // Select Mythallar Classic -> clean legacy UI (no texture)
+    fireEvent.click(screen.getByText('Mythallar Classic'));
+    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-testid="theme-bg-stars"]')).not.toBeInTheDocument();
+    expect(container.querySelector('[data-testid="theme-bg-limewash"]')).not.toBeInTheDocument();
   });
 });
