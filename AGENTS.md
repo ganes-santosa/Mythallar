@@ -33,12 +33,15 @@ Mythallar: D&D 5e spellbook SPA. React 18, Vite 6, Tailwind 3, Vitest, lucide-re
 
 ## Versioning (SemVer: MAJOR.MINOR.PATCH)
 - PATCH: bug fixes, visual tweaks. MINOR: new user-facing features. MAJOR: breaking changes to saved data or exports.
-- The version lives only in `package.json` and gets injected as `__APP_VERSION__` (`vite.config.js`). Never hardcode it.
-- Release:
-  1. `npm.cmd version <patch|minor|major> --no-git-tag-version`
-  2. Test and build pass.
-  3. Stage the intended files explicitly. Don't use `git add -A` (it picks up scratch files).
-  4. `git commit -m "release: vX.Y.Z - summary"`, `git tag vX.Y.Z`, `git push origin master --tags`
+- **MANDATORY**: Whenever updating version to X.Y.Z:
+  1. Update `package.json` (`npm.cmd version <version> --no-git-tag-version`).
+  2. Update `src/version.js` (`export const APP_VERSION = 'X.Y.Z';`) so the top-left version badge in the UI and the Settings modal update immediately in code and hot-reload in Vite.
+  3. Update `HANDOFF.md` release header.
+- Release sequence:
+  1. Version updated in `package.json` AND `src/version.js`.
+  2. Test and build pass (`npm.cmd test -- --run`, `npm.cmd run build`).
+  3. Stage the intended files explicitly (including `src/version.js`, `package.json`, `HANDOFF.md`). Never use `git add -A`.
+  4. `git commit -m "release: vX.Y.Z - summary"`, `git tag vX.Y.Z`, `git push origin master --tags` (append `[skip netlify]` if not deploying to production).
 - Never move or force-push a published tag. If something is wrong, ship the next patch.
 
 ## Handoff & Netlify credits

@@ -2,6 +2,7 @@ import React from 'react';
 import { X, Check, Sliders, Palette, Sparkles } from 'lucide-react';
 import { THEMES } from '../../utils/themeService';
 import MythallarLogo from '../Common/MythallarLogo';
+import { APP_VERSION } from '../../version';
 
 export default function SettingsModal({
   isOpen,
@@ -100,7 +101,7 @@ export default function SettingsModal({
 
         {/* Modal Footer with version info */}
         <div className="pt-3 flex items-center justify-between text-xs text-slate-400 flex-shrink-0">
-          <span className="text-[11px] font-mono text-slate-400">v{__APP_VERSION__}</span>
+          <span className="text-[11px] font-mono text-slate-400">v{APP_VERSION}</span>
         </div>
       </div>
     </div>

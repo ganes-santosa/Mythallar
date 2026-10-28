@@ -28,6 +28,7 @@ import CreateCharacterModal from './components/Modal/CreateCharacterModal';
 import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
+import { APP_VERSION } from './version';
 
 export default function App() {
   // --- Character & Profile State ---
@@ -707,7 +708,7 @@ export default function App() {
                     DnD 5e Spellbook
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono tracking-tight select-none">
-                    v{__APP_VERSION__}
+                    v{APP_VERSION}
                   </span>
                 </div>
               </div>
