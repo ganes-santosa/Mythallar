@@ -63,8 +63,9 @@ describe('themeService', () => {
     expect(desert.colors.ivory).toBe('#F3F2F0');
   });
 
-  it('defaults to mythallar-classic when nothing is stored and migrates bioluminescent-cyan to underdark', () => {
+  it('defaults to the-weave when nothing is stored and migrates bioluminescent-cyan to underdark', () => {
     expect(getStoredThemeId()).toBe(DEFAULT_THEME_ID);
+    expect(DEFAULT_THEME_ID).toBe('the-weave');
     localStorage.setItem('mythallar_theme_id', 'bioluminescent-cyan');
     expect(getStoredThemeId()).toBe('underdark');
   });

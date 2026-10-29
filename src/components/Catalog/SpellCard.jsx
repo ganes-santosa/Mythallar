@@ -12,15 +12,35 @@ import {
   Trash2,
 } from 'lucide-react';
 
+import abjurationIcon from '../../assets/abjuration.png';
+import conjurationIcon from '../../assets/conjuration.png';
+import divinationIcon from '../../assets/divination.png';
+import enchantmentIcon from '../../assets/enchantment.png';
+import evocationIcon from '../../assets/evocation.png';
+import illusionIcon from '../../assets/illusion.png';
+import necromancyIcon from '../../assets/necromancy.png';
+import transmutationIcon from '../../assets/transmutation.png';
+
+const SCHOOL_ICONS = {
+  Abjuration: abjurationIcon,
+  Conjuration: conjurationIcon,
+  Divination: divinationIcon,
+  Enchantment: enchantmentIcon,
+  Evocation: evocationIcon,
+  Illusion: illusionIcon,
+  Necromancy: necromancyIcon,
+  Transmutation: transmutationIcon,
+};
+
 const SCHOOL_COLORS = {
-  Abjuration: 'text-blue-300 bg-blue-500/15',
-  Conjuration: 'text-amber-300 bg-amber-500/15',
-  Divination: 'text-purple-300 bg-purple-500/15',
-  Enchantment: 'text-pink-300 bg-pink-500/15',
-  Evocation: 'text-red-300 bg-red-500/15',
-  Illusion: 'text-indigo-300 bg-indigo-500/15',
-  Necromancy: 'text-emerald-300 bg-emerald-500/15',
-  Transmutation: 'text-yellow-300 bg-yellow-500/15',
+  Abjuration: 'text-[#6daef6] bg-[#6daef6]/15',
+  Conjuration: 'text-[#ffb45b] bg-[#ffb45b]/15',
+  Divination: 'text-[#b886f1] bg-[#b886f1]/15',
+  Enchantment: 'text-[#f4a4d0] bg-[#f4a4d0]/15',
+  Evocation: 'text-[#fa8c77] bg-[#fa8c77]/15',
+  Illusion: 'text-[#a0adea] bg-[#a0adea]/15',
+  Necromancy: 'text-[#95ef6e] bg-[#95ef6e]/15',
+  Transmutation: 'text-[#ffe455] bg-[#ffe455]/15',
 };
 
 export default function SpellCard({
@@ -39,6 +59,7 @@ export default function SpellCard({
   const { armed: deleteArmed, handleClick: handleDeleteClick } = useTwoClickConfirm(() => onDeleteHomebrew?.(spell.id));
   const isHomebrew = spell.source === 'Homebrew' || spell.source === 'Custom';
   const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 bg-slate-500/15';
+  const schoolIcon = SCHOOL_ICONS[spell.school];
 
   const handleDragStart = (e) => {
     e.dataTransfer.setData('text/plain', spell.id);
@@ -155,9 +176,26 @@ export default function SpellCard({
               {specialization}
             </span>
           ))}
-          <span className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${schoolColor}`}>
-            {spell.school}
-          </span>
+          {isExpanded ? (
+            <span className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${schoolColor}`}>
+              {spell.school}
+            </span>
+          ) : schoolIcon ? (
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 rounded ${schoolColor}`}
+              title={spell.school}
+            >
+              <img
+                src={schoolIcon}
+                alt={spell.school}
+                className="w-4 h-4 object-contain select-none pointer-events-none"
+              />
+            </span>
+          ) : (
+            <span className={`text-[11px] px-1.5 py-0.2 rounded font-medium ${schoolColor}`}>
+              {spell.school}
+            </span>
+          )}
           <span className="text-[11px] px-1.5 py-0.2 rounded bg-dnd-panel/80 text-slate-300 font-medium">
             {spell.level === 0 ? 'Cantrip' : `Lvl ${spell.level}`}
           </span>

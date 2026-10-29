@@ -274,17 +274,13 @@ describe('App End-to-End Integration', () => {
       expect(screen.getByText('Fireball')).toBeInTheDocument();
     });
 
-    // Mythallar Classic (default) has no texture overlay
-    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).not.toBeInTheDocument();
+    // The Weave (default) has celestial texture overlay
+    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).toBeInTheDocument();
     expect(container.querySelector('[data-testid="theme-bg-stars"]')).not.toBeInTheDocument();
     expect(container.querySelector('[data-testid="theme-bg-limewash"]')).not.toBeInTheDocument();
 
     // Open Settings & Themes modal
     fireEvent.click(screen.getByRole('button', { name: /Open settings/i }));
-
-    // Select The Weave -> celestial background
-    fireEvent.click(screen.getByText('The Weave'));
-    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).toBeInTheDocument();
 
     // Select Space Cadet -> stars background
     fireEvent.click(screen.getByText('Space Cadet'));
@@ -299,5 +295,9 @@ describe('App End-to-End Integration', () => {
     expect(container.querySelector('[data-testid="theme-bg-celestial"]')).not.toBeInTheDocument();
     expect(container.querySelector('[data-testid="theme-bg-stars"]')).not.toBeInTheDocument();
     expect(container.querySelector('[data-testid="theme-bg-limewash"]')).not.toBeInTheDocument();
+
+    // Select The Weave -> celestial background restored
+    fireEvent.click(screen.getByText('The Weave'));
+    expect(container.querySelector('[data-testid="theme-bg-celestial"]')).toBeInTheDocument();
   });
 });

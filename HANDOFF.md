@@ -1,14 +1,14 @@
 # HANDOFF
 
-## Current state (v1.3.0)
-- **Theme Roster & Background Textures:** Overhauled theme system in `themeService.js` and `SettingsModal.jsx`. 8 distinct themes + custom editor: Mythallar Classic (solid legacy UI), The Weave (celestial compass chart), Space Cadet (45k starfield canvas), Underdark (limewash plaster), Desert Dunes (limewash plaster), Woodland Olive (limewash plaster, darkened umber browns), Gunmetal (clean charcoal/ash), Blood God (darkened/desaturated greens and crimson).
-- **Custom Theme Creator:** Full-width bottom card in `SettingsModal` supporting real-time custom palette editing and background texture selection.
-- **Empty States & Branding Iconography:** Empty spellbook logo centered with slate-300 mask. "No Character Selected" empty state features enlarged `w-11 h-11` `bg-dnd-ivory` masked logo. Main header branding logo masked with matching `bg-dnd-ivory`.
-- **Outline & Glow Clipping:** Modal container and grid wrapped with `p-2 -mx-2` and `p-1` padding to eliminate clipped rings.
+## Current state (v1.3.1)
+- **School of Magic Icons:** Replaced collapsed text tags with square badge school icons (`w-6 h-6`, 24x24px, centered 16x16px icon) using custom assets (`src/assets/*.png`). Toggles to text tag on accordion expand.
+- **Palette Alignment:** Updated school color themes (Abjuration, Conjuration, Divination, Enchantment, Evocation, Illusion, Necromancy, Transmutation) to match visual icon palette.
+- **Character Header Truncation & Edit Alignment:** Fixed dynamic collision detection in character header; edit action buttons ("Done", "Cancel") wrap cleanly and align left under the input without clipping or right-clash. Default theme set to The Weave (`the-weave`).
 - **Verification:** 23 test files (134 tests) green; `npm.cmd run build` clean.
 
 ## Next up
 - Expand character creator into full builder (abilities, subclass, race, equipment) when ready.
+- **Long-term Roadmap:** Evolve left pane (current Spellbook view) into a full fillable D&D character sheet tab / interface while preserving core spellcasting workflow.
 - Cloud sync / homebrew library enhancements.
 
 ## Open questions

@@ -52,26 +52,14 @@ h1, h2, h3, h4, .font-display {
   background: var(--color-ivory);
 }
 
-.character-edit-actions { flex-wrap: wrap; }
-
-@media (max-width: 420px) {
-  .character-profile-card .character-edit-actions {
-    flex-basis: 100%;
-    margin-left: 0;
-    justify-content: flex-start;
-  }
-}
-
 .character-profile-card { container-type: inline-size; }
 
-@container (max-width: 390px) {
+.character-edit-actions { flex-wrap: wrap; }
+
+@container (max-width: 440px) {
   .character-profile-card .character-edit-actions {
     flex-basis: 100%;
-    margin-left: 0;
+    margin-left: 0 !important;
     justify-content: flex-start;
   }
-}
-
-@container (max-width: 400px) {
-  .character-profile-card .character-level-label { display: none; }
 }

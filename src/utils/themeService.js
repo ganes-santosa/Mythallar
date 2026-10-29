@@ -183,7 +183,7 @@ export const THEMES = [
   DEFAULT_CUSTOM_THEME,
 ];
 
-export const DEFAULT_THEME_ID = 'mythallar-classic';
+export const DEFAULT_THEME_ID = 'the-weave';
 const STORAGE_KEY = 'mythallar_theme_id';
 
 const LEGACY_THEME_ALIASES = {
@@ -246,7 +246,7 @@ export function getActiveTheme(themeId) {
   if (resolvedId === 'custom') {
     return getCustomThemeConfig();
   }
-  return THEMES.find((t) => t.id === resolvedId) || THEMES[0];
+  return THEMES.find((t) => t.id === resolvedId) || THEMES.find((t) => t.id === DEFAULT_THEME_ID) || THEMES[0];
 }
 
 export function getStoredThemeId() {

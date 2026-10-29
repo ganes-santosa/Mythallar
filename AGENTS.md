@@ -30,6 +30,7 @@ Mythallar: D&D 5e spellbook SPA. React 18, Vite 6, Tailwind 3, Vitest, lucide-re
 - Hooks go before any early `return`.
 - Scroll containers that hold ringed/glowing items need padding on every side (`p-1`), or the ring gets clipped.
 - **Character Initialization**: Storage defaults to empty profiles (`profiles: []`, `activeId: null`). When no character exists, the right pane displays an empty state with a "Create First Character" action prompting `CreateCharacterModal` (character name + 1st-level class). Designed for future extension into a full character builder.
+- **Character Sheet Evolution**: Long-term plan expands the left pane (the spellbook view) into a full fillable character sheet. Keep left-pane state and component hierarchy flexible for this integration.
 
 ## Versioning (SemVer: MAJOR.MINOR.PATCH)
 - PATCH: bug fixes, visual tweaks. MINOR: new user-facing features. MAJOR: breaking changes to saved data or exports.

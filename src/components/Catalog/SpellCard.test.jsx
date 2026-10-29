@@ -19,7 +19,7 @@ describe('SpellCard', () => {
     render(<SpellCard spell={mockSpell} onSelect={vi.fn()} isInSpellbook={false} />);
     expect(screen.getByText('Fireball')).toBeInTheDocument();
     expect(screen.getByText('Lvl 3')).toBeInTheDocument();
-    expect(screen.getByText('Evocation')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Evocation' })).toBeInTheDocument();
   });
 
   it('toggles accordion dropdown with spell details on click', () => {
@@ -37,10 +37,12 @@ describe('SpellCard', () => {
     fireEvent.click(screen.getByText('Fireball'));
     expect(screen.getByText(/A bright streak flashes/i)).toBeInTheDocument();
     expect(screen.getByText(/Damage increases by 1d6/i)).toBeInTheDocument();
+    expect(screen.getByText('Evocation')).toBeInTheDocument();
 
     // Click card again to collapse
     fireEvent.click(screen.getByText('Fireball'));
     expect(screen.queryByText(/A bright streak flashes/i)).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Evocation' })).toBeInTheDocument();
   });
 
   it('shows in-spellbook indicator when added', () => {

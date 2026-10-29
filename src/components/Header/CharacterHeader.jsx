@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound } from 'lucide-react';
-import ProfileSelector from './ProfileSelector';
+import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users } from 'lucide-react';
 import CharacterManagerModal from './CharacterManagerModal';
 import AuthStatus from './AuthStatus';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
@@ -70,6 +69,14 @@ export default function CharacterHeader({
   const [levelUpTarget, setLevelUpTarget] = useState('');
   const [newMulticlassChoice, setNewMulticlassChoice] = useState('');
 
+  // Adaptive collision detection for header card items
+  const headerRowRef = useRef(null);
+  const nameRef = useRef(null);
+  const levelRef = useRef(null);
+  const actionsRef = useRef(null);
+  const [showLevelText, setShowLevelText] = useState(true);
+  const [showButtonText, setShowButtonText] = useState(true);
+
   const classes = getCharacterClasses(activeCharacter);
   const totalLevel = Number.isFinite(getTotalCharacterLevel(activeCharacter))
     ? getTotalCharacterLevel(activeCharacter)
@@ -102,6 +109,66 @@ export default function CharacterHeader({
     setNameDraft(activeCharacter?.name || '');
     setIsEditing(false);
   };
+
+  // ponytail: dynamically measure actual element widths to hide level label first, then button text, only when clashing
+  useEffect(() => {
+    if (isCollapsed) return;
+    const row = headerRowRef.current;
+    if (!row) return;
+
+    let naturalLevelWidth = 95;
+    let naturalBtnLabelsWidth = 75;
+
+    const checkFit = () => {
+      const rowWidth = row.clientWidth;
+      if (!rowWidth) return;
+
+      const nameWidth = nameRef.current?.scrollWidth || 0;
+      const currentLevelWidth = levelRef.current?.offsetWidth || 0;
+      if (currentLevelWidth > 0) naturalLevelWidth = currentLevelWidth;
+
+      const actionsWidth = actionsRef.current?.offsetWidth || 0;
+      // actions width when button text labels are hidden is ~80px (3 icon buttons)
+      const actionsMinIconWidth = 82;
+      const actionsFullWidth = showButtonText ? actionsWidth : actionsWidth + naturalBtnLabelsWidth;
+
+      const gapBudget = 18;
+
+      // Stage 1: Ample space -> show Character Level AND button labels
+      const fullWidthNeeded = nameWidth + naturalLevelWidth + actionsFullWidth + gapBudget;
+      if (rowWidth >= fullWidthNeeded) {
+        setShowLevelText(true);
+        setShowButtonText(true);
+        return;
+      }
+
+      // Stage 2: Character Level clashes -> hide it first, keep button labels
+      const withoutLevelNeeded = nameWidth + actionsFullWidth + 8;
+      if (rowWidth >= withoutLevelNeeded) {
+        setShowLevelText(false);
+        setShowButtonText(true);
+        return;
+      }
+
+      // Stage 3: Button text labels also clash -> hide button text labels, keep icons
+      const minIconNeeded = nameWidth + actionsMinIconWidth + 8;
+      if (rowWidth >= minIconNeeded) {
+        setShowLevelText(false);
+        setShowButtonText(false);
+        return;
+      }
+
+      // Stage 4: Constrained further -> icons only, character name truncates
+      setShowLevelText(false);
+      setShowButtonText(false);
+    };
+
+    checkFit();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(checkFit);
+    observer.observe(row);
+    return () => observer.disconnect();
+  }, [activeCharacter?.name, totalLevel, isCollapsed, isEditing, showButtonText]);
 
   const handleClassChange = (index, newClassName) => {
     const newClasses = classes.map((c, i) => (i === index ? { ...c, className: newClassName } : c));
@@ -223,9 +290,9 @@ export default function CharacterHeader({
       {/* Left: Highlight Character Profile Card */}
       <div className="character-profile-card flex-1 min-w-[280px] min-w-0 p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
         {/* Name Title & Header Actions */}
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <div ref={headerRowRef} className={`flex min-w-0 items-center gap-2 ${isEditing ? 'flex-wrap' : ''}`}>
           {/* Left: Name & Character Level next to it */}
-          <div className="flex min-w-0 flex-1 items-center space-x-2.5 flex-wrap gap-y-1">
+          <div className={`flex min-w-0 items-center space-x-2.5 ${isEditing ? 'flex-wrap gap-y-1' : 'flex-1'}`}>
             {isEditing ? (
               <input
                 type="text"
@@ -236,18 +303,25 @@ export default function CharacterHeader({
                 className="bg-dnd-panel rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
               />
             ) : (
-              <h2 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate max-w-[180px] sm:max-w-xs font-display">
+              <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
                 {activeCharacter.name}
               </h2>
             )}
 
-            <span className="character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none">
-              Character Level <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
-            </span>
+            {!isEditing && (
+              <span
+                ref={levelRef}
+                className={`character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none ${
+                  showLevelText ? '' : 'hidden'
+                }`}
+              >
+                Character Level <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
+              </span>
+            )}
           </div>
 
           {/* Right: Edit & Level Up Actions (aligned right) */}
-          <div className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
+          <div ref={actionsRef} className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
             {isEditing ? (
               <>
                 <button
@@ -274,24 +348,34 @@ export default function CharacterHeader({
               <>
                 <button
                   type="button"
+                  onClick={() => setShowManagerModal(true)}
+                  aria-label="Manage Characters"
+                  title="Open character manager modal"
+                  className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center"
+                >
+                  <Users size={13} />
+                </button>
+
+                <button
+                  type="button"
                   aria-label="Edit Profile"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
                   title="Edit character name and classes"
                 >
-                  <Pencil size={11} className="mr-1 text-slate-400" />
-                  Edit
+                  <Pencil size={11} className="text-slate-400" />
+                  {showButtonText && <span className="character-btn-label ml-1">Edit</span>}
                 </button>
 
                 {totalLevel < 20 && (
                   <button
                     type="button"
                     onClick={handleOpenLevelUpModal}
-                    className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0"
+                    className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0"
                     title="Level up this character"
                   >
-                    <ArrowUpCircle size={12} className="mr-1 text-slate-400 flex-shrink-0" />
-                    Level Up
+                    <ArrowUpCircle size={12} className="text-slate-400 flex-shrink-0" />
+                    {showButtonText && <span className="character-btn-label ml-1">Level Up</span>}
                   </button>
                 )}
               </>
@@ -380,15 +464,8 @@ export default function CharacterHeader({
       </div>
 
       {/* Right: Unified Character & File Actions Card */}
-      <div className="flex min-w-[220px] flex-col items-end justify-center self-stretch p-2 rounded-xl bg-dnd-card shadow-sm space-y-1.5 flex-shrink-0">
-        <div className="flex items-center space-x-1.5 w-full justify-between">
-          <ProfileSelector
-            profiles={profiles}
-            activeId={activeCharacter.id}
-            onSelectProfile={onSelectProfile}
-            onCreateProfile={onCreateProfile}
-            onOpenManager={() => setShowManagerModal(true)}
-          />
+      <div className="flex flex-col items-end justify-center self-stretch p-2 rounded-xl bg-dnd-card shadow-sm space-y-1.5 flex-shrink-0">
+        <div className="flex items-center space-x-1.5 w-full justify-end">
           <AuthStatus
             user={user}
             syncStatus={syncStatus}
