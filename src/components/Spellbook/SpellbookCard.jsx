@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Wand2, Trash2, ChevronDown, BookCheck, Feather, HelpCircle, X } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useClickOutside from '../../hooks/useClickOutside';
 import SpellNoteSection from '../Common/SpellNoteSection';
 
 // Runic, alchemical/planetary, and occult BMP glyphs verified to render in the app font stack
@@ -43,22 +44,11 @@ export default function SpellbookCard({
 }) {
   const [localExpanded, setLocalExpanded] = useState(false);
   const [showCopyHint, setShowCopyHint] = useState(false);
-  const copyHintRef = useRef(null);
+  const copyHintRef = useClickOutside(showCopyHint, () => setShowCopyHint(false));
   const isExpanded = controlledExpanded ?? localExpanded;
   const effectivePrepared = isPrepared && !isCopying;
   const { armed: removeArmed, handleClick: handleRemoveClick } = useTwoClickConfirm(() => onRemove?.(spell.id));
   const { armed: finishArmed, handleClick: handleFinishClick } = useTwoClickConfirm(() => onFinishCopying?.(spell.id));
-
-  useEffect(() => {
-    if (!showCopyHint) return undefined;
-    const handleOutside = (e) => {
-      if (copyHintRef.current && !copyHintRef.current.contains(e.target)) {
-        setShowCopyHint(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, [showCopyHint]);
 
   const toggleExpand = () => {
     if (onToggleExpand) onToggleExpand(spell.id);

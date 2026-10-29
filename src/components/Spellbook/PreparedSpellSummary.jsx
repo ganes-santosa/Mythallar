@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, Check, HelpCircle, Pencil, RotateCcw, X } from 'lucide-react';
 import { getEffectiveMaxPreparedInfo, getEffectiveMaxKnownInfo } from '../../utils/spellSlots';
+import useClickOutside from '../../hooks/useClickOutside';
 
 function SpellLimitBadge({ label, count, info, customKey, character, onUpdateCharacter }) {
   const [showHint, setShowHint] = useState(false);
   const [editing, setEditing] = useState(false);
+  const hintRef = useClickOutside(showHint, () => setShowHint(false));
   const max = Number.isFinite(info.total) ? info.total : null;
   const [draft, setDraft] = useState(max ?? '');
 
@@ -30,7 +32,7 @@ function SpellLimitBadge({ label, count, info, customKey, character, onUpdateCha
   };
 
   return (
-    <div className="relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs">
+    <div ref={hintRef} className="relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs">
       <BookOpen size={11} className="text-dnd-gold" />
       <span className="text-[11px] text-slate-400">{label}:</span>
       {editing ? (

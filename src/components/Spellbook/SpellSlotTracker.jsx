@@ -16,6 +16,7 @@ import {
   calculateMulticlassSpellSlots,
 } from '../../utils/spellSlots';
 import SlotLevelRow from './SlotLevelRow';
+import useClickOutside from '../../hooks/useClickOutside';
 
 export default function SpellSlotTracker({
   character,
@@ -39,6 +40,8 @@ export default function SpellSlotTracker({
   // Hints popovers
   const [showSlotsHint, setShowSlotsHint] = useState(false);
   const [showPactHint, setShowPactHint] = useState(false);
+  const slotsHintRef = useClickOutside(showSlotsHint, () => setShowSlotsHint(false));
+  const pactHintRef = useClickOutside(showPactHint, () => setShowPactHint(false));
 
   const multiclassInfo = calculateMulticlassSpellSlots(character);
   const effectiveSlots = getEffectiveMaxSlots(
@@ -105,7 +108,7 @@ export default function SpellSlotTracker({
             </button>
 
             {/* Hint Button for Spell Slots */}
-            <div className="relative">
+            <div ref={slotsHintRef} className="relative">
               <button
                 type="button"
                 aria-label="Spell slots source breakdown"
@@ -288,7 +291,7 @@ export default function SpellSlotTracker({
               </button>
 
               {/* Pact Magic Hint */}
-              <div className="relative">
+              <div ref={pactHintRef} className="relative">
                 <button
                   type="button"
                   aria-label="Pact magic source breakdown"

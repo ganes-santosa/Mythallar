@@ -5,6 +5,7 @@ import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
 import { isWizardCharacter, getEffectiveMaxCantripsInfo } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useClickOutside from '../../hooks/useClickOutside';
 
 const CLASSES = [
   'Artificer',
@@ -60,6 +61,7 @@ export default function SpellbookView({
   onUpdateNote,
 }) {
   const [showSpellHint, setShowSpellHint] = useState(false);
+  const spellHintRef = useClickOutside(showSpellHint, () => setShowSpellHint(false));
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -230,7 +232,7 @@ export default function SpellbookView({
           </button>
           <PreparedSpellSummary character={character} catalog={catalog} onUpdateCharacter={onUpdateCharacter} />
           <span className="text-[11px] text-slate-400">{(character?.spells || []).length} spells</span>
-          <div className="relative">
+          <div ref={spellHintRef} className="relative">
             <button type="button" aria-label="Spell learning hint" onClick={() => setShowSpellHint(!showSpellHint)} className="p-1 text-slate-400 hover:text-dnd-gold" title="How this class gains spells">
               <HelpCircle size={13} />
             </button>
