@@ -119,16 +119,25 @@ describe('CharacterManagerModal', () => {
     expect(handleDelete).toHaveBeenCalledWith('c2');
   });
 
-  it('requires two clicks before creating a character', () => {
+  it('creates character and closes modal on single click', () => {
     const handleCreate = vi.fn();
-    render(<CharacterManagerModal isOpen={true} onClose={vi.fn()} profiles={mockProfiles} activeId="c1" onSelectProfile={vi.fn()} onCreateProfile={handleCreate} onDeleteProfile={vi.fn()} />);
+    const handleClose = vi.fn();
+    render(
+      <CharacterManagerModal
+        isOpen={true}
+        onClose={handleClose}
+        profiles={mockProfiles}
+        activeId="c1"
+        onSelectProfile={vi.fn()}
+        onCreateProfile={handleCreate}
+        onDeleteProfile={vi.fn()}
+      />
+    );
 
     const createBtn = screen.getByRole('button', { name: /New Character/i });
     fireEvent.click(createBtn);
-    expect(handleCreate).not.toHaveBeenCalled();
-    expect(createBtn).toHaveClass('bg-green-400');
-    fireEvent.click(screen.getByRole('button', { name: /Click again to create character/i }));
     expect(handleCreate).toHaveBeenCalledOnce();
+    expect(handleClose).toHaveBeenCalledOnce();
   });
 
   it('allows deleting character when only one profile exists and closes modal', () => {

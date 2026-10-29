@@ -78,8 +78,6 @@ export default function CharacterManagerModal({
     onClose();
   };
 
-  const { armed: createArmed, handleClick: handleCreateClick } = useTwoClickConfirm(handleCreateNew);
-
   if (!isOpen) return null;
 
   const handleSelect = (id) => {
@@ -147,10 +145,10 @@ export default function CharacterManagerModal({
 
             <button
               type="button"
-              onClick={handleCreateClick}
-              aria-label={createArmed ? 'Click again to create character' : 'New Character'}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm whitespace-nowrap ${createArmed ? 'bg-green-400 text-slate-950 ring-1 ring-green-300' : 'bg-dnd-gold hover:bg-dnd-gold-light text-slate-950'}`}
-              title={createArmed ? 'Click again to create character' : 'Create a new character profile'}
+              onClick={handleCreateNew}
+              aria-label="New Character"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm whitespace-nowrap bg-dnd-gold hover:bg-dnd-gold-light text-slate-950"
+              title="Create a new character profile"
             >
               <Plus size={13} />
               <span>New Character</span>
