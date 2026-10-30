@@ -165,7 +165,7 @@ function SpellbookCard({
 
                   {spell.isLegacy && (
                 <span
-                  className="text-[9px] font-medium tracking-wide px-1 py-0.2 rounded bg-amber-500/15 text-amber-300"
+                  className="inline-flex items-center justify-center h-4 leading-none text-[9px] font-medium tracking-wide px-1.5 pb-0.5 rounded bg-dnd-panel/80 text-dnd-pewter"
                   title="2014 Legacy PHB version"
                 >
                   Legacy
@@ -182,7 +182,7 @@ function SpellbookCard({
               )}
             </div>
 
-            <div className={`flex items-center space-x-2 text-[11px] mt-0.5 ${isCopying ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className={`flex items-center space-x-2 text-[11px] leading-4 mt-0.5 ${isCopying ? 'text-slate-500' : 'text-slate-400'}`}>
               <span>{isCopying ? '???' : spell.time}</span>
               <span>•</span>
               <span>{isCopying ? '???' : spell.range}</span>

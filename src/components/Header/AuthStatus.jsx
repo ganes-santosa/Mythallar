@@ -26,11 +26,11 @@ export default function AuthStatus({
       <button
         type="button"
         onClick={onSignIn}
-        className="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-200 hover:text-dnd-gold transition-colors text-xs font-medium"
+        className="flex items-center space-x-1.5 px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-200 hover:text-dnd-gold transition-colors text-xs font-normal"
         title="Sign in with Google to sync characters across devices"
         aria-label="Sign in with Google"
       >
-        <LogIn size={13} className="text-dnd-gold" />
+        <LogIn size={12} className="text-dnd-gold flex-shrink-0" />
         <span className="hidden sm:inline">Sign in with Google</span>
         <span className="sm:hidden">Sign in</span>
       </button>
@@ -45,7 +45,7 @@ export default function AuthStatus({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={user.email}
-        className="flex items-center space-x-1.5 px-2 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel transition-colors text-xs text-slate-200"
+        className="flex items-center space-x-1.5 px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel transition-colors text-xs font-normal text-slate-200"
       >
         {syncStatus === 'syncing' ? (
           <RefreshCw size={12} className="text-dnd-gold animate-spin" />
@@ -54,7 +54,7 @@ export default function AuthStatus({
         ) : (
           <Cloud size={12} className="text-emerald-400" />
         )}
-        <span className="max-w-[110px] sm:max-w-[140px] truncate font-medium">
+        <span className="max-w-[110px] sm:max-w-[140px] truncate">
           {displayName}
         </span>
         <ChevronDown size={11} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

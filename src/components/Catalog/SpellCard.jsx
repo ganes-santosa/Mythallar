@@ -123,7 +123,7 @@ function SpellCard({
 
               {spell.isLegacy && (
                 <span
-                  className="text-[10px] font-medium tracking-wide px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300"
+                  className="inline-flex items-center justify-center h-4 leading-none text-[9px] font-medium tracking-wide px-1.5 pb-0.5 rounded bg-dnd-panel/80 text-dnd-pewter"
                   title="2014 Legacy PHB version"
                 >
                   Legacy
@@ -146,7 +146,7 @@ function SpellCard({
               )}
             </div>
 
-            <div className="flex items-center space-x-2.5 text-[11px] text-slate-400 mt-0.5">
+            <div className="flex items-center space-x-2.5 text-[11px] leading-4 text-slate-400 mt-0.5">
               <span className="flex items-center">
                 <Clock size={11} className="mr-1" />
                 {spell.time}

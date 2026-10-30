@@ -219,6 +219,9 @@ describe('SpellSlotTracker', () => {
 
     // Short Rest button inside Pact Magic section uses two-click confirm
     const shortRestBtn = screen.getByRole('button', { name: /Reset Pact Magic slots on Short Rest/i });
+    expect(shortRestBtn).toHaveClass('bg-dnd-card');
+    expect(shortRestBtn).toHaveClass('text-amber-200/80');
+    expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
     fireEvent.click(shortRestBtn);
     expect(handleShortRest).not.toHaveBeenCalled();
 
@@ -258,6 +261,30 @@ describe('SpellSlotTracker', () => {
     expect(screen.queryByRole('spinbutton', { name: /^Max 1st Level slots$/i })).not.toBeInTheDocument();
   });
 
+  it('renders standard short rest button with muted amber styling for non-wizards without pact slots', () => {
+    const nonWizardChar = {
+      ...mockCharacter,
+      className: 'Cleric',
+      classData: [{ name: 'Cleric', level: 5 }],
+      slots: { 1: 4, 2: 3, 3: 2 },
+    };
+    render(
+      <SpellSlotTracker
+        character={nonWizardChar}
+        onUseSlot={vi.fn()}
+        onRestoreSlot={vi.fn()}
+        onUpdateMaxSlot={vi.fn()}
+        onLongRest={vi.fn()}
+        onShortRest={vi.fn()}
+      />
+    );
+
+    const shortRestBtn = screen.getByRole('button', { name: 'Short Rest' });
+    expect(shortRestBtn).toHaveClass('bg-dnd-card');
+    expect(shortRestBtn).toHaveClass('text-amber-200/80');
+    expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
+  });
+
   it('opens Arcane Recovery modal on Short Rest click for Wizard characters', () => {
     const handleArcane = vi.fn();
     render(
@@ -273,6 +300,9 @@ describe('SpellSlotTracker', () => {
     );
 
     const shortRestBtn = screen.getByRole('button', { name: /Short Rest Arcane Recovery/i });
+    expect(shortRestBtn).toHaveClass('bg-dnd-card');
+    expect(shortRestBtn).toHaveClass('text-amber-200/80');
+    expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
     fireEvent.click(shortRestBtn);
 
     expect(screen.getByText(/Arcane Recovery/i)).toBeInTheDocument();

@@ -972,7 +972,21 @@ export default function App() {
 
           {isLoadingSpells ? (
             <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
-              <Sparkles className="animate-spin text-dnd-gold mb-2" size={24} />
+              <div
+                role="img"
+                aria-label="Loading Grimoire"
+                className="w-7 h-7 mb-2 animate-spin bg-dnd-gold select-none pointer-events-none"
+                style={{
+                  WebkitMaskImage: "url('/mythallar_logo.png')",
+                  WebkitMaskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskImage: "url('/mythallar_logo.png')",
+                  maskSize: 'contain',
+                  maskRepeat: 'no-repeat',
+                  maskPosition: 'center',
+                }}
+              />
               <span>Loading spell grimoire...</span>
             </div>
           ) : spellError ? (

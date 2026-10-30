@@ -4,12 +4,13 @@ import React from 'react';
 import AuthStatus from './AuthStatus';
 
 describe('AuthStatus component', () => {
-  it('renders Google sign in button when user is null', () => {
+  it('renders Google sign in button when user is null with compact styling matching profile actions', () => {
     const handleSignIn = vi.fn();
     render(<AuthStatus user={null} syncStatus="idle" onSignIn={handleSignIn} onSignOut={vi.fn()} />);
 
     const signInBtn = screen.getByRole('button', { name: /sign in/i });
     expect(signInBtn).toBeInTheDocument();
+    expect(signInBtn).toHaveClass('px-1.5', 'py-0.5', 'text-xs');
     fireEvent.click(signInBtn);
     expect(handleSignIn).toHaveBeenCalled();
   });

@@ -196,7 +196,7 @@ export default function SpellSlotTracker({
                 type="button"
                 aria-label="Short Rest Arcane Recovery"
                 onClick={() => setShowArcaneModal(true)}
-                className="flex items-center px-2 py-0.5 rounded bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 transition-colors font-medium text-xs"
+                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs"
                 title="Short Rest (Arcane Recovery)"
               >
                 <Sun size={12} className="mr-1 text-amber-400" />
@@ -210,7 +210,7 @@ export default function SpellSlotTracker({
                 className={`flex items-center px-2 py-0.5 rounded transition-colors font-medium text-xs ${
                   shortRestArmed
                     ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
-                    : 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200'
+                    : 'bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100'
                 }`}
                 title={shortRestArmed ? 'Click again to confirm Short Rest' : 'Short Rest'}
               >
@@ -364,7 +364,7 @@ export default function SpellSlotTracker({
               className={`flex items-center px-2 py-0.5 rounded transition-colors text-xs font-medium ${
                 pactRestArmed
                   ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
-                  : 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200'
+                  : 'bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100'
               }`}
               title={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
             >

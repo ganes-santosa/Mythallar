@@ -238,7 +238,7 @@ describe('CharacterHeader', () => {
     );
   });
 
-  it('triggers onExport when export button clicked', () => {
+  it('triggers onExport when export button clicked and has compact styling matching profile actions', () => {
     const handleExport = vi.fn();
     render(
       <CharacterHeader
@@ -252,7 +252,9 @@ describe('CharacterHeader', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Export/i }));
+    const exportBtn = screen.getByRole('button', { name: /Export/i });
+    expect(exportBtn).toHaveClass('px-1.5', 'py-0.5', 'text-xs');
+    fireEvent.click(exportBtn);
     expect(handleExport).toHaveBeenCalled();
   });
 

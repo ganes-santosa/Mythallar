@@ -481,11 +481,11 @@ export default function CharacterHeader({
           />
         </div>
 
-        <div className="flex items-center space-x-1 w-full justify-end">
+        <div className="flex items-center space-x-1.5 w-full justify-end">
           <button
             type="button"
             onClick={onExport}
-            className="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-[11px] font-medium"
+            className="flex-1 flex items-center justify-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-xs font-normal"
             title="Export character spellbook as JSON"
           >
             <Download size={11} className="mr-1" />
@@ -495,7 +495,7 @@ export default function CharacterHeader({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center px-2 py-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-[11px] font-medium"
+            className="flex-1 flex items-center justify-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-xs font-normal"
             title="Import character spellbook from JSON"
           >
             <Upload size={11} className="mr-1" />

@@ -60,6 +60,28 @@ describe('SpellCard', () => {
     expect(setData).toHaveBeenCalledWith('text/plain', 'fireball');
   });
 
+  it('renders legacy badge with neutral container and theme accent text for legacy spells matching spellbook dimensions', () => {
+    const legacySpell = {
+      ...mockSpell,
+      id: 'fireball-legacy',
+      name: 'Fireball',
+      isLegacy: true,
+    };
+    render(<SpellCard spell={legacySpell} onSelect={vi.fn()} isInSpellbook={false} />);
+    const badge = screen.getByText('Legacy');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveClass('bg-dnd-panel/80');
+    expect(badge).toHaveClass('text-dnd-pewter');
+    expect(badge).toHaveClass('text-[9px]');
+    expect(badge).toHaveClass('h-4');
+    expect(badge).toHaveClass('inline-flex');
+    expect(badge).toHaveClass('items-center');
+    expect(badge).toHaveClass('justify-center');
+    expect(badge).toHaveClass('leading-none');
+    expect(badge).toHaveClass('px-1.5');
+    expect(badge).toHaveClass('pb-0.5');
+  });
+
   it('renders and invokes delete button for homebrew spells', () => {
     const handleDelete = vi.fn();
     const homebrewSpell = {

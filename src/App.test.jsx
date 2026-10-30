@@ -68,6 +68,18 @@ describe('App End-to-End Integration', () => {
     expect(headerLogo).toHaveClass('bg-dnd-ivory');
   });
 
+  it('renders a spinning Mythallar logo during spell catalog loading', () => {
+    // Keep fetch unresolved
+    global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
+    render(<App />);
+
+    expect(screen.getByText('Loading spell grimoire...')).toBeInTheDocument();
+    const spinner = screen.getByRole('img', { name: 'Loading Grimoire' });
+    expect(spinner).toBeInTheDocument();
+    expect(spinner).toHaveClass('animate-spin');
+    expect(spinner).toHaveClass('bg-dnd-gold');
+  });
+
   it('allows clicking a spell to expand accordion and adding it to spellbook', async () => {
     render(<App />);
 
