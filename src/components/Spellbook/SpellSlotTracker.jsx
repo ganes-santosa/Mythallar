@@ -31,6 +31,7 @@ export default function SpellSlotTracker({
   onSetPactSlotsUsed,
   onUpdateMaxSlot,
   onResetMaxSlot,
+  onDoneEditingMax,
   onLongRest,
   onShortRest,
   onArcaneRecovery,
@@ -165,7 +166,10 @@ export default function SpellSlotTracker({
               <button
                 type="button"
                 aria-label="Done editing max slots"
-                onClick={() => setIsEditingMax(false)}
+                onClick={() => {
+                  setIsEditingMax(false);
+                  onDoneEditingMax?.();
+                }}
                 className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm"
                 title="Done editing max slots"
               >

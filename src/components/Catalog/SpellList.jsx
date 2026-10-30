@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import SpellCard from './SpellCard';
 
@@ -10,7 +10,7 @@ function getLevelTitle(level) {
   return `${level}${ord} Level Spells`;
 }
 
-function CatalogLevelGroup({
+const CatalogLevelGroup = React.memo(function CatalogLevelGroup({
   level,
   spells,
   isOpen,
@@ -64,7 +64,7 @@ function CatalogLevelGroup({
       )}
     </div>
   );
-}
+});
 
 export default React.memo(function SpellList({
   spells,
@@ -98,6 +98,14 @@ export default React.memo(function SpellList({
   const [openLevel, setOpenLevel] = useState(null);
   const [expandedSpellId, setExpandedSpellId] = useState(null);
 
+  const handleToggleSpell = useCallback((id) => {
+    setExpandedSpellId((current) => (current === id ? null : id));
+  }, []);
+
+  const handleToggleLevel = useCallback((lvl) => {
+    setOpenLevel((prev) => (prev === lvl ? null : lvl));
+  }, []);
+
   const activeLevels = useMemo(() => {
     return Object.keys(groupedSpells)
       .map(Number)
@@ -124,7 +132,7 @@ export default React.memo(function SpellList({
               level={lvl}
               spells={groupedSpells[lvl]}
               isOpen={openLevel === null || openLevel === lvl}
-              onToggle={() => setOpenLevel(openLevel === lvl ? null : lvl)}
+              onToggle={() => handleToggleLevel(lvl)}
               spellbookSpellIds={spellbookSpellIds}
               notesMap={notesMap}
               onSelectSpell={onSelectSpell}
@@ -132,7 +140,7 @@ export default React.memo(function SpellList({
               onDeleteHomebrew={onDeleteHomebrew}
               onUpdateNote={onUpdateNote}
               expandedSpellId={expandedSpellId}
-              onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
+              onToggleSpell={handleToggleSpell}
             />
           ))
         )}

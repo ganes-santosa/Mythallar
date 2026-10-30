@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useAccordionMount from '../../hooks/useAccordionMount';
 import SpellNoteSection from '../Common/SpellNoteSection';
 import {
   GripVertical,
@@ -43,7 +44,7 @@ const SCHOOL_COLORS = {
   Transmutation: 'text-[#ffe455] bg-[#ffe455]/15',
 };
 
-export default function SpellCard({
+function SpellCard({
   spell,
   onSelect,
   onAddToSpellbook,
@@ -56,6 +57,7 @@ export default function SpellCard({
 }) {
   const [localExpanded, setLocalExpanded] = useState(false);
   const isExpanded = controlledExpanded ?? localExpanded;
+  const { shouldRender, isClosing } = useAccordionMount(isExpanded, 200);
   const { armed: deleteArmed, handleClick: handleDeleteClick } = useTwoClickConfirm(() => onDeleteHomebrew?.(spell.id));
   const isHomebrew = spell.source === 'Homebrew' || spell.source === 'Custom';
   const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 bg-slate-500/15';
@@ -92,7 +94,7 @@ export default function SpellCard({
     <div
       draggable
       onDragStart={handleDragStart}
-      className={`rounded-lg bg-dnd-card transition-all duration-200 select-none overflow-hidden ${
+      className={`catalog-spell-card rounded-lg bg-dnd-card transition-[box-shadow,background-color] duration-150 select-none overflow-hidden ${
         isExpanded ? 'shadow-[0_0_18px_rgba(255,255,255,0.12)] ring-1 ring-white/30' : 'hover:bg-dnd-hover/80'
       }`}
     >
@@ -209,9 +211,10 @@ export default function SpellCard({
       </div>
 
       {/* Accordion Detail Body */}
-      {isExpanded && (
-        <div className="overflow-hidden animate-in fade-in duration-200">
-          <div className="p-3 bg-dnd-panel/40 text-xs text-slate-300 space-y-2.5">
+      {shouldRender && (
+        <div className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}>
+          <div className="overflow-hidden">
+            <div className="p-3 bg-dnd-panel/40 text-xs text-slate-300 space-y-2.5">
             {/* Quick stats strip */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded bg-dnd-panel/60 text-[11px]">
               <div>
@@ -315,9 +318,12 @@ export default function SpellCard({
             </div>
           </div>
         </div>
+        </div>
       )}
     </div>
   );
 }
+
+export default React.memo(SpellCard);
 
 

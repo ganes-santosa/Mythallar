@@ -148,6 +148,64 @@ describe('App End-to-End Integration', () => {
     });
   });
 
+  it('makes newly added max slots empty, and eats empty slots from the right when reducing max slots', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Magic Missile')).toBeInTheDocument();
+    });
+
+    // Cast Magic Missile so 1 of 2 slots is used (1 remaining, 1 empty)
+    fireEvent.click(screen.getByText('Magic Missile'));
+    const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
+    fireEvent.click(addBtns[0]);
+    fireEvent.click(await screen.findByLabelText(/Finish copying Magic Missile/i));
+    fireEvent.click(screen.getByLabelText(/Click again to finish copying Magic Missile/i));
+    fireEvent.click(await screen.findByLabelText(/Quick-Cast Magic Missile/i));
+
+    await waitFor(() => {
+      expect(screen.getByText('1 / 2')).toBeInTheDocument();
+    });
+
+    // Open max slot editing
+    fireEvent.click(screen.getByRole('button', { name: /Edit maximum spell slots/i }));
+
+    // 1. Add 1 slot: Max increases from 2 to 3. New slot is empty, so remaining stays 1 (1 / 3)
+    fireEvent.click(screen.getByLabelText(/Increase max 1st Level slots/i));
+    expect(screen.getByText('1 /')).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).value).toBe('3');
+
+    // 2. Reduce 1 slot: Max decreases from 3 to 2. Eats empty slot from right, so remaining stays 1 (1 / 2)
+    fireEvent.click(screen.getByLabelText(/Decrease max 1st Level slots/i));
+    expect(screen.getByText('1 /')).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).value).toBe('2');
+
+    // 3. Reduce another slot: Max decreases from 2 to 1. Eats the remaining empty slot, so remaining stays 1 (1 / 1)
+    fireEvent.click(screen.getByLabelText(/Decrease max 1st Level slots/i));
+    expect(screen.getByText('1 /')).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).value).toBe('1');
+
+    // 4. Reduce below remaining: Max decreases from 1 to 0. Now remaining must cap at 0 (0 / 0)
+    fireEvent.click(screen.getByLabelText(/Decrease max 1st Level slots/i));
+    const level1Row = screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).closest('div.rounded-lg');
+    expect(level1Row).toHaveTextContent('0 /');
+    expect(screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).value).toBe('0');
+
+    // 5. Increase back to 1: Was filled before (baseline had 1 available), so slot is restored as filled (1 / 1)
+    fireEvent.click(screen.getByLabelText(/Increase max 1st Level slots/i));
+    expect(level1Row).toHaveTextContent('1 /');
+    expect(screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).value).toBe('1');
+
+    // 6. Increase to 2: 2nd slot was empty before, stays empty (1 / 2)
+    fireEvent.click(screen.getByLabelText(/Increase max 1st Level slots/i));
+    expect(level1Row).toHaveTextContent('1 /');
+    expect(screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i }).value).toBe('2');
+
+    // 7. Click Done to close editing session
+    fireEvent.click(screen.getByRole('button', { name: /Done editing max slots/i }));
+    expect(screen.getByText('1 / 2')).toBeInTheDocument();
+  });
+
   it('allows creating and cataloging a homebrew spell', async () => {
     render(<App />);
 

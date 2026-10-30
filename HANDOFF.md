@@ -1,14 +1,13 @@
 # HANDOFF
 
-## Current state (v1.3.4)
-- **Wizard Arcane Recovery Modal:** Single-line recovery layout with tight stepper spacing (`space-x-1`, `w-3.5`), theme gold `+` button, grey available stars, and pulsing yellow recovering stars.
-- **Two-Click Rest Confirmation:** Converted Long Rest, header Short Rest, and Pact Magic Short Rest to `useTwoClickConfirm` with armed green icon & ring styling.
-- **Skip Copying State Setting:** Added configurable `skipCopying` app preference in Settings modal that immediately readies wizard spells without scribing state.
-- **Smooth Accordion Transitions:** Applied CSS Grid row animations across FilterBar, CharacterHeader, SpellSlotTracker, and SpellbookLevelGroup.
-- **Verification:** 25 test files (144 tests) green; production build verified.
+## Current state (v1.3.5)
+- **Spell Card Expand/Collapse Transitions:** Animated individual catalog and spellbook cards using `useAccordionMount` with `contain: layout paint` and `content-visibility: auto` to prevent catalog FPS drops.
+- **Spell Slot Editing UX:** Added baseline-preserving slot adjustments when editing max slots (eats empty slots before filled slots).
+- **Slot Stepper Layout:** Compact vertical inline stepper `[+] / {max} / [-]` with `X / Y` format; removed redundant "Editing Max" pill and "MAX" labels; eliminated click latency.
+- **Performance:** Decoupled catalog mutations via `activeCharacterRef`; memoized `SpellCard`, `SpellbookCard`, `SlotLevelRow`, and `CatalogLevelGroup`.
+- **Verification:** 26 test files (147 tests) passing; production build verified.
 
 ## Next up
-- Add smooth expand/collapse transition for individual spell cards (`SpellbookCard` and catalog `SpellCard`).
 - Expand character creator into full builder (abilities, subclass, race, equipment).
 - Long-term roadmap: expand left pane into fillable character sheet.
 

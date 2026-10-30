@@ -63,3 +63,45 @@ h1, h2, h3, h4, .font-display {
     justify-content: flex-start;
   }
 }
+
+/* Accordion expand & collapse animations */
+@keyframes accordionExpand {
+  0% {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  100% {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@keyframes accordionCollapse {
+  0% {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  100% {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+.animate-accordion-down {
+  display: grid;
+  animation: accordionExpand 200ms ease-out forwards;
+  will-change: grid-template-rows, opacity;
+  contain: layout paint;
+}
+
+.animate-accordion-up {
+  display: grid;
+  animation: accordionCollapse 200ms ease-in forwards;
+  will-change: grid-template-rows, opacity;
+  contain: layout paint;
+}
+
+.catalog-spell-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 40px;
+}

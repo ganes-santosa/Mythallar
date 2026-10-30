@@ -42,6 +42,11 @@ export default function App() {
     return profiles.find((p) => p.id === activeId) || profiles[0] || null;
   }, [profiles, activeId]);
 
+  const activeCharacterRef = useRef(activeCharacter);
+  useEffect(() => {
+    activeCharacterRef.current = activeCharacter;
+  }, [activeCharacter]);
+
   // Persist profiles on change
   useEffect(() => {
     saveCharacterProfiles(profileData);
@@ -446,24 +451,25 @@ export default function App() {
   // --- Spell Management Actions ---
   const handleAddSpell = useCallback(
     (spellId) => {
-      if (!activeCharacter) return;
+      const char = activeCharacterRef.current;
+      if (!char) return;
       const spell = catalogMap[spellId];
       if (!spell) return;
 
-      const alreadyHas = activeCharacter.spells?.some((s) => s.id === spellId);
+      const alreadyHas = char.spells?.some((s) => s.id === spellId);
       if (alreadyHas) {
         showToast(`${spell.name} is already in your spellbook`, 'info');
         return;
       }
 
-      const shouldCopy = !appSettings.skipCopying && isWizardCharacter(activeCharacter) && spell.level > 0;
+      const shouldCopy = !appSettings.skipCopying && isWizardCharacter(char) && spell.level > 0;
       const updatedSpells = [
-        ...(activeCharacter.spells || []),
+        ...(char.spells || []),
         { id: spellId, prepared: spell.level === 0, copying: shouldCopy },
       ];
 
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         spells: updatedSpells,
       });
 
@@ -472,38 +478,40 @@ export default function App() {
         'success'
       );
     },
-    [activeCharacter, catalogMap, updateActiveCharacter, showToast, appSettings.skipCopying]
+    [catalogMap, updateActiveCharacter, showToast, appSettings.skipCopying]
   );
 
   const handleFinishCopying = useCallback(
     (spellId) => {
-      if (!activeCharacter) return;
+      const char = activeCharacterRef.current;
+      if (!char) return;
       const spell = catalogMap[spellId];
-      const updatedSpells = (activeCharacter.spells || []).map((s) =>
+      const updatedSpells = (char.spells || []).map((s) =>
         s.id === spellId ? { ...s, copying: false } : s
       );
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         spells: updatedSpells,
       });
       if (spell) {
         showToast(`Finished copying ${spell.name}`, 'success');
       }
     },
-    [activeCharacter, catalogMap, updateActiveCharacter, showToast]
+    [catalogMap, updateActiveCharacter, showToast]
   );
 
   const handleFinishCopyingAll = useCallback(() => {
-    if (!activeCharacter) return;
-    const updatedSpells = (activeCharacter.spells || []).map((s) =>
+    const char = activeCharacterRef.current;
+    if (!char) return;
+    const updatedSpells = (char.spells || []).map((s) =>
       s.copying ? { ...s, copying: false } : s
     );
     updateActiveCharacter({
-      ...activeCharacter,
+      ...char,
       spells: updatedSpells,
     });
     showToast('Finished copying all spells!', 'success');
-  }, [activeCharacter, updateActiveCharacter, showToast]);
+  }, [updateActiveCharacter, showToast]);
 
   const handleRemoveSpell = useCallback(
     (spellId) => {
@@ -537,18 +545,19 @@ export default function App() {
 
   const handleUpdateSpellNote = useCallback(
     (spellId, note) => {
-      if (!activeCharacter) return;
-      const existing = (activeCharacter.spells || []).find((s) => s.id === spellId);
+      const char = activeCharacterRef.current;
+      if (!char) return;
+      const existing = (char.spells || []).find((s) => s.id === spellId);
       let updatedSpells;
       if (existing) {
-        updatedSpells = activeCharacter.spells.map((s) =>
+        updatedSpells = char.spells.map((s) =>
           s.id === spellId ? { ...s, note: note.trim() } : s
         );
       } else {
         const spell = catalogMap[spellId];
-        const shouldCopy = !appSettings.skipCopying && isWizardCharacter(activeCharacter) && spell && spell.level > 0;
+        const shouldCopy = !appSettings.skipCopying && isWizardCharacter(char) && spell && spell.level > 0;
         updatedSpells = [
-          ...(activeCharacter.spells || []),
+          ...(char.spells || []),
           {
             id: spellId,
             prepared: false,
@@ -558,16 +567,28 @@ export default function App() {
         ];
       }
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         spells: updatedSpells,
       });
     },
-    [activeCharacter, catalogMap, updateActiveCharacter, appSettings.skipCopying]
+    [catalogMap, updateActiveCharacter, appSettings.skipCopying]
   );
 
   // --- Spell Slot Actions ---
+  const slotBaselinesRef = useRef({});
+  const prevActiveIdRef = useRef(activeCharacter?.id);
+  if (prevActiveIdRef.current !== activeCharacter?.id) {
+    prevActiveIdRef.current = activeCharacter?.id;
+    slotBaselinesRef.current = {};
+  }
+
+  const handleDoneEditingMax = useCallback(() => {
+    slotBaselinesRef.current = {};
+  }, []);
+
   const handleUseSlot = useCallback(
     (level, explicitUsed) => {
+      slotBaselinesRef.current = {};
       if (!activeCharacter) return;
       const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
       const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : currentUsed + 1;
@@ -584,6 +605,7 @@ export default function App() {
 
   const handleRestoreSlot = useCallback(
     (level, explicitUsed) => {
+      slotBaselinesRef.current = {};
       if (!activeCharacter) return;
       const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
       const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : Math.max(0, currentUsed - 1);
@@ -600,6 +622,7 @@ export default function App() {
 
   const handleSetSlotsUsed = useCallback(
     (level, used) => {
+      slotBaselinesRef.current = {};
       if (!activeCharacter) return;
       updateActiveCharacter({
         ...activeCharacter,
@@ -615,11 +638,33 @@ export default function App() {
   const handleUpdateMaxSlot = useCallback(
     (level, newMax) => {
       if (!activeCharacter) return;
+      const effectiveSlots = getEffectiveMaxSlots(
+        activeCharacter.className,
+        activeCharacter.level,
+        activeCharacter.customSlots,
+        activeCharacter
+      );
+      const currentMax = effectiveSlots[level] || 0;
+      const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
+      const safeNewMax = Math.max(0, newMax);
+
+      // Lock baseline available slots snapshot for the editing state
+      if (slotBaselinesRef.current[level] === undefined) {
+        slotBaselinesRef.current[level] = Math.max(0, currentMax - currentUsed);
+      }
+      const baseline = slotBaselinesRef.current[level];
+      const nextRemaining = Math.min(safeNewMax, baseline);
+      const nextUsed = safeNewMax - nextRemaining;
+
       updateActiveCharacter({
         ...activeCharacter,
         customSlots: {
           ...activeCharacter.customSlots,
-          [level]: newMax,
+          [level]: safeNewMax,
+        },
+        slotsUsed: {
+          ...activeCharacter.slotsUsed,
+          [level]: nextUsed,
         },
       });
     },
@@ -631,9 +676,35 @@ export default function App() {
       if (!activeCharacter) return;
       const nextCustom = { ...activeCharacter.customSlots };
       delete nextCustom[level];
+
+      const currentMax = getEffectiveMaxSlots(
+        activeCharacter.className,
+        activeCharacter.level,
+        activeCharacter.customSlots,
+        activeCharacter
+      )[level] || 0;
+      const newMax = getEffectiveMaxSlots(
+        activeCharacter.className,
+        activeCharacter.level,
+        nextCustom,
+        activeCharacter
+      )[level] || 0;
+      const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
+
+      if (slotBaselinesRef.current[level] === undefined) {
+        slotBaselinesRef.current[level] = Math.max(0, currentMax - currentUsed);
+      }
+      const baseline = slotBaselinesRef.current[level];
+      const nextRemaining = Math.min(newMax, baseline);
+      const nextUsed = newMax - nextRemaining;
+
       updateActiveCharacter({
         ...activeCharacter,
         customSlots: nextCustom,
+        slotsUsed: {
+          ...activeCharacter.slotsUsed,
+          [level]: nextUsed,
+        },
       });
     },
     [activeCharacter, updateActiveCharacter]
@@ -669,6 +740,7 @@ export default function App() {
   );
 
   const handleLongRest = useCallback(() => {
+    slotBaselinesRef.current = {};
     if (!activeCharacter) return;
     updateActiveCharacter({
       ...activeCharacter,
@@ -680,6 +752,7 @@ export default function App() {
   }, [activeCharacter, updateActiveCharacter, showToast]);
 
   const handleShortRest = useCallback(() => {
+    slotBaselinesRef.current = {};
     if (!activeCharacter) return;
     const classes = activeCharacter.classes || [{ className: activeCharacter.className, level: activeCharacter.level }];
     const hasWarlock = classes.some((c) => c.className === 'Warlock');
@@ -698,6 +771,7 @@ export default function App() {
 
   const handleArcaneRecovery = useCallback(
     (recoveredByLevel) => {
+      slotBaselinesRef.current = {};
       if (!activeCharacter) return;
       const currentUsed = activeCharacter.slotsUsed || {};
       const nextUsed = { ...currentUsed };
@@ -948,6 +1022,7 @@ export default function App() {
                 onSetPactSlotsUsed={handleSetPactSlotsUsed}
                 onUpdateMaxSlot={handleUpdateMaxSlot}
                 onResetMaxSlot={handleResetMaxSlot}
+                onDoneEditingMax={handleDoneEditingMax}
                 onLongRest={handleLongRest}
                 onShortRest={handleShortRest}
                 onArcaneRecovery={handleArcaneRecovery}

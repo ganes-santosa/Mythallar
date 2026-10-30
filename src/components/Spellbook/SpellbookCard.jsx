@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Wand2, Trash2, ChevronDown, BookCheck, Feather, HelpCircle, X } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
+import useAccordionMount from '../../hooks/useAccordionMount';
 import SpellNoteSection from '../Common/SpellNoteSection';
 
 // Runic, alchemical/planetary, and occult BMP glyphs verified to render in the app font stack
@@ -28,7 +29,7 @@ export function obfuscateMagicalText(text, seed = 0) {
   return out;
 }
 
-export default function SpellbookCard({
+function SpellbookCard({
   spell,
   isPrepared,
   isCopying = false,
@@ -46,6 +47,7 @@ export default function SpellbookCard({
   const [showCopyHint, setShowCopyHint] = useState(false);
   const copyHintRef = useClickOutside(showCopyHint, () => setShowCopyHint(false));
   const isExpanded = controlledExpanded ?? localExpanded;
+  const { shouldRender, isClosing } = useAccordionMount(isExpanded, 200);
   const effectivePrepared = isPrepared && !isCopying;
   const { armed: removeArmed, handleClick: handleRemoveClick } = useTwoClickConfirm(() => onRemove?.(spell.id));
   const { armed: finishArmed, handleClick: handleFinishClick } = useTwoClickConfirm(() => onFinishCopying?.(spell.id));
@@ -68,7 +70,7 @@ export default function SpellbookCard({
 
   return (
     <div
-      className={`relative rounded-lg bg-dnd-card text-slate-100 transition-all duration-200 select-none ${
+      className={`relative rounded-lg bg-dnd-card text-slate-100 transition-[box-shadow,background-color] duration-150 select-none ${
         showCopyHint ? 'overflow-visible z-30' : 'overflow-hidden'
       } ${
         effectivePrepared
@@ -275,9 +277,10 @@ export default function SpellbookCard({
       </div>
 
       {/* Accordion Detail Body */}
-      {isExpanded && (
-        <div className="overflow-hidden animate-in fade-in duration-200">
-          <div className={`py-3 pr-3 pl-5 sm:pl-6 bg-dnd-panel/40 text-xs space-y-2.5 ${isCopying ? 'text-slate-500' : 'text-slate-300'}`}>
+      {shouldRender && (
+        <div className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}>
+          <div className="overflow-hidden">
+            <div className={`py-3 pr-3 pl-5 sm:pl-6 bg-dnd-panel/40 text-xs space-y-2.5 ${isCopying ? 'text-slate-500' : 'text-slate-300'}`}>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 p-2 rounded text-[11px] bg-dnd-panel/60 text-slate-300">
               <div>
                 <span className="block font-medium text-slate-400">Casting Time</span>
@@ -346,8 +349,11 @@ export default function SpellbookCard({
             )}
           </div>
         </div>
+        </div>
       )}
     </div>
   );
 }
+
+export default React.memo(SpellbookCard);
 

@@ -8,7 +8,7 @@ function getLevelLabel(level) {
   return `${level}${ord} Level`;
 }
 
-export default function SlotLevelRow({
+function SlotLevelRow({
   level,
   maxSlots = 0,
   usedSlots = 0,
@@ -49,17 +49,34 @@ export default function SlotLevelRow({
 
   return (
     <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-lg bg-dnd-card min-w-0">
-      {/* Persistent Left Column: Level Label, Count, and Edit Controls underneath */}
-      <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-[95px] sm:min-w-[105px]">
+      {/* Left Column: Level Label on line 1, Count & Stepper on line 2 */}
+      <div className="flex flex-col items-start justify-center flex-shrink-0 min-w-0">
         <div className="flex items-center space-x-1 sm:space-x-1.5 whitespace-nowrap">
           <span className="text-xs font-semibold text-dnd-ivory whitespace-nowrap">
             {getLevelLabel(level)}
           </span>
-          {isEditingMax ? (
-            <div className="flex items-center space-x-1">
-              <span className="text-[11px] text-dnd-pewter tabular-nums">
-                {remainingSlots} /
-              </span>
+          {!isEditingMax && (
+            <span className="text-[10px] sm:text-[11px] font-medium px-1 sm:px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter tabular-nums whitespace-nowrap">
+              {remainingSlots} / {safeMax}
+            </span>
+          )}
+        </div>
+
+        {isEditingMax && (
+          <div className="flex items-center space-x-1 mt-0.5">
+            <span className="text-[11px] font-medium text-dnd-pewter tabular-nums whitespace-nowrap">
+              {remainingSlots} /
+            </span>
+            <div className="flex flex-col items-center justify-center">
+              <button
+                type="button"
+                aria-label={`Increase max ${getLevelLabel(level)} slots`}
+                onClick={() => onUpdateMaxSlot(level, safeMax + 1)}
+                className="w-full flex items-center justify-center py-0.5 rounded hover:bg-white/15 active:bg-white/25 text-slate-400 hover:text-dnd-gold select-none cursor-pointer"
+                title="Increase max slots"
+              >
+                <Plus size={9} strokeWidth={2.5} />
+              </button>
               <input
                 type="number"
                 min="0"
@@ -73,43 +90,24 @@ export default function SlotLevelRow({
                   if (e.key === 'Enter') e.target.blur();
                 }}
                 aria-label={`Max ${getLevelLabel(level)} slots`}
-                className="w-9 bg-dnd-panel rounded px-1 py-0 text-center text-xs text-dnd-gold font-medium focus:outline-none focus:ring-1 focus:ring-white/20"
+                className="w-6 h-4 bg-dnd-panel/90 border border-white/10 rounded px-0.5 text-center text-xs text-dnd-gold font-bold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none select-none"
               />
+              <button
+                type="button"
+                aria-label={`Decrease max ${getLevelLabel(level)} slots`}
+                onClick={() => onUpdateMaxSlot(level, Math.max(0, safeMax - 1))}
+                className="w-full flex items-center justify-center py-0.5 rounded hover:bg-white/15 active:bg-white/25 text-slate-400 hover:text-dnd-gold select-none cursor-pointer"
+                title="Decrease max slots"
+              >
+                <Minus size={9} strokeWidth={2.5} />
+              </button>
             </div>
-          ) : (
-            <span className="text-[10px] sm:text-[11px] font-medium px-1 sm:px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter tabular-nums whitespace-nowrap">
-              {remainingSlots} / {safeMax}
-            </span>
-          )}
-        </div>
-
-        {/* Persistent edit buttons under text so position never jumps */}
-        {isEditingMax && (
-          <div className="flex items-center space-x-0.5 mt-1">
-            <button
-              type="button"
-              aria-label={`Decrease max ${getLevelLabel(level)} slots`}
-              onClick={() => onUpdateMaxSlot(level, Math.max(0, safeMax - 1))}
-              className="p-0.5 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-300 transition-colors"
-              title="Decrease max slots"
-            >
-              <Minus size={10} />
-            </button>
-            <button
-              type="button"
-              aria-label={`Increase max ${getLevelLabel(level)} slots`}
-              onClick={() => onUpdateMaxSlot(level, safeMax + 1)}
-              className="p-0.5 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-300 transition-colors"
-              title="Increase max slots"
-            >
-              <Plus size={10} />
-            </button>
             {onResetMaxSlot && (
               <button
                 type="button"
                 aria-label={`Reset max ${getLevelLabel(level)} slots to default`}
                 onClick={() => onResetMaxSlot(level)}
-                className="p-0.5 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-300 transition-colors"
+                className="p-1 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors ml-0.5 select-none cursor-pointer"
                 title="Reset to 5e rules"
               >
                 <RotateCcw size={10} />
@@ -120,7 +118,11 @@ export default function SlotLevelRow({
       </div>
 
       {/* Pips container: 4-pointed stars arranged in a compact 4-column grid */}
-      <div className="grid grid-cols-4 gap-0.5 sm:gap-1 items-center justify-items-center flex-shrink-0">
+      <div
+        className={`grid grid-cols-4 gap-0.5 sm:gap-1 items-center justify-items-center flex-shrink-0 transition-opacity ${
+          isEditingMax ? 'opacity-80' : 'opacity-100'
+        }`}
+      >
         {pips.map((isAvailable, idx) => (
           <button
             key={idx}
@@ -155,3 +157,5 @@ export default function SlotLevelRow({
     </div>
   );
 }
+
+export default React.memo(SlotLevelRow);
