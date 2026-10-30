@@ -93,7 +93,7 @@ describe('SpellSlotTracker', () => {
     expect(handleSetSlotsUsed).toHaveBeenCalledWith(1, 2);
   });
 
-  it('calls onLongRest with confirmation prompt when Long Rest button is clicked', () => {
+  it('calls onLongRest with two-click confirmation when Long Rest button is clicked', () => {
     const handleLongRest = vi.fn();
     render(
       <SpellSlotTracker
@@ -106,13 +106,17 @@ describe('SpellSlotTracker', () => {
       />
     );
 
-    const restBtn = screen.getByRole('button', { name: /Long Rest/i });
+    const restBtn = screen.getByRole('button', { name: /^Long Rest$/i });
     fireEvent.click(restBtn);
-    expect(screen.getByText(/Long Rest\?/i)).toBeInTheDocument();
+    expect(handleLongRest).not.toHaveBeenCalled();
 
-    const confirmBtn = screen.getByLabelText(/Confirm Long Rest/i);
+    // Armed state updates aria-label and turns icon green
+    const confirmBtn = screen.getByRole('button', { name: /Click again to confirm Long Rest/i });
+    const moonIcon = confirmBtn.querySelector('svg');
+    expect(moonIcon).toHaveClass('text-green-400');
+
     fireEvent.click(confirmBtn);
-    expect(handleLongRest).toHaveBeenCalled();
+    expect(handleLongRest).toHaveBeenCalledTimes(1);
   });
 
   it('allows editing max slots when Edit is toggled', () => {
@@ -128,7 +132,7 @@ describe('SpellSlotTracker', () => {
       />
     );
 
-    const editToggle = screen.getByRole('button', { name: /^Edit$/i });
+    const editToggle = screen.getByRole('button', { name: /Edit maximum spell slots/i });
     fireEvent.click(editToggle);
 
     const plusBtn = screen.getByLabelText(/Increase max 1st Level slots/i);
@@ -150,7 +154,7 @@ describe('SpellSlotTracker', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^Edit$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Edit maximum spell slots/i }));
     const resetBtn = screen.getByLabelText(/Reset max 1st Level slots to default/i);
     fireEvent.click(resetBtn);
     expect(handleResetMax).toHaveBeenCalledWith(1);
@@ -213,10 +217,17 @@ describe('SpellSlotTracker', () => {
 
     expect(screen.getByText(/Pact Magic \(Short Rest\)/i)).toBeInTheDocument();
 
-    // Short Rest button inside Pact Magic section
-    const shortRestBtn = screen.getByRole('button', { name: /Short Rest/i });
+    // Short Rest button inside Pact Magic section uses two-click confirm
+    const shortRestBtn = screen.getByRole('button', { name: /Reset Pact Magic slots on Short Rest/i });
     fireEvent.click(shortRestBtn);
-    expect(handleShortRest).toHaveBeenCalled();
+    expect(handleShortRest).not.toHaveBeenCalled();
+
+    const armedBtn = screen.getByRole('button', { name: /Click again to confirm Short Rest/i });
+    const sunIcon = armedBtn.querySelector('svg');
+    expect(sunIcon).toHaveClass('text-green-400');
+
+    fireEvent.click(armedBtn);
+    expect(handleShortRest).toHaveBeenCalledTimes(1);
   });
 
   it('allows manual number input for max slots and clicking Done', () => {
@@ -233,7 +244,7 @@ describe('SpellSlotTracker', () => {
     );
 
     // Enter edit mode
-    fireEvent.click(screen.getByRole('button', { name: /^Edit$/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Edit maximum spell slots/i }));
 
     // Manual input in SlotLevelRow
     const maxInput = screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i });
@@ -242,9 +253,30 @@ describe('SpellSlotTracker', () => {
     expect(handleUpdateMax).toHaveBeenCalledWith(1, 6);
 
     // Done button exits edit mode
-    const doneBtn = screen.getByRole('button', { name: /^Done$/i });
+    const doneBtn = screen.getByRole('button', { name: /Done editing max slots/i });
     fireEvent.click(doneBtn);
     expect(screen.queryByRole('spinbutton', { name: /^Max 1st Level slots$/i })).not.toBeInTheDocument();
+  });
+
+  it('opens Arcane Recovery modal on Short Rest click for Wizard characters', () => {
+    const handleArcane = vi.fn();
+    render(
+      <SpellSlotTracker
+        character={mockCharacter}
+        onUseSlot={vi.fn()}
+        onRestoreSlot={vi.fn()}
+        onUpdateMaxSlot={vi.fn()}
+        onLongRest={vi.fn()}
+        onShortRest={vi.fn()}
+        onArcaneRecovery={handleArcane}
+      />
+    );
+
+    const shortRestBtn = screen.getByRole('button', { name: /Short Rest Arcane Recovery/i });
+    fireEvent.click(shortRestBtn);
+
+    expect(screen.getByText(/Arcane Recovery/i)).toBeInTheDocument();
+    expect(screen.getByText(/Short Rest • Level 5 Wizard/i)).toBeInTheDocument();
   });
 
 });

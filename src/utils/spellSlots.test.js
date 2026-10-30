@@ -7,6 +7,7 @@ import {
   calculateDefaultMaxCantrips,
   getEffectiveMaxCantripsInfo,
   getTotalCharacterLevel,
+  getMaxArcaneRecoveryLevels,
 } from './spellSlots';
 
 describe('calculateDefaultSlots', () => {
@@ -201,5 +202,24 @@ describe('Multiclass Spell Slots Calculation', () => {
       isCustom: true,
       hasCantripCaster: true,
     });
+  });
+
+  it('calculates Arcane Recovery wizard level and max recovery pool', () => {
+    const wizard1 = { className: 'Wizard', level: 1 };
+    expect(getMaxArcaneRecoveryLevels(wizard1)).toBe(1);
+
+    const wizard3 = { className: 'Wizard', level: 3 };
+    expect(getMaxArcaneRecoveryLevels(wizard3)).toBe(2);
+
+    const wizard5 = { className: 'Wizard', level: 5 };
+    expect(getMaxArcaneRecoveryLevels(wizard5)).toBe(3);
+
+    const multiclass = {
+      classes: [
+        { className: 'Wizard', level: 4 },
+        { className: 'Fighter', level: 2 },
+      ],
+    };
+    expect(getMaxArcaneRecoveryLevels(multiclass)).toBe(2);
   });
 });

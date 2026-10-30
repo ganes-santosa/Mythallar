@@ -248,6 +248,27 @@ describe('SpellbookView', () => {
     expect(handleFinishCopying).toHaveBeenCalledWith('fireball');
   });
 
+  it('bypasses copying state when skipCopying is true', () => {
+    const wizardCopyingChar = {
+      ...mockCharacter,
+      className: 'Wizard',
+      spells: [{ id: 'fireball', prepared: false, copying: true }],
+    };
+
+    render(
+      <SpellbookView
+        character={wizardCopyingChar}
+        catalog={mockCatalog}
+        skipCopying={true}
+      />
+    );
+
+    // No Copying badge, Prepare button is available
+    expect(screen.queryByText('Copying')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Toggle Prepared for Fireball/i)).toBeInTheDocument();
+    expect(screen.getByText('150 feet')).toBeInTheDocument();
+  });
+
   it('shows Finish Copying All only for Wizards with copying spells and confirms in two clicks', () => {
     const handleFinishAll = vi.fn();
     const wizardCopyingChar = {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Sliders, Palette } from 'lucide-react';
+import { X, Check, Sliders, Palette, Feather } from 'lucide-react';
 import {
   THEMES,
   getCustomThemeConfig,
@@ -31,6 +31,8 @@ export default function SettingsModal({
   activeThemeId,
   onSelectTheme,
   onUpdateCustomTheme,
+  skipCopying = false,
+  onToggleSkipCopying,
 }) {
   const [customTheme, setCustomTheme] = useState(() => getCustomThemeConfig());
 
@@ -102,8 +104,49 @@ export default function SettingsModal({
           </button>
         </div>
 
-        {/* Modal Body: Palette Grid (padded on all sides so active ring & glow never clip) */}
-        <div className="flex-1 overflow-y-auto space-y-3 p-2 -mx-2">
+        {/* Modal Body: Preferences & Palette Grid */}
+        <div className="flex-1 overflow-y-auto space-y-4 p-2 -mx-2">
+          {/* Spellbook Preferences */}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+              <Feather size={13} className="text-dnd-gold" />
+              <span>Spellbook Preferences</span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-dnd-panel/40 border border-white/5 flex items-center justify-between gap-3">
+              <div className="pr-2">
+                <label
+                  htmlFor="skip-copying-toggle"
+                  className="font-bold text-xs sm:text-sm text-dnd-ivory block cursor-pointer"
+                >
+                  Skip Copying State
+                </label>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Immediately ready wizard spells, skipping copying state.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                id="skip-copying-toggle"
+                aria-checked={skipCopying}
+                aria-label="Skip Copying State"
+                onClick={() => onToggleSkipCopying?.(!skipCopying)}
+                className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  skipCopying ? 'bg-dnd-gold' : 'bg-slate-700'
+                }`}
+              >
+                <span
+                  aria-hidden="true"
+                  className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-slate-950 shadow ring-0 transition duration-200 ease-in-out ${
+                    skipCopying ? 'translate-x-4' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
             <Palette size={13} className="text-dnd-gold" />
             <span>Color Palettes</span>

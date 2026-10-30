@@ -1,6 +1,35 @@
 export const STORAGE_KEY = 'dnd_spellbook_data';
 export const HOMEBREW_SPELLS_KEY = 'dnd_homebrew_spells';
 export const LEGACY_CUSTOM_SPELLS_KEY = 'dnd_custom_spells';
+export const SETTINGS_KEY = 'dnd_spellbook_settings';
+
+/**
+ * Loads general app settings from localStorage.
+ */
+export function loadAppSettings() {
+  try {
+    const raw = localStorage.getItem(SETTINGS_KEY);
+    if (!raw) return { skipCopying: false };
+    const parsed = JSON.parse(raw);
+    return {
+      skipCopying: Boolean(parsed?.skipCopying),
+    };
+  } catch {
+    return { skipCopying: false };
+  }
+}
+
+/**
+ * Persists general app settings to localStorage.
+ */
+export function saveAppSettings(settings) {
+  try {
+    if (!settings || typeof settings !== 'object') return;
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch (err) {
+    console.error('Error saving app settings to localStorage', err);
+  }
+}
 
 /**
  * Loads homebrew user spells from localStorage (with fallback to old custom key).

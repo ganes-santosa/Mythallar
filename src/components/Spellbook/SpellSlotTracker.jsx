@@ -14,9 +14,12 @@ import {
 import {
   getEffectiveMaxSlots,
   calculateMulticlassSpellSlots,
+  isWizardCharacter,
 } from '../../utils/spellSlots';
 import SlotLevelRow from './SlotLevelRow';
 import useClickOutside from '../../hooks/useClickOutside';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import ArcaneRecoveryModal from '../Modal/ArcaneRecoveryModal';
 
 export default function SpellSlotTracker({
   character,
@@ -30,12 +33,18 @@ export default function SpellSlotTracker({
   onResetMaxSlot,
   onLongRest,
   onShortRest,
+  onArcaneRecovery,
+  onResetArcaneRecoveryUsed,
   onUpdateCharacter,
 }) {
   const [isEditingMax, setIsEditingMax] = useState(false);
-  const [showLongRestConfirm, setShowLongRestConfirm] = useState(false);
+  const [showArcaneModal, setShowArcaneModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPactCollapsed, setIsPactCollapsed] = useState(false);
+
+  const { armed: longRestArmed, handleClick: handleLongRestClick } = useTwoClickConfirm(onLongRest);
+  const { armed: pactRestArmed, handleClick: handlePactRestClick } = useTwoClickConfirm(onShortRest);
+  const { armed: shortRestArmed, handleClick: handleShortRestClick } = useTwoClickConfirm(onShortRest);
 
   // Hints popovers
   const [showSlotsHint, setShowSlotsHint] = useState(false);
@@ -71,21 +80,12 @@ export default function SpellSlotTracker({
     : 0;
   const usedPactSlots = Number(character?.pactSlotsUsed) || 0;
 
-  const handleConfirmLongRest = () => {
-    onLongRest();
-    setShowLongRestConfirm(false);
-  };
-
   return (
     <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* ================= SHARED SPELL SLOTS SECTION ================= */}
       <div>
         {/* Header / Accordion Trigger */}
-        <div
-          className={`flex flex-wrap items-center justify-between gap-2 ${
-            isCollapsed ? '' : 'pb-1.5 mb-1.5'
-          }`}
-        >
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             {/* Header click toggles accordion */}
             <button
@@ -160,116 +160,128 @@ export default function SpellSlotTracker({
           </div>
 
           <div className="flex items-center space-x-2 text-xs">
-            {/* Edit Max Slots Toggle / Done */}
+            {/* Edit Max Slots Toggle / Done (Icon-only) */}
             {isEditingMax ? (
               <button
                 type="button"
+                aria-label="Done editing max slots"
                 onClick={() => setIsEditingMax(false)}
-                className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm"
+                className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm"
                 title="Done editing max slots"
               >
-                <Check size={12} className="mr-1" />
-                Done
+                <Check size={13} strokeWidth={2.5} />
               </button>
             ) : (
               <button
                 type="button"
+                aria-label="Edit maximum spell slots"
                 onClick={() => {
                   if (isCollapsed) setIsCollapsed(false);
                   setIsEditingMax(true);
                 }}
-                className="flex items-center px-2 py-0.5 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
+                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors"
                 title="Edit maximum spell slots"
               >
-                <Settings2 size={12} className="mr-1 text-slate-400" />
-                Edit
+                <Settings2 size={13} />
               </button>
             )}
 
-            {/* Long Rest with Inverted Light Mode Confirmation Popup */}
-            {showLongRestConfirm ? (
-              <div className="flex items-center space-x-1.5 bg-[#EFE9E0] text-slate-900 px-2 py-0.5 rounded-lg shadow-md text-xs animate-in fade-in">
-                <span className="text-[11px] font-semibold text-slate-900">Long Rest?</span>
-                <button
-                  type="button"
-                  aria-label="Confirm Long Rest"
-                  onClick={handleConfirmLongRest}
-                  className="p-0.5 text-emerald-700 hover:text-emerald-900 hover:bg-emerald-100/80 rounded transition-colors"
-                  title="Confirm long rest"
-                >
-                  <Check size={13} strokeWidth={2.5} />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Cancel Long Rest"
-                  onClick={() => setShowLongRestConfirm(false)}
-                  className="p-0.5 text-red-700 hover:text-red-900 hover:bg-red-100/80 rounded transition-colors"
-                  title="Cancel"
-                >
-                  <X size={13} strokeWidth={2.5} />
-                </button>
-              </div>
+            {/* Short Rest / Arcane Recovery Button */}
+            {isWizardCharacter(character) ? (
+              <button
+                type="button"
+                aria-label="Short Rest Arcane Recovery"
+                onClick={() => setShowArcaneModal(true)}
+                className="flex items-center px-2 py-0.5 rounded bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 transition-colors font-medium text-xs"
+                title="Short Rest (Arcane Recovery)"
+              >
+                <Sun size={12} className="mr-1 text-amber-400" />
+                Short Rest
+              </button>
             ) : (
               <button
                 type="button"
-                onClick={() => setShowLongRestConfirm(true)}
-                className="flex items-center px-2 py-0.5 rounded bg-blue-950/40 hover:bg-blue-900/60 text-blue-300 transition-colors font-medium"
-                title="Reset all spell slots on Long Rest"
+                aria-label={shortRestArmed ? 'Click again to confirm Short Rest' : 'Short Rest'}
+                onClick={handleShortRestClick}
+                className={`flex items-center px-2 py-0.5 rounded transition-colors font-medium text-xs ${
+                  shortRestArmed
+                    ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                    : 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200'
+                }`}
+                title={shortRestArmed ? 'Click again to confirm Short Rest' : 'Short Rest'}
               >
-                <Moon size={12} className="mr-1 text-blue-400" />
-                Long Rest
+                <Sun size={12} className={`mr-1 ${shortRestArmed ? 'text-green-400' : 'text-amber-400'}`} />
+                Short Rest
               </button>
             )}
+
+            {/* Long Rest with two-click confirmation */}
+            <button
+              type="button"
+              aria-label={longRestArmed ? 'Click again to confirm Long Rest' : 'Long Rest'}
+              onClick={handleLongRestClick}
+              className={`flex items-center px-2 py-0.5 rounded transition-colors font-medium ${
+                longRestArmed
+                  ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                  : 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-300'
+              }`}
+              title={longRestArmed ? 'Click again to confirm Long Rest' : 'Reset all spell slots on Long Rest'}
+            >
+              <Moon size={12} className={`mr-1 ${longRestArmed ? 'text-green-400' : 'text-blue-400'}`} />
+              Long Rest
+            </button>
           </div>
         </div>
 
         {/* Rows Grid (Collapsible Accordion Body) */}
-        {!isCollapsed && (
-          <div className="animate-in fade-in duration-200">
-            {activeLevels.length === 0 ? (
-              <div className="text-center py-2 text-xs text-slate-500">
-                <p>No shared spell slots.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditingMax(true);
-                    onUpdateMaxSlot(1, 2);
-                  }}
-                  className="mt-1 text-dnd-gold underline hover:text-dnd-gold-light"
-                >
-                  Add custom 1st level slots
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
-                {activeLevels.map((lvl) => (
-                  <SlotLevelRow
-                    key={lvl}
-                    level={lvl}
-                    maxSlots={effectiveSlots[lvl]}
-                    usedSlots={character?.slotsUsed?.[lvl] || 0}
-                    isEditingMax={isEditingMax}
-                    onUseSlot={onUseSlot}
-                    onRestoreSlot={onRestoreSlot}
-                    onSetSlotsUsed={onSetSlotsUsed}
-                    onUpdateMaxSlot={onUpdateMaxSlot}
-                    onResetMaxSlot={onResetMaxSlot}
-                  />
-                ))}
-              </div>
-            )}
+        <div
+          className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+            !isCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <div className="pt-2">
+              {activeLevels.length === 0 ? (
+                <div className="text-center py-2 text-xs text-slate-500">
+                  <p>No shared spell slots.</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingMax(true);
+                      onUpdateMaxSlot(1, 2);
+                    }}
+                    className="mt-1 text-dnd-gold underline hover:text-dnd-gold-light"
+                  >
+                    Add custom 1st level slots
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
+                  {activeLevels.map((lvl) => (
+                    <SlotLevelRow
+                      key={lvl}
+                      level={lvl}
+                      maxSlots={effectiveSlots[lvl]}
+                      usedSlots={character?.slotsUsed?.[lvl] || 0}
+                      isEditingMax={isEditingMax}
+                      onUseSlot={onUseSlot}
+                      onRestoreSlot={onRestoreSlot}
+                      onSetSlotsUsed={onSetSlotsUsed}
+                      onUpdateMaxSlot={onUpdateMaxSlot}
+                      onResetMaxSlot={onResetMaxSlot}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* ================= PACT MAGIC ACCORDION (WARLOCK) ================= */}
       {hasPactMagic && (
         <div className="pt-2">
-          <div
-            className={`flex flex-wrap items-center justify-between gap-2 ${
-              isPactCollapsed ? '' : 'pb-1.5 mb-1.5'
-            }`}
-          >
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
               <button
                 type="button"
@@ -343,29 +355,55 @@ export default function SpellSlotTracker({
             {/* Short Rest Action Button directly on Pact Magic */}
             <button
               type="button"
-              onClick={onShortRest}
-              className="flex items-center px-2 py-0.5 rounded bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 transition-colors text-xs font-medium"
-              title="Reset Pact Magic slots on Short Rest"
+              aria-label={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
+              onClick={handlePactRestClick}
+              className={`flex items-center px-2 py-0.5 rounded transition-colors text-xs font-medium ${
+                pactRestArmed
+                  ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                  : 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200'
+              }`}
+              title={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
             >
-              <Sun size={12} className="mr-1 text-amber-400" />
+              <Sun size={12} className={`mr-1 ${pactRestArmed ? 'text-green-400' : 'text-amber-400'}`} />
               Short Rest
             </button>
           </div>
 
-          {!isPactCollapsed && (
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
-              <SlotLevelRow
-                level={pactSlotLevel}
-                maxSlots={maxPactSlots}
-                usedSlots={usedPactSlots}
-                isEditingMax={false}
-                onUseSlot={() => onUsePactSlot?.()}
-                onRestoreSlot={() => onRestorePactSlot?.()}
-                onSetSlotsUsed={(_, used) => onSetPactSlotsUsed?.(used)}
-              />
+          <div
+            className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+              !isPactCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="pt-2">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(210px,1fr))] gap-2">
+                  <SlotLevelRow
+                    level={pactSlotLevel}
+                    maxSlots={maxPactSlots}
+                    usedSlots={usedPactSlots}
+                    isEditingMax={false}
+                    onUseSlot={() => onUsePactSlot?.()}
+                    onRestoreSlot={() => onRestorePactSlot?.()}
+                    onSetSlotsUsed={(_, used) => onSetPactSlotsUsed?.(used)}
+                  />
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
+      )}
+
+      {/* Arcane Recovery Modal */}
+      {showArcaneModal && (
+        <ArcaneRecoveryModal
+          isOpen={showArcaneModal}
+          onClose={() => setShowArcaneModal(false)}
+          character={character}
+          effectiveSlots={effectiveSlots}
+          slotsUsed={character?.slotsUsed || {}}
+          onRecoverSlots={(recovered) => onArcaneRecovery?.(recovered)}
+          onResetUsedFlag={() => onResetArcaneRecoveryUsed?.()}
+        />
       )}
     </div>
   );

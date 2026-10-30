@@ -6,6 +6,8 @@ import {
   createDefaultProfile,
   loadHomebrewSpells,
   saveHomebrewSpells,
+  loadAppSettings,
+  saveAppSettings,
 } from './utils/storage';
 import { getEffectiveMaxSlots, isWizardCharacter } from './utils/spellSlots';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
@@ -57,7 +59,16 @@ export default function App() {
   const [activeThemeId, setActiveThemeId] = useState(() => getStoredThemeId());
   const [customThemeRev, setCustomThemeRev] = useState(0);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [appSettings, setAppSettings] = useState(() => loadAppSettings());
   const starCanvasRef = useRef(null);
+
+  const handleToggleSkipCopying = useCallback((value) => {
+    setAppSettings((prev) => {
+      const next = { ...prev, skipCopying: value };
+      saveAppSettings(next);
+      return next;
+    });
+  }, []);
 
   const activeTheme = useMemo(
     () => getActiveTheme(activeThemeId),
@@ -445,7 +456,7 @@ export default function App() {
         return;
       }
 
-      const shouldCopy = isWizardCharacter(activeCharacter) && spell.level > 0;
+      const shouldCopy = !appSettings.skipCopying && isWizardCharacter(activeCharacter) && spell.level > 0;
       const updatedSpells = [
         ...(activeCharacter.spells || []),
         { id: spellId, prepared: spell.level === 0, copying: shouldCopy },
@@ -461,7 +472,7 @@ export default function App() {
         'success'
       );
     },
-    [activeCharacter, catalogMap, updateActiveCharacter, showToast]
+    [activeCharacter, catalogMap, updateActiveCharacter, showToast, appSettings.skipCopying]
   );
 
   const handleFinishCopying = useCallback(
@@ -535,7 +546,7 @@ export default function App() {
         );
       } else {
         const spell = catalogMap[spellId];
-        const shouldCopy = isWizardCharacter(activeCharacter) && spell && spell.level > 0;
+        const shouldCopy = !appSettings.skipCopying && isWizardCharacter(activeCharacter) && spell && spell.level > 0;
         updatedSpells = [
           ...(activeCharacter.spells || []),
           {
@@ -551,7 +562,7 @@ export default function App() {
         spells: updatedSpells,
       });
     },
-    [activeCharacter, catalogMap, updateActiveCharacter]
+    [activeCharacter, catalogMap, updateActiveCharacter, appSettings.skipCopying]
   );
 
   // --- Spell Slot Actions ---
@@ -663,6 +674,7 @@ export default function App() {
       ...activeCharacter,
       slotsUsed: {},
       pactSlotsUsed: 0,
+      arcaneRecoveryUsed: false,
     });
     showToast('Long Rest completed: All spell slots restored!', 'success');
   }, [activeCharacter, updateActiveCharacter, showToast]);
@@ -679,7 +691,52 @@ export default function App() {
         slotsUsed: activeCharacter.className === 'Warlock' ? {} : activeCharacter.slotsUsed,
       });
       showToast('Short Rest completed: Pact Magic slots restored!', 'success');
+    } else {
+      showToast('Short Rest completed.', 'info');
     }
+  }, [activeCharacter, updateActiveCharacter, showToast]);
+
+  const handleArcaneRecovery = useCallback(
+    (recoveredByLevel) => {
+      if (!activeCharacter) return;
+      const currentUsed = activeCharacter.slotsUsed || {};
+      const nextUsed = { ...currentUsed };
+
+      for (const [lvl, count] of Object.entries(recoveredByLevel)) {
+        const numLvl = Number(lvl);
+        const numCount = Number(count) || 0;
+        const currentExpended = nextUsed[numLvl] || 0;
+        const nextExpended = Math.max(0, currentExpended - numCount);
+        if (nextExpended === 0) {
+          delete nextUsed[numLvl];
+        } else {
+          nextUsed[numLvl] = nextExpended;
+        }
+      }
+
+      // Also restore pact slots if pure/multiclass Warlock on Short Rest
+      const classes = activeCharacter.classes || [{ className: activeCharacter.className, level: activeCharacter.level }];
+      const hasWarlock = classes.some((c) => c.className === 'Warlock');
+      const nextPactUsed = hasWarlock || activeCharacter.className === 'Warlock' ? 0 : activeCharacter.pactSlotsUsed || 0;
+
+      updateActiveCharacter({
+        ...activeCharacter,
+        slotsUsed: nextUsed,
+        pactSlotsUsed: nextPactUsed,
+        arcaneRecoveryUsed: true,
+      });
+      showToast('Arcane Recovery: Spell slots restored!', 'success');
+    },
+    [activeCharacter, updateActiveCharacter, showToast]
+  );
+
+  const handleResetArcaneRecoveryUsed = useCallback(() => {
+    if (!activeCharacter) return;
+    updateActiveCharacter({
+      ...activeCharacter,
+      arcaneRecoveryUsed: false,
+    });
+    showToast('Arcane Recovery reset: Available to use again.', 'info');
   }, [activeCharacter, updateActiveCharacter, showToast]);
 
   const handleCastSpell = useCallback(
@@ -893,6 +950,8 @@ export default function App() {
                 onResetMaxSlot={handleResetMaxSlot}
                 onLongRest={handleLongRest}
                 onShortRest={handleShortRest}
+                onArcaneRecovery={handleArcaneRecovery}
+                onResetArcaneRecoveryUsed={handleResetArcaneRecoveryUsed}
                 onUpdateCharacter={updateActiveCharacter}
               />
 
@@ -900,6 +959,7 @@ export default function App() {
                 <SpellbookView
                   character={activeCharacter}
                   catalog={catalogMap}
+                  skipCopying={appSettings.skipCopying}
                   onTogglePrepare={handleTogglePrepare}
                   onFinishCopying={handleFinishCopying}
                   onFinishCopyingAll={handleFinishCopyingAll}
@@ -972,6 +1032,8 @@ export default function App() {
         activeThemeId={activeThemeId}
         onSelectTheme={handleSelectTheme}
         onUpdateCustomTheme={() => setCustomThemeRev((r) => r + 1)}
+        skipCopying={appSettings.skipCopying}
+        onToggleSkipCopying={handleToggleSkipCopying}
       />
     </div>
   );

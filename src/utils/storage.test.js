@@ -1,5 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { loadCharacterProfiles, saveCharacterProfiles, createDefaultProfile, STORAGE_KEY } from './storage';
+import {
+  loadCharacterProfiles,
+  saveCharacterProfiles,
+  createDefaultProfile,
+  STORAGE_KEY,
+  loadAppSettings,
+  saveAppSettings,
+  SETTINGS_KEY,
+} from './storage';
 
 describe('storage', () => {
   beforeEach(() => {
@@ -39,5 +47,17 @@ describe('storage', () => {
     const data = loadCharacterProfiles();
     expect(data.profiles).toEqual([]);
     expect(data.activeId).toBeNull();
+  });
+
+  it('loads and saves app settings including skipCopying option', () => {
+    // Default when empty
+    expect(loadAppSettings()).toEqual({ skipCopying: false });
+
+    saveAppSettings({ skipCopying: true });
+    expect(loadAppSettings()).toEqual({ skipCopying: true });
+
+    // Fallback on invalid JSON
+    localStorage.setItem(SETTINGS_KEY, 'invalid-json');
+    expect(loadAppSettings()).toEqual({ skipCopying: false });
   });
 });

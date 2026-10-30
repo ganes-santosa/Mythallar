@@ -86,22 +86,28 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
         )}
       </div>
 
-      <div className={`flex flex-wrap items-center justify-between gap-2 ${isCollapsed ? '' : 'pb-1.5 mb-1.5'}`}>
-      <button
-        type="button"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className="flex items-center space-x-1.5 text-left group focus:outline-none"
-        aria-label={isCollapsed ? 'Expand Filters' : 'Collapse Filters'}
-      >
-        <Flame size={13} className="text-dnd-gold" />
-        <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Filters</h3>
-        <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
-      </button>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="flex items-center space-x-1.5 text-left group focus:outline-none"
+          aria-label={isCollapsed ? 'Expand Filters' : 'Collapse Filters'}
+        >
+          <Flame size={13} className="text-dnd-gold" />
+          <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Filters</h3>
+          <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+        </button>
       </div>
 
-      {!isCollapsed && <>
-      {/* Select Dropdowns Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+          !isCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="pt-2 space-y-2">
+            {/* Select Dropdowns Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
         {/* Level */}
         <select
           value={filters.level !== undefined ? filters.level : 'all'}
@@ -285,7 +291,9 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
           </button>
         )}
       </div>
-      </>}
+      </div>
+      </div>
+      </div>
     </div>
   );
 }

@@ -97,6 +97,25 @@ export function isWizardCharacter(character) {
 }
 
 /**
+ * Gets wizard level for Arcane Recovery calculation (sum of all Wizard class levels).
+ */
+export function getWizardLevel(character) {
+  const classes = getCharacterClasses(character);
+  return classes
+    .filter((c) => c.className === 'Wizard')
+    .reduce((sum, c) => sum + (Number(c.level) || 0), 0);
+}
+
+/**
+ * Calculates max slot levels recoverable by Arcane Recovery (ceil(wizardLevel / 2)).
+ * Slots recovered can only be 5th level or lower.
+ */
+export function getMaxArcaneRecoveryLevels(character) {
+  const wLevel = getWizardLevel(character);
+  return Math.ceil(wLevel / 2);
+}
+
+/**
  * Calculates total character level across all classes (capped at 20).
  */
 export function getTotalCharacterLevel(character) {

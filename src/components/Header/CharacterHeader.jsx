@@ -272,7 +272,7 @@ export default function CharacterHeader({
 
   return (
     <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all">
-      <div className={`flex items-center gap-2 ${isCollapsed ? '' : 'pb-1.5 mb-1.5'}`}>
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -286,8 +286,14 @@ export default function CharacterHeader({
         </button>
       </div>
 
-      {!isCollapsed && <div className="flex flex-wrap items-stretch justify-between gap-3">
-      {/* Left: Highlight Character Profile Card */}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+          !isCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div className="overflow-hidden">
+          <div className="pt-2 flex flex-wrap items-stretch justify-between gap-3">
+          {/* Left: Highlight Character Profile Card */}
       <div className="character-profile-card flex-1 min-w-[280px] min-w-0 p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
         {/* Name Title & Header Actions */}
         <div ref={headerRowRef} className={`flex min-w-0 items-center gap-2 ${isEditing ? 'flex-wrap' : ''}`}>
@@ -505,7 +511,9 @@ export default function CharacterHeader({
           className="hidden"
         />
       </div>
-      </div>}
+      </div>
+      </div>
+      </div>
 
       {/* Character Manager Modal */}
       <CharacterManagerModal

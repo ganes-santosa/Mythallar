@@ -50,6 +50,7 @@ const INITIAL_FILTERS = {
 export default function SpellbookView({
   character,
   catalog,
+  skipCopying = false,
   onTogglePrepare,
   onFinishCopying,
   onFinishCopyingAll,
@@ -135,7 +136,7 @@ export default function SpellbookView({
       const spell = catalog[item.id];
       if (spell) {
         const lvl = typeof spell.level === 'number' ? spell.level : 0;
-        const copying = Boolean(isWizard && item.copying && lvl > 0);
+        const copying = Boolean(!skipCopying && isWizard && item.copying && lvl > 0);
         const effectivePrepared = Boolean(item.prepared && !copying);
         copyingMap[item.id] = copying;
         if (copying) hasCopyingSpells = true;

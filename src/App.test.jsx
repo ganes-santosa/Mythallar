@@ -210,6 +210,23 @@ describe('App End-to-End Integration', () => {
     });
   });
 
+  it('skips copying state when skipCopying setting is enabled', async () => {
+    localStorage.setItem('dnd_spellbook_settings', JSON.stringify({ skipCopying: true }));
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Magic Missile')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText('Magic Missile'));
+    const addBtns = await screen.findAllByRole('button', { name: /Add to Spellbook/i });
+    fireEvent.click(addBtns[0]);
+
+    // Added directly ready without copying state
+    expect(await screen.findByLabelText(/Toggle Prepared for Magic Missile/i)).toBeInTheDocument();
+    expect(screen.queryByText('Copying')).not.toBeInTheDocument();
+  });
+
   it('starts with no character and prompts creation when storage is empty', async () => {
     localStorage.clear();
     render(<App />);

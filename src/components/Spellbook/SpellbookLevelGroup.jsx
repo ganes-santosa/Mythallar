@@ -37,7 +37,7 @@ export default function SpellbookLevelGroup({
     : `${spells.length} cantrips`;
 
   return (
-    <div className="mb-4">
+    <div className={`transition-all duration-200 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
       {/* Group Header */}
       <button
         type="button"
@@ -45,7 +45,10 @@ export default function SpellbookLevelGroup({
         className="flex items-center justify-between w-full py-1 px-2 mb-1 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
       >
         <div className="flex items-center space-x-1.5">
-          {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          <ChevronDown
+            size={14}
+            className={`transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+          />
           <span>{getLevelTitle(level)}</span>
         </div>
 
@@ -56,7 +59,7 @@ export default function SpellbookLevelGroup({
 
       {/* Cards List */}
       {isOpen && (
-        <div className="space-y-1">
+        <div className="space-y-1 animate-in fade-in duration-200">
           {spells.map((spell) => (
             <SpellbookCard
               key={spell.id}

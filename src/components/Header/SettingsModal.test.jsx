@@ -92,6 +92,27 @@ describe('SettingsModal', () => {
     expect(handleCustomChange).toHaveBeenCalled();
   });
 
+  it('renders and toggles the Skip Copying State switch', () => {
+    const handleToggle = vi.fn();
+    render(
+      <SettingsModal
+        isOpen={true}
+        onClose={vi.fn()}
+        activeThemeId="mythallar-classic"
+        onSelectTheme={vi.fn()}
+        skipCopying={false}
+        onToggleSkipCopying={handleToggle}
+      />
+    );
+
+    expect(screen.getByText('Skip Copying State')).toBeInTheDocument();
+    const switchBtn = screen.getByRole('switch', { name: /Skip Copying State/i });
+    expect(switchBtn).toHaveAttribute('aria-checked', 'false');
+
+    fireEvent.click(switchBtn);
+    expect(handleToggle).toHaveBeenCalledWith(true);
+  });
+
   it('closes when close button is clicked', () => {
     const handleClose = vi.fn();
     render(
