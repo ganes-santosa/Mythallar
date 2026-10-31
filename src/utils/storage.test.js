@@ -22,6 +22,32 @@ describe('storage', () => {
     expect(char.spells).toEqual([]);
     expect(char.slotsUsed).toEqual({});
     expect(char.customSlots).toEqual({});
+    expect(char.sheet).toBeDefined();
+    expect(char.sheet.abilities.int).toBe(10);
+    expect(char.sheet.abilities.saveProficiencies).toEqual(['int', 'wis']);
+    expect(char.sheet.maxAttunement).toBe(3);
+    expect(char.sheet.items).toEqual([]);
+  });
+
+  it('populates default sheet data when loading legacy profiles lacking sheet property', () => {
+    const legacyProfile = {
+      id: 'char_legacy',
+      name: 'Old Timer',
+      className: 'Sorcerer',
+      level: 3,
+      spells: [],
+      slotsUsed: {},
+      customSlots: {},
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      profiles: [legacyProfile],
+      activeId: 'char_legacy',
+    }));
+
+    const loaded = loadCharacterProfiles();
+    expect(loaded.profiles[0].sheet).toBeDefined();
+    expect(loaded.profiles[0].sheet.abilities.saveProficiencies).toEqual(['con', 'cha']);
+    expect(loaded.profiles[0].sheet.vitals.hpCurrent).toBe(10);
   });
 
   it('returns empty profiles and null activeId when localStorage is empty', () => {

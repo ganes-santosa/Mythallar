@@ -59,6 +59,55 @@ export function saveHomebrewSpells(spells) {
 }
 
 /**
+ * Creates default modular Character Sheet data.
+ */
+export function createDefaultSheet(className = 'Wizard') {
+  const defaultProficientSaves = {
+    Wizard: ['int', 'wis'],
+    Sorcerer: ['con', 'cha'],
+    Warlock: ['wis', 'cha'],
+    Cleric: ['wis', 'cha'],
+    Druid: ['int', 'wis'],
+    Bard: ['dex', 'cha'],
+    Paladin: ['wis', 'cha'],
+    Ranger: ['str', 'dex'],
+    Fighter: ['str', 'con'],
+    Barbarian: ['str', 'con'],
+    Rogue: ['dex', 'int'],
+    Monk: ['str', 'dex'],
+  }[className] || ['int', 'wis'];
+
+  return {
+    vitals: {
+      hpCurrent: 10,
+      hpMax: 10,
+      hpTemp: 0,
+      ac: 10,
+      acFormula: '',
+      conditions: {
+        exhaustion: 0,
+        inspiration: false,
+        heroicInspiration: false,
+      },
+    },
+    abilities: {
+      str: 10,
+      dex: 10,
+      con: 10,
+      int: 10,
+      wis: 10,
+      cha: 10,
+      saveProficiencies: defaultProficientSaves,
+      overrides: {},
+    },
+    trackedResources: [],
+    featuresNotes: '',
+    items: [],
+    maxAttunement: 3,
+  };
+}
+
+/**
  * Creates a blank default character profile.
  */
 export function createDefaultProfile(name = 'New Adventurer', className = 'Wizard') {
@@ -70,6 +119,7 @@ export function createDefaultProfile(name = 'New Adventurer', className = 'Wizar
     customSlots: {},
     slotsUsed: {},
     spells: [], // array of { id: string, prepared: boolean }
+    sheet: createDefaultSheet(className),
   };
 }
 
@@ -94,12 +144,23 @@ export function loadCharacterProfiles() {
       };
     }
 
-    const activeId = parsed.activeId && parsed.profiles.some(p => p.id === parsed.activeId)
+    const profiles = parsed.profiles.map(p => {
+      if (!p || typeof p !== 'object') return p;
+      if (!p.sheet) {
+        return {
+          ...p,
+          sheet: createDefaultSheet(p.className || 'Wizard'),
+        };
+      }
+      return p;
+    });
+
+    const activeId = parsed.activeId && profiles.some(p => p.id === parsed.activeId)
       ? parsed.activeId
-      : (parsed.profiles[0]?.id || null);
+      : (profiles[0]?.id || null);
 
     return {
-      profiles: parsed.profiles,
+      profiles,
       activeId,
     };
   } catch (err) {
