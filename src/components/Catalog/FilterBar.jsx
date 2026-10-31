@@ -29,7 +29,7 @@ const SCHOOLS = [
 ];
 
 export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSources = [] }) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const update = (key, value) => {
     onChange({ ...filters, [key]: value });
   };
