@@ -46,19 +46,53 @@ describe('CharacterSheetView', () => {
     },
   };
 
-  it('renders all four modular cards and character summary banner', () => {
-    render(<CharacterSheetView character={mockCharacter} onUpdateCharacter={() => {}} />);
+  it('renders all modular cards and character summary banner with identity fields', () => {
+    const fullChar = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        identity: {
+          race: 'Half-Elf',
+          subclass: 'Chronurgy',
+          background: 'Sage',
+          portrait: '',
+        },
+        skills: { stealth: 'proficient' },
+        senses: { darkvision: 60 },
+        proficiencies: {
+          armor: ['Light Armor'],
+          weapons: [],
+          tools: [],
+          languages: ['Common', 'Elvish'],
+        },
+      },
+    };
+
+    render(<CharacterSheetView character={fullChar} onUpdateCharacter={() => {}} />);
 
     // Header info
     expect(screen.getByText('Sahazad Nazir')).toBeInTheDocument();
     expect(screen.getByText(/Wizard \(Level 19\)/i)).toBeInTheDocument();
     expect(screen.getByText('Proficiency +6')).toBeInTheDocument();
 
+    // Identity metadata
+    expect(screen.getByDisplayValue('Half-Elf')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Chronurgy')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Sage')).toBeInTheDocument();
+
+    // Skills Card & Senses
+    expect(screen.getByText('Skills & Senses')).toBeInTheDocument();
+    expect(screen.getByText('Passive Perception')).toBeInTheDocument();
+
+    // Proficiencies Card
+    expect(screen.getByText('Proficiencies & Training')).toBeInTheDocument();
+    expect(screen.getByText('Light Armor')).toBeInTheDocument();
+
     // Vitals Card
     expect(screen.getByLabelText('Current HP')).toHaveValue(184);
 
     // Abilities Card
-    expect(screen.getByText('Save +11')).toBeInTheDocument(); // INT save +5 mod + 6 prof
+    expect(screen.getByText('Save +11')).toBeInTheDocument();
 
     // Resources Card
     expect(screen.getByText('The Timekeeper')).toBeInTheDocument();
