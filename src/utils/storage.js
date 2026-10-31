@@ -77,13 +77,46 @@ export function createDefaultSheet(className = 'Wizard') {
     Monk: ['str', 'dex'],
   }[className] || ['int', 'wis'];
 
+  const defaultHitDie = {
+    Wizard: 'd6',
+    Sorcerer: 'd6',
+    Bard: 'd8',
+    Cleric: 'd8',
+    Druid: 'd8',
+    Monk: 'd8',
+    Rogue: 'd8',
+    Warlock: 'd8',
+    Fighter: 'd10',
+    Paladin: 'd10',
+    Ranger: 'd10',
+    Barbarian: 'd12',
+  }[className] || 'd8';
+
   return {
+    identity: {
+      race: '',
+      subclass: '',
+      background: '',
+      portrait: '',
+    },
     vitals: {
       hpCurrent: 10,
       hpMax: 10,
       hpTemp: 0,
       ac: 10,
       acFormula: '',
+      speed: 30,
+      initiativeOverride: null,
+      hitDice: {
+        current: 1,
+        max: 1,
+        die: defaultHitDie,
+      },
+      deathSaves: {
+        successes: 0,
+        failures: 0,
+      },
+      defenses: [],
       conditions: {
         exhaustion: 0,
         inspiration: false,
@@ -99,6 +132,36 @@ export function createDefaultSheet(className = 'Wizard') {
       cha: 10,
       saveProficiencies: defaultProficientSaves,
       overrides: {},
+    },
+    skills: {
+      acrobatics: 'none',
+      animalHandling: 'none',
+      arcana: 'none',
+      athletics: 'none',
+      deception: 'none',
+      history: 'none',
+      insight: 'none',
+      intimidation: 'none',
+      investigation: 'none',
+      medicine: 'none',
+      nature: 'none',
+      perception: 'none',
+      performance: 'none',
+      persuasion: 'none',
+      religion: 'none',
+      sleightOfHand: 'none',
+      stealth: 'none',
+      survival: 'none',
+    },
+    senses: {
+      darkvision: 0,
+      custom: '',
+    },
+    proficiencies: {
+      armor: [],
+      weapons: [],
+      tools: [],
+      languages: ['Common'],
     },
     trackedResources: [],
     featuresNotes: '',
@@ -146,13 +209,26 @@ export function loadCharacterProfiles() {
 
     const profiles = parsed.profiles.map(p => {
       if (!p || typeof p !== 'object') return p;
+      const defaultSheet = createDefaultSheet(p.className || 'Wizard');
       if (!p.sheet) {
         return {
           ...p,
-          sheet: createDefaultSheet(p.className || 'Wizard'),
+          sheet: defaultSheet,
         };
       }
-      return p;
+      return {
+        ...p,
+        sheet: {
+          ...defaultSheet,
+          ...p.sheet,
+          vitals: { ...defaultSheet.vitals, ...(p.sheet.vitals || {}) },
+          abilities: { ...defaultSheet.abilities, ...(p.sheet.abilities || {}) },
+          skills: { ...defaultSheet.skills, ...(p.sheet.skills || {}) },
+          senses: { ...defaultSheet.senses, ...(p.sheet.senses || {}) },
+          proficiencies: { ...defaultSheet.proficiencies, ...(p.sheet.proficiencies || {}) },
+          identity: { ...defaultSheet.identity, ...(p.sheet.identity || {}) },
+        },
+      };
     });
 
     const activeId = parsed.activeId && profiles.some(p => p.id === parsed.activeId)

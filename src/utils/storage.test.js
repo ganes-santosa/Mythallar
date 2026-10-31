@@ -27,6 +27,12 @@ describe('storage', () => {
     expect(char.sheet.abilities.saveProficiencies).toEqual(['int', 'wis']);
     expect(char.sheet.maxAttunement).toBe(3);
     expect(char.sheet.items).toEqual([]);
+    expect(char.sheet.skills.stealth).toBe('none');
+    expect(char.sheet.senses.darkvision).toBe(0);
+    expect(char.sheet.vitals.speed).toBe(30);
+    expect(char.sheet.vitals.deathSaves).toEqual({ successes: 0, failures: 0 });
+    expect(char.sheet.proficiencies.languages).toEqual(['Common']);
+    expect(char.sheet.identity.race).toBe('');
   });
 
   it('populates default sheet data when loading legacy profiles lacking sheet property', () => {
