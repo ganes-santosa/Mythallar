@@ -49,4 +49,32 @@ describe('VitalsCard', () => {
       conditions: expect.objectContaining({ inspiration: false })
     }));
   });
+
+  it('renders initiative, speed, hit dice, and death saves', () => {
+    const fullVitals = {
+      ...mockVitals,
+      speed: 30,
+      initiativeOverride: null,
+      hitDice: { current: 5, max: 8, die: 'd6' },
+      deathSaves: { successes: 2, failures: 1 },
+      defenses: ['Fire (Resistance)', 'Poison (Immune)'],
+    };
+    const handleUpdate = vi.fn();
+    render(<VitalsCard vitals={fullVitals} dexScore={14} onUpdateVitals={handleUpdate} />);
+
+    // Initiative with DEX 14 (+2 mod)
+    expect(screen.getByText('+2')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('30')).toBeInTheDocument();
+    expect(screen.getByText('5 / 8 d6')).toBeInTheDocument();
+
+    // Death saves toggle
+    const successBtn = screen.getByLabelText('Death Save Success 3');
+    fireEvent.click(successBtn);
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      deathSaves: expect.objectContaining({ successes: 3 })
+    }));
+
+    // Defenses display
+    expect(screen.getByText('Fire (Resistance)')).toBeInTheDocument();
+  });
 });
