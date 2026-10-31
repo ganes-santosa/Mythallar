@@ -30,12 +30,14 @@ import CreateCharacterModal from './components/Modal/CreateCharacterModal';
 import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
+import CharacterSheetView from './components/CharacterSheet/CharacterSheetView';
 import { APP_VERSION } from './version';
 
 export default function App() {
   // --- Character & Profile State ---
   const [profileData, setProfileData] = useState(() => loadCharacterProfiles());
   const [isCreateCharacterModalOpen, setIsCreateCharacterModalOpen] = useState(false);
+  const [leftPaneView, setLeftPaneView] = useState('spells'); // 'spells' | 'sheet'
   const { profiles, activeId } = profileData;
 
   const activeCharacter = useMemo(() => {
@@ -952,57 +954,93 @@ export default function App() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsSettingsOpen(true)}
-              aria-label="Open settings"
-              title="Appearance & Theme Settings"
-              className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card hover:text-white text-slate-400 transition-colors flex items-center justify-center"
-            >
-              <Settings size={15} />
-            </button>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center p-0.5 rounded-lg bg-dnd-card/80 border border-white/5 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setLeftPaneView('spells')}
+                  className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
+                    leftPaneView === 'spells'
+                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Grimoire
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLeftPaneView('sheet')}
+                  className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
+                    leftPaneView === 'sheet'
+                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Character Sheet
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                aria-label="Open settings"
+                title="Appearance & Theme Settings"
+                className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card hover:text-white text-slate-400 transition-colors flex items-center justify-center"
+              >
+                <Settings size={15} />
+              </button>
+            </div>
           </div>
 
-          <FilterBar
-            filters={filters}
-            onChange={setFilters}
-            onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
-            availableSources={availableSources}
-          />
-
-          {isLoadingSpells ? (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
-              <div
-                role="img"
-                aria-label="Loading Grimoire"
-                className="w-7 h-7 mb-2 animate-spin bg-dnd-gold select-none pointer-events-none"
-                style={{
-                  WebkitMaskImage: "url('/mythallar_logo.png')",
-                  WebkitMaskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                  maskImage: "url('/mythallar_logo.png')",
-                  maskSize: 'contain',
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                }}
-              />
-              <span>Loading spell grimoire...</span>
-            </div>
-          ) : spellError ? (
-            <div className="flex items-center justify-center h-64 text-red-400 text-sm">
-              <AlertCircle size={18} className="mr-2" />
-              <span>{spellError}</span>
-            </div>
-          ) : (
-            <SpellList
-              spells={filteredSpells}
-              spellbookSpellIds={spellbookSpellIds}
-              notesMap={spellNotesMap}
-              onAddToSpellbook={handleAddSpell}
-              onDeleteHomebrew={handleDeleteHomebrewSpell}
-              onUpdateNote={activeCharacter ? handleUpdateSpellNote : null}
+          {leftPaneView === 'sheet' ? (
+            <CharacterSheetView
+              character={activeCharacter}
+              onUpdateCharacter={updateActiveCharacter}
             />
+          ) : (
+            <>
+              <FilterBar
+                filters={filters}
+                onChange={setFilters}
+                onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
+                availableSources={availableSources}
+              />
+
+              {isLoadingSpells ? (
+                <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
+                  <div
+                    role="img"
+                    aria-label="Loading Grimoire"
+                    className="w-7 h-7 mb-2 animate-spin bg-dnd-gold select-none pointer-events-none"
+                    style={{
+                      WebkitMaskImage: "url('/mythallar_logo.png')",
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskImage: "url('/mythallar_logo.png')",
+                      maskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                    }}
+                  />
+                  <span>Loading spell grimoire...</span>
+                </div>
+              ) : spellError ? (
+                <div className="flex items-center justify-center h-64 text-red-400 text-sm">
+                  <AlertCircle size={18} className="mr-2" />
+                  <span>{spellError}</span>
+                </div>
+              ) : (
+                <SpellList
+                  spells={filteredSpells}
+                  spellbookSpellIds={spellbookSpellIds}
+                  notesMap={spellNotesMap}
+                  onAddToSpellbook={handleAddSpell}
+                  onDeleteHomebrew={handleDeleteHomebrewSpell}
+                  onUpdateNote={activeCharacter ? handleUpdateSpellNote : null}
+                />
+              )}
+            </>
           )}
         </section>
 

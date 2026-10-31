@@ -68,6 +68,31 @@ describe('App End-to-End Integration', () => {
     expect(headerLogo).toHaveClass('bg-dnd-ivory');
   });
 
+  it('allows toggling left pane view between Spells Grimoire and Character Sheet', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    // Default: Spells view is active
+    expect(screen.getByPlaceholderText(/Search spells/i)).toBeInTheDocument();
+
+    // Toggle to Character Sheet
+    const sheetTab = screen.getByRole('button', { name: /Character Sheet/i });
+    fireEvent.click(sheetTab);
+
+    // Character Sheet elements should now be visible
+    expect(screen.getByText('Combat Vitals & Formulations')).toBeInTheDocument();
+    expect(screen.getByText('Ability Scores & Saving Throws')).toBeInTheDocument();
+
+    // Toggle back to Grimoire
+    const grimoireTab = screen.getByRole('button', { name: /Grimoire/i });
+    fireEvent.click(grimoireTab);
+
+    expect(screen.getByPlaceholderText(/Search spells/i)).toBeInTheDocument();
+  });
+
   it('renders a spinning Mythallar logo during spell catalog loading', () => {
     // Keep fetch unresolved
     global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
