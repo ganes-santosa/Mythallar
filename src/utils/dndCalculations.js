@@ -40,3 +40,39 @@ export function calculateSave(score, isProficient, level, override) {
   const prof = isProficient ? getProficiencyBonus(level) : 0;
   return mod + prof;
 }
+
+export const SKILLS_DEFINITION = [
+  { key: 'acrobatics', label: 'Acrobatics', ability: 'dex' },
+  { key: 'animalHandling', label: 'Animal Handling', ability: 'wis' },
+  { key: 'arcana', label: 'Arcana', ability: 'int' },
+  { key: 'athletics', label: 'Athletics', ability: 'str' },
+  { key: 'deception', label: 'Deception', ability: 'cha' },
+  { key: 'history', label: 'History', ability: 'int' },
+  { key: 'insight', label: 'Insight', ability: 'wis' },
+  { key: 'intimidation', label: 'Intimidation', ability: 'cha' },
+  { key: 'investigation', label: 'Investigation', ability: 'int' },
+  { key: 'medicine', label: 'Medicine', ability: 'wis' },
+  { key: 'nature', label: 'Nature', ability: 'int' },
+  { key: 'perception', label: 'Perception', ability: 'wis' },
+  { key: 'performance', label: 'Performance', ability: 'cha' },
+  { key: 'persuasion', label: 'Persuasion', ability: 'cha' },
+  { key: 'religion', label: 'Religion', ability: 'int' },
+  { key: 'sleightOfHand', label: 'Sleight of Hand', ability: 'dex' },
+  { key: 'stealth', label: 'Stealth', ability: 'dex' },
+  { key: 'survival', label: 'Survival', ability: 'wis' },
+];
+
+export function calculateSkillBonus(score, profType = 'none', level = 1, override) {
+  if (typeof override === 'number' && !isNaN(override)) {
+    return override;
+  }
+  const mod = getAbilityModifier(score);
+  const prof = getProficiencyBonus(level);
+  const mult = profType === 'expertise' ? 2 : profType === 'proficient' ? 1 : 0;
+  return mod + prof * mult;
+}
+
+export function calculatePassiveScore(score, profType = 'none', level = 1, bonus = 0) {
+  return 10 + calculateSkillBonus(score, profType, level) + (Number(bonus) || 0);
+}
+

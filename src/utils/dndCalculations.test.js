@@ -4,6 +4,9 @@ import {
   getAbilityModifier,
   formatModifier,
   calculateSave,
+  SKILLS_DEFINITION,
+  calculateSkillBonus,
+  calculatePassiveScore,
 } from './dndCalculations';
 
 describe('dndCalculations', () => {
@@ -41,5 +44,27 @@ describe('dndCalculations', () => {
     expect(calculateSave(14, true, 5)).toBe(5); // +2 mod + 3 prof
     expect(calculateSave(20, true, 19)).toBe(11); // +5 mod + 6 prof
     expect(calculateSave(14, true, 5, 9)).toBe(9); // respects manual override
+  });
+
+  it('defines the 18 standard 5e skills with their key abilities', () => {
+    expect(SKILLS_DEFINITION.length).toBe(18);
+    const stealth = SKILLS_DEFINITION.find(s => s.key === 'stealth');
+    expect(stealth).toEqual({ key: 'stealth', label: 'Stealth', ability: 'dex' });
+    const arcana = SKILLS_DEFINITION.find(s => s.key === 'arcana');
+    expect(arcana).toEqual({ key: 'arcana', label: 'Arcana', ability: 'int' });
+  });
+
+  it('calculates skill bonus for none, proficient, and expertise', () => {
+    // Score 18 (+4 mod) at level 5 (+3 prof)
+    expect(calculateSkillBonus(18, 'none', 5)).toBe(4);
+    expect(calculateSkillBonus(18, 'proficient', 5)).toBe(7);
+    expect(calculateSkillBonus(18, 'expertise', 5)).toBe(10);
+    expect(calculateSkillBonus(18, 'none', 5, 99)).toBe(99); // override
+  });
+
+  it('calculates passive score correctly based on skill bonus', () => {
+    expect(calculatePassiveScore(14, 'proficient', 5)).toBe(15); // 10 + 2 mod + 3 prof
+    expect(calculatePassiveScore(14, 'expertise', 5)).toBe(18); // 10 + 2 mod + 6 prof
+    expect(calculatePassiveScore(14, 'none', 5, 5)).toBe(17); // 10 + 2 mod + 5 bonus
   });
 });
