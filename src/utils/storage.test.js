@@ -3,6 +3,7 @@ import {
   loadCharacterProfiles,
   saveCharacterProfiles,
   createDefaultProfile,
+  normalizeSpeeds,
   STORAGE_KEY,
   loadAppSettings,
   saveAppSettings,
@@ -31,6 +32,7 @@ describe('storage', () => {
     expect(char.sheet.senses.darkvision).toBe(0);
     expect(char.sheet.vitals.speed).toBe(30);
     expect(char.sheet.vitals.deathSaves).toEqual({ successes: 0, failures: 0 });
+    expect(char.sheet.vitals.hpMaxBuff).toBe(0);
     expect(char.sheet.proficiencies.languages).toEqual(['Common']);
     expect(char.sheet.identity.race).toBe('');
   });
@@ -91,5 +93,17 @@ describe('storage', () => {
     // Fallback on invalid JSON
     localStorage.setItem(SETTINGS_KEY, 'invalid-json');
     expect(loadAppSettings()).toEqual({ skipCopying: false });
+  });
+
+  it('normalizes legacy vitals.speed into speeds object with walk', () => {
+    const legacyVitals = { speed: 30 };
+    const normalized = normalizeSpeeds(legacyVitals);
+    expect(normalized).toEqual({ walk: 30 });
+  });
+
+  it('preserves existing vitals.speeds object with secondary modes', () => {
+    const modernVitals = { speeds: { walk: 30, fly: 60 } };
+    const normalized = normalizeSpeeds(modernVitals);
+    expect(normalized).toEqual({ walk: 30, fly: 60 });
   });
 });

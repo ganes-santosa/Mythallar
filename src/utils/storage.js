@@ -4,6 +4,31 @@ export const LEGACY_CUSTOM_SPELLS_KEY = 'dnd_custom_spells';
 export const SETTINGS_KEY = 'dnd_spellbook_settings';
 
 /**
+ * Normalizes vitals movement speeds supporting both legacy numeric speed
+ * and structured multi-speed objects (walk, climb, swim, fly, burrow).
+ */
+export function normalizeSpeeds(vitals = {}) {
+  if (vitals && typeof vitals.speeds === 'object' && vitals.speeds !== null) {
+    const walkVal = Number(vitals.speeds.walk);
+    const result = {
+      walk: !isNaN(walkVal) && walkVal >= 0 ? walkVal : 30,
+    };
+    for (const [key, val] of Object.entries(vitals.speeds)) {
+      if (key === 'walk') continue;
+      const num = Number(val);
+      if (!isNaN(num) && num > 0) {
+        result[key] = num;
+      }
+    }
+    return result;
+  }
+  if (vitals && typeof vitals.speed === 'number' && !isNaN(vitals.speed)) {
+    return { walk: Math.max(0, vitals.speed) };
+  }
+  return { walk: 30 };
+}
+
+/**
  * Loads general app settings from localStorage.
  */
 export function loadAppSettings() {
@@ -102,10 +127,12 @@ export function createDefaultSheet(className = 'Wizard') {
     vitals: {
       hpCurrent: 10,
       hpMax: 10,
+      hpMaxBuff: 0,
       hpTemp: 0,
       ac: 10,
       acFormula: '',
       speed: 30,
+      speeds: { walk: 30 },
       initiativeOverride: null,
       hitDice: {
         current: 1,
@@ -117,11 +144,9 @@ export function createDefaultSheet(className = 'Wizard') {
         failures: 0,
       },
       defenses: [],
-      conditions: {
-        exhaustion: 0,
-        inspiration: false,
-        heroicInspiration: false,
-      },
+      inspiration: 0,
+      exhaustion: 0,
+      conditions: [],
     },
     abilities: {
       str: 10,
