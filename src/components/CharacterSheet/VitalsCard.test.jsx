@@ -330,7 +330,7 @@ describe('VitalsCard', () => {
     expect(amtInput).toHaveAttribute('placeholder', '0');
   });
 
-  it('renders combined AC and Initiative in the same card container', () => {
+  it('renders AC and Initiative as distinct stacked cards', () => {
     render(<VitalsCard vitals={{ ac: 15, acFormula: '10 + 2 DEX + 3 Armor', initiativeOverride: null }} dexScore={14} />);
     expect(screen.getByText('15')).toBeInTheDocument();
     expect(screen.getByText('10 + 2 DEX + 3 Armor')).toBeInTheDocument();

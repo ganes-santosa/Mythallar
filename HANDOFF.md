@@ -4,10 +4,10 @@
 - **Combat Stats & Row 1 Redesign:**
   - Standardized all inner card labels, stat badges, field labels, tracker text, and action buttons to **Title Case** (`Hit Points`, `Hit Dice`, `Death Saves`, `Max HP Buff`, `Base Max`, `Temp HP`, `Damage`, `Heal`, `Speed`).
   - Card 1: Hit Points redesigned with always-interactive inputs for Current and Temp HP, auto-sized width (`ch`) ensuring uniform `/` spacing across 1-3 digits, and Damage/Heal capsule.
-  - Card 2: Combined AC and Initiative into a stacked card. AC on top with hero number, formula breakdown, and persistent `+ Note` / edit button. Initiative on bottom in an accent pill with `Zap` icon, modifier, and override support.
-  - Card 3: Dedicated 5e Movement Speeds card with hero Walking speed (`30 ft`, `Walking`) on left, active optional speeds (`Climbing`, `Swimming`, `Flying`, `Burrowing`) on right with `+ Speed` adder. Speed remove (`x`) buttons are now conditionally rendered only in the editing state of combat stats (`isEditing`).
+  - Card 2: Stacked standalone cards for AC and Initiative (`flex flex-col gap-2`). AC card on top with hero number, formula breakdown, and persistent `+ Note` / edit button; Initiative as its own distinct card on bottom with `Zap` icon and modifier.
+  - Card 3: Dedicated 5e Movement Speeds card with hero Walking speed (`30 ft`, `Walking`) on left, active optional speeds (`Climbing`, `Swimming`, `Flying`, `Burrowing`) on right with `+ Speed` adder. Speed remove (`x`) buttons conditionally rendered only in editing state (`isEditing`).
   - Backward-compatibility: legacy numeric `vitals.speed: 30` automatically normalizes to `{ walk: 30 }` via `normalizeSpeeds` in `src/utils/storage.js`.
-  - Rebalanced Row 1 grid (`lg:grid-cols-[10fr_5fr_9fr]`): Hit Points ~41.7%, AC/Initiative ~20.8%, Speeds ~37.5%. Reduced Hit Points container padding and gaps to remove dead space. Speeds card uses `whitespace-nowrap` on secondary speed chips and `flex-shrink-0` on Walking speed to prevent text wrapping.
+  - Rebalanced Row 1 grid (`lg:grid-cols-[12fr_6fr_6fr]`): Hit Points 50%, AC/Initiative 25%, Speeds 25%, eliminating excess whitespace in Speeds.
   - Removed "Over" text badge from read-only Initiative pill.
   - Proficiencies & Training add form persistent on submit (clears draft, retains focus for rapid multi-add); closes on click outside (`useClickOutside`), Cancel, or Escape; category cards use `justify-start` without vertical gaps.
   - Eliminated browser-native validation tooltips via `noValidate` and number stepper buttons in CSS (`appearance: textfield`).

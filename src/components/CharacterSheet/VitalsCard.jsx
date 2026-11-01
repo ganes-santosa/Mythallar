@@ -272,7 +272,7 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
   return (
     <div className="space-y-2.5 p-0.5">
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[10fr_5fr_9fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[12fr_6fr_6fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 lg:col-span-1">
@@ -462,10 +462,10 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
           </div>
         )}
 
-        {/* Card 2: Combined AC & Initiative */}
-        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-1 lg:col-span-1">
-          {/* Top: Armor Class */}
-          <div className="flex flex-col justify-between flex-1">
+        {/* Card 2: Stacked AC & Initiative Cards */}
+        <div className="flex flex-col gap-2 sm:col-span-1 lg:col-span-1">
+          {/* Armor Class Card */}
+          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1">
             <div className="text-[10px] text-slate-400 flex items-center justify-between">
               <span className="flex items-center gap-1 font-bold text-slate-400">
                 <Shield size={12} className="text-dnd-gold" /> AC
@@ -570,8 +570,8 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
             )}
           </div>
 
-          {/* Bottom: Initiative Pill Sub-container */}
-          <div className="mt-1.5 pt-1.5 border-t border-white/5 flex items-center justify-between bg-dnd-panel/40 px-2 py-1 rounded">
+          {/* Initiative Card */}
+          <div className="bg-dnd-card p-2 rounded-lg flex items-center justify-between shadow-sm">
             <div className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
               <Zap size={11} className="text-dnd-gold" />
               <span className="hidden sm:inline">Initiative</span>
