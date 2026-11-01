@@ -1,19 +1,20 @@
 # HANDOFF
 
 ## Current state (v2.0.1)
-- **D&D Beyond Character Sheet Parity:** Built full modular card deck in left pane (`Grimoire` / `Character Sheet` toggle):
-  - **Identity & Portrait:** Client-side HTML Canvas image compressor (`imageCompressor.js`) downsamples uploads to <=256x256 WebP data URLs (<30 KB). Name, level, proficiency, race, subclass, background metadata.
-  - **Combat Vitals & Formulations:** HP, max HP, temp HP, AC formula, initiative (auto DEX mod + override), speed, hit dice tracker, 3-point death saves (successes/failures), and damage defenses tagger.
-  - **Ability Scores & Saving Throws:** Auto-calculated modifiers and saving throw bonuses with proficiency toggle dots.
-  - **Skills & Senses:** 18 standard 5e skills with 3-state cycle (none -> proficient -> expertise -> none), skill search filter, Darkvision input, and passive senses banner (Perception, Investigation, Insight).
-  - **Proficiencies & Training:** Categorized chips for Armor, Weapons, Tools, and Languages with inline add/remove.
-  - **Tracked Resources & Notes:** Custom counter steppers (Lucky, Chronal Shift, etc.) and freeform notes.
-  - **Items & Attunement:** Attunement capacity tracking (`X / 3`) with glowing ivory bookmark strips (`#EFE9E0`).
-- **Excluded by request:** Actions & Attack Breakdown card.
-- **Verification:** 36 test files (186 tests) passing; production build clean.
+- **Combat Stats & Row 1 Redesign:**
+  - Standardized all inner card labels, stat badges, field labels, tracker text, and action buttons to **Title Case** (`Hit Points`, `Hit Dice`, `Death Saves`, `Max HP Buff`, `Base Max`, `Temp HP`, `Damage`, `Heal`, `Speed`).
+  - Card 1: Hit Points redesigned with always-interactive inputs for Current and Temp HP, auto-sized width (`ch`) ensuring uniform `/` spacing across 1-3 digits, and Damage/Heal capsule.
+  - Card 2: Combined AC and Initiative into a stacked card. AC on top with hero number, formula breakdown, and persistent `+ Note` / edit button. Initiative on bottom in an accent pill with `Zap` icon, modifier, and override support.
+  - Card 3: Dedicated 5e Movement Speeds card with hero Walking speed (`30 ft`, `Walking`) on left, active optional speeds (`Climbing`, `Swimming`, `Flying`, `Burrowing`) on right with `+ Speed` adder and remove (`x`) buttons.
+  - Backward-compatibility: legacy numeric `vitals.speed: 30` automatically normalizes to `{ walk: 30 }` via `normalizeSpeeds` in `src/utils/storage.js`.
+  - Rebalanced Row 1 grid (`lg:grid-cols-[10fr_5fr_9fr]`): Hit Points ~41.7%, AC/Initiative ~20.8%, Speeds ~37.5%. Reduced Hit Points container padding and gaps to remove dead space. Speeds card uses `whitespace-nowrap` on secondary speed chips and `flex-shrink-0` on Walking speed to prevent text wrapping.
+  - Removed "Over" text badge from read-only Initiative pill.
+  - Proficiencies & Training add form persistent on submit (clears draft, retains focus for rapid multi-add); closes on click outside (`useClickOutside`), Cancel, or Escape; category cards use `justify-start` without vertical gaps.
+  - Eliminated browser-native validation tooltips via `noValidate` and number stepper buttons in CSS (`appearance: textfield`).
+- **Verification:** 37 test files (210 tests) passing; production build clean.
 
 ## Next up
-- Push commits to remote or add character export/import for new sheet fields if needed.
+- Review changes, commit, and tag/push when ready.
 
 ## Open questions
 - (none)

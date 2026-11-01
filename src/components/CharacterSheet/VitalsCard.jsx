@@ -272,7 +272,7 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
   return (
     <div className="space-y-2.5 p-0.5">
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[12fr_5fr_7fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[10fr_5fr_9fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 lg:col-span-1">
@@ -333,9 +333,9 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
             </div>
           </div>
         ) : (
-          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-3 shadow-sm sm:col-span-2 lg:col-span-1">
+          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm sm:col-span-2 lg:col-span-1">
             {/* Left: HP Info */}
-            <div className="flex-1 flex flex-col justify-between">
+            <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-0.5">
                 <span className="text-[11px] font-bold text-red-400 flex items-center gap-1">
                   <Heart size={12} className="text-red-400 fill-red-400/20" /> Hit Points
@@ -347,9 +347,9 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
                 )}
               </div>
 
-              <div className="flex items-center gap-2 my-0.5">
+              <div className="flex items-center gap-1.5 my-0.5">
                 {/* Sub-container 1: Current & Max */}
-                <div className="bg-dnd-panel/60 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-4 py-1.5 flex flex-col justify-between">
+                <div className="bg-dnd-panel/60 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between">
                   <div className="flex justify-between items-center text-[8px] font-semibold text-slate-400 px-0.5 mb-0.5">
                     <span>Current</span>
                     <span>Max</span>
@@ -384,7 +384,7 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
                 </div>
 
                 {/* Sub-container 2: Temp HP */}
-                <div className="bg-dnd-panel/60 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-3.5 py-1.5 flex flex-col justify-between self-stretch min-w-[3.25rem]">
+                <div className="bg-dnd-panel/60 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between self-stretch min-w-[2.75rem]">
                   <div className="text-[8px] font-semibold text-blue-400 text-center mb-0.5">
                     Temp
                   </div>
@@ -601,9 +601,6 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
                 <span className="text-xs font-bold text-slate-100">
                   {formatModifier(initMod)}
                 </span>
-                {typeof currentVitals.initiativeOverride === 'number' && !isNaN(currentVitals.initiativeOverride) && (
-                  <span className="text-[8px] text-amber-400/80 font-medium">Over</span>
-                )}
               </div>
             )}
           </div>
@@ -633,9 +630,9 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
           </div>
 
           {/* Body */}
-          <div className="flex items-start justify-between gap-2 my-auto pt-1">
+          <div className="flex items-center justify-between gap-2 my-auto pt-1">
             {/* Left: Walking Speed Hero */}
-            <div className="flex-1 flex flex-col justify-center">
+            <div className="flex-shrink-0 flex flex-col justify-center">
               {isEditing ? (
                 <div className="flex items-center gap-1">
                   <input
@@ -658,11 +655,11 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
             </div>
 
             {/* Right: Optional Speeds List */}
-            <div className="flex-1 flex flex-col items-end gap-1">
+            <div className="flex-1 min-w-0 flex flex-col items-end gap-1">
               {OPTIONAL_SPEED_TYPES.filter((t) => speeds[t.key] !== undefined).map(({ key, label }) => (
                 <div
                   key={key}
-                  className="flex items-center gap-1 text-[11px] bg-dnd-panel/60 border border-white/5 rounded px-1.5 py-0.5 text-slate-200"
+                  className="flex items-center gap-1 text-[11px] bg-dnd-panel/60 border border-white/5 rounded px-1.5 py-0.5 text-slate-200 whitespace-nowrap"
                 >
                   <span className="text-slate-400 text-[10px]">{label}:</span>
                   <span className="font-bold text-slate-100">{speeds[key]} ft</span>
