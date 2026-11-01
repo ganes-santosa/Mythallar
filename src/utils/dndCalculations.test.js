@@ -7,6 +7,8 @@ import {
   SKILLS_DEFINITION,
   calculateSkillBonus,
   calculatePassiveScore,
+  getClassHitDie,
+  rollHitDie,
 } from './dndCalculations';
 
 describe('dndCalculations', () => {
@@ -66,5 +68,43 @@ describe('dndCalculations', () => {
     expect(calculatePassiveScore(14, 'proficient', 5)).toBe(15); // 10 + 2 mod + 3 prof
     expect(calculatePassiveScore(14, 'expertise', 5)).toBe(18); // 10 + 2 mod + 6 prof
     expect(calculatePassiveScore(14, 'none', 5, 5)).toBe(17); // 10 + 2 mod + 5 bonus
+  });
+
+  it('maps D&D classes to their authentic 5e hit dice', () => {
+    expect(getClassHitDie('Wizard')).toBe('d6');
+    expect(getClassHitDie('Sorcerer')).toBe('d6');
+    expect(getClassHitDie('Rogue')).toBe('d8');
+    expect(getClassHitDie('Bard')).toBe('d8');
+    expect(getClassHitDie('Cleric')).toBe('d8');
+    expect(getClassHitDie('Druid')).toBe('d8');
+    expect(getClassHitDie('Monk')).toBe('d8');
+    expect(getClassHitDie('Warlock')).toBe('d8');
+    expect(getClassHitDie('Artificer')).toBe('d8');
+    expect(getClassHitDie('Fighter')).toBe('d10');
+    expect(getClassHitDie('Paladin')).toBe('d10');
+    expect(getClassHitDie('Ranger')).toBe('d10');
+    expect(getClassHitDie('Barbarian')).toBe('d12');
+    expect(getClassHitDie('UnknownHomebrew')).toBe('d8');
+  });
+
+  it('rolls hit die, adding CON modifier with a minimum floor of 1', () => {
+    // Deterministic RNG returning 0.5 -> roll = 4 on d8
+    const mockRngMid = () => 0.5; // (0.5 * 8) + 1 = 5
+    const resultPositiveCon = rollHitDie(8, 14, () => 0.5); // roll 5, con mod +2 -> total 7
+    expect(resultPositiveCon.roll).toBe(5);
+    expect(resultPositiveCon.conMod).toBe(2);
+    expect(resultPositiveCon.total).toBe(7);
+
+    // Negative CON modifier: CON 6 (-2 mod), roll 1 on d6 -> total minimum 1 (not -1)
+    const resultNegativeCon = rollHitDie(6, 6, () => 0); // roll 1, con mod -2 -> 1 - 2 = -1 -> floor 1
+    expect(resultNegativeCon.roll).toBe(1);
+    expect(resultNegativeCon.conMod).toBe(-2);
+    expect(resultNegativeCon.total).toBe(1);
+
+    // Die sides can be string 'd10' or number 10
+    const resultStringDie = rollHitDie('d10', 10, () => 0.99); // roll 10, con mod 0 -> total 10
+    expect(resultStringDie.roll).toBe(10);
+    expect(resultStringDie.conMod).toBe(0);
+    expect(resultStringDie.total).toBe(10);
   });
 });

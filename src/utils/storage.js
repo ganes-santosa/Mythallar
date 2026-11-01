@@ -1,3 +1,5 @@
+import { getClassHitDie } from './dndCalculations';
+
 export const STORAGE_KEY = 'dnd_spellbook_data';
 export const HOMEBREW_SPELLS_KEY = 'dnd_homebrew_spells';
 export const LEGACY_CUSTOM_SPELLS_KEY = 'dnd_custom_spells';
@@ -26,6 +28,135 @@ export function normalizeSpeeds(vitals = {}) {
     return { walk: Math.max(0, vitals.speed) };
   }
   return { walk: 30 };
+}
+
+/**
+ * Normalizes hit dice pool based on character class(es) and level(s).
+ * Supports multiclass characters with distinct pools per die type.
+ */
+export function normalizeHitDice(vitals = {}, character = {}) {
+  const classes = Array.isArray(character?.classes) && character.classes.length > 0
+    ? character.classes
+    : [{
+        className: character?.className || vitals?.hitDice?.classNames?.[0] || 'Wizard',
+        level: Math.max(1, Number(character?.level) || 1),
+      }];
+
+  const targetPools = {};
+  for (const c of classes) {
+    const die = getClassHitDie(c.className);
+    const lvl = Math.max(1, Number(c.level) || 1);
+    if (!targetPools[die]) {
+      targetPools[die] = { max: 0, classNames: [] };
+    }
+    targetPools[die].max += lvl;
+    if (c.className && !targetPools[die].classNames.includes(c.className)) {
+      targetPools[die].classNames.push(c.className);
+    }
+  }
+
+  const primaryDie = getClassHitDie(classes[0]?.className || 'Wizard');
+  const existing = vitals?.hitDice;
+  const existingPools = existing?.pools;
+
+  const resultPools = {};
+  let totalMax = 0;
+  let totalCurrent = 0;
+
+  if (existingPools && typeof existingPools === 'object') {
+    for (const [die, target] of Object.entries(targetPools)) {
+      const prev = existingPools[die];
+      const prevCurrent = prev?.current !== undefined ? Number(prev.current) : target.max;
+      const current = Math.max(0, Math.min(target.max, isNaN(prevCurrent) ? target.max : prevCurrent));
+      resultPools[die] = {
+        current,
+        max: target.max,
+        classNames: target.classNames,
+      };
+      totalMax += target.max;
+      totalCurrent += current;
+    }
+  } else {
+    // Legacy single pool or uninitialized
+    const isLegacyDefault = existing?.current === 1 && existing?.max === 1 && (Number(character?.level) || 1) > 1;
+    let remainingToSpend = 0;
+    if (!isLegacyDefault && existing && typeof existing.current === 'number' && typeof existing.max === 'number') {
+      remainingToSpend = Math.max(0, existing.max - existing.current);
+    }
+
+    for (const [die, target] of Object.entries(targetPools)) {
+      const spendFromThis = Math.min(target.max, remainingToSpend);
+      remainingToSpend -= spendFromThis;
+      const current = target.max - spendFromThis;
+
+      resultPools[die] = {
+        current,
+        max: target.max,
+        classNames: target.classNames,
+      };
+      totalMax += target.max;
+      totalCurrent += current;
+    }
+  }
+
+  return {
+    current: totalCurrent,
+    max: totalMax,
+    die: primaryDie,
+    pools: resultPools,
+  };
+}
+
+/**
+ * Recovers spent hit dice on 5e Long Rest: up to half total level (minimum 1),
+ * prioritizing largest dice types first.
+ */
+export function recoverHitDiceOnLongRest(hitDice = {}, totalLevel = 1) {
+  const safeLevel = Math.max(1, Number(totalLevel) || 1);
+  let recoveryBudget = Math.max(1, Math.floor(safeLevel / 2));
+
+  const pools = {};
+  if (hitDice.pools && typeof hitDice.pools === 'object') {
+    for (const [die, pool] of Object.entries(hitDice.pools)) {
+      pools[die] = { ...pool };
+    }
+  } else {
+    const die = hitDice.die || 'd8';
+    pools[die] = {
+      current: hitDice.current ?? 1,
+      max: hitDice.max ?? 1,
+      classNames: [],
+    };
+  }
+
+  const sortedDice = Object.keys(pools).sort((a, b) => {
+    const sizeA = parseInt(a.replace(/\D/g, ''), 10) || 0;
+    const sizeB = parseInt(b.replace(/\D/g, ''), 10) || 0;
+    return sizeB - sizeA;
+  });
+
+  for (const die of sortedDice) {
+    if (recoveryBudget <= 0) break;
+    const pool = pools[die];
+    const missing = Math.max(0, pool.max - pool.current);
+    const toRecover = Math.min(missing, recoveryBudget);
+    pool.current += toRecover;
+    recoveryBudget -= toRecover;
+  }
+
+  let totalCurrent = 0;
+  let totalMax = 0;
+  for (const p of Object.values(pools)) {
+    totalCurrent += p.current;
+    totalMax += p.max;
+  }
+
+  return {
+    ...hitDice,
+    current: totalCurrent,
+    max: totalMax,
+    pools,
+  };
 }
 
 /**
@@ -138,6 +269,9 @@ export function createDefaultSheet(className = 'Wizard') {
         current: 1,
         max: 1,
         die: defaultHitDie,
+        pools: {
+          [defaultHitDie]: { current: 1, max: 1, classNames: [className] },
+        },
       },
       deathSaves: {
         successes: 0,

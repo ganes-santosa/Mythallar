@@ -76,3 +76,39 @@ export function calculatePassiveScore(score, profType = 'none', level = 1, bonus
   return 10 + calculateSkillBonus(score, profType, level) + (Number(bonus) || 0);
 }
 
+export const CLASS_HIT_DIE = {
+  Wizard: 'd6',
+  Sorcerer: 'd6',
+  Artificer: 'd8',
+  Bard: 'd8',
+  Cleric: 'd8',
+  Druid: 'd8',
+  Monk: 'd8',
+  Rogue: 'd8',
+  Warlock: 'd8',
+  Fighter: 'd10',
+  Paladin: 'd10',
+  Ranger: 'd10',
+  Barbarian: 'd12',
+};
+
+/**
+ * Returns the authentic 5e hit die string (e.g. 'd8') for a class.
+ */
+export function getClassHitDie(className) {
+  return CLASS_HIT_DIE[className] || 'd8';
+}
+
+/**
+ * Rolls one hit die, adding CON modifier with a 5e floor of 1.
+ */
+export function rollHitDie(dieSides, conScore = 10, rng = Math.random) {
+  const sides = typeof dieSides === 'string'
+    ? parseInt(dieSides.replace(/\D/g, ''), 10) || 8
+    : Number(dieSides) || 8;
+  const roll = Math.floor(rng() * sides) + 1;
+  const conMod = getAbilityModifier(conScore);
+  const total = Math.max(1, roll + conMod);
+  return { roll, conMod, total };
+}
+
