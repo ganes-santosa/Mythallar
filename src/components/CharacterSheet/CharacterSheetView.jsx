@@ -26,7 +26,7 @@ import { getProficiencyBonus } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 import { compressImageFile } from '../../utils/imageCompressor';
 
-export default function CharacterSheetView({ character, onUpdateCharacter }) {
+export default function CharacterSheetView({ character, onUpdateCharacter, onShortRest }) {
   const fileInputRef = useRef(null);
 
   if (!character) {
@@ -233,8 +233,11 @@ export default function CharacterSheetView({ character, onUpdateCharacter }) {
           <VitalsCard
             vitals={sheet.vitals}
             dexScore={sheet.abilities?.dex ?? 10}
+            conScore={sheet.abilities?.con ?? 10}
+            classes={character.classes || [{ className: character.className, level: character.level }]}
             isEditing={isEditingVitals}
             onUpdateVitals={(vitals) => updateSheet({ vitals })}
+            onShortRest={onShortRest}
           />
         </AccordionSection>
 

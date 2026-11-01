@@ -35,11 +35,18 @@ export function normalizeSpeeds(vitals = {}) {
  * Supports multiclass characters with distinct pools per die type.
  */
 export function normalizeHitDice(vitals = {}, character = {}) {
+  const existingDie = vitals?.hitDice?.die;
+  const fallbackClass = character?.className
+    || vitals?.hitDice?.classNames?.[0]
+    || (existingDie === 'd6' ? 'Wizard' : existingDie === 'd10' ? 'Fighter' : existingDie === 'd12' ? 'Barbarian' : 'Rogue');
+
+  const fallbackLevel = Math.max(1, Number(character?.level) || Number(vitals?.hitDice?.max) || 1);
+
   const classes = Array.isArray(character?.classes) && character.classes.length > 0
     ? character.classes
     : [{
-        className: character?.className || vitals?.hitDice?.classNames?.[0] || 'Wizard',
-        level: Math.max(1, Number(character?.level) || 1),
+        className: fallbackClass,
+        level: fallbackLevel,
       }];
 
   const targetPools = {};

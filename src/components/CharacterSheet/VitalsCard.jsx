@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3 } from 'lucide-react';
-import { getAbilityModifier, formatModifier } from '../../utils/dndCalculations';
-import { normalizeSpeeds } from '../../utils/storage';
+import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Sun, Sparkles } from 'lucide-react';
+import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
+import { normalizeSpeeds, normalizeHitDice } from '../../utils/storage';
 
 const OPTIONAL_SPEED_TYPES = [
   { key: 'climb', label: 'Climbing' },
@@ -10,7 +10,15 @@ const OPTIONAL_SPEED_TYPES = [
   { key: 'burrow', label: 'Burrowing' },
 ];
 
-export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, onUpdateVitals }) {
+export default function VitalsCard({
+  vitals,
+  dexScore = 10,
+  conScore = 10,
+  classes = [],
+  isEditing = false,
+  onUpdateVitals,
+  onShortRest,
+}) {
   const currentVitals = vitals || {
     hpCurrent: 10,
     hpMax: 10,
@@ -132,7 +140,7 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
       : []
     : [];
 
-  const hitDice = currentVitals.hitDice || { current: 1, max: 1, die: 'd6' };
+  const hitDice = normalizeHitDice(currentVitals, { classes });
   const deathSaves = currentVitals.deathSaves || { successes: 0, failures: 0 };
   const defenses = currentVitals.defenses || [];
 
@@ -239,14 +247,64 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
     });
   };
 
-  const changeHitDice = (delta) => {
-    const maxVal = hitDice.max || 1;
-    const next = Math.max(0, Math.min(maxVal, (hitDice.current || 0) + delta));
+  const handleRollHitDie = (dieKey) => {
+    const pool = hitDice.pools?.[dieKey];
+    if (!pool || pool.current <= 0) return;
+    if (hpCurrent >= effectiveMax) return;
+
+    const { roll, conMod, total } = rollHitDie(dieKey, conScore);
+    const newHp = Math.min(effectiveMax, hpCurrent + total);
+    const updatedPools = {
+      ...hitDice.pools,
+      [dieKey]: {
+        ...pool,
+        current: pool.current - 1,
+      },
+    };
+    let newTotalCurrent = 0;
+    for (const p of Object.values(updatedPools)) {
+      newTotalCurrent += p.current;
+    }
+
+    onUpdateVitals?.({
+      ...currentVitals,
+      hpCurrent: newHp,
+      hitDice: {
+        ...hitDice,
+        current: newTotalCurrent,
+        pools: updatedPools,
+      },
+    });
+  };
+
+  const changeHitDice = (dieKey, delta) => {
+    let actualKey = dieKey;
+    let actualDelta = delta;
+    if (typeof dieKey === 'number' && delta === undefined) {
+      actualDelta = dieKey;
+      actualKey = hitDice.die || Object.keys(hitDice.pools || {})[0] || 'd8';
+    }
+
+    const pool = hitDice.pools?.[actualKey] || { current: hitDice.current || 0, max: hitDice.max || 1 };
+    const nextCurrent = Math.max(0, Math.min(pool.max, (pool.current || 0) + actualDelta));
+    const updatedPools = {
+      ...(hitDice.pools || {}),
+      [actualKey]: {
+        ...pool,
+        current: nextCurrent,
+      },
+    };
+    let newTotalCurrent = 0;
+    for (const p of Object.values(updatedPools)) {
+      newTotalCurrent += p.current;
+    }
+
     onUpdateVitals?.({
       ...currentVitals,
       hitDice: {
         ...hitDice,
-        current: next,
+        current: newTotalCurrent,
+        pools: updatedPools,
       },
     });
   };
@@ -740,30 +798,60 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
       {/* Row 2: Compact Trackers Strip (Hit Dice, Death Saves, Inspiration) */}
       <div className="bg-dnd-card/60 border border-white/5 rounded-lg p-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
         {/* Hit Dice */}
-        <div className="flex-1 flex items-center justify-between sm:justify-start gap-2">
-          <span className="text-[10px] font-bold text-slate-400">
-            Hit Dice
-          </span>
-          <div className="flex items-center space-x-1.5">
-            <button
-              type="button"
-              aria-label="Spend Hit Die"
-              onClick={() => changeHitDice(-1)}
-              className="w-4 h-4 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              -
-            </button>
-            <span className="text-xs font-bold text-slate-200 min-w-[50px] text-center">
-              {hitDice.current ?? 1} / {hitDice.max ?? 1} {hitDice.die || 'd6'}
+        <div className="flex-1 flex flex-wrap items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-bold text-slate-400">
+              Hit Dice
             </span>
-            <button
-              type="button"
-              aria-label="Recover Hit Die"
-              onClick={() => changeHitDice(1)}
-              className="w-4 h-4 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              +
-            </button>
+            {onShortRest && (
+              <button
+                type="button"
+                onClick={onShortRest}
+                className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                title="Take a Short Rest"
+              >
+                <Sun size={10} className="text-amber-400" />
+                Rest
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
+              <div
+                key={dieKey}
+                className="flex items-center space-x-1 bg-dnd-panel/60 px-1.5 py-0.5 rounded border border-white/5"
+              >
+                <button
+                  type="button"
+                  aria-label={`Spend ${dieKey} Hit Die`}
+                  onClick={() => changeHitDice(dieKey, -1)}
+                  disabled={pool.current <= 0}
+                  className="w-4 h-4 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Roll ${dieKey}`}
+                  onClick={() => handleRollHitDie(dieKey)}
+                  disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
+                  className="px-1.5 py-0.5 rounded bg-dnd-gold/10 hover:bg-dnd-gold/20 text-dnd-gold disabled:opacity-40 text-[11px] font-bold font-mono transition-colors flex items-center gap-1 cursor-pointer"
+                  title={`Roll 1${dieKey} + CON mod (${getAbilityModifier(conScore) >= 0 ? '+' : ''}${getAbilityModifier(conScore)}) to heal`}
+                >
+                  <Sparkles size={10} />
+                  <span>{pool.current}/{pool.max} {dieKey}</span>
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Recover ${dieKey} Hit Die`}
+                  onClick={() => changeHitDice(dieKey, 1)}
+                  disabled={pool.current >= pool.max}
+                  className="w-4 h-4 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 

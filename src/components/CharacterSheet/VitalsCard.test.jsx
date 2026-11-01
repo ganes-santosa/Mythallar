@@ -91,7 +91,7 @@ describe('VitalsCard', () => {
     // Initiative with DEX 14 (+2 mod)
     expect(screen.getByText('+2')).toBeInTheDocument();
     expect(screen.getByText(/30\s*ft/i)).toBeInTheDocument();
-    expect(screen.getByText('5 / 8 d6')).toBeInTheDocument();
+    expect(screen.getByText(/5\/8 d6/)).toBeInTheDocument();
 
     // Death saves toggle
     const successBtn = screen.getByLabelText('Death Save Success 3');
@@ -488,5 +488,190 @@ describe('VitalsCard', () => {
         speeds: { walk: 30, swim: 40 },
       })
     );
+  });
+
+  describe('Hit Dice Rolling & Management', () => {
+    it('renders multiclass hit dice pools and allows rolling a hit die to heal HP live', () => {
+      const handleUpdate = vi.fn();
+      const multiclassVitals = {
+        ...mockVitals,
+        hpCurrent: 30,
+        hpMax: 50,
+        hpMaxBuff: 0,
+        hitDice: {
+          current: 5,
+          max: 5,
+          die: 'd8',
+          pools: {
+            d8: { current: 3, max: 3, classNames: ['Rogue'] },
+            d10: { current: 2, max: 2, classNames: ['Fighter'] },
+          },
+        },
+      };
+
+      render(
+        <VitalsCard
+          vitals={multiclassVitals}
+          conScore={14} // CON 14 (+2 mod)
+          classes={[
+            { className: 'Rogue', level: 3 },
+            { className: 'Fighter', level: 2 },
+          ]}
+          onUpdateVitals={handleUpdate}
+        />
+      );
+
+      // Both pools rendered
+      expect(screen.getByRole('button', { name: /Roll d8/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /Roll d10/i })).toBeInTheDocument();
+
+      // Click roll d8
+      const rollD8Btn = screen.getByRole('button', { name: /Roll d8/i });
+      fireEvent.click(rollD8Btn);
+
+      expect(handleUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          // hpCurrent should be healed (30 + at least 1)
+          hpCurrent: expect.any(Number),
+          hitDice: expect.objectContaining({
+            pools: expect.objectContaining({
+              d8: expect.objectContaining({ current: 2, max: 3 }),
+            }),
+          }),
+        })
+      );
+      const updatedHp = handleUpdate.mock.calls[0][0].hpCurrent;
+      expect(updatedHp).toBeGreaterThan(30);
+      expect(updatedHp).toBeLessThanOrEqual(50);
+    });
+
+    it('allows manual increment and decrement of hit dice without altering HP', () => {
+      const handleUpdate = vi.fn();
+      const singleClassVitals = {
+        ...mockVitals,
+        hpCurrent: 30,
+        hpMax: 50,
+        hitDice: {
+          current: 3,
+          max: 5,
+          die: 'd8',
+          pools: {
+            d8: { current: 3, max: 5, classNames: ['Rogue'] },
+          },
+        },
+      };
+
+      render(
+        <VitalsCard
+          vitals={singleClassVitals}
+          conScore={10}
+          classes={[{ className: 'Rogue', level: 5 }]}
+          onUpdateVitals={handleUpdate}
+        />
+      );
+
+      // Manual spend
+      const spendBtn = screen.getByLabelText('Spend d8 Hit Die');
+      fireEvent.click(spendBtn);
+      expect(handleUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hpCurrent: 30, // Unchanged
+          hitDice: expect.objectContaining({
+            current: 2,
+            pools: expect.objectContaining({
+              d8: expect.objectContaining({ current: 2, max: 5 }),
+            }),
+          }),
+        })
+      );
+
+      // Manual recover
+      const recoverBtn = screen.getByLabelText('Recover d8 Hit Die');
+      fireEvent.click(recoverBtn);
+      expect(handleUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          hpCurrent: 30, // Unchanged
+          hitDice: expect.objectContaining({
+            current: 4,
+            pools: expect.objectContaining({
+              d8: expect.objectContaining({ current: 4, max: 5 }),
+            }),
+          }),
+        })
+      );
+    });
+
+    it('disables roll button when HP is at effective max or pool is empty', () => {
+      const handleUpdate = vi.fn();
+      const fullHpVitals = {
+        ...mockVitals,
+        hpCurrent: 50,
+        hpMax: 50,
+        hpMaxBuff: 0,
+        hitDice: {
+          current: 5,
+          max: 5,
+          die: 'd8',
+          pools: {
+            d8: { current: 5, max: 5, classNames: ['Rogue'] },
+          },
+        },
+      };
+
+      const { rerender } = render(
+        <VitalsCard
+          vitals={fullHpVitals}
+          conScore={10}
+          classes={[{ className: 'Rogue', level: 5 }]}
+          onUpdateVitals={handleUpdate}
+        />
+      );
+
+      // Disabled because HP is full
+      const rollBtn = screen.getByRole('button', { name: /Roll d8/i });
+      expect(rollBtn).toBeDisabled();
+
+      // Rerender with empty pool and damaged HP
+      rerender(
+        <VitalsCard
+          vitals={{
+            ...fullHpVitals,
+            hpCurrent: 20,
+            hitDice: {
+              current: 0,
+              max: 5,
+              die: 'd8',
+              pools: {
+                d8: { current: 0, max: 5, classNames: ['Rogue'] },
+              },
+            },
+          }}
+          conScore={10}
+          classes={[{ className: 'Rogue', level: 5 }]}
+          onUpdateVitals={handleUpdate}
+        />
+      );
+
+      // Disabled because pool is 0
+      expect(screen.getByRole('button', { name: /Roll d8/i })).toBeDisabled();
+    });
+
+    it('invokes onShortRest when Rest button is clicked', () => {
+      const handleShortRest = vi.fn();
+      render(
+        <VitalsCard
+          vitals={mockVitals}
+          conScore={10}
+          classes={[{ className: 'Wizard', level: 5 }]}
+          onUpdateVitals={() => {}}
+          onShortRest={handleShortRest}
+        />
+      );
+
+      const restBtn = screen.getByRole('button', { name: /Rest/i });
+      expect(restBtn).toBeInTheDocument();
+      fireEvent.click(restBtn);
+      expect(handleShortRest).toHaveBeenCalledTimes(1);
+    });
   });
 });
