@@ -114,7 +114,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
         </div>
 
         {/* Scrollable Form */}
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+        <form noValidate onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
           {error && (
             <div className="p-2 rounded bg-red-500/20 text-red-300">
               {error}
@@ -135,7 +135,6 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
                 setError('');
               }}
               placeholder="e.g. Eldritch Nova"
-              required
               className="w-full bg-dnd-card rounded-lg px-3 py-2 text-slate-100 text-sm focus:outline-none focus:ring-1 focus:ring-white/20"
             />
           </div>
@@ -326,7 +325,6 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
               value={entriesText}
               onChange={(e) => setEntriesText(e.target.value)}
               placeholder="Describe the spell effects, damage, saves..."
-              required
               className="w-full bg-dnd-card rounded-lg p-2.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20 leading-relaxed"
             />
           </div>

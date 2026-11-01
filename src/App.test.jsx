@@ -83,7 +83,7 @@ describe('App End-to-End Integration', () => {
     fireEvent.click(sheetTab);
 
     // Character Sheet elements should now be visible
-    expect(screen.getByText('Combat Vitals & Formulations')).toBeInTheDocument();
+    expect(screen.getByText('Combat Stats')).toBeInTheDocument();
     expect(screen.getByText('Ability Scores & Saving Throws')).toBeInTheDocument();
 
     // Toggle back to Grimoire

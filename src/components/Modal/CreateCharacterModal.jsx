@@ -65,7 +65,7 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate }) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form noValidate onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="character-name-input" className="block text-xs font-semibold text-slate-300 mb-1.5">
               Character Name
@@ -74,7 +74,6 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate }) {
               id="character-name-input"
               type="text"
               autoFocus
-              required
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Gale of Waterdeep"

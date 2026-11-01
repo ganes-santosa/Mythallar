@@ -30,23 +30,70 @@ describe('AbilitiesCard', () => {
     expect(screen.getByText('Save -1')).toBeInTheDocument();
   });
 
-  it('allows toggling save proficiency', () => {
+  it('allows toggling save proficiency only when isEditing is true', () => {
     const handleUpdate = vi.fn();
-    render(<AbilitiesCard abilities={mockAbilities} level={10} onUpdateAbilities={handleUpdate} />);
-    const conToggle = screen.getByLabelText('Toggle CON save proficiency');
+    const { rerender } = render(
+      <AbilitiesCard
+        abilities={mockAbilities}
+        level={10}
+        isEditing={false}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+
+    // In view mode (isEditing=false), toggle button is disabled
+    const conToggle = screen.getByLabelText('CON save proficiency: not proficient');
+    expect(conToggle).toBeDisabled();
     fireEvent.click(conToggle);
-    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      saveProficiencies: expect.arrayContaining(['int', 'wis', 'con'])
-    }));
+    expect(handleUpdate).not.toHaveBeenCalled();
+
+    // In edit mode (isEditing=true), toggle button is enabled and triggers callback
+    rerender(
+      <AbilitiesCard
+        abilities={mockAbilities}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+    const conToggleEdit = screen.getByLabelText('Toggle CON save proficiency');
+    expect(conToggleEdit).not.toBeDisabled();
+    fireEvent.click(conToggleEdit);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        saveProficiencies: expect.arrayContaining(['int', 'wis', 'con']),
+      })
+    );
   });
 
-  it('allows editing ability score directly', () => {
+  it('allows editing ability score directly only when isEditing is true', () => {
     const handleUpdate = vi.fn();
-    render(<AbilitiesCard abilities={mockAbilities} level={10} onUpdateAbilities={handleUpdate} />);
+    const { rerender } = render(
+      <AbilitiesCard
+        abilities={mockAbilities}
+        level={10}
+        isEditing={false}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+
     const strInput = screen.getByDisplayValue('10');
+    expect(strInput).toHaveAttribute('readonly');
+
+    rerender(
+      <AbilitiesCard
+        abilities={mockAbilities}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+    expect(strInput).not.toHaveAttribute('readonly');
     fireEvent.change(strInput, { target: { value: '18' } });
-    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
-      str: 18,
-    }));
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        str: 18,
+      })
+    );
   });
 });

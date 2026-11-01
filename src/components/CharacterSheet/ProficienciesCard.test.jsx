@@ -20,9 +20,15 @@ describe('ProficienciesCard', () => {
     expect(screen.getByText('Elvish')).toBeInTheDocument();
   });
 
-  it('allows removing an existing proficiency chip', () => {
+  it('hides remove buttons and add buttons when isEditing is false', () => {
+    render(<ProficienciesCard proficiencies={mockProficiencies} isEditing={false} onUpdateProficiencies={() => {}} />);
+    expect(screen.queryByLabelText('Remove Elvish language')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Add armor proficiency')).not.toBeInTheDocument();
+  });
+
+  it('allows removing an existing proficiency chip when isEditing is true', () => {
     const handleUpdate = vi.fn();
-    render(<ProficienciesCard proficiencies={mockProficiencies} onUpdateProficiencies={handleUpdate} />);
+    render(<ProficienciesCard proficiencies={mockProficiencies} isEditing={true} onUpdateProficiencies={handleUpdate} />);
     const removeBtn = screen.getByLabelText('Remove Elvish language');
     fireEvent.click(removeBtn);
 
@@ -31,9 +37,9 @@ describe('ProficienciesCard', () => {
     }));
   });
 
-  it('allows adding a new chip to a category', () => {
+  it('allows adding a new chip to a category when isEditing is true', () => {
     const handleUpdate = vi.fn();
-    render(<ProficienciesCard proficiencies={mockProficiencies} onUpdateProficiencies={handleUpdate} />);
+    render(<ProficienciesCard proficiencies={mockProficiencies} isEditing={true} onUpdateProficiencies={handleUpdate} />);
 
     const openAddBtn = screen.getByLabelText('Add armor proficiency');
     fireEvent.click(openAddBtn);
@@ -47,5 +53,13 @@ describe('ProficienciesCard', () => {
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
       armor: expect.arrayContaining(['Light Armor', 'Medium Armor', 'Shields']),
     }));
+
+    // Form stays persistent after submit
+    expect(screen.getByPlaceholderText('e.g. Shields')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('e.g. Shields').value).toBe('');
+
+    // Clicking outside closes the form
+    fireEvent.pointerDown(document.body);
+    expect(screen.queryByPlaceholderText('e.g. Shields')).not.toBeInTheDocument();
   });
 });

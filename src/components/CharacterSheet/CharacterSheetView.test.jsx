@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import CharacterSheetView from './CharacterSheetView';
 
@@ -16,7 +16,8 @@ describe('CharacterSheetView', () => {
         hpTemp: 69,
         ac: 20,
         acFormula: '17 + 2 + 1',
-        conditions: { exhaustion: 0, inspiration: true, heroicInspiration: false },
+        inspiration: 1,
+        conditions: [],
       },
       abilities: {
         str: 19,
@@ -73,7 +74,8 @@ describe('CharacterSheetView', () => {
     // Header info
     expect(screen.getByText('Sahazad Nazir')).toBeInTheDocument();
     expect(screen.getByText(/Wizard \(Level 19\)/i)).toBeInTheDocument();
-    expect(screen.getByText('Proficiency +6')).toBeInTheDocument();
+    expect(screen.getByText(/Proficiency/i)).toBeInTheDocument();
+    expect(screen.getByText('+6')).toBeInTheDocument();
 
     // Identity metadata
     expect(screen.getByDisplayValue('Half-Elf')).toBeInTheDocument();
@@ -89,7 +91,7 @@ describe('CharacterSheetView', () => {
     expect(screen.getByText('Light Armor')).toBeInTheDocument();
 
     // Vitals Card
-    expect(screen.getByLabelText('Current HP')).toHaveValue(184);
+    expect(screen.getAllByText('184').length).toBeGreaterThanOrEqual(1);
 
     // Abilities Card
     expect(screen.getByText('Save +11')).toBeInTheDocument();
@@ -99,6 +101,62 @@ describe('CharacterSheetView', () => {
 
     // Items Card
     expect(screen.getByText('The Tuvala Sundial')).toBeInTheDocument();
+  });
+
+  it('allows collapsing and expanding accordion sections', () => {
+    render(<CharacterSheetView character={mockCharacter} onUpdateCharacter={() => {}} />);
+
+    const vitalsToggle = screen.getByLabelText('Collapse Combat Stats');
+    expect(vitalsToggle).toBeInTheDocument();
+
+    fireEvent.click(vitalsToggle);
+    expect(screen.getByLabelText('Expand Combat Stats')).toBeInTheDocument();
+  });
+
+  it('toggles editing mode for abilities and skills via header buttons', () => {
+    render(<CharacterSheetView character={mockCharacter} onUpdateCharacter={() => {}} />);
+
+    // Ability scores edit toggle
+    const editAbilitiesBtn = screen.getByLabelText('Edit abilities');
+    expect(editAbilitiesBtn).toBeInTheDocument();
+    fireEvent.click(editAbilitiesBtn);
+
+    const doneAbilitiesBtn = screen.getByLabelText('Done editing abilities');
+    expect(doneAbilitiesBtn).toBeInTheDocument();
+    fireEvent.click(doneAbilitiesBtn);
+    expect(screen.getByLabelText('Edit abilities')).toBeInTheDocument();
+
+    // Skills edit toggle
+    const editSkillsBtn = screen.getByLabelText('Edit skills');
+    expect(editSkillsBtn).toBeInTheDocument();
+    fireEvent.click(editSkillsBtn);
+
+    const doneSkillsBtn = screen.getByLabelText('Done editing skills');
+    expect(doneSkillsBtn).toBeInTheDocument();
+    fireEvent.click(doneSkillsBtn);
+    expect(screen.getByLabelText('Edit skills')).toBeInTheDocument();
+
+    // Proficiencies edit toggle
+    const editProficienciesBtn = screen.getByLabelText('Edit proficiencies');
+    expect(editProficienciesBtn).toBeInTheDocument();
+    fireEvent.click(editProficienciesBtn);
+
+    const doneProficienciesBtn = screen.getByLabelText('Done editing proficiencies');
+    expect(doneProficienciesBtn).toBeInTheDocument();
+    fireEvent.click(doneProficienciesBtn);
+    expect(screen.getByLabelText('Edit proficiencies')).toBeInTheDocument();
+
+    // Combat Vitals edit toggle
+    const editVitalsBtn = screen.getByLabelText('Edit vitals');
+    expect(editVitalsBtn).toBeInTheDocument();
+    fireEvent.click(editVitalsBtn);
+
+    const doneVitalsBtn = screen.getByLabelText('Done editing vitals');
+    expect(doneVitalsBtn).toBeInTheDocument();
+    expect(screen.getByLabelText('Current HP')).toHaveValue(184);
+    expect(screen.getByLabelText('Max HP Buff')).toBeInTheDocument();
+    fireEvent.click(doneVitalsBtn);
+    expect(screen.getByLabelText('Edit vitals')).toBeInTheDocument();
   });
 
   it('renders fallback when no character is selected', () => {

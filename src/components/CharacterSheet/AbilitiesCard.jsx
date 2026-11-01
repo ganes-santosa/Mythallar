@@ -15,7 +15,7 @@ const ABILITIES = [
   { key: 'cha', label: 'CHA' },
 ];
 
-export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
+export default function AbilitiesCard({ abilities, level, isEditing = false, onUpdateAbilities }) {
   const currentAbilities = abilities || {
     str: 10,
     dex: 10,
@@ -32,6 +32,7 @@ export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
   const profBonus = getProficiencyBonus(safeLevel);
 
   const handleScoreChange = (key, value) => {
+    if (!isEditing) return;
     onUpdateAbilities?.({
       ...currentAbilities,
       [key]: Number(value),
@@ -39,6 +40,7 @@ export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
   };
 
   const toggleSaveProficiency = (key) => {
+    if (!isEditing) return;
     const hasProf = saveProficiencies.includes(key);
     const nextProf = hasProf
       ? saveProficiencies.filter((k) => k !== key)
@@ -51,17 +53,8 @@ export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
   };
 
   return (
-    <div className="rounded-lg bg-dnd-card p-3 border border-white/5 shadow-sm space-y-2">
-      <div className="flex items-center justify-between text-xs font-semibold text-dnd-pewter uppercase tracking-wider">
-        <div className="flex items-center space-x-2">
-          <span>Ability Scores & Saving Throws</span>
-          <span className="text-[10px] px-1.5 py-0.2 rounded bg-green-500/15 text-green-300 normal-case font-normal">
-            Proficiency +{profBonus} (Level {safeLevel})
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
+    <div className="space-y-2">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center p-1">
         {ABILITIES.map(({ key, label }) => {
           const score = currentAbilities[key] ?? 10;
           const mod = getAbilityModifier(score);
@@ -71,23 +64,34 @@ export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
           return (
             <div
               key={key}
-              className={`p-2 rounded border relative flex flex-col justify-between transition-all ${
+              className={`p-2 rounded-lg relative flex flex-col justify-between transition-all shadow-sm ${
                 isProf
-                  ? 'bg-dnd-panel/95 border-dnd-gold/30 ring-1 ring-dnd-gold/20'
-                  : 'bg-dnd-panel/80 border-white/5'
+                  ? 'bg-dnd-card ring-1 ring-dnd-gold/40'
+                  : 'bg-dnd-card'
               }`}
             >
               {/* Proficiency toggle dot */}
               <button
                 type="button"
-                aria-label={`Toggle ${label} save proficiency`}
-                title={`Toggle ${label} saving throw proficiency`}
-                onClick={() => toggleSaveProficiency(key)}
+                disabled={!isEditing}
+                aria-label={
+                  isEditing
+                    ? `Toggle ${label} save proficiency`
+                    : `${label} save proficiency: ${isProf ? 'proficient' : 'not proficient'}`
+                }
+                title={
+                  isEditing
+                    ? `Toggle ${label} saving throw proficiency`
+                    : `${label} saving throw: ${isProf ? 'Proficient' : 'Not proficient'}`
+                }
+                onClick={isEditing ? () => toggleSaveProficiency(key) : undefined}
                 className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full transition-all ${
                   isProf
                     ? 'bg-dnd-gold shadow-[0_0_6px_rgba(224,168,56,0.8)]'
-                    : 'bg-white/10 hover:bg-white/30'
-                }`}
+                    : isEditing
+                    ? 'bg-dnd-panel hover:bg-white/30 cursor-pointer'
+                    : 'opacity-0 cursor-default'
+                } ${isEditing ? 'cursor-pointer' : 'cursor-default'}`}
               />
 
               <div
@@ -98,13 +102,19 @@ export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
                 {label}
               </div>
 
-              <div className="my-1">
+              <div className="my-1 flex items-center justify-center">
                 <input
                   type="number"
+                  readOnly={!isEditing}
+                  tabIndex={isEditing ? 0 : -1}
                   aria-label={`${label} Score`}
                   value={score}
-                  onChange={(e) => handleScoreChange(key, e.target.value)}
-                  className="w-12 text-center text-base sm:text-lg font-bold text-slate-100 bg-black/20 rounded border border-white/5 focus:outline-none focus:border-dnd-gold/60"
+                  onChange={isEditing ? (e) => handleScoreChange(key, e.target.value) : undefined}
+                  className={`w-12 text-center text-base sm:text-lg font-bold text-slate-100 rounded-md transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none focus:outline-none ${
+                    isEditing
+                      ? 'bg-dnd-panel focus:ring-1 focus:ring-white/20 pointer-events-auto'
+                      : 'bg-transparent cursor-default select-none pointer-events-none focus:ring-0'
+                  }`}
                 />
               </div>
 
@@ -115,7 +125,7 @@ export default function AbilitiesCard({ abilities, level, onUpdateAbilities }) {
               <div
                 className={`mt-1 pt-1 border-t text-[11px] font-medium ${
                   isProf
-                    ? 'border-white/10 text-dnd-gold font-bold'
+                    ? 'border-dnd-gold/20 text-dnd-gold font-bold'
                     : 'border-white/5 text-slate-300'
                 }`}
               >

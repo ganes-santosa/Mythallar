@@ -4,14 +4,20 @@ import { Plus, X, RotateCcw } from 'lucide-react';
 export default function ResourcesCard({
   trackedResources = [],
   featuresNotes = '',
+  isAdding: externalIsAdding,
+  onSetIsAdding,
+  hideHeaderActions = false,
   onUpdateResources,
   onUpdateNotes,
 }) {
-  const [isAdding, setIsAdding] = useState(false);
+  const [internalIsAdding, setInternalIsAdding] = useState(false);
+  const isAdding = externalIsAdding !== undefined ? externalIsAdding : internalIsAdding;
+  const setIsAdding = onSetIsAdding || setInternalIsAdding;
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceMax, setNewResourceMax] = useState('3');
   const [newResourceReset, setNewResourceReset] = useState('LR');
   const [newResourceNote, setNewResourceNote] = useState('');
+  const [nameError, setNameError] = useState(false);
 
   const handleStep = (id, delta) => {
     const updated = (trackedResources || []).map((res) => {
@@ -32,7 +38,10 @@ export default function ResourcesCard({
 
   const handleSaveResource = (e) => {
     e.preventDefault();
-    if (!newResourceName.trim()) return;
+    if (!newResourceName.trim()) {
+      setNameError(true);
+      return;
+    }
 
     const maxVal = Math.max(1, Number(newResourceMax) || 1);
     const newRes = {
@@ -49,6 +58,7 @@ export default function ResourcesCard({
     setNewResourceMax('3');
     setNewResourceReset('LR');
     setNewResourceNote('');
+    setNameError(false);
     setIsAdding(false);
   };
 
@@ -58,43 +68,49 @@ export default function ResourcesCard({
   };
 
   return (
-    <div className="rounded-lg bg-dnd-card p-3 border border-white/5 shadow-sm space-y-2">
-      <div className="flex items-center justify-between text-xs font-semibold text-dnd-pewter uppercase tracking-wider">
-        <span>Features, Feats & Tracked Resources</span>
-        <div className="flex items-center space-x-2">
-          {trackedResources && trackedResources.length > 0 && (
+    <div className="space-y-2">
+      {/* Header action bar (fallback when not mounted in AccordionSection) */}
+      {!hideHeaderActions && (
+        <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">
+          <div className="flex items-center space-x-2">
+            {trackedResources && trackedResources.length > 0 && (
+              <button
+                type="button"
+                onClick={handleResetAll}
+                aria-label="Reset all resources"
+                title="Reset all resources to max"
+                className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center space-x-1"
+              >
+                <RotateCcw size={11} />
+                <span>Reset</span>
+              </button>
+            )}
             <button
               type="button"
-              onClick={handleResetAll}
-              aria-label="Reset all resources"
-              title="Reset all resources to max"
-              className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center space-x-1"
+              onClick={() => setIsAdding(!isAdding)}
+              className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-medium"
             >
-              <RotateCcw size={11} />
-              <span>Reset</span>
+              + Add Tracked Resource
             </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setIsAdding(!isAdding)}
-            className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-medium"
-          >
-            + Add Tracked Resource
-          </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Add resource inline drawer */}
       {isAdding && (
         <form
+          noValidate
           onSubmit={handleSaveResource}
-          className="p-2.5 rounded bg-dnd-panel/95 border border-dnd-gold/30 space-y-2 text-xs"
+          className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30"
         >
           <div className="flex items-center justify-between">
             <span className="font-bold text-dnd-gold text-[11px]">New Tracked Resource</span>
             <button
               type="button"
-              onClick={() => setIsAdding(false)}
+              onClick={() => {
+                setNameError(false);
+                setIsAdding(false);
+              }}
               className="text-slate-400 hover:text-white"
             >
               <X size={13} />
@@ -102,18 +118,29 @@ export default function ResourcesCard({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div>
-              <label htmlFor="res-name" className="block text-[10px] text-slate-400 mb-0.5">
-                Resource Name
-              </label>
+              <div className="flex items-center justify-between mb-0.5">
+                <label htmlFor="res-name" className="block text-[10px] text-slate-400">
+                  Resource Name
+                </label>
+                {nameError && (
+                  <span className="text-[9px] text-red-400 font-semibold">Name required</span>
+                )}
+              </div>
               <input
                 id="res-name"
                 aria-label="Resource Name"
                 type="text"
                 placeholder="e.g. Chronal Shift"
                 value={newResourceName}
-                onChange={(e) => setNewResourceName(e.target.value)}
-                required
-                className="w-full px-2 py-1 rounded bg-black/30 border border-white/10 text-slate-200 text-xs focus:outline-none focus:border-dnd-gold"
+                onChange={(e) => {
+                  setNewResourceName(e.target.value);
+                  if (nameError) setNameError(false);
+                }}
+                className={`w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none transition-colors ${
+                  nameError
+                    ? 'border border-red-500/60 ring-1 ring-red-500/40'
+                    : 'focus:ring-1 focus:ring-white/20'
+                }`}
               />
             </div>
             <div>
@@ -127,8 +154,7 @@ export default function ResourcesCard({
                 min="1"
                 value={newResourceMax}
                 onChange={(e) => setNewResourceMax(e.target.value)}
-                required
-                className="w-full px-2 py-1 rounded bg-black/30 border border-white/10 text-slate-200 text-xs focus:outline-none focus:border-dnd-gold"
+                className="w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
             <div>
@@ -140,7 +166,7 @@ export default function ResourcesCard({
                 aria-label="Reset Timing"
                 value={newResourceReset}
                 onChange={(e) => setNewResourceReset(e.target.value)}
-                className="w-full px-2 py-1 rounded bg-black/30 border border-white/10 text-slate-200 text-xs focus:outline-none focus:border-dnd-gold"
+                className="w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
               >
                 <option value="LR">Long Rest</option>
                 <option value="SR">Short Rest</option>
@@ -152,7 +178,7 @@ export default function ResourcesCard({
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/10 text-slate-300 text-xs"
+              className="px-2.5 py-1 rounded bg-dnd-panel text-slate-300 text-xs hover:text-white"
             >
               Cancel
             </button>
@@ -172,7 +198,7 @@ export default function ResourcesCard({
           {trackedResources.map((res) => (
             <div
               key={res.id}
-              className="bg-dnd-panel/90 p-2 rounded border border-white/5 flex items-center justify-between group"
+              className="bg-dnd-card p-2 rounded-lg flex items-center justify-between group shadow-sm"
             >
               <div className="min-w-0 pr-1">
                 <div className="text-[11px] font-semibold text-slate-200 truncate">{res.name}</div>
@@ -180,7 +206,7 @@ export default function ResourcesCard({
                   {res.resetOn ? `Recovers @ ${res.resetOn}` : ''}
                 </div>
               </div>
-              <div className="flex items-center space-x-1 font-bold text-dnd-gold text-xs bg-black/30 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0">
+              <div className="flex items-center space-x-1 font-bold text-dnd-gold text-xs bg-dnd-panel px-1.5 py-0.5 rounded-md flex-shrink-0">
                 <button
                   type="button"
                   aria-label={`Decrement ${res.name}`}
@@ -227,7 +253,7 @@ export default function ResourcesCard({
           value={featuresNotes || ''}
           onChange={(e) => onUpdateNotes?.(e.target.value)}
           rows={4}
-          className="w-full p-2 rounded bg-dnd-panel/60 border border-white/5 text-xs text-slate-200 font-mono leading-relaxed placeholder-slate-500 focus:outline-none focus:border-dnd-gold/40 custom-scroll resize-y"
+          className="w-full p-2.5 rounded-lg bg-dnd-card text-xs text-slate-200 leading-relaxed placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 custom-scroll resize-y shadow-sm"
         />
       </div>
     </div>

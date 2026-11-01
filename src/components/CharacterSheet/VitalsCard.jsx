@@ -272,7 +272,7 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
   return (
     <div className="space-y-2.5 p-0.5">
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[12fr_6fr_6fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[11fr_5fr_8fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 lg:col-span-1">
