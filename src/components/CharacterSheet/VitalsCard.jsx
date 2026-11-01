@@ -662,15 +662,28 @@ export default function VitalsCard({ vitals, dexScore = 10, isEditing = false, o
                   className="flex items-center gap-1 text-[11px] bg-dnd-panel/60 border border-white/5 rounded px-1.5 py-0.5 text-slate-200 whitespace-nowrap"
                 >
                   <span className="text-slate-400 text-[10px]">{label}:</span>
-                  <span className="font-bold text-slate-100">{speeds[key]} ft</span>
-                  <button
-                    type="button"
-                    aria-label={`Remove ${label} speed`}
-                    onClick={() => handleUpdateSpeed(key, null)}
-                    className="ml-0.5 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
-                  >
-                    <X size={10} />
-                  </button>
+                  {isEditing ? (
+                    <div className="flex items-center gap-1">
+                      <input
+                        type="number"
+                        aria-label={`${label} Speed`}
+                        value={speeds[key]}
+                        onChange={(e) => handleUpdateSpeed(key, Number(e.target.value))}
+                        className="w-10 px-1 py-0.5 rounded bg-dnd-panel text-[11px] font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
+                      />
+                      <span className="font-bold text-slate-100 text-[10px]">ft</span>
+                      <button
+                        type="button"
+                        aria-label={`Remove ${label} speed`}
+                        onClick={() => handleUpdateSpeed(key, null)}
+                        className="ml-0.5 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="font-bold text-slate-100">{speeds[key]} ft</span>
+                  )}
                 </div>
               ))}
               {OPTIONAL_SPEED_TYPES.every((t) => speeds[t.key] === undefined) && !isAddingSpeed && (

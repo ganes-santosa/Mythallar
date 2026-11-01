@@ -424,7 +424,7 @@ describe('VitalsCard', () => {
 
   it('renders walking speed and allows adding and removing optional secondary movement modes', () => {
     const onUpdateVitals = vi.fn();
-    render(
+    const { rerender } = render(
       <VitalsCard
         vitals={{ ...mockVitals, speeds: { walk: 30, fly: 60 } }}
         onUpdateVitals={onUpdateVitals}
@@ -436,6 +436,18 @@ describe('VitalsCard', () => {
     expect(screen.getByText('Walking')).toBeInTheDocument();
     expect(screen.getByText('Flying:')).toBeInTheDocument();
     expect(screen.getByText('60 ft')).toBeInTheDocument();
+
+    // In normal view (isEditing: false), remove buttons should NOT be present
+    expect(screen.queryByLabelText('Remove Flying speed')).not.toBeInTheDocument();
+
+    // Rerender with isEditing: true
+    rerender(
+      <VitalsCard
+        vitals={{ ...mockVitals, speeds: { walk: 30, fly: 60 } }}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={true}
+      />
+    );
 
     // Remove flying speed
     const removeFlyBtn = screen.getByLabelText('Remove Flying speed');
