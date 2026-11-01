@@ -8,8 +8,11 @@ import {
   saveHomebrewSpells,
   loadAppSettings,
   saveAppSettings,
+  normalizeHitDice,
+  recoverHitDiceOnLongRest,
 } from './utils/storage';
 import { getEffectiveMaxSlots, isWizardCharacter } from './utils/spellSlots';
+import { getAbilityModifier, formatModifier, rollHitDie } from './utils/dndCalculations';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
 import { useSpellFilter } from './hooks/useSpellFilter';
 import { getSupabase, signInWithGoogle, signOut } from './utils/supabase';
@@ -27,6 +30,7 @@ import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
 import CharacterHeader from './components/Header/CharacterHeader';
 import SettingsModal from './components/Header/SettingsModal';
 import CreateCharacterModal from './components/Modal/CreateCharacterModal';
+import ShortRestModal from './components/Modal/ShortRestModal';
 import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
@@ -57,6 +61,7 @@ export default function App() {
   // --- Homebrew Spells State ---
   const [homebrewSpells, setHomebrewSpells] = useState(() => loadHomebrewSpells());
   const [isHomebrewSpellModalOpen, setIsHomebrewSpellModalOpen] = useState(false);
+  const [isShortRestOpen, setIsShortRestOpen] = useState(false);
 
   useEffect(() => {
     saveHomebrewSpells(homebrewSpells);
@@ -744,32 +749,148 @@ export default function App() {
   const handleLongRest = useCallback(() => {
     slotBaselinesRef.current = {};
     if (!activeCharacter) return;
+
+    let updatedSheet = activeCharacter.sheet;
+    if (activeCharacter.sheet?.vitals) {
+      const vitals = activeCharacter.sheet.vitals;
+      const baseMax = Number.isFinite(vitals.hpMax) ? vitals.hpMax : 10;
+      const hpMaxBuff = Number.isFinite(vitals.hpMaxBuff) ? vitals.hpMaxBuff : 0;
+      const effectiveMax = Math.max(1, baseMax + hpMaxBuff);
+
+      const normHitDice = normalizeHitDice(vitals, activeCharacter);
+      const recoveredHitDice = recoverHitDiceOnLongRest(normHitDice, activeCharacter.level || 1);
+
+      updatedSheet = {
+        ...activeCharacter.sheet,
+        vitals: {
+          ...vitals,
+          hpCurrent: effectiveMax,
+          hpTemp: 0,
+          deathSaves: { successes: 0, failures: 0 },
+          hitDice: recoveredHitDice,
+        },
+      };
+    }
+
     updateActiveCharacter({
       ...activeCharacter,
+      sheet: updatedSheet,
       slotsUsed: {},
       pactSlotsUsed: 0,
       arcaneRecoveryUsed: false,
     });
-    showToast('Long Rest completed: All spell slots restored!', 'success');
+    showToast('Long Rest completed: HP, Hit Dice, and Spell Slots restored!', 'success');
   }, [activeCharacter, updateActiveCharacter, showToast]);
 
   const handleShortRest = useCallback(() => {
-    slotBaselinesRef.current = {};
-    if (!activeCharacter) return;
-    const classes = activeCharacter.classes || [{ className: activeCharacter.className, level: activeCharacter.level }];
-    const hasWarlock = classes.some((c) => c.className === 'Warlock');
-    if (hasWarlock || activeCharacter.className === 'Warlock') {
+    setIsShortRestOpen(true);
+  }, []);
+
+  const handleRollHitDie = useCallback(
+    (dieKey, manualRoll) => {
+      if (!activeCharacter?.sheet?.vitals) return;
+      const vitals = activeCharacter.sheet.vitals;
+      const normHitDice = normalizeHitDice(vitals, activeCharacter);
+      const pool = normHitDice.pools?.[dieKey];
+      if (!pool || pool.current <= 0) return;
+
+      const baseMax = Number.isFinite(vitals.hpMax) ? vitals.hpMax : 10;
+      const hpMaxBuff = Number.isFinite(vitals.hpMaxBuff) ? vitals.hpMaxBuff : 0;
+      const effectiveMax = Math.max(1, baseMax + hpMaxBuff);
+      const currentHp = Number.isFinite(vitals.hpCurrent) ? vitals.hpCurrent : 10;
+      if (currentHp >= effectiveMax) return;
+
+      const conScore = activeCharacter.sheet?.abilities?.con ?? 10;
+      const conMod = getAbilityModifier(conScore);
+      let rollValue;
+      if (typeof manualRoll === 'number' && !isNaN(manualRoll) && manualRoll > 0) {
+        rollValue = manualRoll;
+      } else {
+        const sides = parseInt(dieKey.replace(/\D/g, ''), 10) || 8;
+        rollValue = Math.floor(Math.random() * sides) + 1;
+      }
+      const healedAmount = Math.max(1, rollValue + conMod);
+      const nextHp = Math.min(effectiveMax, currentHp + healedAmount);
+
+      const nextPools = {
+        ...normHitDice.pools,
+        [dieKey]: {
+          ...pool,
+          current: pool.current - 1,
+        },
+      };
+      let totalCurrent = 0;
+      for (const p of Object.values(nextPools)) {
+        totalCurrent += p.current;
+      }
+
       updateActiveCharacter({
         ...activeCharacter,
-        pactSlotsUsed: 0,
-        // Also restore standard slots if pure Warlock without pactSlotsUsed yet
-        slotsUsed: activeCharacter.className === 'Warlock' ? {} : activeCharacter.slotsUsed,
+        sheet: {
+          ...activeCharacter.sheet,
+          vitals: {
+            ...vitals,
+            hpCurrent: nextHp,
+            hitDice: {
+              ...normHitDice,
+              current: totalCurrent,
+              pools: nextPools,
+            },
+          },
+        },
       });
-      showToast('Short Rest completed: Pact Magic slots restored!', 'success');
-    } else {
-      showToast('Short Rest completed.', 'info');
-    }
-  }, [activeCharacter, updateActiveCharacter, showToast]);
+      showToast(`Regained ${nextHp - currentHp} HP! (Rolled ${rollValue} ${formatModifier(conMod)})`, 'success');
+    },
+    [activeCharacter, updateActiveCharacter, showToast]
+  );
+
+  const handleCompleteShortRest = useCallback(
+    (stagedRecovery = {}) => {
+      slotBaselinesRef.current = {};
+      if (!activeCharacter) return;
+
+      let nextUsed = { ...(activeCharacter.slotsUsed || {}) };
+      let arcaneUsed = activeCharacter.arcaneRecoveryUsed;
+
+      if (Object.keys(stagedRecovery).length > 0) {
+        for (const [lvl, count] of Object.entries(stagedRecovery)) {
+          const numLvl = Number(lvl);
+          const numCount = Number(count) || 0;
+          const currentExpended = nextUsed[numLvl] || 0;
+          const nextExpended = Math.max(0, currentExpended - numCount);
+          if (nextExpended === 0) {
+            delete nextUsed[numLvl];
+          } else {
+            nextUsed[numLvl] = nextExpended;
+          }
+        }
+        arcaneUsed = true;
+      }
+
+      const classes = activeCharacter.classes || [{ className: activeCharacter.className, level: activeCharacter.level }];
+      const hasWarlock = classes.some((c) => c.className === 'Warlock');
+      const isPureWarlock = activeCharacter.className === 'Warlock';
+
+      let nextPactUsed = activeCharacter.pactSlotsUsed || 0;
+      if (hasWarlock || isPureWarlock) {
+        nextPactUsed = 0;
+        if (isPureWarlock) {
+          nextUsed = {};
+        }
+      }
+
+      updateActiveCharacter({
+        ...activeCharacter,
+        slotsUsed: nextUsed,
+        pactSlotsUsed: nextPactUsed,
+        arcaneRecoveryUsed: arcaneUsed,
+      });
+
+      setIsShortRestOpen(false);
+      showToast('Short Rest completed!', 'success');
+    },
+    [activeCharacter, updateActiveCharacter, showToast]
+  );
 
   const handleArcaneRecovery = useCallback(
     (recoveredByLevel) => {
@@ -996,6 +1117,7 @@ export default function App() {
             <CharacterSheetView
               character={activeCharacter}
               onUpdateCharacter={updateActiveCharacter}
+              onShortRest={handleShortRest}
             />
           ) : (
             <>
@@ -1150,6 +1272,22 @@ export default function App() {
         isOpen={isHomebrewSpellModalOpen}
         onClose={() => setIsHomebrewSpellModalOpen(false)}
         onSave={handleSaveHomebrewSpell}
+      />
+
+      {/* Short Rest Modal */}
+      <ShortRestModal
+        isOpen={isShortRestOpen}
+        onClose={() => setIsShortRestOpen(false)}
+        character={activeCharacter}
+        effectiveSlots={activeCharacter ? getEffectiveMaxSlots(
+          activeCharacter.className,
+          activeCharacter.level,
+          activeCharacter.customSlots,
+          activeCharacter
+        ) : {}}
+        slotsUsed={activeCharacter?.slotsUsed || {}}
+        onRollHitDie={handleRollHitDie}
+        onCompleteShortRest={handleCompleteShortRest}
       />
 
       {/* Settings & Theme Modal */}

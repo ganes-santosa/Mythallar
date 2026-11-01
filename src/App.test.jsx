@@ -412,4 +412,68 @@ describe('App End-to-End Integration', () => {
     fireEvent.click(screen.getByText('The Weave'));
     expect(container.querySelector('[data-testid="theme-bg-celestial"]')).toBeInTheDocument();
   });
+
+  it('opens Short Rest modal, allows rolling hit dice to restore HP, and completes rest', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    // Switch to sheet view
+    fireEvent.click(screen.getByRole('button', { name: /Character Sheet/i }));
+
+    // Damage character HP first
+    const dmgInput = screen.getByLabelText('Amount');
+    fireEvent.change(dmgInput, { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Damage' }));
+
+    // Click Rest button in Hit Dice tracker
+    const restBtn = screen.getByRole('button', { name: /^Rest$/i });
+    fireEvent.click(restBtn);
+
+    // Short Rest modal is open
+    expect(screen.getByRole('heading', { name: /Short Rest/i })).toBeInTheDocument();
+
+    // Roll hit die
+    const rollBtn = screen.getByRole('button', { name: /Roll 1d6/i });
+    fireEvent.click(rollBtn);
+
+    // Finish Short Rest
+    const finishBtn = screen.getByRole('button', { name: /Finish Short Rest/i });
+    fireEvent.click(finishBtn);
+
+    // Modal closed
+    expect(screen.queryByRole('heading', { name: /Short Rest/i })).not.toBeInTheDocument();
+  });
+
+  it('recovers spent hit dice and restores full HP on Long Rest', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    // Switch to sheet view
+    fireEvent.click(screen.getByRole('button', { name: /Character Sheet/i }));
+
+    // Damage HP
+    const dmgInput = screen.getByLabelText('Amount');
+    fireEvent.change(dmgInput, { target: { value: '5' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Damage' }));
+
+    // Spend a hit die manually
+    const spendBtn = screen.getByLabelText(/Spend d6 Hit Die/i);
+    fireEvent.click(spendBtn);
+
+    // Trigger Long Rest
+    const longRestBtn = screen.getByRole('button', { name: /Long Rest/i });
+    fireEvent.click(longRestBtn);
+    const confirmBtn = screen.getByLabelText(/Confirm Long Rest/i);
+    fireEvent.click(confirmBtn);
+
+    // Current HP should be fully restored
+    const hpInput = screen.getByLabelText('Current HP');
+    expect(hpInput.value).toBe('10');
+  });
 });

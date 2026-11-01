@@ -195,8 +195,8 @@ export default function SpellSlotTracker({
               <button
                 type="button"
                 aria-label="Short Rest Arcane Recovery"
-                onClick={() => setShowArcaneModal(true)}
-                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs"
+                onClick={onShortRest}
+                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
                 title="Short Rest (Arcane Recovery)"
               >
                 <Sun size={12} className="mr-1 text-amber-400" />
@@ -205,16 +205,12 @@ export default function SpellSlotTracker({
             ) : (
               <button
                 type="button"
-                aria-label={shortRestArmed ? 'Click again to confirm Short Rest' : 'Short Rest'}
-                onClick={handleShortRestClick}
-                className={`flex items-center px-2 py-0.5 rounded transition-colors font-medium text-xs ${
-                  shortRestArmed
-                    ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
-                    : 'bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100'
-                }`}
-                title={shortRestArmed ? 'Click again to confirm Short Rest' : 'Short Rest'}
+                aria-label="Short Rest"
+                onClick={onShortRest}
+                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
+                title="Short Rest"
               >
-                <Sun size={12} className={`mr-1 ${shortRestArmed ? 'text-green-400' : 'text-amber-400'}`} />
+                <Sun size={12} className="mr-1 text-amber-400" />
                 Short Rest
               </button>
             )}

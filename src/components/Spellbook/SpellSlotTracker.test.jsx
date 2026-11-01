@@ -285,8 +285,8 @@ describe('SpellSlotTracker', () => {
     expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
   });
 
-  it('opens Arcane Recovery modal on Short Rest click for Wizard characters', () => {
-    const handleArcane = vi.fn();
+  it('triggers onShortRest on Short Rest click for Wizard characters', () => {
+    const handleShortRest = vi.fn();
     render(
       <SpellSlotTracker
         character={mockCharacter}
@@ -294,8 +294,7 @@ describe('SpellSlotTracker', () => {
         onRestoreSlot={vi.fn()}
         onUpdateMaxSlot={vi.fn()}
         onLongRest={vi.fn()}
-        onShortRest={vi.fn()}
-        onArcaneRecovery={handleArcane}
+        onShortRest={handleShortRest}
       />
     );
 
@@ -304,9 +303,7 @@ describe('SpellSlotTracker', () => {
     expect(shortRestBtn).toHaveClass('text-amber-200/80');
     expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
     fireEvent.click(shortRestBtn);
-
-    expect(screen.getByText(/Arcane Recovery/i)).toBeInTheDocument();
-    expect(screen.getByText(/Short Rest • Level 5 Wizard/i)).toBeInTheDocument();
+    expect(handleShortRest).toHaveBeenCalledTimes(1);
   });
 
 });
