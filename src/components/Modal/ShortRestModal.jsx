@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Sun, Heart, Sparkles, X, AlertCircle, Zap } from 'lucide-react';
-import { getAbilityModifier, formatModifier } from '../../utils/dndCalculations';
+import React, { useState, useEffect, useRef } from 'react';
+import { Sun, Heart, Dices, X, AlertCircle, Zap, CheckCircle2, Sparkles } from 'lucide-react';
+import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
 import { normalizeHitDice } from '../../utils/storage';
 import { getMaxArcaneRecoveryLevels, getWizardLevel } from '../../utils/spellSlots';
 import { SlotPipStar } from './ArcaneRecoveryModal';
@@ -13,9 +13,44 @@ export default function ShortRestModal({
   slotsUsed = {},
   onRollHitDie,
   onCompleteShortRest,
+  onShowToast,
 }) {
   const [manualRolls, setManualRolls] = useState({});
   const [selectedRecovery, setSelectedRecovery] = useState({});
+  const [toast, setToast] = useState(null);
+  const toastTimeoutRef = useRef(null);
+
+  const vitals = character?.sheet?.vitals || {};
+  const hitDice = normalizeHitDice(vitals, character || {});
+  const conScore = character?.sheet?.abilities?.con ?? 10;
+  const conMod = getAbilityModifier(conScore);
+
+  const baseMax = Number.isFinite(vitals.hpMax) ? vitals.hpMax : 10;
+  const hpMaxBuff = Number.isFinite(vitals.hpMaxBuff) ? vitals.hpMaxBuff : 0;
+  const effectiveMax = Math.max(1, baseMax + hpMaxBuff);
+  const hpCurrent = Number.isFinite(vitals.hpCurrent) ? vitals.hpCurrent : 10;
+  const hpTemp = Number.isFinite(vitals.hpTemp) ? vitals.hpTemp : 0;
+
+  // Staged state: HP and Hit Dice only applied upon Finish Short Rest
+  const [stagedHp, setStagedHp] = useState(hpCurrent);
+  const [stagedPools, setStagedPools] = useState(hitDice.pools || {});
+
+  // Re-sync staged state when modal opens or character changes
+  useEffect(() => {
+    if (isOpen) {
+      setStagedHp(hpCurrent);
+      setStagedPools(hitDice.pools || {});
+      setSelectedRecovery({});
+      setManualRolls({});
+      setToast(null);
+    }
+  }, [isOpen, character?.id, hpCurrent]);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
 
   if (!isOpen || !character) return null;
 
@@ -26,19 +61,8 @@ export default function ShortRestModal({
   const isWizard = classes.some((c) => c.className === 'Wizard') || character.className === 'Wizard';
   const isWarlock = classes.some((c) => c.className === 'Warlock') || character.className === 'Warlock';
 
-  const vitals = character.sheet?.vitals || {};
-  const hitDice = normalizeHitDice(vitals, character);
-  const conScore = character.sheet?.abilities?.con ?? 10;
-  const conMod = getAbilityModifier(conScore);
-
-  const baseMax = Number.isFinite(vitals.hpMax) ? vitals.hpMax : 10;
-  const hpMaxBuff = Number.isFinite(vitals.hpMaxBuff) ? vitals.hpMaxBuff : 0;
-  const effectiveMax = Math.max(1, baseMax + hpMaxBuff);
-  const hpCurrent = Number.isFinite(vitals.hpCurrent) ? vitals.hpCurrent : 10;
-  const hpTemp = Number.isFinite(vitals.hpTemp) ? vitals.hpTemp : 0;
-  const isHpFull = hpCurrent >= effectiveMax;
-
-  const currentHpPct = Math.min(100, Math.round((hpCurrent / effectiveMax) * 100));
+  const isHpFull = stagedHp >= effectiveMax;
+  const currentHpPct = Math.min(100, Math.round((stagedHp / effectiveMax) * 100));
   const tempHpPct = Math.min(100 - currentHpPct, Math.round((hpTemp / effectiveMax) * 100));
 
   // Arcane Recovery calculations
@@ -55,6 +79,50 @@ export default function ShortRestModal({
   const remainingBudget = maxRecoveryPool - recoverySelectedCost;
   const hasAnyExpendedSlots = eligibleRecoveryLevels.some((lvl) => (currentSlotsUsed[lvl] || 0) > 0);
 
+  const triggerToast = (msg) => {
+    setToast({ message: msg });
+    onShowToast?.(msg, 'success');
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast((curr) => (curr?.message === msg ? null : curr));
+    }, 3200);
+  };
+
+  const executeRoll = (dieKey, forcedRoll) => {
+    const pool = stagedPools[dieKey];
+    if (!pool || pool.current <= 0 || stagedHp >= effectiveMax) return;
+
+    let rollValue;
+    if (typeof forcedRoll === 'number' && !isNaN(forcedRoll) && forcedRoll > 0) {
+      rollValue = forcedRoll;
+    } else {
+      const { roll } = rollHitDie(dieKey, conScore);
+      rollValue = roll;
+    }
+
+    const healedAmount = Math.max(1, rollValue + conMod);
+    const newHp = Math.min(effectiveMax, stagedHp + healedAmount);
+    const restoredHp = newHp - stagedHp;
+
+    setStagedHp(newHp);
+    setStagedPools((prev) => ({
+      ...prev,
+      [dieKey]: {
+        ...prev[dieKey],
+        current: Math.max(0, (prev[dieKey]?.current || 0) - 1),
+      },
+    }));
+
+    const msg = `Restored ${dieKey} (${restoredHp}) HP`;
+    triggerToast(msg);
+
+    if (forcedRoll !== undefined) {
+      onRollHitDie?.(dieKey, forcedRoll);
+    } else {
+      onRollHitDie?.(dieKey);
+    }
+  };
+
   const handleManualRollChange = (dieKey, value) => {
     setManualRolls((prev) => ({
       ...prev,
@@ -66,7 +134,7 @@ export default function ShortRestModal({
     const rawVal = manualRolls[dieKey];
     const parsed = parseInt(rawVal, 10);
     if (!isNaN(parsed) && parsed > 0) {
-      onRollHitDie?.(dieKey, parsed);
+      executeRoll(dieKey, parsed);
       setManualRolls((prev) => ({ ...prev, [dieKey]: '' }));
     }
   };
@@ -98,8 +166,30 @@ export default function ShortRestModal({
   };
 
   const handleFinish = () => {
-    onCompleteShortRest?.(selectedRecovery);
+    const totalCurrentHitDice = Object.values(stagedPools).reduce(
+      (sum, p) => sum + (p.current || 0),
+      0
+    );
+    const finalHitDice = {
+      ...hitDice,
+      current: totalCurrentHitDice,
+      pools: stagedPools,
+    };
+
+    onCompleteShortRest?.({
+      ...selectedRecovery,
+      stagedRecovery: selectedRecovery,
+      hpCurrent: stagedHp,
+      hitDice: finalHitDice,
+    });
     setSelectedRecovery({});
+    onClose?.();
+  };
+
+  const handleCancel = () => {
+    setSelectedRecovery({});
+    setManualRolls({});
+    setToast(null);
     onClose?.();
   };
 
@@ -109,7 +199,15 @@ export default function ShortRestModal({
       aria-labelledby="short-rest-modal-title"
       className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in"
     >
-      <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div className="relative bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+        {/* Floating Toast Popup for Hit Die Rolls */}
+        {toast && (
+          <div className="absolute top-3 right-11 z-50 flex items-center space-x-2 px-3.5 py-2 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-panel border border-white/10 pointer-events-none">
+            <CheckCircle2 size={16} className="text-emerald-400" />
+            <span className="text-slate-100">{toast.message}</span>
+          </div>
+        )}
+
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-2 border-b border-white/5">
           <div className="flex items-center space-x-2.5">
@@ -127,7 +225,7 @@ export default function ShortRestModal({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCancel}
             className="p-1.5 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
             title="Close modal"
             aria-label="Close modal"
@@ -150,7 +248,7 @@ export default function ShortRestModal({
             </div>
 
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-bold text-slate-100">{hpCurrent}</span>
+              <span className="text-xl font-bold text-slate-100">{stagedHp}</span>
               <span className="text-xs text-slate-400">/ {effectiveMax}</span>
               {hpTemp > 0 && (
                 <span className="text-xs font-semibold text-blue-400 ml-1">
@@ -189,7 +287,7 @@ export default function ShortRestModal({
             </div>
 
             <div className="space-y-1.5">
-              {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => {
+              {Object.entries(stagedPools || {}).map(([dieKey, pool]) => {
                 const canRoll = pool.current > 0 && !isHpFull;
 
                 return (
@@ -210,11 +308,11 @@ export default function ShortRestModal({
                       <button
                         type="button"
                         aria-label={`Roll 1${dieKey}`}
-                        onClick={() => onRollHitDie?.(dieKey)}
+                        onClick={() => executeRoll(dieKey)}
                         disabled={!canRoll}
                         className="px-2.5 py-1 rounded bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light disabled:opacity-30 disabled:pointer-events-none font-bold text-xs flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
                       >
-                        <Sparkles size={11} />
+                        <Dices size={12} />
                         Roll 1{dieKey}
                       </button>
 
@@ -386,7 +484,7 @@ export default function ShortRestModal({
         <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCancel}
             className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-white/5 transition-colors cursor-pointer"
           >
             Cancel

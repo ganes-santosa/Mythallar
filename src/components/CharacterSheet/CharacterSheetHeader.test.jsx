@@ -48,10 +48,10 @@ describe('CharacterSheetHeader', () => {
     expect(screen.getByText('Cleric')).toBeInTheDocument();
     expect(screen.getByText(/Lvl 2/i)).toBeInTheDocument();
 
-    // Identity metadata fields
-    expect(screen.getByDisplayValue('High Elf')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Divination')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Sage')).toBeInTheDocument();
+    // Identity metadata fields displayed as static text when not editing
+    expect(screen.getByText('High Elf')).toBeInTheDocument();
+    expect(screen.getByText('Divination')).toBeInTheDocument();
+    expect(screen.getByText('Sage')).toBeInTheDocument();
   });
 
   it('renders placeholder avatar button when character has no portrait', () => {
@@ -81,7 +81,7 @@ describe('CharacterSheetHeader', () => {
     expect(uploadBtn).toBeInTheDocument();
   });
 
-  it('updates identity metadata field when user types in input', () => {
+  it('updates identity metadata field when user is editing and types in input', () => {
     const handleUpdate = vi.fn();
     render(
       <CharacterSheetHeader
@@ -90,6 +90,10 @@ describe('CharacterSheetHeader', () => {
         onUpdateCharacter={handleUpdate}
       />
     );
+
+    // Enter edit mode
+    const editBtn = screen.getByLabelText('Edit Profile');
+    fireEvent.click(editBtn);
 
     const raceInput = screen.getByLabelText(/Race \/ Species/i);
     fireEvent.change(raceInput, { target: { value: 'Wood Elf' } });
@@ -129,5 +133,88 @@ describe('CharacterSheetHeader', () => {
         name: 'Aethelgard the Wise',
       })
     );
+  });
+
+  it('renders Character Lore sub-accordion and allows editing text', () => {
+    const handleUpdate = vi.fn();
+    const charWithLore = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        identity: {
+          ...mockCharacter.sheet.identity,
+          lore: 'Born in Silverymoon under an eclipse.',
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={charWithLore}
+        profiles={[charWithLore]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // Header exists
+    expect(screen.getByText('Character Lore')).toBeInTheDocument();
+
+    // Click Edit Character Lore opens editor and expands
+    const editLoreBtn = screen.getByLabelText('Edit Character Lore');
+    fireEvent.click(editLoreBtn);
+
+    const textarea = screen.getByLabelText('Character Lore Text Editor');
+    expect(textarea).toBeInTheDocument();
+    expect(textarea.value).toBe('Born in Silverymoon under an eclipse.');
+
+    fireEvent.change(textarea, { target: { value: 'Exiled scholar seeking Netherese relics.' } });
+
+    // Click Save Character Lore
+    const saveLoreBtn = screen.getByLabelText('Save Character Lore');
+    fireEvent.click(saveLoreBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          identity: expect.objectContaining({
+            lore: 'Exiled scholar seeking Netherese relics.',
+          }),
+        }),
+      })
+    );
+  });
+
+  it('allows expanding and collapsing Character Lore sub-accordion', () => {
+    const charWithLore = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        identity: {
+          ...mockCharacter.sheet.identity,
+          lore: 'Born in Silverymoon under an eclipse.',
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={charWithLore}
+        profiles={[charWithLore]}
+        onUpdateCharacter={() => {}}
+      />
+    );
+
+    // Starts slim and collapsed
+    const expandBtn = screen.getByLabelText('Expand Character Lore');
+    expect(expandBtn).toBeInTheDocument();
+
+    // Click to expand
+    fireEvent.click(expandBtn);
+    expect(screen.getByLabelText('Collapse Character Lore')).toBeInTheDocument();
+    expect(screen.getByText('Born in Silverymoon under an eclipse.')).toBeInTheDocument();
+
+    // Click to collapse
+    fireEvent.click(screen.getByLabelText('Collapse Character Lore'));
+    expect(screen.getByLabelText('Expand Character Lore')).toBeInTheDocument();
   });
 });

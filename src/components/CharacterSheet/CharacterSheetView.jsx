@@ -4,7 +4,7 @@ import {
   Zap,
   Eye,
   Award,
-  Sparkles,
+  Flame,
   Package,
   Search,
   RotateCcw,
@@ -60,6 +60,7 @@ export default function CharacterSheetView({
   const [isEditingAbilities, setIsEditingAbilities] = useState(false);
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [isEditingProficiencies, setIsEditingProficiencies] = useState(false);
+  const [isEditingResources, setIsEditingResources] = useState(false);
   const [isAddingResource, setIsAddingResource] = useState(false);
   const [isAttuneMode, setIsAttuneMode] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -140,7 +141,77 @@ export default function CharacterSheetView({
           />
         </AccordionSection>
 
-        {/* Section 3: Ability Scores & Saving Throws */}
+        {/* Section 3: Features & Tracked Resources */}
+        <AccordionSection
+          title="Features & Tracked Resources"
+          icon={Flame}
+          defaultOpen={true}
+          actions={
+            <div className="flex flex-wrap items-center gap-1.5">
+              {sheet.trackedResources && sheet.trackedResources.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetAllResources}
+                  aria-label="Reset all resources"
+                  title="Reset all resources to max"
+                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-white text-xs transition-colors"
+                >
+                  <RotateCcw size={11} className="text-dnd-gold" />
+                  <span className="text-[11px]">Reset</span>
+                </button>
+              )}
+              {isEditingResources && (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingResource((prev) => !prev)}
+                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
+                >
+                  <Plus size={11} />
+                  <span className="text-[11px]">Add Resource</span>
+                </button>
+              )}
+              {isEditingResources ? (
+                <button
+                  type="button"
+                  aria-label="Done editing resources"
+                  onClick={() => {
+                    setIsEditingResources(false);
+                    setIsAddingResource(false);
+                  }}
+                  className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm"
+                  title="Done editing features and resources"
+                >
+                  <Check size={13} strokeWidth={2.5} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  aria-label="Edit resources"
+                  onClick={() => setIsEditingResources(true)}
+                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
+                  title="Edit features and tracked resources"
+                >
+                  <Settings2 size={13} />
+                </button>
+              )}
+            </div>
+          }
+        >
+          <ResourcesCard
+            trackedResources={sheet.trackedResources}
+            featuresNotes={sheet.featuresNotes}
+            feats={sheet.feats || []}
+            isEditing={isEditingResources}
+            isAdding={isAddingResource}
+            onSetIsAdding={setIsAddingResource}
+            hideHeaderActions={true}
+            onUpdateResources={(trackedResources) => updateSheet({ trackedResources })}
+            onUpdateNotes={(featuresNotes) => updateSheet({ featuresNotes })}
+            onUpdateFeats={(feats) => updateSheet({ feats })}
+          />
+        </AccordionSection>
+
+        {/* Section 4: Ability Scores & Saving Throws */}
         <AccordionSection
           title="Ability Scores & Saving Throws"
           icon={Zap}
@@ -182,7 +253,7 @@ export default function CharacterSheetView({
           />
         </AccordionSection>
 
-        {/* Section 4: Skills & Senses */}
+        {/* Section 5: Skills & Senses */}
         <AccordionSection
           title="Skills & Senses"
           icon={Eye}
@@ -236,84 +307,7 @@ export default function CharacterSheetView({
           />
         </AccordionSection>
 
-        {/* Section 5: Proficiencies & Training */}
-        <AccordionSection
-          title="Proficiencies & Training"
-          icon={Award}
-          defaultOpen={true}
-          actions={
-            isEditingProficiencies ? (
-              <button
-                type="button"
-                aria-label="Done editing proficiencies"
-                onClick={() => setIsEditingProficiencies(false)}
-                className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm"
-                title="Done editing proficiencies and training"
-              >
-                <Check size={13} strokeWidth={2.5} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                aria-label="Edit proficiencies"
-                onClick={() => setIsEditingProficiencies(true)}
-                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
-                title="Edit proficiencies and training"
-              >
-                <Settings2 size={13} />
-              </button>
-            )
-          }
-        >
-          <ProficienciesCard
-            proficiencies={sheet.proficiencies}
-            isEditing={isEditingProficiencies}
-            onUpdateProficiencies={(proficiencies) => updateSheet({ proficiencies })}
-          />
-        </AccordionSection>
-
-        {/* Section 6: Features & Tracked Resources */}
-        <AccordionSection
-          title="Features & Tracked Resources"
-          icon={Sparkles}
-          defaultOpen={true}
-          actions={
-            <div className="flex flex-wrap items-center gap-1.5">
-              {sheet.trackedResources && sheet.trackedResources.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleResetAllResources}
-                  aria-label="Reset all resources"
-                  title="Reset all resources to max"
-                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-white text-xs transition-colors"
-                >
-                  <RotateCcw size={11} className="text-dnd-gold" />
-                  <span className="text-[11px]">Reset</span>
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setIsAddingResource((prev) => !prev)}
-                className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
-              >
-                <Plus size={11} />
-                <span className="text-[11px]">Add Resource</span>
-              </button>
-            </div>
-          }
-        >
-          <ResourcesCard
-            trackedResources={sheet.trackedResources}
-            featuresNotes={sheet.featuresNotes}
-            isAdding={isAddingResource}
-            onSetIsAdding={setIsAddingResource}
-            hideHeaderActions={true}
-            onUpdateResources={(trackedResources) => updateSheet({ trackedResources })}
-            onUpdateNotes={(featuresNotes) => updateSheet({ featuresNotes })}
-          />
-        </AccordionSection>
-
-        {/* Section 7: Items & Inventory */}
+        {/* Section 6: Items & Inventory */}
         <AccordionSection
           title="Items & Inventory"
           icon={Package}
@@ -355,7 +349,7 @@ export default function CharacterSheetView({
                 className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
               >
                 <Plus size={11} />
-                <span className="text-[11px]">+ Add Item</span>
+                <span className="text-[11px]">Add Item</span>
               </button>
             </div>
           }
@@ -369,6 +363,42 @@ export default function CharacterSheetView({
             onSetIsAdding={setIsAddingItem}
             hideHeaderActions={true}
             onUpdateItems={(items) => updateSheet({ items })}
+          />
+        </AccordionSection>
+
+        {/* Section 7: Proficiencies & Training */}
+        <AccordionSection
+          title="Proficiencies & Training"
+          icon={Award}
+          defaultOpen={true}
+          actions={
+            isEditingProficiencies ? (
+              <button
+                type="button"
+                aria-label="Done editing proficiencies"
+                onClick={() => setIsEditingProficiencies(false)}
+                className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm"
+                title="Done editing proficiencies and training"
+              >
+                <Check size={13} strokeWidth={2.5} />
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-label="Edit proficiencies"
+                onClick={() => setIsEditingProficiencies(true)}
+                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
+                title="Edit proficiencies and training"
+              >
+                <Settings2 size={13} />
+              </button>
+            )
+          }
+        >
+          <ProficienciesCard
+            proficiencies={sheet.proficiencies}
+            isEditing={isEditingProficiencies}
+            onUpdateProficiencies={(proficiencies) => updateSheet({ proficiencies })}
           />
         </AccordionSection>
       </div>

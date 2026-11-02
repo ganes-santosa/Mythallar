@@ -79,10 +79,10 @@ describe('CharacterSheetView', () => {
     expect(screen.getByText(/Proficiency/i)).toBeInTheDocument();
     expect(screen.getByText('+6')).toBeInTheDocument();
 
-    // Identity metadata
-    expect(screen.getByDisplayValue('Half-Elf')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Chronurgy')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Sage')).toBeInTheDocument();
+    // Identity metadata (rendered as static text when not editing)
+    expect(screen.getByText('Half-Elf')).toBeInTheDocument();
+    expect(screen.getByText('Chronurgy')).toBeInTheDocument();
+    expect(screen.getByText('Sage')).toBeInTheDocument();
 
     // Skills Card & Senses
     expect(screen.getByText('Skills & Senses')).toBeInTheDocument();
@@ -159,6 +159,19 @@ describe('CharacterSheetView', () => {
     expect(screen.getByLabelText('Max HP Buff')).toBeInTheDocument();
     fireEvent.click(doneVitalsBtn);
     expect(screen.getByLabelText('Edit vitals')).toBeInTheDocument();
+
+    // Features & Resources edit toggle
+    const editResourcesBtn = screen.getByLabelText('Edit resources');
+    expect(editResourcesBtn).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Add Resource/i })).not.toBeInTheDocument();
+    fireEvent.click(editResourcesBtn);
+
+    const doneResourcesBtn = screen.getByLabelText('Done editing resources');
+    expect(doneResourcesBtn).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
+    fireEvent.click(doneResourcesBtn);
+    expect(screen.getByLabelText('Edit resources')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Add Resource/i })).not.toBeInTheDocument();
   });
 
   it('renders fallback when no character is selected', () => {

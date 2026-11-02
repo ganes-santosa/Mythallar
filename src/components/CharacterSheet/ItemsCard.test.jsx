@@ -68,7 +68,7 @@ describe('ItemsCard', () => {
   it('allows adding a new item with category and attunement requirement', () => {
     const handleUpdate = vi.fn();
     render(<ItemsCard items={mockItems} maxAttunement={3} onUpdateItems={handleUpdate} />);
-    const openAddBtn = screen.getByRole('button', { name: /\+ Add Item/i });
+    const openAddBtn = screen.getByRole('button', { name: /Add Item/i });
     fireEvent.click(openAddBtn);
 
     const nameInput = screen.getByLabelText('Item Name');
@@ -87,6 +87,28 @@ describe('ItemsCard', () => {
         requiresAttunement: true,
         attuned: false,
       }),
+    ]);
+  });
+
+  it('requires two clicks to delete an item chip', () => {
+    const handleUpdate = vi.fn();
+    render(<ItemsCard items={mockItems} maxAttunement={3} onUpdateItems={handleUpdate} />);
+
+    const deleteBtn = screen.getByRole('button', { name: 'Delete The Tuvala Sundial' });
+    expect(deleteBtn).toHaveAttribute('title', 'Delete The Tuvala Sundial');
+
+    // First click: arms delete button, does not delete
+    fireEvent.click(deleteBtn);
+    expect(handleUpdate).not.toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Click again to delete The Tuvala Sundial' })).toBeInTheDocument();
+
+    // Second click: executes deletion
+    const armedBtn = screen.getByRole('button', { name: 'Click again to delete The Tuvala Sundial' });
+    fireEvent.click(armedBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith([
+      mockItems[1],
+      mockItems[2],
     ]);
   });
 });

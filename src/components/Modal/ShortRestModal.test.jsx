@@ -225,4 +225,87 @@ describe('ShortRestModal', () => {
     // Non-wizard should not render Arcane Recovery
     expect(screen.queryByText('Arcane Recovery')).not.toBeInTheDocument();
   });
+
+  it('shows toast popup upon rolling and updates staged HP without calling onCompleteShortRest', () => {
+    const handleComplete = vi.fn();
+    render(
+      <ShortRestModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={mockCharacter}
+        onRollHitDie={vi.fn()}
+        onCompleteShortRest={handleComplete}
+      />
+    );
+
+    const rollBtn = screen.getByRole('button', { name: /Roll 1d6/i });
+    fireEvent.click(rollBtn);
+
+    // Toast popup appears inside modal
+    expect(screen.getByText(/Restored d6/i)).toBeInTheDocument();
+    // onCompleteShortRest has NOT been called yet
+    expect(handleComplete).not.toHaveBeenCalled();
+    // Staged pool decremented from 4 to 3
+    expect(screen.getByText(/3 \/ 5 d6/i)).toBeInTheDocument();
+  });
+
+  it('discards staged HP, dice rolls, and slots when Cancel is clicked', () => {
+    const handleClose = vi.fn();
+    const handleComplete = vi.fn();
+    render(
+      <ShortRestModal
+        isOpen={true}
+        onClose={handleClose}
+        character={mockCharacter}
+        onRollHitDie={vi.fn()}
+        onCompleteShortRest={handleComplete}
+      />
+    );
+
+    // Roll 1d6
+    fireEvent.click(screen.getByRole('button', { name: /Roll 1d6/i }));
+    expect(screen.getByText(/Restored d6/i)).toBeInTheDocument();
+
+    // Click Cancel
+    const cancelBtn = screen.getByRole('button', { name: /Cancel/i });
+    fireEvent.click(cancelBtn);
+
+    expect(handleClose).toHaveBeenCalled();
+    expect(handleComplete).not.toHaveBeenCalled();
+  });
+
+  it('applies staged HP and hit dice to onCompleteShortRest upon Finish Short Rest', () => {
+    const handleComplete = vi.fn();
+    render(
+      <ShortRestModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={mockCharacter}
+        onRollHitDie={vi.fn()}
+        onCompleteShortRest={handleComplete}
+      />
+    );
+
+    // Apply manual roll of 4 (+2 CON mod = 6 HP healed, 18 + 6 = 24)
+    const manualInput = screen.getByLabelText('Physical Roll d6');
+    fireEvent.change(manualInput, { target: { value: '4' } });
+    fireEvent.click(screen.getByRole('button', { name: /Apply d6/i }));
+
+    expect(screen.getByText('24')).toBeInTheDocument();
+    expect(screen.getByText('Restored d6 (6) HP')).toBeInTheDocument();
+
+    const finishBtn = screen.getByRole('button', { name: /Finish Short Rest/i });
+    fireEvent.click(finishBtn);
+
+    expect(handleComplete).toHaveBeenCalledWith(
+      expect.objectContaining({
+        hpCurrent: 24,
+        hitDice: expect.objectContaining({
+          pools: expect.objectContaining({
+            d6: expect.objectContaining({ current: 3 }),
+          }),
+        }),
+      })
+    );
+  });
 });

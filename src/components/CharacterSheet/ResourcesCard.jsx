@@ -1,23 +1,59 @@
-import React, { useState } from 'react';
-import { Plus, X, RotateCcw } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Plus, X, RotateCcw, Award } from 'lucide-react';
 
 export default function ResourcesCard({
   trackedResources = [],
   featuresNotes = '',
+  feats = [],
+  isEditing = false,
   isAdding: externalIsAdding,
   onSetIsAdding,
   hideHeaderActions = false,
   onUpdateResources,
   onUpdateNotes,
+  onUpdateFeats,
 }) {
   const [internalIsAdding, setInternalIsAdding] = useState(false);
-  const isAdding = externalIsAdding !== undefined ? externalIsAdding : internalIsAdding;
+  const isAdding = isEditing && (externalIsAdding !== undefined ? externalIsAdding : internalIsAdding);
   const setIsAdding = onSetIsAdding || setInternalIsAdding;
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceMax, setNewResourceMax] = useState('3');
   const [newResourceReset, setNewResourceReset] = useState('LR');
   const [newResourceNote, setNewResourceNote] = useState('');
   const [nameError, setNameError] = useState(false);
+
+  const [isAddingFeat, setIsAddingFeat] = useState(false);
+  const [newFeat, setNewFeat] = useState('');
+
+  const textareaRef = useRef(null);
+
+  const adjustHeight = () => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    if (el.value) {
+      el.style.height = `${Math.min(el.scrollHeight, 215)}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustHeight();
+  }, [featuresNotes]);
+
+  const handleAddFeat = (e) => {
+    e.preventDefault();
+    const trimmed = newFeat.trim();
+    if (!trimmed) return;
+    if (!feats.includes(trimmed)) {
+      onUpdateFeats?.([...feats, trimmed]);
+    }
+    setNewFeat('');
+    setIsAddingFeat(false);
+  };
+
+  const handleRemoveFeat = (featToRemove) => {
+    onUpdateFeats?.(feats.filter((f) => f !== featToRemove));
+  };
 
   const handleStep = (id, delta) => {
     const updated = (trackedResources || []).map((res) => {
@@ -70,7 +106,7 @@ export default function ResourcesCard({
   return (
     <div className="space-y-2">
       {/* Header action bar (fallback when not mounted in AccordionSection) */}
-      {!hideHeaderActions && (
+      {!hideHeaderActions && isEditing && (
         <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">
           <div className="flex items-center space-x-2">
             {trackedResources && trackedResources.length > 0 && (
@@ -226,15 +262,17 @@ export default function ResourcesCard({
                 >
                   +
                 </button>
-                <button
-                  type="button"
-                  aria-label={`Delete ${res.name}`}
-                  title="Remove resource"
-                  onClick={() => handleDeleteResource(res.id)}
-                  className="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400 pl-1 ml-0.5 transition-opacity"
-                >
-                  <X size={10} />
-                </button>
+                {isEditing && (
+                  <button
+                    type="button"
+                    aria-label={`Delete ${res.name}`}
+                    title="Remove resource"
+                    onClick={() => handleDeleteResource(res.id)}
+                    className="text-slate-500 hover:text-red-400 pl-1 ml-0.5 transition-opacity"
+                  >
+                    <X size={10} />
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -244,17 +282,94 @@ export default function ResourcesCard({
       {/* Freeform Notes Box */}
       <div className="space-y-1">
         <label htmlFor="features-notes" className="text-[10px] text-slate-400">
-          Features, Feats & Freeform Notes:
+          Features & Freeform Notes:
         </label>
         <textarea
+          ref={textareaRef}
           id="features-notes"
-          aria-label="Features, Feats & Notes"
+          aria-label="Features & Notes"
           placeholder="Type or paste features, special items, math notes (e.g. Blackstones: 49 + 162 + 28), death ward status, etc..."
           value={featuresNotes || ''}
-          onChange={(e) => onUpdateNotes?.(e.target.value)}
-          rows={4}
-          className="w-full p-2.5 rounded-lg bg-dnd-card text-xs text-slate-200 leading-relaxed placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 custom-scroll resize-y shadow-sm"
+          onChange={(e) => {
+            onUpdateNotes?.(e.target.value);
+            adjustHeight();
+          }}
+          onInput={adjustHeight}
+          rows={2}
+          style={{ fieldSizing: 'content' }}
+          className="w-full p-2.5 rounded-lg bg-dnd-card text-xs text-slate-200 leading-relaxed placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 custom-scroll resize-none min-h-[59px] max-h-[215px] overflow-y-auto shadow-sm"
         />
+      </div>
+
+      {/* Feats Subdivision (matching Conditions and Resistance & Immunities) */}
+      <div className="pt-1.5 border-t border-white/5 space-y-1">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+          <span className="flex items-center gap-1">
+            <Award size={10} className="text-amber-400" /> Feats:
+          </span>
+          {isEditing && (
+            <button
+              type="button"
+              onClick={() => setIsAddingFeat(!isAddingFeat)}
+              className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
+            >
+              + Add
+            </button>
+          )}
+        </div>
+
+        {isEditing && isAddingFeat && (
+          <form noValidate onSubmit={handleAddFeat} className="flex items-center space-x-1.5 pt-1 px-0.5">
+            <input
+              type="text"
+              autoFocus
+              placeholder="e.g. War Caster, Alert, Fey Touched"
+              value={newFeat}
+              onChange={(e) => setNewFeat(e.target.value)}
+              className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
+            />
+            <button
+              type="submit"
+              className="px-2.5 py-1 rounded-lg bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddingFeat(false);
+                setNewFeat('');
+              }}
+              className="px-2 py-1 rounded-lg bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+          </form>
+        )}
+
+        <div className="flex flex-wrap items-center gap-1 min-h-[20px]">
+          {(!feats || feats.length === 0) && !isAddingFeat && (
+            <span className="text-[11px] text-slate-500 italic">No feats recorded.</span>
+          )}
+          {(feats || []).map((feat) => (
+            <span
+              key={feat}
+              className="group inline-flex items-center px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
+            >
+              <span>{feat}</span>
+              {isEditing && (
+                <button
+                  type="button"
+                  aria-label={`Remove feat ${feat}`}
+                  onClick={() => handleRemoveFeat(feat)}
+                  className="ml-1 text-slate-500 hover:text-red-400 opacity-60 hover:opacity-100 cursor-pointer"
+                >
+                  <X size={9} />
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   );

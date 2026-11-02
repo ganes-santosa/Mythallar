@@ -1,17 +1,28 @@
 # HANDOFF
 
-## Current state (v2.1.1 - master)
-- **Character Sheet Header Polish:**
-  - Dedicated `CharacterSheetHeader` in left Character Sheet pane with prominent full-height portrait banner (`w-28 sm:w-36 md:w-44 self-stretch`) and soft right-fading gradient.
-  - Hover highlight overlay uses `bg-gradient-to-r from-black/60 via-black/30 to-transparent` with right-edge blend, eliminating hard rectangular outlines.
-  - Race / Species input relocated to its own full-width line above Subclass & Background 2-column grid, giving room for long races (e.g. Mark of Detection Half-Elf).
-  - Left pane header retains complete character management: inline name editing, multiclass management with class/level selects and two-click delete, Level Up modal, and Character Manager modal. Excludes auth sync and export/import clutter.
-  - Right pane `CharacterHeader` remains simplified and byte-identical to v2.0.2.
-  - VitalsCard hit die carousel chips equipped with two-click confirmation before spending; left pane toast notification alerts on hit die roll (`Restored <die> (<amount>) HP`).
-- **Verification:** 39 test files (239 tests) passing; production build clean.
+## Current state (v2.1.2 - master)
+- **Accordion Section Reorder:**
+  - Restored `Ability Scores & Saving Throws` to Section 4.
+  - Current order: Character -> Combat Stats -> Features & Tracked Resources -> Ability Scores & Saving Throws -> Skills & Senses -> Items & Inventory -> Proficiencies & Training.
+- **Freeform Notes Auto-Expanding Field:**
+  - `ResourcesCard` Freeform Notes textarea starts at 2 lines (`rows={2}`, `min-h-[59px]`) when empty.
+  - Auto-expands to match content height as lines are added.
+  - Capped at ~10 lines (`max-h-[215px]`) with vertical scrolling past the limit.
+- **Character Identity Fields Edit Mode:**
+  - `Race / Species`, `Subclass / Tradition`, and `Background` are now only editable when the Character accordion is in editing mode (`isEditing`). In read-only mode, they render as static badges with subtle italic *None* when empty.
+- **Features & Tracked Resources Edit Mode & Icon:**
+  - Changed accordion section icon from `Sparkles` to `Flame`.
+  - Replaced "+ Add Resource" button in the accordion header with an edit toggle (`Settings2` / `Check`) matching `ProficienciesCard`.
+  - Resource deletion buttons (`X`), inline "+ Add Resource" drawer trigger, Feats "+ Add" trigger, and Feat remove buttons (`X`) only reveal when `isEditingResources` is active.
+- **Item Chip Two-Click Confirmation:**
+  - Extracted `ItemDeleteButton` child component in `ItemsCard.jsx` wrapped with `useTwoClickConfirm`.
+  - First click arms delete state (`text-red-500 bg-red-950/70 ring-1 ring-red-500/60`, title `Click again to delete ...`); second click confirms deletion.
+- **Short Rest Staged State & Modal Polish:**
+  - `Dices` icon for hit dice rolls, in-modal toast feedback, local staging reverted on Cancel and persisted on Finish Short Rest.
+- **Verification:** 40 test files (253 tests) passing; production build clean.
 
 ## Next up
-- Add sub-accordion card within Character card below portrait for Character's Lore (editable text area with edit button).
+- Ready for next user instructions or commit/release.
 
 ## Open questions
 - (none)

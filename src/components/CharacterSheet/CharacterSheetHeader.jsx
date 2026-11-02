@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User } from 'lucide-react';
+import { Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, ScrollText } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import { compressImageFile } from '../../utils/imageCompressor';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
@@ -74,10 +75,31 @@ export default function CharacterSheetHeader({
   );
 
   const sheet = character?.sheet || {};
-  const identity = sheet.identity || { race: '', subclass: '', background: '', portrait: '' };
+  const identity = sheet.identity || { race: '', subclass: '', background: '', portrait: '', lore: '' };
+
+  const [isLoreCollapsed, setIsLoreCollapsed] = useState(true);
+  const loreRef = useAutoScrollOnExpand(!isLoreCollapsed);
+  const [isEditingLore, setIsEditingLore] = useState(false);
+  const [loreDraft, setLoreDraft] = useState(identity.lore || '');
+
+  useEffect(() => {
+    setLoreDraft(identity.lore || '');
+    setIsEditingLore(false);
+  }, [character?.id, identity.lore]);
+
+  const handleSaveLore = () => {
+    handleIdentityChange('lore', loreDraft);
+    setIsEditingLore(false);
+  };
+
+  const handleCancelLore = () => {
+    setLoreDraft(identity.lore || '');
+    setIsEditingLore(false);
+  };
 
   useEffect(() => {
     setNameDraft(character?.name || '');
+    setIsEditingLore(false);
     setIsEditing(false);
   }, [character?.id]);
 
@@ -288,7 +310,7 @@ export default function CharacterSheetHeader({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="pt-2">
+          <div className="pt-2 space-y-2.5">
             <div className="character-profile-card w-full rounded-xl bg-dnd-card shadow-sm flex items-stretch overflow-hidden">
               {/* Left: Prominent Portrait Column with Gradient Fade to Right */}
               <div className="relative flex-shrink-0 w-28 sm:w-36 md:w-44 self-stretch overflow-hidden group select-none">
@@ -508,14 +530,20 @@ export default function CharacterSheetHeader({
                     <label htmlFor="sheet-id-race" className="block text-[9px] text-slate-400 mb-0.5">
                       Race / Species
                     </label>
-                    <input
-                      id="sheet-id-race"
-                      type="text"
-                      placeholder="e.g. High Elf"
-                      value={identity.race || ''}
-                      onChange={(e) => handleIdentityChange('race', e.target.value)}
-                      className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                    />
+                    {isEditing ? (
+                      <input
+                        id="sheet-id-race"
+                        type="text"
+                        placeholder="e.g. High Elf"
+                        value={identity.race || ''}
+                        onChange={(e) => handleIdentityChange('race', e.target.value)}
+                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                      />
+                    ) : (
+                      <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/60 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                        {identity.race || <span className="text-slate-500 italic">None</span>}
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
@@ -523,29 +551,150 @@ export default function CharacterSheetHeader({
                       <label htmlFor="sheet-id-subclass" className="block text-[9px] text-slate-400 mb-0.5">
                         Subclass / Tradition
                       </label>
-                      <input
-                        id="sheet-id-subclass"
-                        type="text"
-                        placeholder="e.g. Chronurgy"
-                        value={identity.subclass || ''}
-                        onChange={(e) => handleIdentityChange('subclass', e.target.value)}
-                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                      />
+                      {isEditing ? (
+                        <input
+                          id="sheet-id-subclass"
+                          type="text"
+                          placeholder="e.g. Chronurgy"
+                          value={identity.subclass || ''}
+                          onChange={(e) => handleIdentityChange('subclass', e.target.value)}
+                          className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                        />
+                      ) : (
+                        <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/60 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                          {identity.subclass || <span className="text-slate-500 italic">None</span>}
+                        </div>
+                      )}
                     </div>
 
                     <div>
                       <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
                         Background
                       </label>
-                      <input
-                        id="sheet-id-background"
-                        type="text"
-                        placeholder="e.g. Sage"
-                        value={identity.background || ''}
-                        onChange={(e) => handleIdentityChange('background', e.target.value)}
-                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                      />
+                      {isEditing ? (
+                        <input
+                          id="sheet-id-background"
+                          type="text"
+                          placeholder="e.g. Sage"
+                          value={identity.background || ''}
+                          onChange={(e) => handleIdentityChange('background', e.target.value)}
+                          className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                        />
+                      ) : (
+                        <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/60 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                          {identity.background || <span className="text-slate-500 italic">None</span>}
+                        </div>
+                      )}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sub-accordion Card: Character Lore */}
+            <div ref={loreRef} className="character-lore-card w-full rounded-lg bg-dnd-card px-3 py-1.5 shadow-sm">
+              <div className="flex items-center justify-between min-h-[26px]">
+                <button
+                  type="button"
+                  onClick={() => setIsLoreCollapsed(!isLoreCollapsed)}
+                  className="flex items-center space-x-1.5 text-left group focus:outline-none"
+                  aria-label={isLoreCollapsed ? 'Expand Character Lore' : 'Collapse Character Lore'}
+                  title={isLoreCollapsed ? 'Click to expand character lore' : 'Click to collapse character lore'}
+                >
+                  <ScrollText size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
+                    Character Lore
+                  </h4>
+                  <ChevronDown
+                    size={12}
+                    className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
+                      isLoreCollapsed ? '-rotate-90' : ''
+                    }`}
+                  />
+                </button>
+
+                {/* Edit Lore Action Button */}
+                <div className="flex items-center space-x-1.5">
+                  {isEditingLore ? (
+                    <>
+                      <button
+                        type="button"
+                        aria-label="Save Character Lore"
+                        onClick={handleSaveLore}
+                        className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                        title="Done editing lore"
+                      >
+                        <Check size={12} className="mr-1" />
+                        Done
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Cancel Editing Character Lore"
+                        onClick={handleCancelLore}
+                        className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                        title="Cancel editing lore"
+                      >
+                        <X size={12} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label="Edit Character Lore"
+                      onClick={() => {
+                        setIsLoreCollapsed(false);
+                        setLoreDraft(identity.lore || '');
+                        setIsEditingLore(true);
+                      }}
+                      className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
+                      title="Edit character lore"
+                    >
+                      <Pencil size={11} />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Sub-accordion collapsible body */}
+              <div
+                className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+                  !isLoreCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="pt-2 mt-2 border-t border-white/5">
+                    {isEditingLore ? (
+                      <div className="space-y-1.5">
+                        <textarea
+                          value={loreDraft}
+                          onChange={(e) => setLoreDraft(e.target.value)}
+                          placeholder="Write character backstory, personality traits, appearance, or campaign lore..."
+                          rows={4}
+                          autoFocus
+                          aria-label="Character Lore Text Editor"
+                          className="w-full bg-dnd-panel rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/60 resize-y leading-relaxed font-sans min-h-[80px]"
+                        />
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => {
+                          setIsLoreCollapsed(false);
+                          setLoreDraft(identity.lore || '');
+                          setIsEditingLore(true);
+                        }}
+                        className="cursor-pointer group/lore"
+                      >
+                        {identity.lore && identity.lore.trim().length > 0 ? (
+                          <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed px-0.5 py-1">
+                            {identity.lore}
+                          </div>
+                        ) : (
+                          <div className="text-xs text-slate-500 italic px-0.5 py-1 hover:text-slate-400 transition-colors">
+                            No character lore written yet. Click to write backstory, personality traits, or notes...
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

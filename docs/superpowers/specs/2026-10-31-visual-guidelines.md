@@ -5,13 +5,17 @@ Status: Active Standard for Left & Right Panes
 
 ## 1. Core Visual Principles
 1. **Symmetric Consistency**: The left pane (Character Sheet & Grimoire) and right pane (Character Header, Spell Slot Tracker, Spellbook) share identical panel containers, accordion mechanics, typography, and icon treatment.
-2. **Capitalization Hierarchy (Title Case Standard)**:
+2. **Minimalism & Zero Outlines Rule for Nested Containers (MANDATORY)**:
+   - Sub-accordions, child cards, nested blocks, and inner inputs inside main accordion panels must **NEVER have outline borders** (`border`, `border-white/*`, etc.).
+   - Rely solely on background tone contrast (e.g. `bg-dnd-card` on `bg-dnd-panel`) and gentle soft shadow (`shadow-sm`) to define secondary containers.
+   - Absolutely no bulky border outlines around nested sub-cards or sub-accordions. Flat, seamless, minimal is the permanent default for all future development.
+3. **Capitalization Hierarchy (Title Case Standard)**:
    - **Section Titles & Accordion Headers**: Strictly use Title Case (e.g. *Combat Stats*, *Spell Slots*, *Ability Scores & Saving Throws*).
    - **Internal Card Labels, Fields, Trackers & Controls**: Strictly use Title Case (e.g. *Hit Points*, *Hit Dice*, *Death Saves*, *Max HP Buff*, *Base Max*, *Temp HP*, *Damage*, *Heal*, *Passive Perception*, *Defenses & Resistances*, *+ Add Condition*, *+ Add Defense*).
    - **Game Initialisms & Units**: Standard 5e system acronyms remain uppercase (HP, AC, DEX, STR, CON, INT, WIS, CHA, ft).
    - **Anti-ALL-CAPS Rule**: Never use CSS `uppercase` or all-caps strings (`HIT POINTS`, `INIT`, `SPEED`) for section headings, card tags, tracker labels, or buttons inside cards.
-3. **No Redundant Nesting (Anti-Box-in-Box)**: The outer accordion container (`bg-dnd-panel`) serves as the framing card. Child content must not duplicate outer borders, excessive padding, or re-declare section title headers inside the card.
-4. **Gold Accent Iconography**: Primary category icons use `text-dnd-gold` with hover scaling for subtle tactile feedback.
+4. **No Redundant Nesting (Anti-Box-in-Box)**: The outer accordion container (`bg-dnd-panel`) serves as the framing card. Child content must not duplicate outer borders, excessive padding, or re-declare section title headers inside the card.
+5. **Gold Accent Iconography**: Primary category icons use `text-dnd-gold` with hover scaling for subtle tactile feedback.
 
 ---
 

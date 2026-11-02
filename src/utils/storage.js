@@ -261,6 +261,7 @@ export function createDefaultSheet(className = 'Wizard') {
       subclass: '',
       background: '',
       portrait: '',
+      lore: '',
     },
     vitals: {
       hpCurrent: 10,
@@ -331,6 +332,7 @@ export function createDefaultSheet(className = 'Wizard') {
     },
     trackedResources: [],
     featuresNotes: '',
+    feats: [],
     items: [],
     maxAttunement: 3,
   };

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAccordionMount from '../../hooks/useAccordionMount';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import SpellNoteSection from '../Common/SpellNoteSection';
 import {
   GripVertical,
@@ -58,6 +59,7 @@ function SpellCard({
   const [localExpanded, setLocalExpanded] = useState(false);
   const isExpanded = controlledExpanded ?? localExpanded;
   const { shouldRender, isClosing } = useAccordionMount(isExpanded, 200);
+  const cardRef = useAutoScrollOnExpand(shouldRender);
   const { armed: deleteArmed, handleClick: handleDeleteClick } = useTwoClickConfirm(() => onDeleteHomebrew?.(spell.id));
   const isHomebrew = spell.source === 'Homebrew' || spell.source === 'Custom';
   const schoolColor = SCHOOL_COLORS[spell.school] || 'text-slate-400 bg-slate-500/15';
@@ -92,6 +94,7 @@ function SpellCard({
 
   return (
     <div
+      ref={cardRef}
       draggable
       onDragStart={handleDragStart}
       className={`catalog-spell-card rounded-lg bg-dnd-card transition-[box-shadow,background-color] duration-150 select-none overflow-hidden ${

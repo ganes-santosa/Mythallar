@@ -795,75 +795,30 @@ export default function App() {
   }, []);
 
   const handleRollHitDie = useCallback(
-    (dieKey, manualRoll) => {
-      if (!activeCharacter?.sheet?.vitals) return;
-      const vitals = activeCharacter.sheet.vitals;
-      const normHitDice = normalizeHitDice(vitals, activeCharacter);
-      const pool = normHitDice.pools?.[dieKey];
-      if (!pool || pool.current <= 0) return;
-
-      const baseMax = Number.isFinite(vitals.hpMax) ? vitals.hpMax : 10;
-      const hpMaxBuff = Number.isFinite(vitals.hpMaxBuff) ? vitals.hpMaxBuff : 0;
-      const effectiveMax = Math.max(1, baseMax + hpMaxBuff);
-      const currentHp = Number.isFinite(vitals.hpCurrent) ? vitals.hpCurrent : 10;
-      if (currentHp >= effectiveMax) return;
-
-      const conScore = activeCharacter.sheet?.abilities?.con ?? 10;
-      const conMod = getAbilityModifier(conScore);
-      let rollValue;
-      if (typeof manualRoll === 'number' && !isNaN(manualRoll) && manualRoll > 0) {
-        rollValue = manualRoll;
-      } else {
-        const sides = parseInt(dieKey.replace(/\D/g, ''), 10) || 8;
-        rollValue = Math.floor(Math.random() * sides) + 1;
-      }
-      const healedAmount = Math.max(1, rollValue + conMod);
-      const nextHp = Math.min(effectiveMax, currentHp + healedAmount);
-
-      const nextPools = {
-        ...normHitDice.pools,
-        [dieKey]: {
-          ...pool,
-          current: pool.current - 1,
-        },
-      };
-      let totalCurrent = 0;
-      for (const p of Object.values(nextPools)) {
-        totalCurrent += p.current;
-      }
-
-      updateActiveCharacter({
-        ...activeCharacter,
-        sheet: {
-          ...activeCharacter.sheet,
-          vitals: {
-            ...vitals,
-            hpCurrent: nextHp,
-            hitDice: {
-              ...normHitDice,
-              current: totalCurrent,
-              pools: nextPools,
-            },
-          },
-        },
-      });
-      showToast(`Regained ${nextHp - currentHp} HP! (Rolled ${rollValue} ${formatModifier(conMod)})`, 'success');
+    () => {
+      // ShortRestModal stages rolls locally; character is updated only on Finish Short Rest
     },
-    [activeCharacter, updateActiveCharacter, showToast]
+    []
   );
 
   const handleCompleteShortRest = useCallback(
-    (stagedRecovery = {}) => {
+    (payload = {}) => {
       slotBaselinesRef.current = {};
       if (!activeCharacter) return;
+
+      const stagedRecovery = payload.stagedRecovery || payload || {};
+      const stagedHp = payload.hpCurrent;
+      const stagedHitDice = payload.hitDice;
 
       let nextUsed = { ...(activeCharacter.slotsUsed || {}) };
       let arcaneUsed = activeCharacter.arcaneRecoveryUsed;
 
       if (Object.keys(stagedRecovery).length > 0) {
         for (const [lvl, count] of Object.entries(stagedRecovery)) {
+          if (lvl === 'stagedRecovery' || lvl === 'hpCurrent' || lvl === 'hitDice') continue;
           const numLvl = Number(lvl);
           const numCount = Number(count) || 0;
+          if (isNaN(numLvl) || numCount <= 0) continue;
           const currentExpended = nextUsed[numLvl] || 0;
           const nextExpended = Math.max(0, currentExpended - numCount);
           if (nextExpended === 0) {
@@ -887,11 +842,22 @@ export default function App() {
         }
       }
 
+      const currentVitals = activeCharacter.sheet?.vitals || {};
+      const nextVitals = {
+        ...currentVitals,
+        ...(stagedHp !== undefined ? { hpCurrent: stagedHp } : {}),
+        ...(stagedHitDice ? { hitDice: stagedHitDice } : {}),
+      };
+
       updateActiveCharacter({
         ...activeCharacter,
         slotsUsed: nextUsed,
         pactSlotsUsed: nextPactUsed,
         arcaneRecoveryUsed: arcaneUsed,
+        sheet: {
+          ...activeCharacter.sheet,
+          vitals: nextVitals,
+        },
       });
 
       setIsShortRestOpen(false);

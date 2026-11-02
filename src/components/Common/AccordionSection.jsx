@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 export default function AccordionSection({
   title,
@@ -11,9 +12,10 @@ export default function AccordionSection({
   className = '',
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const sectionRef = useAutoScrollOnExpand(isOpen);
 
   return (
-    <div className={`p-2.5 rounded-lg bg-dnd-panel transition-all ${className}`}>
+    <div ref={sectionRef} className={`p-2.5 rounded-lg bg-dnd-panel transition-all ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"

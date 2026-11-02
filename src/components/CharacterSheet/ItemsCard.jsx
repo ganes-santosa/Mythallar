@@ -1,5 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, Plus, X, Trash2 } from 'lucide-react';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import { scrollIntoViewOnExpand } from '../../hooks/useAutoScrollOnExpand';
+
+// ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
+function ItemDeleteButton({ item, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(() => {
+    onDelete?.(item.id);
+  });
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${item.name}` : `Delete ${item.name}`}
+      title={armed ? `Click again to delete ${item.name}` : `Delete ${item.name}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      className={`ml-1.5 p-0.5 rounded transition-all cursor-pointer ${
+        armed
+          ? 'opacity-100 text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400'
+      }`}
+    >
+      <X size={10} />
+    </button>
+  );
+}
 
 export default function ItemsCard({
   items = [],
@@ -27,6 +55,16 @@ export default function ItemsCard({
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
   const [nameError, setNameError] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (isAttuneMode || isAdding) {
+      const frame = requestAnimationFrame(() => {
+        scrollIntoViewOnExpand(containerRef.current);
+      });
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [isAttuneMode, isAdding]);
 
   const safeItems = Array.isArray(items) ? items : [];
   const attunedCount = safeItems.filter((i) => i.requiresAttunement && i.attuned).length;
@@ -44,7 +82,7 @@ export default function ItemsCard({
   };
 
   const handleDeleteItem = (itemId, e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     const updated = safeItems.filter((i) => i.id !== itemId);
     onUpdateItems?.(updated);
   };
@@ -77,7 +115,7 @@ export default function ItemsCard({
   };
 
   return (
-    <div className="space-y-2.5">
+    <div ref={containerRef} className="space-y-2.5">
       {/* Header action bar (fallback when not mounted in AccordionSection) */}
       {!hideHeaderActions && (
         <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">
@@ -116,7 +154,7 @@ export default function ItemsCard({
               className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
             >
               <Plus size={11} />
-              <span className="text-[11px]">+ Add Item</span>
+              <span className="text-[11px]">Add Item</span>
             </button>
           </div>
         </div>
@@ -308,14 +346,7 @@ export default function ItemsCard({
                 </span>
               )}
 
-              <button
-                type="button"
-                aria-label={`Delete ${item.name}`}
-                onClick={(e) => handleDeleteItem(item.id, e)}
-                className="opacity-0 group-hover:opacity-100 ml-1.5 text-slate-500 hover:text-red-400 transition-opacity"
-              >
-                <X size={10} />
-              </button>
+              <ItemDeleteButton item={item} onDelete={handleDeleteItem} />
             </div>
           );
         })}

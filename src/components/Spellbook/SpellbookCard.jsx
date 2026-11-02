@@ -3,6 +3,7 @@ import { Wand2, Trash2, ChevronDown, BookCheck, Feather, HelpCircle, X } from 'l
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
 import useAccordionMount from '../../hooks/useAccordionMount';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import SpellNoteSection from '../Common/SpellNoteSection';
 
 // Runic, alchemical/planetary, and occult BMP glyphs verified to render in the app font stack
@@ -48,6 +49,7 @@ function SpellbookCard({
   const copyHintRef = useClickOutside(showCopyHint, () => setShowCopyHint(false));
   const isExpanded = controlledExpanded ?? localExpanded;
   const { shouldRender, isClosing } = useAccordionMount(isExpanded, 200);
+  const cardRef = useAutoScrollOnExpand(shouldRender);
   const effectivePrepared = isPrepared && !isCopying;
   const { armed: removeArmed, handleClick: handleRemoveClick } = useTwoClickConfirm(() => onRemove?.(spell.id));
   const { armed: finishArmed, handleClick: handleFinishClick } = useTwoClickConfirm(() => onFinishCopying?.(spell.id));
@@ -70,6 +72,7 @@ function SpellbookCard({
 
   return (
     <div
+      ref={cardRef}
       className={`relative rounded-lg bg-dnd-card text-slate-100 transition-[box-shadow,background-color] duration-150 select-none ${
         showCopyHint ? 'overflow-visible z-30' : 'overflow-hidden'
       } ${
