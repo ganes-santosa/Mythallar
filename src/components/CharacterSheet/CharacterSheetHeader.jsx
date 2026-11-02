@@ -139,7 +139,6 @@ export default function CharacterSheetHeader({
       const rowWidth = row.clientWidth;
       if (!rowWidth) return;
 
-      const avatarWidth = 44;
       const nameWidth = nameRef.current?.scrollWidth || 0;
       const currentLevelWidth = levelRef.current?.offsetWidth || 0;
       if (currentLevelWidth > 0) naturalLevelWidth = currentLevelWidth;
@@ -148,23 +147,23 @@ export default function CharacterSheetHeader({
       const actionsMinIconWidth = 82;
       const actionsFullWidth = showButtonText ? actionsWidth : actionsWidth + naturalBtnLabelsWidth;
 
-      const gapBudget = 22;
+      const gapBudget = 16;
 
-      const fullWidthNeeded = avatarWidth + nameWidth + naturalLevelWidth + actionsFullWidth + gapBudget;
+      const fullWidthNeeded = nameWidth + naturalLevelWidth + actionsFullWidth + gapBudget;
       if (rowWidth >= fullWidthNeeded) {
         setShowLevelText(true);
         setShowButtonText(true);
         return;
       }
 
-      const withoutLevelNeeded = avatarWidth + nameWidth + actionsFullWidth + 10;
+      const withoutLevelNeeded = nameWidth + actionsFullWidth + 8;
       if (rowWidth >= withoutLevelNeeded) {
         setShowLevelText(false);
         setShowButtonText(true);
         return;
       }
 
-      const minIconNeeded = avatarWidth + nameWidth + actionsMinIconWidth + 10;
+      const minIconNeeded = nameWidth + actionsMinIconWidth + 8;
       if (rowWidth >= minIconNeeded) {
         setShowLevelText(false);
         setShowButtonText(false);
@@ -290,249 +289,264 @@ export default function CharacterSheetHeader({
       >
         <div className="overflow-hidden">
           <div className="pt-2">
-            <div className="character-profile-card w-full p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm space-y-2">
-              {/* Header row: Portrait + Name / Level + Actions */}
-              <div ref={headerRowRef} className={`flex min-w-0 items-center gap-2 ${isEditing ? 'flex-wrap' : ''}`}>
-                <div className={`flex min-w-0 items-center space-x-2.5 ${isEditing ? 'flex-wrap gap-y-1' : 'flex-1'}`}>
-                  {/* Portrait avatar with compressed upload */}
-                  <div className="relative group flex-shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => portraitInputRef.current?.click()}
-                      aria-label="Upload character portrait"
-                      title="Click to upload portrait (auto-compressed to 256px WebP)"
-                      className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-dnd-gold/40 bg-black/40 overflow-hidden flex items-center justify-center shadow-sm relative group cursor-pointer"
-                    >
-                      {identity.portrait ? (
-                        <img
-                          src={identity.portrait}
-                          alt={character.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User size={18} className="text-slate-400 group-hover:text-dnd-gold transition-colors" />
-                      )}
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Camera size={11} className="text-white" />
-                      </div>
-                    </button>
-                    <input
-                      ref={portraitInputRef}
-                      type="file"
-                      accept="image/*"
-                      aria-label="Portrait file input"
-                      onChange={handlePortraitUpload}
-                      className="hidden"
-                    />
+            <div className="character-profile-card w-full rounded-xl bg-dnd-card shadow-sm flex items-stretch overflow-hidden">
+              {/* Left: Prominent Portrait Column with Gradient Fade to Right */}
+              <div className="relative flex-shrink-0 w-28 sm:w-36 md:w-44 self-stretch overflow-hidden group select-none">
+                {identity.portrait ? (
+                  <img
+                    src={identity.portrait}
+                    alt={character.name}
+                    className="w-full h-full object-cover object-center"
+                  />
+                ) : (
+                  <div className="w-full h-full min-h-[110px] bg-dnd-panel/60 flex flex-col items-center justify-center text-slate-500 group-hover:text-dnd-gold transition-colors p-2 text-center">
+                    <User size={32} />
+                    <span className="text-[10px] mt-1 text-slate-400 font-medium">Add Portrait</span>
                   </div>
+                )}
 
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={nameDraft}
-                      onChange={(e) => setNameDraft(e.target.value)}
-                      placeholder="Character Name"
-                      autoFocus
-                      className="bg-dnd-panel rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
-                    />
-                  ) : (
-                    <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
-                      {character.name}
-                    </h2>
-                  )}
+                {/* Vertical gradient on the right edge of the portrait fading into card background */}
+                <div className="absolute inset-y-0 right-0 w-12 sm:w-16 bg-gradient-to-r from-transparent via-dnd-card/50 to-dnd-card pointer-events-none z-10" />
 
-                  {!isEditing && (
-                    <span
-                      ref={levelRef}
-                      className={`character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none ${
-                        showLevelText ? '' : 'hidden'
-                      }`}
-                    >
-                      Character Level <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
-                    </span>
-                  )}
-                </div>
+                {/* Hover overlay to change avatar with soft right gradient */}
+                <button
+                  type="button"
+                  onClick={() => portraitInputRef.current?.click()}
+                  aria-label="Upload character portrait"
+                  title="Click to upload portrait (auto-compressed to 256px WebP)"
+                  className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer focus:outline-none focus:opacity-100"
+                >
+                  <div className="flex items-center space-x-1 px-2 py-1 rounded-md bg-black/75 text-slate-200 text-[10px] shadow">
+                    <Camera size={12} className="text-dnd-gold" />
+                    <span>Change</span>
+                  </div>
+                </button>
 
-                {/* Right: Actions */}
-                <div ref={actionsRef} className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
-                  {isEditing ? (
-                    <>
-                      <button
-                        type="button"
-                        aria-label="Save Profile"
-                        onClick={handleSaveEdit}
-                        className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm cursor-pointer"
-                        title="Done editing profile"
-                      >
-                        <Check size={12} className="mr-1" />
-                        Done
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Cancel Edit Profile"
-                        onClick={handleCancelEdit}
-                        className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Cancel editing"
-                      >
-                        <X size={12} />
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setShowManagerModal(true)}
-                        aria-label="Manage Characters"
-                        title="Open character manager modal"
-                        className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer"
-                      >
-                        <Users size={13} />
-                      </button>
-
-                      <button
-                        type="button"
-                        aria-label="Edit Profile"
-                        onClick={() => setIsEditing(true)}
-                        className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors cursor-pointer"
-                        title="Edit character name and classes"
-                      >
-                        <Pencil size={11} className="text-slate-400" />
-                        {showButtonText && <span className="character-btn-label ml-1">Edit</span>}
-                      </button>
-
-                      {totalLevel < 20 && (
-                        <button
-                          type="button"
-                          onClick={handleOpenLevelUpModal}
-                          className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer"
-                          title="Level up this character"
-                        >
-                          <ArrowUpCircle size={12} className="text-slate-400 flex-shrink-0" />
-                          {showButtonText && <span className="character-btn-label ml-1">Level Up</span>}
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
+                <input
+                  ref={portraitInputRef}
+                  type="file"
+                  accept="image/*"
+                  aria-label="Portrait file input"
+                  onChange={handlePortraitUpload}
+                  className="hidden"
+                />
               </div>
 
-              {/* Multiclass Rows */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {isEditing ? (
-                  <>
-                    {classes.map((clsItem, idx) => {
-                      const maxLvlForThisClass = 20 - (totalLevel - clsItem.level);
-                      return (
-                        <div
-                          key={idx}
-                          className="flex items-center space-x-1 bg-dnd-panel rounded-md px-1.5 py-0.5 text-xs animate-in fade-in"
-                        >
-                          <select
-                            value={clsItem.className}
-                            onChange={(e) => handleClassChange(idx, e.target.value)}
-                            className="bg-transparent border-0 text-slate-200 font-normal focus:outline-none cursor-pointer pr-1"
-                            aria-label={`Character Class ${idx + 1}`}
-                          >
-                            {CASTER_CLASSES.map((cls) => (
-                              <option key={cls} value={cls} className="bg-dnd-panel">
-                                {cls}
-                              </option>
-                            ))}
-                          </select>
+              {/* Right: Info container (Name, Level, Actions, Multiclass, Identity fields) */}
+              <div className="flex-1 min-w-0 p-2.5 sm:p-3 flex flex-col justify-between space-y-2">
+                {/* Row 1: Name / Level + Actions */}
+                <div ref={headerRowRef} className={`flex min-w-0 items-center gap-2 ${isEditing ? 'flex-wrap' : ''}`}>
+                  <div className={`flex min-w-0 items-center space-x-2.5 ${isEditing ? 'flex-wrap gap-y-1' : 'flex-1'}`}>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={nameDraft}
+                        onChange={(e) => setNameDraft(e.target.value)}
+                        placeholder="Character Name"
+                        autoFocus
+                        className="bg-dnd-panel rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
+                      />
+                    ) : (
+                      <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
+                        {character.name}
+                      </h2>
+                    )}
 
-                          <div className="flex items-center space-x-1 pl-1">
-                            <span className="text-[11px] text-slate-400">Lvl</span>
+                    {!isEditing && (
+                      <span
+                        ref={levelRef}
+                        className={`character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none ${
+                          showLevelText ? '' : 'hidden'
+                        }`}
+                      >
+                        Character Level <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Actions (aligned right) */}
+                  <div ref={actionsRef} className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
+                    {isEditing ? (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Save Profile"
+                          onClick={handleSaveEdit}
+                          className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                          title="Done editing profile"
+                        >
+                          <Check size={12} className="mr-1" />
+                          Done
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Cancel Edit Profile"
+                          onClick={handleCancelEdit}
+                          className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Cancel editing"
+                        >
+                          <X size={12} />
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setShowManagerModal(true)}
+                          aria-label="Manage Characters"
+                          title="Open character manager modal"
+                          className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer"
+                        >
+                          <Users size={13} />
+                        </button>
+
+                        <button
+                          type="button"
+                          aria-label="Edit Profile"
+                          onClick={() => setIsEditing(true)}
+                          className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors cursor-pointer"
+                          title="Edit character name and classes"
+                        >
+                          <Pencil size={11} className="text-slate-400" />
+                          {showButtonText && <span className="character-btn-label ml-1">Edit</span>}
+                        </button>
+
+                        {totalLevel < 20 && (
+                          <button
+                            type="button"
+                            onClick={handleOpenLevelUpModal}
+                            className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer"
+                            title="Level up this character"
+                          >
+                            <ArrowUpCircle size={12} className="text-slate-400 flex-shrink-0" />
+                            {showButtonText && <span className="character-btn-label ml-1">Level Up</span>}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Row 2: Multiclass Rows */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {isEditing ? (
+                    <>
+                      {classes.map((clsItem, idx) => {
+                        const maxLvlForThisClass = 20 - (totalLevel - clsItem.level);
+                        return (
+                          <div
+                            key={idx}
+                            className="flex items-center space-x-1 bg-dnd-panel rounded-md px-1.5 py-0.5 text-xs animate-in fade-in"
+                          >
                             <select
-                              value={clsItem.level}
-                              onChange={(e) => handleSetClassLevel(idx, e.target.value)}
-                              className="bg-dnd-panel/80 rounded px-1 py-0.5 text-[11px] text-slate-100 font-normal focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
-                              aria-label={`Level for ${clsItem.className}`}
+                              value={clsItem.className}
+                              onChange={(e) => handleClassChange(idx, e.target.value)}
+                              className="bg-transparent border-0 text-slate-200 font-normal focus:outline-none cursor-pointer pr-1"
+                              aria-label={`Character Class ${idx + 1}`}
                             >
-                              {Array.from({ length: maxLvlForThisClass }, (_, i) => i + 1).map((lvl) => (
-                                <option key={lvl} value={lvl} className="bg-dnd-panel">
-                                  {lvl}
+                              {CASTER_CLASSES.map((cls) => (
+                                <option key={cls} value={cls} className="bg-dnd-panel">
+                                  {cls}
                                 </option>
                               ))}
                             </select>
+
+                            <div className="flex items-center space-x-1 pl-1">
+                              <span className="text-[11px] text-slate-400">Lvl</span>
+                              <select
+                                value={clsItem.level}
+                                onChange={(e) => handleSetClassLevel(idx, e.target.value)}
+                                className="bg-dnd-panel/80 rounded px-1 py-0.5 text-[11px] text-slate-100 font-normal focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
+                                aria-label={`Level for ${clsItem.className}`}
+                              >
+                                {Array.from({ length: maxLvlForThisClass }, (_, i) => i + 1).map((lvl) => (
+                                  <option key={lvl} value={lvl} className="bg-dnd-panel">
+                                    {lvl}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {classes.length > 1 && (
+                              <ClassDeleteButton
+                                className={clsItem.className}
+                                onRemove={() => handleRemoveClass(idx)}
+                              />
+                            )}
                           </div>
+                        );
+                      })}
 
-                          {classes.length > 1 && (
-                            <ClassDeleteButton
-                              className={clsItem.className}
-                              onRemove={() => handleRemoveClass(idx)}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-
-                    {classes.length < CASTER_CLASSES.length && totalLevel < 20 && (
-                      <button
-                        type="button"
-                        onClick={handleAddClass}
-                        className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs transition-colors cursor-pointer"
-                        title="Add another class for multiclassing"
+                      {classes.length < CASTER_CLASSES.length && totalLevel < 20 && (
+                        <button
+                          type="button"
+                          onClick={handleAddClass}
+                          className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs transition-colors cursor-pointer"
+                          title="Add another class for multiclassing"
+                        >
+                          <Plus size={12} className="mr-1" />
+                          Add Class
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    classes.map((clsItem, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center space-x-1.5 bg-dnd-panel/60 rounded-md px-2 py-0.5 text-xs text-slate-200"
                       >
-                        <Plus size={12} className="mr-1" />
-                        Add Class
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  classes.map((clsItem, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center space-x-1.5 bg-dnd-panel/60 rounded-md px-2 py-0.5 text-xs text-slate-200"
-                    >
-                      <span className="font-normal text-slate-200">{clsItem.className}</span>
-                      <span className="text-[11px] text-dnd-gold font-normal">Lvl {clsItem.level}</span>
+                        <span className="font-normal text-slate-200">{clsItem.className}</span>
+                        <span className="text-[11px] text-dnd-gold font-normal">Lvl {clsItem.level}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Row 3: Identity Metadata Fields (Race above Subclass & Background) */}
+                <div className="space-y-1.5 pt-2 border-t border-white/5 text-[11px]">
+                  <div>
+                    <label htmlFor="sheet-id-race" className="block text-[9px] text-slate-400 mb-0.5">
+                      Race / Species
+                    </label>
+                    <input
+                      id="sheet-id-race"
+                      type="text"
+                      placeholder="e.g. High Elf"
+                      value={identity.race || ''}
+                      onChange={(e) => handleIdentityChange('race', e.target.value)}
+                      className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label htmlFor="sheet-id-subclass" className="block text-[9px] text-slate-400 mb-0.5">
+                        Subclass / Tradition
+                      </label>
+                      <input
+                        id="sheet-id-subclass"
+                        type="text"
+                        placeholder="e.g. Chronurgy"
+                        value={identity.subclass || ''}
+                        onChange={(e) => handleIdentityChange('subclass', e.target.value)}
+                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                      />
                     </div>
-                  ))
-                )}
-              </div>
 
-              {/* Identity Metadata Fields (Race, Subclass, Background) */}
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/5 text-[11px]">
-                <div>
-                  <label htmlFor="sheet-id-race" className="block text-[9px] text-slate-400 mb-0.5">
-                    Race / Species
-                  </label>
-                  <input
-                    id="sheet-id-race"
-                    type="text"
-                    placeholder="e.g. High Elf"
-                    value={identity.race || ''}
-                    onChange={(e) => handleIdentityChange('race', e.target.value)}
-                    className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="sheet-id-subclass" className="block text-[9px] text-slate-400 mb-0.5">
-                    Subclass / Tradition
-                  </label>
-                  <input
-                    id="sheet-id-subclass"
-                    type="text"
-                    placeholder="e.g. Chronurgy"
-                    value={identity.subclass || ''}
-                    onChange={(e) => handleIdentityChange('subclass', e.target.value)}
-                    className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
-                    Background
-                  </label>
-                  <input
-                    id="sheet-id-background"
-                    type="text"
-                    placeholder="e.g. Sage"
-                    value={identity.background || ''}
-                    onChange={(e) => handleIdentityChange('background', e.target.value)}
-                    className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                  />
+                    <div>
+                      <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
+                        Background
+                      </label>
+                      <input
+                        id="sheet-id-background"
+                        type="text"
+                        placeholder="e.g. Sage"
+                        value={identity.background || ''}
+                        onChange={(e) => handleIdentityChange('background', e.target.value)}
+                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
