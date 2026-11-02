@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Sun, Sparkles } from 'lucide-react';
+import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Sparkles } from 'lucide-react';
 import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
 import { normalizeSpeeds, normalizeHitDice } from '../../utils/storage';
 
@@ -330,7 +330,7 @@ export default function VitalsCard({
   return (
     <div className="space-y-2.5 p-0.5">
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[11fr_5fr_8fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[13fr_6fr_9fr] xl:grid-cols-[11fr_5fr_8fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 lg:col-span-1">
@@ -391,7 +391,7 @@ export default function VitalsCard({
             </div>
           </div>
         ) : (
-          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm sm:col-span-2 lg:col-span-1">
+          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 lg:col-span-1">
             {/* Left: HP Info */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-0.5">
@@ -521,9 +521,9 @@ export default function VitalsCard({
         )}
 
         {/* Card 2: Stacked AC & Initiative Cards */}
-        <div className="flex flex-col gap-2 sm:col-span-1 lg:col-span-1">
+        <div className="flex flex-col gap-2 min-w-0 sm:col-span-1 lg:col-span-1">
           {/* Armor Class Card */}
-          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1">
+          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
             <div className="text-[10px] text-slate-400 flex items-center justify-between">
               <span className="flex items-center gap-1 font-bold text-slate-400">
                 <Shield size={12} className="text-dnd-gold" /> AC
@@ -665,7 +665,7 @@ export default function VitalsCard({
         </div>
 
         {/* Card 3: Dedicated Movement Speeds Card */}
-        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-1 lg:col-span-1">
+        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 lg:col-span-1">
           {/* Header */}
           <div className="text-[10px] text-slate-400 flex items-center justify-between">
             <span className="flex items-center gap-1 font-bold text-slate-400">
@@ -713,15 +713,15 @@ export default function VitalsCard({
             </div>
 
             {/* Right: Optional Speeds List */}
-            <div className="flex-1 min-w-0 flex flex-col items-end gap-1">
+            <div className="flex-1 min-w-0 flex flex-col items-end gap-1 overflow-hidden">
               {OPTIONAL_SPEED_TYPES.filter((t) => speeds[t.key] !== undefined).map(({ key, label }) => (
                 <div
                   key={key}
-                  className="flex items-center gap-1 text-[11px] bg-dnd-panel/60 border border-white/5 rounded px-1.5 py-0.5 text-slate-200 whitespace-nowrap"
+                  className="max-w-full flex items-center gap-1 text-[11px] bg-dnd-panel/60 border border-white/5 rounded px-1.5 py-0.5 text-slate-200"
                 >
-                  <span className="text-slate-400 text-[10px]">{label}:</span>
+                  <span className="text-slate-400 text-[10px] truncate">{label}:</span>
                   {isEditing ? (
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       <input
                         type="number"
                         aria-label={`${label} Speed`}
@@ -740,7 +740,7 @@ export default function VitalsCard({
                       </button>
                     </div>
                   ) : (
-                    <span className="font-bold text-slate-100">{speeds[key]} ft</span>
+                    <span className="font-bold text-slate-100 flex-shrink-0">{speeds[key]} ft</span>
                   )}
                 </div>
               ))}
@@ -793,153 +793,136 @@ export default function VitalsCard({
             </form>
           )}
         </div>
-      </div>
 
-      {/* Row 2: Compact Trackers Strip (Hit Dice, Death Saves, Inspiration) */}
-      <div className="bg-dnd-card/60 border border-white/5 rounded-lg p-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 text-xs">
-        {/* Hit Dice */}
-        <div className="flex-1 flex flex-wrap items-center justify-between sm:justify-start gap-1.5 sm:gap-2">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold text-slate-400">
+        {/* Row 2: Compact Trackers Strip (Hit Dice, Inspiration, Death Saves) in ONE Single Card */}
+        <div className="col-span-1 sm:col-span-2 lg:col-span-3 bg-dnd-card/60 border border-white/5 rounded-lg py-1.5 px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[13fr_6fr_9fr] xl:grid-cols-[11fr_5fr_8fr] lg:grid-cols-subgrid text-xs items-center">
+          {/* Subdivision 1: Hit Dice */}
+          <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 min-w-0 sm:col-span-2 lg:col-span-1 border-b sm:border-b lg:border-b-0 lg:border-r border-white/5 pb-2 sm:pb-2 lg:pb-0 pl-2 pr-2">
+            <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
               Hit Dice
             </span>
-            {onShortRest && (
+            <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto no-scrollbar py-0.5 min-w-0">
+              {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
+                <div
+                  key={dieKey}
+                  className="flex items-center space-x-1 bg-dnd-panel/60 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
+                >
+                  <button
+                    type="button"
+                    aria-label={`Spend ${dieKey} Hit Die`}
+                    onClick={() => changeHitDice(dieKey, -1)}
+                    disabled={pool.current <= 0}
+                    className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                  >
+                    -
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Roll ${dieKey}`}
+                    onClick={() => handleRollHitDie(dieKey)}
+                    disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
+                    className="px-1.5 py-0.5 rounded bg-dnd-gold/10 hover:bg-dnd-gold/20 text-dnd-gold disabled:opacity-40 text-[10px] font-semibold transition-colors flex items-center gap-0.5 cursor-pointer"
+                    title={`Roll 1${dieKey} + CON mod (${getAbilityModifier(conScore) >= 0 ? '+' : ''}${getAbilityModifier(conScore)}) to heal`}
+                  >
+                    <Sparkles size={9} />
+                    <span>{pool.current}/{pool.max} {dieKey}</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Recover ${dieKey} Hit Die`}
+                    onClick={() => changeHitDice(dieKey, 1)}
+                    disabled={pool.current >= pool.max}
+                    className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Subdivision 2: Inspiration */}
+          <div className="flex flex-col xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 lg:col-span-1 border-b sm:border-b-0 sm:border-r border-white/5 pb-2 sm:pb-0 pt-2 sm:pt-0 px-1 text-center">
+            <span className="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1 min-w-0 flex-shrink-0">
+              <Lightbulb size={11} className="text-dnd-gold flex-shrink-0" />
+              <span className="truncate">Inspiration</span>
+            </span>
+            <div className="flex items-center justify-center space-x-1 flex-shrink-0">
               <button
                 type="button"
-                onClick={onShortRest}
-                className="px-1.5 py-0.5 text-[9px] font-semibold rounded bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 transition-colors flex items-center gap-1 cursor-pointer"
-                title="Take a Short Rest"
+                aria-label="Decrement inspiration"
+                onClick={() => handleInspirationStep(-1)}
+                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
               >
-                <Sun size={10} className="text-amber-400" />
-                Rest
+                -
               </button>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
-              <div
-                key={dieKey}
-                className="flex items-center space-x-1 bg-dnd-panel/60 px-1.5 py-0.5 rounded border border-white/5"
+              <span data-testid="inspiration-value" className="w-4 text-center text-xs font-bold text-dnd-gold leading-none">
+                {inspirationCount}
+              </span>
+              <button
+                type="button"
+                aria-label="Increment inspiration"
+                onClick={() => handleInspirationStep(1)}
+                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
               >
-                <button
-                  type="button"
-                  aria-label={`Spend ${dieKey} Hit Die`}
-                  onClick={() => changeHitDice(dieKey, -1)}
-                  disabled={pool.current <= 0}
-                  className="w-4 h-4 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer"
-                >
-                  -
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Roll ${dieKey}`}
-                  onClick={() => handleRollHitDie(dieKey)}
-                  disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
-                  className="px-1.5 py-0.5 rounded bg-dnd-gold/10 hover:bg-dnd-gold/20 text-dnd-gold disabled:opacity-40 text-[11px] font-bold font-mono transition-colors flex items-center gap-1 cursor-pointer"
-                  title={`Roll 1${dieKey} + CON mod (${getAbilityModifier(conScore) >= 0 ? '+' : ''}${getAbilityModifier(conScore)}) to heal`}
-                >
-                  <Sparkles size={10} />
-                  <span>{pool.current}/{pool.max} {dieKey}</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Recover ${dieKey} Hit Die`}
-                  onClick={() => changeHitDice(dieKey, 1)}
-                  disabled={pool.current >= pool.max}
-                  className="w-4 h-4 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-xs font-bold transition-colors cursor-pointer"
-                >
-                  +
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Divider */}
-        <div className="hidden sm:block w-px h-6 bg-white/5 self-center" />
-
-        {/* Death Saves */}
-        <div className="flex-1 flex items-center justify-between sm:justify-center gap-3">
-          <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-            <Activity size={11} className="text-red-400" /> Death Saves
-          </span>
-          <div className="flex items-center gap-2">
-            {/* Successes */}
-            <div className="flex items-center gap-1">
-              <span className="text-[9px] text-emerald-400 font-bold">Succ</span>
-              <div className="flex items-center space-x-1">
-                {[1, 2, 3].map((num) => {
-                  const active = (deathSaves.successes || 0) >= num;
-                  return (
-                    <button
-                      key={`ds-succ-${num}`}
-                      type="button"
-                      aria-label={`Death Save Success ${num}`}
-                      onClick={() => toggleDeathSave('successes', num)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                        active
-                          ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
-                          : 'bg-dnd-panel hover:bg-emerald-400/40'
-                      }`}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Failures */}
-            <div className="flex items-center gap-1">
-              <span className="text-[9px] text-red-400 font-bold">Fail</span>
-              <div className="flex items-center space-x-1">
-                {[1, 2, 3].map((num) => {
-                  const active = (deathSaves.failures || 0) >= num;
-                  return (
-                    <button
-                      key={`ds-fail-${num}`}
-                      type="button"
-                      aria-label={`Death Save Failure ${num}`}
-                      onClick={() => toggleDeathSave('failures', num)}
-                      className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                        active
-                          ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
-                          : 'bg-dnd-panel hover:bg-red-400/40'
-                      }`}
-                    />
-                  );
-                })}
-              </div>
+                +
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* Divider */}
-        <div className="hidden sm:block w-px h-6 bg-white/5 self-center" />
-
-        {/* Inspiration */}
-        <div className="flex-1 flex items-center justify-between sm:justify-end gap-2">
-          <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
-            <Lightbulb size={11} className="text-dnd-gold" /> Inspiration
-          </span>
-          <div className="flex items-center space-x-1.5">
-            <button
-              type="button"
-              aria-label="Decrement inspiration"
-              onClick={() => handleInspirationStep(-1)}
-              className="w-4 h-4 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              -
-            </button>
-            <span data-testid="inspiration-value" className="w-5 text-center text-sm font-bold text-dnd-gold">
-              {inspirationCount}
+          {/* Subdivision 3: Death Saves */}
+          <div className="flex flex-col items-center justify-center min-w-0 sm:col-span-1 lg:col-span-1 pt-2 sm:pt-0 pl-1 pr-2">
+            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 flex-shrink-0 mb-0.5">
+              <Activity size={11} className="text-red-400 flex-shrink-0" />
+              <span>Death Saves</span>
             </span>
-            <button
-              type="button"
-              aria-label="Increment inspiration"
-              onClick={() => handleInspirationStep(1)}
-              className="w-4 h-4 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-xs font-bold transition-colors cursor-pointer"
-            >
-              +
-            </button>
+            <div className="flex items-center gap-2.5 flex-shrink-0">
+              {/* Successes */}
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] text-emerald-400 font-bold">Succ</span>
+                <div className="flex items-center space-x-1">
+                  {[1, 2, 3].map((num) => {
+                    const active = (deathSaves.successes || 0) >= num;
+                    return (
+                      <button
+                        key={`ds-succ-${num}`}
+                        type="button"
+                        aria-label={`Death Save Success ${num}`}
+                        onClick={() => toggleDeathSave('successes', num)}
+                        className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                          active
+                            ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
+                            : 'bg-dnd-panel hover:bg-emerald-400/40'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Failures */}
+              <div className="flex items-center gap-1">
+                <span className="text-[9px] text-red-400 font-bold">Fail</span>
+                <div className="flex items-center space-x-1">
+                  {[1, 2, 3].map((num) => {
+                    const active = (deathSaves.failures || 0) >= num;
+                    return (
+                      <button
+                        key={`ds-fail-${num}`}
+                        type="button"
+                        aria-label={`Death Save Failure ${num}`}
+                        onClick={() => toggleDeathSave('failures', num)}
+                        className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                          active
+                            ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                            : 'bg-dnd-panel hover:bg-red-400/40'
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

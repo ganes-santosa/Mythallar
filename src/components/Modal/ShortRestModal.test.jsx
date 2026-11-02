@@ -161,7 +161,7 @@ describe('ShortRestModal', () => {
     expect(screen.getByText(/Recovery budget:/i)).toBeInTheDocument();
 
     // Increment 1st-level recovery
-    const incBtn = screen.getByLabelText('Recover 1st Level Slot');
+    const incBtn = screen.getByLabelText(/Increase recovered level 1 slots/i);
     fireEvent.click(incBtn);
 
     const finishBtn = screen.getByRole('button', { name: /Finish Short Rest/i });

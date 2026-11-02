@@ -285,7 +285,7 @@ describe('SpellSlotTracker', () => {
     expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
   });
 
-  it('triggers onShortRest on Short Rest click for Wizard characters', () => {
+  it('triggers onShortRest on Short Rest click', () => {
     const handleShortRest = vi.fn();
     render(
       <SpellSlotTracker
@@ -298,11 +298,12 @@ describe('SpellSlotTracker', () => {
       />
     );
 
-    const shortRestBtn = screen.getByRole('button', { name: /Short Rest Arcane Recovery/i });
+    const shortRestBtn = screen.getByRole('button', { name: 'Short Rest' });
     expect(shortRestBtn).toHaveClass('bg-dnd-card');
     expect(shortRestBtn).toHaveClass('text-amber-200/80');
     expect(shortRestBtn.querySelector('svg')).toHaveClass('text-amber-400');
     fireEvent.click(shortRestBtn);
+
     expect(handleShortRest).toHaveBeenCalledTimes(1);
   });
 

@@ -428,8 +428,8 @@ describe('App End-to-End Integration', () => {
     fireEvent.change(dmgInput, { target: { value: '5' } });
     fireEvent.click(screen.getByRole('button', { name: 'Apply Damage' }));
 
-    // Click Rest button in Hit Dice tracker
-    const restBtn = screen.getByRole('button', { name: /^Rest$/i });
+    // Click Short Rest button
+    const restBtn = screen.getByRole('button', { name: 'Short Rest' });
     fireEvent.click(restBtn);
 
     // Short Rest modal is open

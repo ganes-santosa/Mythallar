@@ -7,7 +7,7 @@ import { getMaxArcaneRecoveryLevels, getWizardLevel } from '../../utils/spellSlo
  * Wizard recovers spell slots with a combined level <= ceil(wizardLevel / 2).
  * Slots recovered must be 5th level or lower. Once per long rest.
  */
-function SlotPipStar({ status }) {
+export function SlotPipStar({ status }) {
   // status: 'available' | 'recovering' | 'expended'
   const isAvailable = status === 'available';
   const isRecovering = status === 'recovering';

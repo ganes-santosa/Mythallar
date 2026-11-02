@@ -190,30 +190,17 @@ export default function SpellSlotTracker({
               </button>
             )}
 
-            {/* Short Rest / Arcane Recovery Button */}
-            {isWizardCharacter(character) ? (
-              <button
-                type="button"
-                aria-label="Short Rest Arcane Recovery"
-                onClick={onShortRest}
-                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
-                title="Short Rest (Arcane Recovery)"
-              >
-                <Sun size={12} className="mr-1 text-amber-400" />
-                Short Rest
-              </button>
-            ) : (
-              <button
-                type="button"
-                aria-label="Short Rest"
-                onClick={onShortRest}
-                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
-                title="Short Rest"
-              >
-                <Sun size={12} className="mr-1 text-amber-400" />
-                Short Rest
-              </button>
-            )}
+            {/* Short Rest Button */}
+            <button
+              type="button"
+              aria-label="Short Rest"
+              onClick={onShortRest}
+              className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
+              title="Take a Short Rest"
+            >
+              <Sun size={12} className="mr-1 text-amber-400" />
+              Short Rest
+            </button>
 
             {/* Long Rest with two-click confirmation */}
             <button

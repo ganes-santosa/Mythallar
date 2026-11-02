@@ -655,23 +655,5 @@ describe('VitalsCard', () => {
       // Disabled because pool is 0
       expect(screen.getByRole('button', { name: /Roll d8/i })).toBeDisabled();
     });
-
-    it('invokes onShortRest when Rest button is clicked', () => {
-      const handleShortRest = vi.fn();
-      render(
-        <VitalsCard
-          vitals={mockVitals}
-          conScore={10}
-          classes={[{ className: 'Wizard', level: 5 }]}
-          onUpdateVitals={() => {}}
-          onShortRest={handleShortRest}
-        />
-      );
-
-      const restBtn = screen.getByRole('button', { name: /Rest/i });
-      expect(restBtn).toBeInTheDocument();
-      fireEvent.click(restBtn);
-      expect(handleShortRest).toHaveBeenCalledTimes(1);
-    });
   });
 });

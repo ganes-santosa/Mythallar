@@ -52,6 +52,14 @@ h1, h2, h3, h4, .font-display {
   background: var(--color-ivory);
 }
 
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 .character-profile-card { container-type: inline-size; }
 
 .character-edit-actions { flex-wrap: wrap; }
