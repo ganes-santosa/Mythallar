@@ -150,7 +150,7 @@ export default function ShortRestModal({
             </div>
 
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-slate-100">{hpCurrent}</span>
+              <span className="text-xl font-bold text-slate-100">{hpCurrent}</span>
               <span className="text-xs text-slate-400">/ {effectiveMax}</span>
               {hpTemp > 0 && (
                 <span className="text-xs font-semibold text-blue-400 ml-1">

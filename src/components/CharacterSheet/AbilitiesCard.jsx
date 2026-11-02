@@ -110,7 +110,7 @@ export default function AbilitiesCard({ abilities, level, isEditing = false, onU
                   aria-label={`${label} Score`}
                   value={score}
                   onChange={isEditing ? (e) => handleScoreChange(key, e.target.value) : undefined}
-                  className={`w-12 text-center text-base sm:text-lg font-bold text-slate-100 rounded-md transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none focus:outline-none ${
+                  className={`w-12 text-center text-xl font-black text-slate-100 rounded-md transition-colors leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none focus:outline-none ${
                     isEditing
                       ? 'bg-dnd-panel focus:ring-1 focus:ring-white/20 pointer-events-auto'
                       : 'bg-transparent cursor-default select-none pointer-events-none focus:ring-0'

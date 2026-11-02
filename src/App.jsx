@@ -363,6 +363,14 @@ export default function App() {
     }, 3200);
   }, []);
 
+  const [leftToast, setLeftToast] = useState(null);
+  const showLeftToast = useCallback((message, type = 'success') => {
+    setLeftToast({ message, type });
+    setTimeout(() => {
+      setLeftToast((curr) => (curr?.message === message ? null : curr));
+    }, 3200);
+  }, []);
+
   // --- Character Profile Mutations ---
   const updateActiveCharacter = useCallback(
     (updated) => {
@@ -1039,7 +1047,17 @@ export default function App() {
       {/* Main Dual-Pane Body */}
       <main className="relative z-10 flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
-        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10">
+        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10 relative">
+          {/* Left Pane Toast Banner */}
+          {leftToast && (
+            <div className="absolute top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-white/5 pointer-events-none">
+              {leftToast.type === 'success' && <CheckCircle2 size={16} className="text-emerald-400" />}
+              {leftToast.type === 'error' && <AlertCircle size={16} className="text-red-400" />}
+              {leftToast.type === 'info' && <Sparkles size={16} className="text-dnd-gold" />}
+              <span className="text-slate-100">{leftToast.message}</span>
+            </div>
+          )}
+
           {/* Integrated Header */}
           <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
             <div className="flex items-center space-x-2">
@@ -1116,8 +1134,13 @@ export default function App() {
           {leftPaneView === 'sheet' ? (
             <CharacterSheetView
               character={activeCharacter}
+              profiles={profiles}
               onUpdateCharacter={updateActiveCharacter}
+              onSelectProfile={handleSelectProfile}
+              onCreateProfile={handleOpenCreateCharacter}
+              onDeleteProfile={handleDeleteCharacter}
               onShortRest={handleShortRest}
+              onShowToast={showLeftToast}
             />
           ) : (
             <>

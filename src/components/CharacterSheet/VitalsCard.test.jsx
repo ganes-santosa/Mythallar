@@ -52,10 +52,10 @@ describe('VitalsCard', () => {
 
   it('allows adding and removing conditions dynamically', () => {
     const handleUpdate = vi.fn();
-    render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
+    const { rerender } = render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
     
-    // Add condition
-    const addBtn = screen.getByRole('button', { name: /\+ Add Condition/i });
+    // Add condition (first "+ Add" button)
+    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[0];
     fireEvent.click(addBtn);
 
     const input = screen.getByPlaceholderText(/e\.g\. Paralyzed, Blinded/i);
@@ -68,7 +68,11 @@ describe('VitalsCard', () => {
       conditions: expect.arrayContaining(['Poisoned', 'Exhausted 1', 'Paralyzed'])
     }));
 
-    // Remove condition
+    // In view mode, remove button is hidden
+    expect(screen.queryByLabelText('Remove condition Poisoned')).not.toBeInTheDocument();
+
+    // In edit mode, remove button is visible and allows removing
+    rerender(<VitalsCard vitals={mockVitals} isEditing={true} onUpdateVitals={handleUpdate} />);
     const removePoisonedBtn = screen.getByLabelText('Remove condition Poisoned');
     fireEvent.click(removePoisonedBtn);
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
@@ -102,6 +106,51 @@ describe('VitalsCard', () => {
 
     // Defenses display
     expect(screen.getByText('Fire (Resistance)')).toBeInTheDocument();
+  });
+
+  it('allows adding resistance and immunity with type toggle', () => {
+    const handleUpdate = vi.fn();
+    render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
+
+    // Open add defense form (second "+ Add" button)
+    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[1];
+    fireEvent.click(addBtn);
+
+    // Toggle defaults to Resistance
+    const input = screen.getByPlaceholderText(/e\.g\. Fire, Cold/i);
+    fireEvent.change(input, { target: { value: 'Cold' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/i }));
+
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      defenses: ['Cold (Resistance)'],
+    }));
+
+    // Toggle to Immunity
+    fireEvent.click(addBtn);
+    const immunityBtn = screen.getByRole('button', { name: /^Immunity$/i });
+    fireEvent.click(immunityBtn);
+
+    const immuneInput = screen.getByPlaceholderText(/e\.g\. Poison, Charmed/i);
+    fireEvent.change(immuneInput, { target: { value: 'Poison' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/i }));
+
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      defenses: ['Poison (Immune)'],
+    }));
+
+    // In view mode, remove button is hidden
+    expect(screen.queryByLabelText(/Remove defense/i)).not.toBeInTheDocument();
+
+    // In edit mode, remove button is visible and allows removing
+    const vitalsWithDefense = { ...mockVitals, defenses: ['Cold (Resistance)'] };
+    const { rerender: rerenderEdit } = render(
+      <VitalsCard vitals={vitalsWithDefense} isEditing={true} onUpdateVitals={handleUpdate} />
+    );
+    const removeColdBtn = screen.getByLabelText('Remove defense Cold (Resistance)');
+    fireEvent.click(removeColdBtn);
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      defenses: [],
+    }));
   });
 
   it('allows opening and saving AC note via inline note action', () => {
@@ -525,9 +574,16 @@ describe('VitalsCard', () => {
       expect(screen.getByRole('button', { name: /Roll d8/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Roll d10/i })).toBeInTheDocument();
 
-      // Click roll d8
+      // Click roll d8: first click arms confirmation hook
       const rollD8Btn = screen.getByRole('button', { name: /Roll d8/i });
       fireEvent.click(rollD8Btn);
+
+      expect(handleUpdate).not.toHaveBeenCalled();
+      const armedBtn = screen.getByRole('button', { name: /Click again to roll d8/i });
+      expect(armedBtn).toBeInTheDocument();
+
+      // Second click executes roll, restores HP, and shows toast
+      fireEvent.click(armedBtn);
 
       expect(handleUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -543,6 +599,7 @@ describe('VitalsCard', () => {
       const updatedHp = handleUpdate.mock.calls[0][0].hpCurrent;
       expect(updatedHp).toBeGreaterThan(30);
       expect(updatedHp).toBeLessThanOrEqual(50);
+      expect(screen.getByText(/Restored d8 \(\d+\) HP/i)).toBeInTheDocument();
     });
 
     it('allows manual increment and decrement of hit dice without altering HP', () => {

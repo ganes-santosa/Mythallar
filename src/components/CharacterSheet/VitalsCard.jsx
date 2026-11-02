@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Sparkles } from 'lucide-react';
+import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
 import { normalizeSpeeds, normalizeHitDice } from '../../utils/storage';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 
 const OPTIONAL_SPEED_TYPES = [
   { key: 'climb', label: 'Climbing' },
@@ -9,6 +10,34 @@ const OPTIONAL_SPEED_TYPES = [
   { key: 'fly', label: 'Flying' },
   { key: 'burrow', label: 'Burrowing' },
 ];
+
+// ponytail: extracted so useTwoClickConfirm hook works per-pool inside .map()
+function HitDieRollChip({ dieKey, pool, onRoll, disabled, conScore }) {
+  const { armed, handleClick } = useTwoClickConfirm(onRoll);
+  const conMod = getAbilityModifier(conScore);
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to roll ${dieKey}` : `Roll ${dieKey}`}
+      onClick={handleClick}
+      disabled={disabled}
+      className={`px-1.5 py-0.5 rounded text-[10px] font-semibold transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-default ${
+        armed
+          ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+          : 'bg-dnd-gold/10 hover:bg-dnd-gold/20 text-dnd-gold'
+      }`}
+      title={
+        armed
+          ? `Click again to roll ${dieKey} and heal`
+          : `Roll 1${dieKey} + CON mod (${conMod >= 0 ? '+' : ''}${conMod}) to heal`
+      }
+    >
+      <Dices size={10} className="flex-shrink-0" />
+      <span>{pool.current}/{pool.max} {dieKey}</span>
+    </button>
+  );
+}
 
 export default function VitalsCard({
   vitals,
@@ -18,6 +47,7 @@ export default function VitalsCard({
   isEditing = false,
   onUpdateVitals,
   onShortRest,
+  onShowToast,
 }) {
   const currentVitals = vitals || {
     hpCurrent: 10,
@@ -145,6 +175,7 @@ export default function VitalsCard({
   const defenses = currentVitals.defenses || [];
 
   const [newDefense, setNewDefense] = useState('');
+  const [defenseType, setDefenseType] = useState('resistance');
   const [isAddingDefense, setIsAddingDefense] = useState(false);
   const [newCondition, setNewCondition] = useState('');
   const [isAddingCondition, setIsAddingCondition] = useState(false);
@@ -213,6 +244,34 @@ export default function VitalsCard({
     });
   };
 
+  const hitDiceScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isHitDiceOverflowing, setIsHitDiceOverflowing] = useState(false);
+  const [internalToast, setInternalToast] = useState(null);
+
+  const checkHitDiceScroll = () => {
+    const el = hitDiceScrollRef.current;
+    if (!el) return;
+    const overflowing = el.scrollWidth > el.clientWidth + 2;
+    setIsHitDiceOverflowing(overflowing);
+    setCanScrollLeft(el.scrollLeft > 2);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+  };
+
+  useEffect(() => {
+    checkHitDiceScroll();
+    window.addEventListener('resize', checkHitDiceScroll);
+    return () => window.removeEventListener('resize', checkHitDiceScroll);
+  }, [hitDice.pools]);
+
+  const scrollHitDice = (direction) => {
+    const el = hitDiceScrollRef.current;
+    if (!el) return;
+    el.scrollBy({ left: direction * 80, behavior: 'smooth' });
+    setTimeout(checkHitDiceScroll, 150);
+  };
+
   const handleAddCondition = (e) => {
     e.preventDefault();
     if (!newCondition.trim()) return;
@@ -254,6 +313,7 @@ export default function VitalsCard({
 
     const { roll, conMod, total } = rollHitDie(dieKey, conScore);
     const newHp = Math.min(effectiveMax, hpCurrent + total);
+    const restoredHp = newHp - hpCurrent;
     const updatedPools = {
       ...hitDice.pools,
       [dieKey]: {
@@ -275,6 +335,16 @@ export default function VitalsCard({
         pools: updatedPools,
       },
     });
+
+    const msg = `Restored ${dieKey} (${restoredHp}) HP`;
+    if (onShowToast) {
+      onShowToast(msg, 'success');
+    } else {
+      setInternalToast({ message: msg, type: 'success' });
+      setTimeout(() => {
+        setInternalToast((curr) => (curr?.message === msg ? null : curr));
+      }, 3200);
+    }
   };
 
   const changeHitDice = (dieKey, delta) => {
@@ -311,10 +381,17 @@ export default function VitalsCard({
 
   const handleAddDefense = (e) => {
     e.preventDefault();
-    if (!newDefense.trim()) return;
+    const trimmed = newDefense.trim();
+    if (!trimmed) return;
+
+    let entry = trimmed;
+    if (!/\((resistance|immune|immunity)\)/i.test(trimmed)) {
+      entry = defenseType === 'immunity' ? `${trimmed} (Immune)` : `${trimmed} (Resistance)`;
+    }
+
     onUpdateVitals?.({
       ...currentVitals,
-      defenses: [...defenses, newDefense.trim()],
+      defenses: [...defenses, entry],
     });
     setNewDefense('');
     setIsAddingDefense(false);
@@ -328,12 +405,18 @@ export default function VitalsCard({
   };
 
   return (
-    <div className="space-y-2.5 p-0.5">
+    <div className="space-y-2.5 p-0.5 relative">
+      {!onShowToast && internalToast && (
+        <div className="absolute top-2 right-2 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-white/5 pointer-events-none">
+          <CheckCircle2 size={16} className="text-emerald-400" />
+          <span className="text-slate-100">{internalToast.message}</span>
+        </div>
+      )}
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[13fr_6fr_9fr] xl:grid-cols-[11fr_5fr_8fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[13fr_6fr_9fr] 2xl:grid-cols-[11fr_5fr_8fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
-          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 lg:col-span-1">
+          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 xl:col-span-1">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[11px] font-bold text-red-400 flex items-center gap-1">
                 <Heart size={12} className="text-red-400 fill-red-400/20" /> Hit Points Settings
@@ -391,7 +474,7 @@ export default function VitalsCard({
             </div>
           </div>
         ) : (
-          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 lg:col-span-1">
+          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 xl:col-span-1">
             {/* Left: HP Info */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-0.5">
@@ -432,10 +515,10 @@ export default function VitalsCard({
                           e.target.blur();
                         }
                       }}
-                      className="text-right text-2xl font-black text-slate-100 hover:text-dnd-gold bg-transparent outline-none focus:ring-1 focus:ring-dnd-gold/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
+                      className="text-right text-xl font-black text-slate-100 hover:text-dnd-gold bg-transparent outline-none focus:ring-1 focus:ring-dnd-gold/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
                     />
                     <span className="text-base text-slate-600 font-bold self-center px-1.5 select-none">/</span>
-                    <div className="text-lg font-bold text-slate-400 leading-none self-center text-left">
+                    <div className="text-xl font-black text-slate-400 leading-none self-center text-left">
                       {effectiveMax}
                     </div>
                   </div>
@@ -466,7 +549,7 @@ export default function VitalsCard({
                           e.target.blur();
                         }
                       }}
-                      className="text-center text-lg font-bold text-blue-300 hover:text-blue-200 bg-transparent outline-none focus:ring-1 focus:ring-blue-400/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
+                      className="text-center text-xl font-black text-blue-300 hover:text-blue-200 bg-transparent outline-none focus:ring-1 focus:ring-blue-400/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
                     />
                   </div>
                 </div>
@@ -521,7 +604,7 @@ export default function VitalsCard({
         )}
 
         {/* Card 2: Stacked AC & Initiative Cards */}
-        <div className="flex flex-col gap-2 min-w-0 sm:col-span-1 lg:col-span-1">
+        <div className="flex flex-col gap-2 min-w-0 sm:col-span-1 xl:col-span-1">
           {/* Armor Class Card */}
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
             <div className="text-[10px] text-slate-400 flex items-center justify-between">
@@ -593,7 +676,7 @@ export default function VitalsCard({
               </div>
             ) : (
               <div className="flex flex-col justify-between my-auto">
-                <div className="text-2xl font-black text-slate-100 leading-none my-0.5">
+                <div className="text-xl font-black text-slate-100 leading-none my-0.5">
                   {currentVitals.ac ?? 10}
                 </div>
                 {currentVitals.acFormula ? (
@@ -665,7 +748,7 @@ export default function VitalsCard({
         </div>
 
         {/* Card 3: Dedicated Movement Speeds Card */}
-        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 lg:col-span-1">
+        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 xl:col-span-1">
           {/* Header */}
           <div className="text-[10px] text-slate-400 flex items-center justify-between">
             <span className="flex items-center gap-1 font-bold text-slate-400">
@@ -703,7 +786,7 @@ export default function VitalsCard({
                   <span className="text-[10px] text-slate-400 font-bold">ft</span>
                 </div>
               ) : (
-                <div className="text-2xl font-black text-slate-100 leading-none">
+                <div className="text-xl font-black text-slate-100 leading-none">
                   {speeds.walk ?? 30} ft
                 </div>
               )}
@@ -795,54 +878,87 @@ export default function VitalsCard({
         </div>
 
         {/* Row 2: Compact Trackers Strip (Hit Dice, Inspiration, Death Saves) in ONE Single Card */}
-        <div className="col-span-1 sm:col-span-2 lg:col-span-3 bg-dnd-card/60 border border-white/5 rounded-lg py-1.5 px-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[13fr_6fr_9fr] xl:grid-cols-[11fr_5fr_8fr] lg:grid-cols-subgrid text-xs items-center">
+        <div className="col-span-1 sm:col-span-2 xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-subgrid sm:gap-x-2 text-xs items-stretch relative">
+          {/* Unified Card Background */}
+          <div className="absolute inset-0 bg-dnd-card/60 border border-white/5 rounded-lg pointer-events-none -z-0" />
+
           {/* Subdivision 1: Hit Dice */}
-          <div className="flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 min-w-0 sm:col-span-2 lg:col-span-1 border-b sm:border-b lg:border-b-0 lg:border-r border-white/5 pb-2 sm:pb-2 lg:pb-0 pl-2 pr-2">
+          <div className="relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 xl:col-span-1 border-b xl:border-b-0 border-white/5 py-1.5 pl-2 pr-1.5">
             <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
               Hit Dice
             </span>
-            <div className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto no-scrollbar py-0.5 min-w-0">
-              {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
-                <div
-                  key={dieKey}
-                  className="flex items-center space-x-1 bg-dnd-panel/60 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
+
+            {/* Hit Dice Pools Carousel */}
+            <div className="flex items-center min-w-0 flex-1">
+              {isHitDiceOverflowing && (
+                <button
+                  type="button"
+                  aria-label="Scroll hit dice left"
+                  onClick={() => scrollHitDice(-1)}
+                  disabled={!canScrollLeft}
+                  className="w-3.5 h-5 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:text-slate-400 flex-shrink-0 -ml-0.5 mr-0.5 transition-opacity cursor-pointer disabled:cursor-default"
                 >
-                  <button
-                    type="button"
-                    aria-label={`Spend ${dieKey} Hit Die`}
-                    onClick={() => changeHitDice(dieKey, -1)}
-                    disabled={pool.current <= 0}
-                    className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                  <ChevronLeft size={11} />
+                </button>
+              )}
+
+              <div
+                ref={hitDiceScrollRef}
+                onScroll={checkHitDiceScroll}
+                className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1"
+              >
+                {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
+                  <div
+                    key={dieKey}
+                    className="flex items-center space-x-1 bg-dnd-panel/60 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
                   >
-                    -
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Roll ${dieKey}`}
-                    onClick={() => handleRollHitDie(dieKey)}
-                    disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
-                    className="px-1.5 py-0.5 rounded bg-dnd-gold/10 hover:bg-dnd-gold/20 text-dnd-gold disabled:opacity-40 text-[10px] font-semibold transition-colors flex items-center gap-0.5 cursor-pointer"
-                    title={`Roll 1${dieKey} + CON mod (${getAbilityModifier(conScore) >= 0 ? '+' : ''}${getAbilityModifier(conScore)}) to heal`}
-                  >
-                    <Sparkles size={9} />
-                    <span>{pool.current}/{pool.max} {dieKey}</span>
-                  </button>
-                  <button
-                    type="button"
-                    aria-label={`Recover ${dieKey} Hit Die`}
-                    onClick={() => changeHitDice(dieKey, 1)}
-                    disabled={pool.current >= pool.max}
-                    className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
-                  >
-                    +
-                  </button>
-                </div>
-              ))}
+                    <button
+                      type="button"
+                      aria-label={`Spend ${dieKey} Hit Die`}
+                      onClick={() => changeHitDice(dieKey, -1)}
+                      disabled={pool.current <= 0}
+                      className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                    >
+                      -
+                    </button>
+                    <HitDieRollChip
+                      dieKey={dieKey}
+                      pool={pool}
+                      onRoll={() => handleRollHitDie(dieKey)}
+                      disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
+                      conScore={conScore}
+                    />
+                    <button
+                      type="button"
+                      aria-label={`Recover ${dieKey} Hit Die`}
+                      onClick={() => changeHitDice(dieKey, 1)}
+                      disabled={pool.current >= pool.max}
+                      className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                    >
+                      +
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {isHitDiceOverflowing && (
+                <button
+                  type="button"
+                  aria-label="Scroll hit dice right"
+                  onClick={() => scrollHitDice(1)}
+                  disabled={!canScrollRight}
+                  className="w-3.5 h-5 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:text-slate-400 flex-shrink-0 -mr-0.5 ml-0.5 transition-opacity cursor-pointer disabled:cursor-default"
+                >
+                  <ChevronRight size={11} />
+                </button>
+              )}
             </div>
+            {/* Divider 1: Centered in gap between Card 1 & Card 2 on xl */}
+            <div className="hidden xl:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
           </div>
 
           {/* Subdivision 2: Inspiration */}
-          <div className="flex flex-col xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 lg:col-span-1 border-b sm:border-b-0 sm:border-r border-white/5 pb-2 sm:pb-0 pt-2 sm:pt-0 px-1 text-center">
+          <div className="relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 xl:col-span-1 border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center">
             <span className="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1 min-w-0 flex-shrink-0">
               <Lightbulb size={11} className="text-dnd-gold flex-shrink-0" />
               <span className="truncate">Inspiration</span>
@@ -868,10 +984,12 @@ export default function VitalsCard({
                 +
               </button>
             </div>
+            {/* Divider 2: Centered in gap between Card 2 & Card 3 on xl and sm */}
+            <div className="hidden sm:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
           </div>
 
           {/* Subdivision 3: Death Saves */}
-          <div className="flex flex-col items-center justify-center min-w-0 sm:col-span-1 lg:col-span-1 pt-2 sm:pt-0 pl-1 pr-2">
+          <div className="relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 xl:col-span-1 py-1.5 pl-1 pr-2.5">
             <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 flex-shrink-0 mb-0.5">
               <Activity size={11} className="text-red-400 flex-shrink-0" />
               <span>Death Saves</span>
@@ -928,7 +1046,7 @@ export default function VitalsCard({
       </div>
 
       {/* Conditions */}
-      <div className="pt-1 border-t border-white/5 space-y-1">
+      <div className="pt-1.5 border-t border-white/5 space-y-1">
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
           <span className="flex items-center gap-1">
             <Activity size={10} className="text-amber-400" /> Conditions:
@@ -936,9 +1054,9 @@ export default function VitalsCard({
           <button
             type="button"
             onClick={() => setIsAddingCondition(!isAddingCondition)}
-            className="text-dnd-gold hover:text-dnd-gold-light"
+            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
           >
-            + Add Condition
+            + Add
           </button>
         </div>
 
@@ -1009,54 +1127,80 @@ export default function VitalsCard({
               className="group inline-flex items-center px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
             >
               <span>{cond}</span>
-              <button
-                type="button"
-                aria-label={`Remove condition ${cond}`}
-                onClick={() => handleRemoveCondition(cond)}
-                className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100"
-              >
-                <X size={9} />
-              </button>
+              {isEditing && (
+                <button
+                  type="button"
+                  aria-label={`Remove condition ${cond}`}
+                  onClick={() => handleRemoveCondition(cond)}
+                  className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100 cursor-pointer"
+                >
+                  <X size={9} />
+                </button>
+              )}
             </span>
           ))}
         </div>
       </div>
 
-      {/* Row 3: Defenses & Resistances */}
-      <div className="pt-1 border-t border-white/5 space-y-1">
+      {/* Resistance & Immunities */}
+      <div className="pt-1.5 border-t border-white/5 space-y-1">
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
           <span className="flex items-center gap-1">
-            <Flame size={10} className="text-amber-400" /> Defenses & Resistances:
+            <Shield size={10} className="text-amber-400" /> Resistance & Immunities:
           </span>
           <button
             type="button"
             onClick={() => setIsAddingDefense(!isAddingDefense)}
-            className="text-dnd-gold hover:text-dnd-gold-light"
+            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
           >
-            + Add Defense
+            + Add
           </button>
         </div>
 
         {isAddingDefense && (
-          <form noValidate onSubmit={handleAddDefense} className="flex items-center space-x-1.5 pt-1 px-0.5">
+          <form noValidate onSubmit={handleAddDefense} className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-1 px-0.5">
+            <div className="inline-flex rounded-lg bg-dnd-panel/90 p-0.5 border border-white/10 shrink-0 text-xs">
+              <button
+                type="button"
+                onClick={() => setDefenseType('resistance')}
+                className={`px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
+                  defenseType === 'resistance'
+                    ? 'bg-emerald-500/20 text-emerald-300 font-medium'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Resistance
+              </button>
+              <button
+                type="button"
+                onClick={() => setDefenseType('immunity')}
+                className={`px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
+                  defenseType === 'immunity'
+                    ? 'bg-dnd-gold/20 text-dnd-gold font-medium'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Immunity
+              </button>
+            </div>
             <input
               type="text"
               autoFocus
-              placeholder="e.g. Fire (Resistance)"
+              placeholder={defenseType === 'resistance' ? 'e.g. Fire, Cold' : 'e.g. Poison, Charmed'}
               value={newDefense}
               onChange={(e) => setNewDefense(e.target.value)}
-              className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
+              className="flex-1 min-w-[120px] px-2 py-0.5 rounded bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
             />
             <button
               type="submit"
-              className="px-2.5 py-1 rounded-lg bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm"
+              className="px-2 py-0.5 rounded bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
             >
               Add
             </button>
             <button
               type="button"
               onClick={() => setIsAddingDefense(false)}
-              className="px-2 py-1 rounded-lg bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors"
+              className="px-1.5 py-0.5 rounded bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -1070,16 +1214,19 @@ export default function VitalsCard({
           {defenses.map((def) => (
             <span
               key={def}
-              className="group inline-flex items-center px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
+              className="group inline-flex items-center px-1.5 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm border border-white/5"
             >
               <span>{def}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveDefense(def)}
-                className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100"
-              >
-                <X size={9} />
-              </button>
+              {isEditing && (
+                <button
+                  type="button"
+                  aria-label={`Remove defense ${def}`}
+                  onClick={() => handleRemoveDefense(def)}
+                  className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100 cursor-pointer"
+                >
+                  <X size={9} />
+                </button>
+              )}
             </span>
           ))}
         </div>

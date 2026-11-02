@@ -72,8 +72,10 @@ describe('CharacterSheetView', () => {
     render(<CharacterSheetView character={fullChar} onUpdateCharacter={() => {}} />);
 
     // Header info
-    expect(screen.getByText('Sahazad Nazir')).toBeInTheDocument();
-    expect(screen.getByText(/Wizard \(Level 19\)/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Sahazad Nazir' })).toBeInTheDocument();
+    expect(screen.getByText('Wizard')).toBeInTheDocument();
+    expect(screen.getByText(/Lvl 19/i)).toBeInTheDocument();
+    expect(screen.getByText(/Character Level/i)).toBeInTheDocument();
     expect(screen.getByText(/Proficiency/i)).toBeInTheDocument();
     expect(screen.getByText('+6')).toBeInTheDocument();
 
@@ -162,5 +164,86 @@ describe('CharacterSheetView', () => {
   it('renders fallback when no character is selected', () => {
     render(<CharacterSheetView character={null} onUpdateCharacter={() => {}} />);
     expect(screen.getByText(/No character selected/i)).toBeInTheDocument();
+  });
+
+  it('delegates hit die roll confirmation to onShowToast with healed HP message', () => {
+    const handleShowToast = vi.fn();
+    const damagedChar = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        vitals: {
+          ...mockCharacter.sheet.vitals,
+          hpCurrent: 10,
+          hpMax: 20,
+          hitDice: {
+            current: 2,
+            max: 2,
+            die: 'd6',
+            pools: {
+              d6: { current: 2, max: 2, classNames: ['Wizard'] },
+            },
+          },
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetView
+        character={damagedChar}
+        onUpdateCharacter={() => {}}
+        onShowToast={handleShowToast}
+      />
+    );
+
+    const rollBtn = screen.getByRole('button', { name: /Roll d6/i });
+    fireEvent.click(rollBtn);
+    expect(handleShowToast).not.toHaveBeenCalled();
+
+    const armedBtn = screen.getByRole('button', { name: /Click again to roll d6/i });
+    fireEvent.click(armedBtn);
+
+    expect(handleShowToast).toHaveBeenCalledWith(
+      expect.stringMatching(/Restored d6 \(\d+\) HP/),
+      'success'
+    );
+  });
+
+  it('provides all CharacterHeader polished features in Section 1 Character accordion', () => {
+    const handleUpdate = vi.fn();
+    const handleExport = vi.fn();
+    const profiles = [mockCharacter];
+
+    render(
+      <CharacterSheetView
+        character={mockCharacter}
+        profiles={profiles}
+        onUpdateCharacter={handleUpdate}
+        onExport={handleExport}
+      />
+    );
+
+    // Edit profile button exists and allows editing character name and classes
+    const editProfileBtn = screen.getByLabelText('Edit Profile');
+    expect(editProfileBtn).toBeInTheDocument();
+    fireEvent.click(editProfileBtn);
+
+    const nameInput = screen.getByPlaceholderText('Character Name');
+    expect(nameInput).toHaveValue('Sahazad Nazir');
+    fireEvent.change(nameInput, { target: { value: 'Archmage Sahazad' } });
+
+    fireEvent.click(screen.getByLabelText('Save Profile'));
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ name: 'Archmage Sahazad' }));
+
+    // Level up button is accessible
+    expect(screen.getByRole('button', { name: /Level Up/i })).toBeInTheDocument();
+
+    // Profiles manager button is accessible
+    expect(screen.getByRole('button', { name: /Manage Characters/i })).toBeInTheDocument();
+
+    // Sign in and Export/Import buttons are not rendered on the sheet view
+    expect(screen.queryByRole('button', { name: /Export/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Import/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Sign in/i })).not.toBeInTheDocument();
   });
 });

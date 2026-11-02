@@ -407,7 +407,7 @@ export default function SpellbookView({
           <div
             role="img"
             aria-label="Mythallar Logo"
-            className="w-16 h-16 mb-1 bg-slate-300 select-none pointer-events-none"
+            className="w-10 h-10 mb-2 bg-slate-300 select-none pointer-events-none"
             style={{
               WebkitMaskImage: "url('/mythallar_logo.png')",
               WebkitMaskSize: 'contain',
