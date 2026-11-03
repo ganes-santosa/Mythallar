@@ -60,7 +60,7 @@ describe('ResourcesCard', () => {
     expect(handleNotes).toHaveBeenCalledWith('New features note');
   });
 
-  it('hides add and remove controls when isEditing is false', () => {
+  it('hides delete controls when isEditing is false, but shows add controls', () => {
     render(
       <ResourcesCard
         trackedResources={mockResources}
@@ -76,9 +76,9 @@ describe('ResourcesCard', () => {
     // Delete buttons should not be present
     expect(screen.queryByLabelText('Delete Lucky')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Remove feat War Caster')).not.toBeInTheDocument();
-    // Add buttons should not be present
-    expect(screen.queryByRole('button', { name: /\+ Add Tracked Resource/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^\+ Add$/i })).not.toBeInTheDocument();
+    // Add buttons should be drawn outside editing state
+    expect(screen.getByRole('button', { name: /\+ Add Tracked Resource/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^\+ Add$/i })).toBeInTheDocument();
   });
 
   it('allows adding a new resource via inline form when isEditing is true', () => {

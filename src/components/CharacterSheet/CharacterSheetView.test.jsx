@@ -163,7 +163,7 @@ describe('CharacterSheetView', () => {
     // Features & Resources edit toggle
     const editResourcesBtn = screen.getByLabelText('Edit resources');
     expect(editResourcesBtn).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Add Resource/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
     fireEvent.click(editResourcesBtn);
 
     const doneResourcesBtn = screen.getByLabelText('Done editing resources');
@@ -171,7 +171,7 @@ describe('CharacterSheetView', () => {
     expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
     fireEvent.click(doneResourcesBtn);
     expect(screen.getByLabelText('Edit resources')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Add Resource/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
   });
 
   it('renders fallback when no character is selected', () => {

@@ -118,8 +118,8 @@ export default function AbilitiesCard({ abilities, level, isEditing = false, onU
                 />
               </div>
 
-              <div className="text-xs font-semibold text-dnd-gold">
-                {formatModifier(mod)} mod
+              <div className="text-xs font-bold text-dnd-gold">
+                {formatModifier(mod)}
               </div>
 
               <div

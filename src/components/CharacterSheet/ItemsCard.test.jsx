@@ -111,4 +111,34 @@ describe('ItemsCard', () => {
       mockItems[2],
     ]);
   });
+
+  it('allows editing max attunement in managing attunement state and clearing value while typing', () => {
+    const handleUpdateMax = vi.fn();
+    render(
+      <ItemsCard
+        items={mockItems}
+        maxAttunement={3}
+        onUpdateMaxAttunement={handleUpdateMax}
+        onUpdateItems={() => {}}
+      />
+    );
+    const manageBtn = screen.getByRole('button', { name: /manage attunement/i });
+    fireEvent.click(manageBtn);
+
+    const input = screen.getByLabelText('Max Attunement');
+    expect(input).toHaveValue(3);
+
+    // Can delete/clear without being locked to previous number
+    fireEvent.change(input, { target: { value: '' } });
+    expect(input).toHaveValue(null);
+
+    // Type new value
+    fireEvent.change(input, { target: { value: '5' } });
+    expect(handleUpdateMax).toHaveBeenCalledWith(5);
+
+    // Blurring when empty falls back safely
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.blur(input);
+    expect(handleUpdateMax).toHaveBeenCalledWith(3);
+  });
 });

@@ -14,7 +14,7 @@ export default function ResourcesCard({
   onUpdateFeats,
 }) {
   const [internalIsAdding, setInternalIsAdding] = useState(false);
-  const isAdding = isEditing && (externalIsAdding !== undefined ? externalIsAdding : internalIsAdding);
+  const isAdding = externalIsAdding !== undefined ? externalIsAdding : internalIsAdding;
   const setIsAdding = onSetIsAdding || setInternalIsAdding;
   const [newResourceName, setNewResourceName] = useState('');
   const [newResourceMax, setNewResourceMax] = useState('3');
@@ -106,7 +106,7 @@ export default function ResourcesCard({
   return (
     <div className="space-y-2">
       {/* Header action bar (fallback when not mounted in AccordionSection) */}
-      {!hideHeaderActions && isEditing && (
+      {!hideHeaderActions && (
         <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">
           <div className="flex items-center space-x-2">
             {trackedResources && trackedResources.length > 0 && (
@@ -307,18 +307,16 @@ export default function ResourcesCard({
           <span className="flex items-center gap-1">
             <Award size={10} className="text-amber-400" /> Feats:
           </span>
-          {isEditing && (
-            <button
-              type="button"
-              onClick={() => setIsAddingFeat(!isAddingFeat)}
-              className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
-            >
-              + Add
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setIsAddingFeat(!isAddingFeat)}
+            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
+          >
+            + Add
+          </button>
         </div>
 
-        {isEditing && isAddingFeat && (
+        {isAddingFeat && (
           <form noValidate onSubmit={handleAddFeat} className="flex items-center space-x-1.5 pt-1 px-0.5">
             <input
               type="text"

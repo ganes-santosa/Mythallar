@@ -20,13 +20,13 @@ describe('AbilitiesCard', () => {
     // INT 20 at lvl 10 has mod +5 and prof +4 -> Save +9
     expect(screen.getByText('INT')).toBeInTheDocument();
     expect(screen.getByDisplayValue('20')).toBeInTheDocument();
-    expect(screen.getByText('+5 mod')).toBeInTheDocument();
+    expect(screen.getByText('+5')).toBeInTheDocument();
     expect(screen.getByText('Save +9')).toBeInTheDocument();
 
     // CHA 8 has mod -1 and no prof -> Save -1
     expect(screen.getByText('CHA')).toBeInTheDocument();
     expect(screen.getByDisplayValue('8')).toBeInTheDocument();
-    expect(screen.getByText('-1 mod')).toBeInTheDocument();
+    expect(screen.getByText('-1')).toBeInTheDocument();
     expect(screen.getByText('Save -1')).toBeInTheDocument();
   });
 

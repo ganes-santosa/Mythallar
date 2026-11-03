@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check } from 'lucide-react';
 import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
 import { normalizeSpeeds, normalizeHitDice } from '../../utils/storage';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
@@ -757,7 +757,7 @@ export default function VitalsCard({
             {availableSpeedTypes.length > 0 && !isAddingSpeed && (
               <button
                 type="button"
-                aria-label="+ Speed"
+                aria-label="+ Add"
                 onClick={() => {
                   setNewSpeedType(availableSpeedTypes[0].key);
                   setNewSpeedValue('30');
@@ -765,7 +765,7 @@ export default function VitalsCard({
                 }}
                 className="text-[10px] text-dnd-gold hover:text-dnd-gold-light font-medium flex items-center gap-0.5 transition-colors cursor-pointer"
               >
-                <Plus size={10} /> Speed
+                <Plus size={10} /> Add
               </button>
             )}
           </div>
@@ -862,16 +862,20 @@ export default function VitalsCard({
               <span className="text-slate-400 text-[9px]">ft</span>
               <button
                 type="submit"
-                className="px-1.5 py-0.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-[9px]"
+                aria-label="Add"
+                title="Add speed"
+                className="p-1 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 transition-colors shrink-0 cursor-pointer"
               >
-                Add
+                <Check size={11} strokeWidth={2.5} />
               </button>
               <button
                 type="button"
+                aria-label="Cancel"
+                title="Cancel"
                 onClick={() => setIsAddingSpeed(false)}
-                className="px-1 py-0.5 rounded text-slate-400 hover:text-white text-[9px]"
+                className="p-1 rounded text-slate-400 hover:text-white transition-colors shrink-0 cursor-pointer"
               >
-                Cancel
+                <X size={11} />
               </button>
             </form>
           )}

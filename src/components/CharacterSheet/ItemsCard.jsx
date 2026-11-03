@@ -29,9 +29,55 @@ function ItemDeleteButton({ item, onDelete }) {
   );
 }
 
+export function MaxAttunementInput({ value, onChange }) {
+  const [draft, setDraft] = useState(String(value ?? 3));
+
+  useEffect(() => {
+    setDraft(String(value ?? 3));
+  }, [value]);
+
+  const commit = (rawVal) => {
+    const candidate = rawVal !== undefined ? rawVal : draft;
+    const parsed = parseInt(candidate, 10);
+    const valid = Number.isNaN(parsed) ? (value ?? 3) : Math.max(1, Math.min(20, parsed));
+    setDraft(String(valid));
+    onChange?.(valid);
+  };
+
+  return (
+    <input
+      type="number"
+      aria-label="Max Attunement"
+      min="1"
+      max="20"
+      value={draft}
+      onFocus={(e) => e.target.select()}
+      onChange={(e) => {
+        const next = e.target.value;
+        setDraft(next);
+        if (next !== '') {
+          const parsed = parseInt(next, 10);
+          if (!Number.isNaN(parsed) && parsed >= 1 && parsed <= 20) {
+            onChange?.(parsed);
+          }
+        }
+      }}
+      onBlur={(e) => commit(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          commit(e.currentTarget.value);
+          e.currentTarget.blur();
+        }
+      }}
+      className="w-7 text-center rounded bg-dnd-panel text-dnd-gold font-bold text-[11px] focus:outline-none focus:ring-1 focus:ring-white/20 ml-1 py-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+    />
+  );
+}
+
 export default function ItemsCard({
   items = [],
   maxAttunement = 3,
+  onUpdateMaxAttunement,
   isAttuneMode: externalIsAttuneMode,
   onToggleAttuneMode,
   isAdding: externalIsAdding,
@@ -123,11 +169,19 @@ export default function ItemsCard({
             <div className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card text-xs shadow-sm">
               <span className="text-[11px] text-slate-400">Attuned:</span>
               <span
-                className={`text-[11px] font-semibold ${
+                className={`text-[11px] font-semibold flex items-center ${
                   attunedCount > maxAttunement ? 'text-red-400' : 'text-dnd-gold'
                 }`}
               >
-                {attunedCount} / {maxAttunement}
+                {attunedCount} /{' '}
+                {isAttuneMode ? (
+                  <MaxAttunementInput
+                    value={maxAttunement}
+                    onChange={(val) => onUpdateMaxAttunement?.(val)}
+                  />
+                ) : (
+                  maxAttunement
+                )}
               </span>
             </div>
 
@@ -160,18 +214,11 @@ export default function ItemsCard({
         </div>
       )}
 
-      {/* Attunement Mode Banner */}
+      {/* Attunement Mode Subtle Tip */}
       {isAttuneMode && (
-        <div className="p-2 rounded bg-amber-950/40 border border-amber-500/30 text-amber-300 text-xs flex items-center justify-between animate-fadeIn">
-          <span>⚡ Attunement Mode Active: Click any attunable item chip below to attune/unattune.</span>
-          <button
-            type="button"
-            onClick={() => setIsAttuneMode(false)}
-            className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-semibold text-[11px]"
-          >
-            Done
-          </button>
-        </div>
+        <p className="text-[11px] text-slate-500 italic px-0.5 animate-fadeIn">
+          Click any attunable item chip below to attune or unattune.
+        </p>
       )}
 
       {/* Inline Add Item Form */}

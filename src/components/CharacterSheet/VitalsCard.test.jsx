@@ -54,8 +54,8 @@ describe('VitalsCard', () => {
     const handleUpdate = vi.fn();
     const { rerender } = render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
     
-    // Add condition (first "+ Add" button)
-    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[0];
+    // Add condition ("+ Add" button under Conditions)
+    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[1];
     fireEvent.click(addBtn);
 
     const input = screen.getByPlaceholderText(/e\.g\. Paralyzed, Blinded/i);
@@ -112,8 +112,8 @@ describe('VitalsCard', () => {
     const handleUpdate = vi.fn();
     render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
 
-    // Open add defense form (second "+ Add" button)
-    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[1];
+    // Open add defense form ("+ Add" button under Defenses)
+    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[2];
     fireEvent.click(addBtn);
 
     // Toggle defaults to Resistance
@@ -508,7 +508,7 @@ describe('VitalsCard', () => {
     );
   });
 
-  it('allows adding a new optional speed via + Speed button', () => {
+  it('allows adding a new optional speed via + Add button', () => {
     const onUpdateVitals = vi.fn();
     render(
       <VitalsCard
@@ -518,8 +518,8 @@ describe('VitalsCard', () => {
       />
     );
 
-    // Click + Speed
-    const addSpeedBtn = screen.getByRole('button', { name: '+ Speed' });
+    // Click + Add in Speed Card
+    const addSpeedBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[0];
     fireEvent.click(addSpeedBtn);
 
     // Select Swimming and set 40 ft

@@ -19,7 +19,7 @@ import AbilitiesCard from './AbilitiesCard';
 import SkillsCard from './SkillsCard';
 import ProficienciesCard from './ProficienciesCard';
 import ResourcesCard from './ResourcesCard';
-import ItemsCard from './ItemsCard';
+import ItemsCard, { MaxAttunementInput } from './ItemsCard';
 import { getProficiencyBonus } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 
@@ -154,22 +154,20 @@ export default function CharacterSheetView({
                   onClick={handleResetAllResources}
                   aria-label="Reset all resources"
                   title="Reset all resources to max"
-                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-white text-xs transition-colors"
+                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-white text-xs transition-colors cursor-pointer"
                 >
                   <RotateCcw size={11} className="text-dnd-gold" />
                   <span className="text-[11px]">Reset</span>
                 </button>
               )}
-              {isEditingResources && (
-                <button
-                  type="button"
-                  onClick={() => setIsAddingResource((prev) => !prev)}
-                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
-                >
-                  <Plus size={11} />
-                  <span className="text-[11px]">Add Resource</span>
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setIsAddingResource((prev) => !prev)}
+                className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors cursor-pointer"
+              >
+                <Plus size={11} />
+                <span className="text-[11px]">Add Resource</span>
+              </button>
               {isEditingResources ? (
                 <button
                   type="button"
@@ -178,7 +176,7 @@ export default function CharacterSheetView({
                     setIsEditingResources(false);
                     setIsAddingResource(false);
                   }}
-                  className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm"
+                  className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
                   title="Done editing features and resources"
                 >
                   <Check size={13} strokeWidth={2.5} />
@@ -188,7 +186,7 @@ export default function CharacterSheetView({
                   type="button"
                   aria-label="Edit resources"
                   onClick={() => setIsEditingResources(true)}
-                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
+                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                   title="Edit features and tracked resources"
                 >
                   <Settings2 size={13} />
@@ -317,11 +315,19 @@ export default function CharacterSheetView({
               <div className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card text-xs shadow-sm">
                 <span className="text-[11px] text-slate-400">Attuned:</span>
                 <span
-                  className={`text-[11px] font-semibold ${
+                  className={`text-[11px] font-semibold flex items-center ${
                     attunedCount > maxAttunement ? 'text-red-400' : 'text-dnd-gold'
                   }`}
                 >
-                  {attunedCount} / {maxAttunement}
+                  {attunedCount} /{' '}
+                  {isAttuneMode ? (
+                    <MaxAttunementInput
+                      value={maxAttunement}
+                      onChange={(val) => updateSheet({ maxAttunement: val })}
+                    />
+                  ) : (
+                    maxAttunement
+                  )}
                 </span>
               </div>
 
@@ -357,6 +363,7 @@ export default function CharacterSheetView({
           <ItemsCard
             items={sheet.items}
             maxAttunement={maxAttunement}
+            onUpdateMaxAttunement={(maxAttunement) => updateSheet({ maxAttunement })}
             isAttuneMode={isAttuneMode}
             onToggleAttuneMode={() => setIsAttuneMode((prev) => !prev)}
             isAdding={isAddingItem}
