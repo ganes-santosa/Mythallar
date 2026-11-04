@@ -72,6 +72,67 @@ h1, h2, h3, h4, .font-display {
   }
 }
 
+.catalog-header-container {
+  container-type: inline-size;
+}
+
+.catalog-header-grid {
+  display: grid;
+  grid-template-columns: auto auto 1fr auto auto;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.catalog-header-branding {
+  grid-column: 1;
+}
+
+.catalog-header-auth {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.catalog-header-switcher {
+  grid-column: 4;
+  justify-self: end;
+}
+
+.catalog-header-settings {
+  grid-column: 5;
+  justify-self: end;
+}
+
+@container (max-width: 565px) {
+  .catalog-header-grid {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    row-gap: 0.5rem;
+  }
+
+  .catalog-header-branding {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .catalog-header-settings {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .catalog-header-auth {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .catalog-header-switcher {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+}
+
 /* Accordion expand & collapse animations */
 @keyframes accordionExpand {
   0% {

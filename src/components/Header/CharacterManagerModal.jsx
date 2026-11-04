@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import {
   X,
@@ -10,6 +10,8 @@ import {
   ArrowUpDown,
   Sparkles,
   BookMarked,
+  Download,
+  Upload,
 } from 'lucide-react';
 import { getTotalCharacterLevel, getCharacterClasses } from '../../utils/spellSlots';
 
@@ -37,9 +39,23 @@ export default function CharacterManagerModal({
   onSelectProfile,
   onCreateProfile,
   onDeleteProfile,
+  onExport,
+  onImport,
 }) {
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('level-desc'); // 'level-desc', 'level-asc', 'name-asc', 'name-desc'
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      onImport?.(event.target.result);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
 
   const filteredAndSortedProfiles = useMemo(() => {
     let list = profiles.filter((p) => {
@@ -145,9 +161,20 @@ export default function CharacterManagerModal({
 
             <button
               type="button"
+              onClick={() => fileInputRef.current?.click()}
+              aria-label="Import Character JSON"
+              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm whitespace-nowrap bg-dnd-panel/70 hover:bg-dnd-panel hover:text-dnd-gold text-slate-200 cursor-pointer"
+              title="Import character profile from JSON"
+            >
+              <Download size={13} />
+              <span>Import</span>
+            </button>
+
+            <button
+              type="button"
               onClick={handleCreateNew}
               aria-label="New Character"
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm whitespace-nowrap bg-dnd-gold hover:bg-dnd-gold-light text-slate-950"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg font-semibold text-xs transition-colors shadow-sm whitespace-nowrap bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 cursor-pointer"
               title="Create a new character profile"
             >
               <Plus size={13} />
@@ -216,12 +243,22 @@ export default function CharacterManagerModal({
                   {/* Actions Column */}
                   <div className="flex items-center space-x-2 self-end sm:self-center">
                     <>
+                      <button
+                        type="button"
+                        aria-label={`Export ${char.name}`}
+                        onClick={() => onExport?.(char)}
+                        className="p-1 rounded-md text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer"
+                        title={`Export ${char.name} as JSON`}
+                      >
+                        <Upload size={14} />
+                      </button>
+
                       {!isActive && (
                         <button
                           type="button"
                           aria-label={`Switch to ${char.name}`}
                           onClick={() => handleSelect(char.id)}
-                          className="px-2.5 py-1 rounded-md bg-dnd-card/80 hover:bg-dnd-card hover:text-white text-slate-300 text-xs font-semibold transition-colors"
+                          className="px-2.5 py-1 rounded-md bg-dnd-card/80 hover:bg-dnd-card hover:text-white text-slate-300 text-xs font-semibold transition-colors cursor-pointer"
                         >
                           Switch
                         </button>
@@ -243,6 +280,14 @@ export default function CharacterManagerModal({
             })
           )}
         </div>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json,application/json"
+          onChange={handleFileChange}
+          className="hidden"
+        />
       </div>
     </div>
   );

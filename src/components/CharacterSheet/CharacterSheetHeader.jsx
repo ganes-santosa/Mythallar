@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, ScrollText } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
@@ -47,6 +47,8 @@ export default function CharacterSheetHeader({
   onSelectProfile,
   onCreateProfile,
   onDeleteProfile,
+  onExport,
+  onImport,
 }) {
   const portraitInputRef = useRef(null);
 
@@ -429,7 +431,7 @@ export default function CharacterSheetHeader({
                           className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors cursor-pointer"
                           title="Edit character name and classes"
                         >
-                          <Pencil size={11} className="text-slate-400" />
+                          <UserPen size={11} className="text-slate-400" />
                           {showButtonText && <span className="character-btn-label ml-1">Edit</span>}
                         </button>
 
@@ -601,7 +603,7 @@ export default function CharacterSheetHeader({
                   aria-label={isLoreCollapsed ? 'Expand Character Lore' : 'Collapse Character Lore'}
                   title={isLoreCollapsed ? 'Click to expand character lore' : 'Click to collapse character lore'}
                 >
-                  <ScrollText size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                  <FingerprintPattern size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
                   <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
                     Character Lore
                   </h4>
@@ -649,7 +651,7 @@ export default function CharacterSheetHeader({
                       className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
                       title="Edit character lore"
                     >
-                      <Pencil size={11} />
+                      <UserPen size={11} />
                     </button>
                   )}
                 </div>
@@ -712,6 +714,8 @@ export default function CharacterSheetHeader({
         onSelectProfile={onSelectProfile}
         onCreateProfile={onCreateProfile}
         onDeleteProfile={onDeleteProfile}
+        onExport={onExport}
+        onImport={onImport}
       />
 
       {/* Level Up Selection Popup Modal */}

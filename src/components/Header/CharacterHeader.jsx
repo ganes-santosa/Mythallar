@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Download, Upload, Pencil, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users } from 'lucide-react';
 import CharacterManagerModal from './CharacterManagerModal';
-import AuthStatus from './AuthStatus';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 
@@ -48,14 +47,7 @@ export default function CharacterHeader({
   onDeleteProfile,
   onExport,
   onImport,
-  user,
-  syncStatus,
-  onSignIn,
-  onSignOut,
-  onSyncNow,
 }) {
-  const fileInputRef = useRef(null);
-
   // Single card edit mode
   const [isEditing, setIsEditing] = useState(false);
   const [nameDraft, setNameDraft] = useState(activeCharacter?.name || '');
@@ -253,21 +245,6 @@ export default function CharacterHeader({
     setShowLevelUpModal(false);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target?.result;
-      if (typeof content === 'string') {
-        onImport(content);
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = ''; // reset for re-selection
-  };
-
   if (!activeCharacter) return null;
 
   return (
@@ -292,10 +269,10 @@ export default function CharacterHeader({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="pt-2 flex flex-wrap items-stretch justify-between gap-3">
-          {/* Left: Highlight Character Profile Card */}
-      <div className="character-profile-card flex-1 min-w-[280px] min-w-0 p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
-        {/* Name Title & Header Actions */}
+          <div className="pt-2">
+            {/* Highlight Character Profile Card */}
+            <div className="character-profile-card w-full p-2.5 sm:p-3 rounded-xl bg-dnd-card shadow-sm">
+              {/* Name Title & Header Actions */}
         <div ref={headerRowRef} className={`flex min-w-0 items-center gap-2 ${isEditing ? 'flex-wrap' : ''}`}>
           {/* Left: Name & Character Level next to it */}
           <div className={`flex min-w-0 items-center space-x-2.5 ${isEditing ? 'flex-wrap gap-y-1' : 'flex-1'}`}>
@@ -369,7 +346,7 @@ export default function CharacterHeader({
                   className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
                   title="Edit character name and classes"
                 >
-                  <Pencil size={11} className="text-slate-400" />
+                  <UserPen size={11} className="text-slate-400" />
                   {showButtonText && <span className="character-btn-label ml-1">Edit</span>}
                 </button>
 
@@ -468,51 +445,8 @@ export default function CharacterHeader({
           )}
         </div>
       </div>
-
-      {/* Right: Unified Character & File Actions Card */}
-      <div className="flex flex-col items-end justify-center self-stretch p-2 rounded-xl bg-dnd-card shadow-sm space-y-1.5 flex-shrink-0">
-        <div className="flex items-center space-x-1.5 w-full justify-end">
-          <AuthStatus
-            user={user}
-            syncStatus={syncStatus}
-            onSignIn={onSignIn}
-            onSignOut={onSignOut}
-            onSyncNow={onSyncNow}
-          />
+          </div>
         </div>
-
-        <div className="flex items-center space-x-1.5 w-full justify-end">
-          <button
-            type="button"
-            onClick={onExport}
-            className="flex-1 flex items-center justify-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-xs font-normal"
-            title="Export character spellbook as JSON"
-          >
-            <Download size={11} className="mr-1" />
-            Export
-          </button>
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-1 flex items-center justify-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel hover:text-dnd-gold text-slate-300 transition-colors text-xs font-normal"
-            title="Import character spellbook from JSON"
-          >
-            <Upload size={11} className="mr-1" />
-            Import
-          </button>
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json,application/json"
-          onChange={handleFileChange}
-          className="hidden"
-        />
-      </div>
-      </div>
-      </div>
       </div>
 
       {/* Character Manager Modal */}
@@ -524,6 +458,8 @@ export default function CharacterHeader({
         onSelectProfile={onSelectProfile}
         onCreateProfile={onCreateProfile}
         onDeleteProfile={onDeleteProfile}
+        onExport={onExport}
+        onImport={onImport}
       />
 
       {/* Level Up Selection Popup Modal */}

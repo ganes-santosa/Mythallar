@@ -59,4 +59,15 @@ describe('AuthStatus component', () => {
 
     expect(handleSignOut).toHaveBeenCalled();
   });
+
+  it('collapses text to icon-only state when isCompact is true', () => {
+    const { rerender } = render(<AuthStatus user={null} isCompact={true} onSignIn={vi.fn()} />);
+    const textSpan = screen.getByText('Sign in with Google').closest('span.transition-all');
+    expect(textSpan).toHaveClass('max-w-0', 'opacity-0');
+
+    const mockUser = { id: 'u1', email: 'test@example.com', user_metadata: { full_name: 'Hero' } };
+    rerender(<AuthStatus user={mockUser} isCompact={true} onSignIn={vi.fn()} onSignOut={vi.fn()} />);
+    const userSpan = screen.getByText('Hero');
+    expect(userSpan).toHaveClass('max-w-0', 'opacity-0');
+  });
 });

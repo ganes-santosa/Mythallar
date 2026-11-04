@@ -167,4 +167,61 @@ describe('CharacterManagerModal', () => {
     expect(handleDelete).toHaveBeenCalledWith('c1');
     expect(handleClose).toHaveBeenCalled();
   });
+
+  it('triggers onExport when export button clicked for a character', () => {
+    const handleExport = vi.fn();
+    render(
+      <CharacterManagerModal
+        isOpen={true}
+        onClose={vi.fn()}
+        profiles={mockProfiles}
+        activeId="c1"
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onDeleteProfile={vi.fn()}
+        onExport={handleExport}
+        onImport={vi.fn()}
+      />
+    );
+
+    const exportBtn = screen.getByRole('button', { name: 'Export Mordenkainen' });
+    fireEvent.click(exportBtn);
+
+    expect(handleExport).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'c1', name: 'Mordenkainen' })
+    );
+  });
+
+  it('triggers onImport when a JSON file is selected via Import button', () => {
+    const handleImport = vi.fn();
+    const { container } = render(
+      <CharacterManagerModal
+        isOpen={true}
+        onClose={vi.fn()}
+        profiles={mockProfiles}
+        activeId="c1"
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onDeleteProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={handleImport}
+      />
+    );
+
+    const fileInput = container.querySelector('input[type="file"]');
+    expect(fileInput).toBeInTheDocument();
+
+    const jsonContent = JSON.stringify({ name: 'Imported Mage', className: 'Wizard', level: 5 });
+    const file = new File([jsonContent], 'mage.json', { type: 'application/json' });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // FileReader is async; mock or wait
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        expect(handleImport).toHaveBeenCalledWith(jsonContent);
+        resolve();
+      }, 50);
+    });
+  });
 });

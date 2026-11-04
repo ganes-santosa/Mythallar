@@ -7,6 +7,8 @@ export default function AuthStatus({
   onSignIn,
   onSignOut,
   onSyncNow,
+  isCompact = false,
+  className = '',
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -26,13 +28,21 @@ export default function AuthStatus({
       <button
         type="button"
         onClick={onSignIn}
-        className="flex items-center space-x-1.5 px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-200 hover:text-dnd-gold transition-colors text-xs font-normal"
+        className={`flex items-center px-1.5 py-0.5 rounded-md bg-dnd-card/70 hover:bg-dnd-card text-slate-200 hover:text-dnd-gold transition-all text-xs font-normal border border-white/5 cursor-pointer shrink-0 ${className}`}
         title="Sign in with Google to sync characters across devices"
         aria-label="Sign in with Google"
       >
         <LogIn size={12} className="text-dnd-gold flex-shrink-0" />
-        <span className="hidden sm:inline">Sign in with Google</span>
-        <span className="sm:hidden">Sign in</span>
+        <span
+          className={`transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden inline-block ${
+            isCompact
+              ? 'max-w-0 opacity-0 ml-0'
+              : 'max-w-[130px] opacity-100 ml-1.5'
+          }`}
+        >
+          <span className="hidden sm:inline">Sign in with Google</span>
+          <span className="sm:hidden">Sign in</span>
+        </span>
       </button>
     );
   }
@@ -40,24 +50,38 @@ export default function AuthStatus({
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className={`relative shrink-0 ${className}`} ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={user.email}
-        className="flex items-center space-x-1.5 px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel transition-colors text-xs font-normal text-slate-200"
+        className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-card/70 hover:bg-dnd-card transition-all text-xs font-normal text-slate-200 border border-white/5 cursor-pointer"
       >
         {syncStatus === 'syncing' ? (
-          <RefreshCw size={12} className="text-dnd-gold animate-spin" />
+          <RefreshCw size={12} className="text-dnd-gold animate-spin flex-shrink-0" />
         ) : syncStatus === 'error' ? (
-          <CloudOff size={12} className="text-red-400" />
+          <CloudOff size={12} className="text-red-400 flex-shrink-0" />
         ) : (
-          <Cloud size={12} className="text-emerald-400" />
+          <Cloud size={12} className="text-emerald-400 flex-shrink-0" />
         )}
-        <span className="max-w-[110px] sm:max-w-[140px] truncate">
+        <span
+          className={`transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden inline-block ${
+            isCompact
+              ? 'max-w-0 opacity-0 ml-0'
+              : 'max-w-[110px] sm:max-w-[140px] opacity-100 ml-1.5 truncate'
+          }`}
+        >
           {displayName}
         </span>
-        <ChevronDown size={11} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span
+          className={`transition-all duration-300 ease-in-out overflow-hidden inline-flex items-center ${
+            isCompact
+              ? 'max-w-0 opacity-0 ml-0'
+              : 'max-w-[20px] opacity-100 ml-1'
+          }`}
+        >
+          <ChevronDown size={11} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </span>
       </button>
 
       {isOpen && (

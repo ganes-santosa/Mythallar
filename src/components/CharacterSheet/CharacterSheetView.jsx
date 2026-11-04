@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Swords,
-  Zap,
+  Pyramid,
   Eye,
   Award,
   Flame,
@@ -9,7 +9,7 @@ import {
   Search,
   RotateCcw,
   Plus,
-  Settings2,
+  UserPen,
   Check,
 } from 'lucide-react';
 import AccordionSection from '../Common/AccordionSection';
@@ -98,6 +98,8 @@ export default function CharacterSheetView({
           onSelectProfile={onSelectProfile}
           onCreateProfile={onCreateProfile}
           onDeleteProfile={onDeleteProfile}
+          onExport={onExport}
+          onImport={onImport}
         />
 
         {/* Section 2: Combat Stats */}
@@ -124,7 +126,7 @@ export default function CharacterSheetView({
                 className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer"
                 title="Edit combat vitals"
               >
-                <Settings2 size={13} />
+                <UserPen size={13} />
               </button>
             )
           }
@@ -189,7 +191,7 @@ export default function CharacterSheetView({
                   className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                   title="Edit features and tracked resources"
                 >
-                  <Settings2 size={13} />
+                  <UserPen size={13} />
                 </button>
               )}
             </div>
@@ -212,7 +214,7 @@ export default function CharacterSheetView({
         {/* Section 4: Ability Scores & Saving Throws */}
         <AccordionSection
           title="Ability Scores & Saving Throws"
-          icon={Zap}
+          icon={Pyramid}
           badge={
             <span className="px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-400">
               Proficiency <span className="font-semibold text-dnd-gold">+{profBonus}</span>
@@ -238,7 +240,7 @@ export default function CharacterSheetView({
                 className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
                 title="Edit ability scores and saving throws"
               >
-                <Settings2 size={13} />
+                <UserPen size={13} />
               </button>
             )
           }
@@ -286,7 +288,7 @@ export default function CharacterSheetView({
                   className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
                   title="Edit skills and senses"
                 >
-                  <Settings2 size={13} />
+                  <UserPen size={13} />
                 </button>
               )}
             </div>
@@ -397,7 +399,7 @@ export default function CharacterSheetView({
                 className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
                 title="Edit proficiencies and training"
               >
-                <Settings2 size={13} />
+                <UserPen size={13} />
               </button>
             )
           }

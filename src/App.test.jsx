@@ -86,8 +86,8 @@ describe('App End-to-End Integration', () => {
     expect(screen.getByText('Combat Stats')).toBeInTheDocument();
     expect(screen.getByText('Ability Scores & Saving Throws')).toBeInTheDocument();
 
-    // Toggle back to Grimoire
-    const grimoireTab = screen.getByRole('button', { name: /Grimoire/i });
+    // Toggle back to Spell Library
+    const grimoireTab = screen.getByRole('button', { name: /Spell Library/i });
     fireEvent.click(grimoireTab);
 
     expect(screen.getByPlaceholderText(/Search spells/i)).toBeInTheDocument();
@@ -475,5 +475,88 @@ describe('App End-to-End Integration', () => {
     // Current HP should be fully restored
     const hpInput = screen.getByLabelText('Current HP');
     expect(hpInput.value).toBe('10');
+  });
+
+  it('renders AuthStatus in branding header and morphs view switcher and AuthStatus on desktop hover', async () => {
+    // Mock matchMedia for (hover: hover)
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: query === '(hover: hover)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    // Auth status is in header next to version
+    const authBtn = screen.getByRole('button', { name: /Sign in with Google/i });
+    expect(authBtn).toBeInTheDocument();
+
+    const grimoireBtn = screen.getByRole('button', { name: 'Spell Library' });
+    const switcherContainer = grimoireBtn.parentElement;
+
+    // Initially switcher labels are collapsed (max-w-0, opacity-0)
+    const grimoireLabel = grimoireBtn.querySelector('span');
+    expect(grimoireLabel).toHaveClass('max-w-0', 'opacity-0');
+
+    // Desktop hover over switcher
+    fireEvent.mouseEnter(switcherContainer);
+
+    // Switcher labels expand
+    expect(grimoireLabel).toHaveClass('max-w-[120px]', 'opacity-100');
+
+    // AuthStatus text collapses
+    const authLabel = authBtn.querySelector('span.transition-all');
+    expect(authLabel).toHaveClass('max-w-0', 'opacity-0');
+
+    // Desktop mouse leave
+    fireEvent.mouseLeave(switcherContainer);
+
+    // Switcher labels collapse back
+    expect(grimoireLabel).toHaveClass('max-w-0', 'opacity-0');
+
+    // AuthStatus text re-expands
+    expect(authLabel).toHaveClass('opacity-100');
+  });
+
+  it('keeps static state on touch devices without sticky hover artifacts', async () => {
+    // Mock touch device: (hover: none)
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    const grimoireBtn = screen.getByRole('button', { name: 'Spell Library' });
+    const switcherContainer = grimoireBtn.parentElement;
+    const grimoireLabel = grimoireBtn.querySelector('span');
+    const authBtn = screen.getByRole('button', { name: /Sign in with Google/i });
+    const authLabel = authBtn.querySelector('span.transition-all');
+
+    // Trigger tap / touch mouseEnter
+    fireEvent.mouseEnter(switcherContainer);
+
+    // Remains collapsed because (hover: hover) is false
+    expect(grimoireLabel).toHaveClass('max-w-0', 'opacity-0');
+    expect(authLabel).toHaveClass('opacity-100');
   });
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings, Plus } from 'lucide-react';
+import { LibraryBig, UserRound, Sparkles, AlertCircle, CheckCircle2, Settings, Plus } from 'lucide-react';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -28,6 +28,7 @@ import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
 import HomebrewSpellModal from './components/Catalog/HomebrewSpellModal';
 import CharacterHeader from './components/Header/CharacterHeader';
+import AuthStatus from './components/Header/AuthStatus';
 import SettingsModal from './components/Header/SettingsModal';
 import CreateCharacterModal from './components/Modal/CreateCharacterModal';
 import ShortRestModal from './components/Modal/ShortRestModal';
@@ -42,6 +43,7 @@ export default function App() {
   const [profileData, setProfileData] = useState(() => loadCharacterProfiles());
   const [isCreateCharacterModalOpen, setIsCreateCharacterModalOpen] = useState(false);
   const [leftPaneView, setLeftPaneView] = useState('spells'); // 'spells' | 'sheet'
+  const [isSwitcherHovered, setIsSwitcherHovered] = useState(false);
   const { profiles, activeId } = profileData;
 
   const activeCharacter = useMemo(() => {
@@ -1025,75 +1027,135 @@ export default function App() {
           )}
 
           {/* Integrated Header */}
-          <div className="flex items-center justify-between pb-2 mb-2 flex-shrink-0">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-lg bg-dnd-card/70 flex items-center justify-center p-1">
-                <div
-                  role="img"
-                  aria-label="Mythallar Logo"
-                  className="w-6 h-6 bg-dnd-ivory select-none pointer-events-none"
-                  style={{
-                    WebkitMaskImage: "url('/mythallar_logo.png')",
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: "url('/mythallar_logo.png')",
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                  }}
+          <div className="catalog-header-container pb-2 mb-2 flex-shrink-0">
+            <div className="catalog-header-grid">
+              {/* 1. Branding */}
+              <div className="catalog-header-branding flex items-center space-x-2 shrink-0">
+                <div className="w-8 h-8 rounded-lg bg-dnd-card/70 flex items-center justify-center p-1 shrink-0">
+                  <div
+                    role="img"
+                    aria-label="Mythallar Logo"
+                    className="w-6 h-6 bg-dnd-ivory select-none pointer-events-none"
+                    style={{
+                      WebkitMaskImage: "url('/mythallar_logo.png')",
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskImage: "url('/mythallar_logo.png')",
+                      maskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                    }}
+                  />
+                </div>
+                <div className="flex items-center space-x-2 min-w-0">
+                  <h1 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display whitespace-nowrap">
+                    Mythallar
+                  </h1>
+                  <div className="flex flex-col justify-center leading-tight">
+                    <span className="text-[10px] text-dnd-gold font-medium whitespace-nowrap tracking-tight">
+                      DnD 5e Spellbook
+                    </span>
+                    <span className="text-[9px] text-slate-400 font-mono tracking-tight select-none">
+                      v{APP_VERSION}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. AuthStatus */}
+              <div className="catalog-header-auth flex items-center">
+                <AuthStatus
+                  user={user}
+                  syncStatus={syncStatus}
+                  onSignIn={handleSignIn}
+                  onSignOut={handleSignOut}
+                  onSyncNow={handleManualSyncNow}
+                  isCompact={isSwitcherHovered}
                 />
               </div>
-              <div className="flex flex-wrap items-baseline gap-1.5 sm:gap-2">
-                <h1 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display">
-                  Mythallar
-                </h1>
-                <div className="flex items-center space-x-1.5">
-                  <span className="text-[11px] text-dnd-gold font-medium px-1.5 py-0.5 rounded bg-dnd-gold/10">
-                    DnD 5e Spellbook
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono tracking-tight select-none">
-                    v{APP_VERSION}
-                  </span>
+
+              {/* 3. Symmetrical Middle-Anchored View Switcher */}
+              <div className="catalog-header-switcher flex items-center">
+                <div
+                  className="relative flex items-center h-7 select-none mr-24"
+                  style={{ width: '60px' }}
+                  onMouseEnter={() => {
+                    if (typeof window !== 'undefined' && window.matchMedia?.('(hover: hover)')?.matches) {
+                      setIsSwitcherHovered(true);
+                    }
+                  }}
+                  onMouseLeave={() => setIsSwitcherHovered(false)}
+                >
+                {/* Center Anchor Point P at 50% */}
+                <div
+                  className="absolute left-1/2 top-0 bottom-0 flex items-center"
+                  onMouseEnter={() => {
+                    if (typeof window !== 'undefined' && window.matchMedia?.('(hover: hover)')?.matches) {
+                      setIsSwitcherHovered(true);
+                    }
+                  }}
+                  onMouseLeave={() => setIsSwitcherHovered(false)}
+                >
+                  {/* Left Button (Spell Library): right edge pinned to P */}
+                  <button
+                    type="button"
+                    onClick={() => setLeftPaneView('spells')}
+                    aria-label="Spell Library"
+                    title="Spell Library"
+                    className={`absolute right-0 flex items-center justify-end h-7 px-2 rounded-l-lg border border-r border-white/10 text-xs font-medium transition-all duration-300 cursor-pointer shadow-md ${
+                      leftPaneView === 'spells'
+                        ? 'bg-dnd-gold text-slate-950 font-bold z-10 border-dnd-gold'
+                        : 'bg-dnd-card/90 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <span
+                      className={`transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden inline-block ${
+                        isSwitcherHovered ? 'max-w-[120px] opacity-100 mr-1.5' : 'max-w-0 opacity-0 mr-0'
+                      }`}
+                    >
+                      Spell Library
+                    </span>
+                    <LibraryBig size={14} className="shrink-0" />
+                  </button>
+
+                  {/* Right Button (Character Sheet): left edge pinned to P */}
+                  <button
+                    type="button"
+                    onClick={() => setLeftPaneView('sheet')}
+                    aria-label="Character Sheet"
+                    title="Character Sheet"
+                    className={`absolute left-0 flex items-center justify-start h-7 px-2 rounded-r-lg border border-l border-white/10 text-xs font-medium transition-all duration-300 cursor-pointer shadow-md ${
+                      leftPaneView === 'sheet'
+                        ? 'bg-dnd-gold text-slate-950 font-bold z-10 border-dnd-gold'
+                        : 'bg-dnd-card/90 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    <UserRound size={14} className="shrink-0" />
+                    <span
+                      className={`transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden inline-block ${
+                        isSwitcherHovered ? 'max-w-[120px] opacity-100 ml-1.5' : 'max-w-0 opacity-0 ml-0'
+                      }`}
+                    >
+                      Character Sheet
+                    </span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center p-0.5 rounded-lg bg-dnd-card/80 border border-white/5 text-xs">
+            {/* 4. Settings Button */}
+              <div className="catalog-header-settings flex items-center">
                 <button
                   type="button"
-                  onClick={() => setLeftPaneView('spells')}
-                  className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
-                    leftPaneView === 'spells'
-                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
+                  onClick={() => setIsSettingsOpen(true)}
+                  aria-label="Open settings"
+                  title="Appearance & Theme Settings"
+                  className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card hover:text-white text-slate-400 transition-colors flex items-center justify-center cursor-pointer"
                 >
-                  Grimoire
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLeftPaneView('sheet')}
-                  className={`px-2 py-0.5 rounded-md font-medium transition-colors ${
-                    leftPaneView === 'sheet'
-                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                >
-                  Character Sheet
+                  <Settings size={15} />
                 </button>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setIsSettingsOpen(true)}
-                aria-label="Open settings"
-                title="Appearance & Theme Settings"
-                className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card hover:text-white text-slate-400 transition-colors flex items-center justify-center"
-              >
-                <Settings size={15} />
-              </button>
             </div>
           </div>
 
@@ -1105,6 +1167,8 @@ export default function App() {
               onSelectProfile={handleSelectProfile}
               onCreateProfile={handleOpenCreateCharacter}
               onDeleteProfile={handleDeleteCharacter}
+              onExport={handleExport}
+              onImport={handleImport}
               onShortRest={handleShortRest}
               onShowToast={showLeftToast}
             />
@@ -1168,11 +1232,6 @@ export default function App() {
                 onDeleteProfile={handleDeleteCharacter}
                 onExport={handleExport}
                 onImport={handleImport}
-                user={user}
-                syncStatus={syncStatus}
-                onSignIn={handleSignIn}
-                onSignOut={handleSignOut}
-                onSyncNow={handleManualSyncNow}
               />
 
               <SpellSlotTracker

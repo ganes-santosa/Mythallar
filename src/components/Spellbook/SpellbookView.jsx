@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Flame, BookCheck, Sparkles, ScrollText } from 'lucide-react';
+import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Sparkles, ScrollText } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
@@ -227,7 +227,7 @@ export default function SpellbookView({
             }`}
             title="Filter spells in spellbook"
           >
-            <Flame size={11} className="text-dnd-gold" />
+            <Blend size={11} className="text-dnd-gold" />
             <span className="text-[11px] font-semibold text-slate-200">Filters</span>
             <ChevronDown size={10} className={`text-slate-400 transition-transform duration-200 ${showFilters ? '' : '-rotate-90'}`} />
           </button>

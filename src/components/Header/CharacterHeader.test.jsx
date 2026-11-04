@@ -238,8 +238,9 @@ describe('CharacterHeader', () => {
     );
   });
 
-  it('triggers onExport when export button clicked and has compact styling matching profile actions', () => {
+  it('wires onExport and onImport to CharacterManagerModal', () => {
     const handleExport = vi.fn();
+    const handleImport = vi.fn();
     render(
       <CharacterHeader
         activeCharacter={mockProfiles[0]}
@@ -248,14 +249,24 @@ describe('CharacterHeader', () => {
         onSelectProfile={vi.fn()}
         onCreateProfile={vi.fn()}
         onExport={handleExport}
-        onImport={vi.fn()}
+        onImport={handleImport}
       />
     );
 
-    const exportBtn = screen.getByRole('button', { name: /Export/i });
-    expect(exportBtn).toHaveClass('px-1.5', 'py-0.5', 'text-xs');
+    // Open manager modal
+    fireEvent.click(screen.getByRole('button', { name: /Manage Characters/i }));
+
+    // Export button inside modal
+    const exportBtn = screen.getByRole('button', { name: 'Export Mordenkainen' });
+    expect(exportBtn).toBeInTheDocument();
     fireEvent.click(exportBtn);
-    expect(handleExport).toHaveBeenCalled();
+    expect(handleExport).toHaveBeenCalledWith(
+      expect.objectContaining({ name: 'Mordenkainen' })
+    );
+
+    // Import button inside modal
+    const importBtn = screen.getByRole('button', { name: /Import Character JSON/i });
+    expect(importBtn).toBeInTheDocument();
   });
 
   it('opens CharacterManagerModal when manage characters button is clicked', () => {

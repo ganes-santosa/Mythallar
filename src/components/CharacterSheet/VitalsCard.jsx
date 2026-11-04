@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check } from 'lucide-react';
+import { Shield, ShieldHalf, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check } from 'lucide-react';
 import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
 import { normalizeSpeeds, normalizeHitDice } from '../../utils/storage';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
@@ -609,7 +609,7 @@ export default function VitalsCard({
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
             <div className="text-[10px] text-slate-400 flex items-center justify-between">
               <span className="flex items-center gap-1 font-bold text-slate-400">
-                <Shield size={12} className="text-dnd-gold" /> AC
+                <ShieldHalf size={12} className="text-dnd-gold" /> AC
               </span>
               {!isEditing && !isEditingAcNote && !currentVitals.acFormula && (
                 <button

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Sparkles, ScrollText, Plus, Flame, ChevronDown } from 'lucide-react';
+import { Search, X, Sparkles, ScrollText, Plus, Blend, Flame, ChevronDown } from 'lucide-react';
 
 const CLASSES = [
   'Artificer',
@@ -93,7 +93,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
           className="flex items-center space-x-1.5 text-left group focus:outline-none"
           aria-label={isCollapsed ? 'Expand Filters' : 'Collapse Filters'}
         >
-          <Flame size={13} className="text-dnd-gold" />
+          <Blend size={13} className="text-dnd-gold" />
           <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Filters</h3>
           <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
         </button>
