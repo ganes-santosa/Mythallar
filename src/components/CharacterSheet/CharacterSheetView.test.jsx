@@ -103,6 +103,11 @@ describe('CharacterSheetView', () => {
 
     // Items Card
     expect(screen.getByText('The Tuvala Sundial')).toBeInTheDocument();
+
+    // Notes Card
+    expect(screen.getByText('Notes')).toBeInTheDocument();
+    expect(screen.getByLabelText('Note Content')).toBeInTheDocument();
+    expect(screen.getByLabelText('Note Title')).toBeInTheDocument();
   });
 
   it('allows collapsing and expanding accordion sections', () => {
@@ -258,5 +263,25 @@ describe('CharacterSheetView', () => {
     expect(screen.queryByRole('button', { name: /Export/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Import/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Sign in/i })).not.toBeInTheDocument();
+  });
+
+  it('updates character notes on change', () => {
+    const handleUpdate = vi.fn();
+    render(<CharacterSheetView character={mockCharacter} onUpdateCharacter={handleUpdate} />);
+
+    const notesTextarea = screen.getByLabelText('Note Content');
+    fireEvent.change(notesTextarea, { target: { value: 'Discovered hidden tomb in the ruins.' } });
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          notes: expect.arrayContaining([
+            expect.objectContaining({
+              content: 'Discovered hidden tomb in the ruins.',
+            }),
+          ]),
+        }),
+      })
+    );
   });
 });

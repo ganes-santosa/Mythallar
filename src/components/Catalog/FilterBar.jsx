@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Sparkles, ScrollText, Plus, Blend, Flame, ChevronDown } from 'lucide-react';
+import { Search, X, Brain, ScrollText, Plus, Blend, FlaskRound, ChevronDown } from 'lucide-react';
 
 const CLASSES = [
   'Artificer',
@@ -198,7 +198,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
           }`}
           title="Filter only homebrew spells"
         >
-          <Flame size={12} className="mr-1 text-purple-400" />
+          <FlaskRound size={12} className="mr-1 text-purple-400" />
           Homebrew
         </button>
 
@@ -211,7 +211,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
               : 'bg-dnd-card text-slate-400 hover:text-slate-200'
           }`}
         >
-          <Sparkles size={12} className="mr-1" />
+          <Brain size={12} className="mr-1" />
           Concentration
         </button>
 

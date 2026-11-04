@@ -36,4 +36,16 @@ describe('FilterBar', () => {
     fireEvent.click(screen.getByRole('button', { name: /collapse filters/i }));
     expect(screen.getByRole('button', { name: /expand filters/i })).toBeInTheDocument();
   });
+
+  it('renders homebrew filter button and triggers onChange when toggled', () => {
+    const handleChange = vi.fn();
+    render(<FilterBar filters={defaultFilters} onChange={handleChange} />);
+    const toggleButton = screen.getByRole('button', { name: /expand filters/i });
+    fireEvent.click(toggleButton);
+
+    const homebrewBtn = screen.getByRole('button', { name: /Homebrew/i });
+    expect(homebrewBtn).toBeInTheDocument();
+    fireEvent.click(homebrewBtn);
+    expect(handleChange).toHaveBeenCalledWith(expect.objectContaining({ isHomebrewOnly: true }));
+  });
 });

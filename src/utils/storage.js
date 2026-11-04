@@ -335,6 +335,7 @@ export function createDefaultSheet(className = 'Wizard') {
     feats: [],
     items: [],
     maxAttunement: 3,
+    notes: '',
   };
 }
 

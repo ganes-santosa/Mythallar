@@ -11,6 +11,7 @@ import {
   Plus,
   UserPen,
   Check,
+  NotebookPen,
 } from 'lucide-react';
 import AccordionSection from '../Common/AccordionSection';
 import CharacterSheetHeader from './CharacterSheetHeader';
@@ -20,6 +21,7 @@ import SkillsCard from './SkillsCard';
 import ProficienciesCard from './ProficienciesCard';
 import ResourcesCard from './ResourcesCard';
 import ItemsCard, { MaxAttunementInput } from './ItemsCard';
+import NotesCard from './NotesCard';
 import { getProficiencyBonus } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 
@@ -408,6 +410,18 @@ export default function CharacterSheetView({
             proficiencies={sheet.proficiencies}
             isEditing={isEditingProficiencies}
             onUpdateProficiencies={(proficiencies) => updateSheet({ proficiencies })}
+          />
+        </AccordionSection>
+
+        {/* Section 8: Notes */}
+        <AccordionSection
+          title="Notes"
+          icon={NotebookPen}
+          defaultOpen={true}
+        >
+          <NotesCard
+            notes={sheet.notes}
+            onUpdateNotes={(notes) => updateSheet({ notes })}
           />
         </AccordionSection>
       </div>

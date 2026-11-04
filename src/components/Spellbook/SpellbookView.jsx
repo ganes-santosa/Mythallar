@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Sparkles, ScrollText } from 'lucide-react';
+import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
@@ -332,7 +332,7 @@ export default function SpellbookView({
                   : 'bg-dnd-card text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Sparkles size={12} className="mr-1" />
+              <Brain size={12} className="mr-1" />
               Concentration
             </button>
 

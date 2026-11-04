@@ -1159,7 +1159,7 @@ export default function App() {
             </div>
           </div>
 
-          {leftPaneView === 'sheet' ? (
+          {leftPaneView === 'sheet' && (
             <CharacterSheetView
               character={activeCharacter}
               profiles={profiles}
@@ -1172,51 +1172,51 @@ export default function App() {
               onShortRest={handleShortRest}
               onShowToast={showLeftToast}
             />
-          ) : (
-            <>
-              <FilterBar
-                filters={filters}
-                onChange={setFilters}
-                onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
-                availableSources={availableSources}
-              />
-
-              {isLoadingSpells ? (
-                <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
-                  <div
-                    role="img"
-                    aria-label="Loading Grimoire"
-                    className="w-7 h-7 mb-2 animate-spin bg-dnd-gold select-none pointer-events-none"
-                    style={{
-                      WebkitMaskImage: "url('/mythallar_logo.png')",
-                      WebkitMaskSize: 'contain',
-                      WebkitMaskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'center',
-                      maskImage: "url('/mythallar_logo.png')",
-                      maskSize: 'contain',
-                      maskRepeat: 'no-repeat',
-                      maskPosition: 'center',
-                    }}
-                  />
-                  <span>Loading spell grimoire...</span>
-                </div>
-              ) : spellError ? (
-                <div className="flex items-center justify-center h-64 text-red-400 text-sm">
-                  <AlertCircle size={18} className="mr-2" />
-                  <span>{spellError}</span>
-                </div>
-              ) : (
-                <SpellList
-                  spells={filteredSpells}
-                  spellbookSpellIds={spellbookSpellIds}
-                  notesMap={spellNotesMap}
-                  onAddToSpellbook={handleAddSpell}
-                  onDeleteHomebrew={handleDeleteHomebrewSpell}
-                  onUpdateNote={activeCharacter ? handleUpdateSpellNote : null}
-                />
-              )}
-            </>
           )}
+
+          <div className={leftPaneView === 'spells' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
+            <FilterBar
+              filters={filters}
+              onChange={setFilters}
+              onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
+              availableSources={availableSources}
+            />
+
+            {isLoadingSpells ? (
+              <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
+                <div
+                  role="img"
+                  aria-label="Loading Grimoire"
+                  className="w-7 h-7 mb-2 animate-spin bg-dnd-gold select-none pointer-events-none"
+                  style={{
+                    WebkitMaskImage: "url('/mythallar_logo.png')",
+                    WebkitMaskSize: 'contain',
+                    WebkitMaskRepeat: 'no-repeat',
+                    WebkitMaskPosition: 'center',
+                    maskImage: "url('/mythallar_logo.png')",
+                    maskSize: 'contain',
+                    maskRepeat: 'no-repeat',
+                    maskPosition: 'center',
+                  }}
+                />
+                <span>Loading spell grimoire...</span>
+              </div>
+            ) : spellError ? (
+              <div className="flex items-center justify-center h-64 text-red-400 text-sm">
+                <AlertCircle size={18} className="mr-2" />
+                <span>{spellError}</span>
+              </div>
+            ) : (
+              <SpellList
+                spells={filteredSpells}
+                spellbookSpellIds={spellbookSpellIds}
+                notesMap={spellNotesMap}
+                onAddToSpellbook={handleAddSpell}
+                onDeleteHomebrew={handleDeleteHomebrewSpell}
+                onUpdateNote={activeCharacter ? handleUpdateSpellNote : null}
+              />
+            )}
+          </div>
         </section>
 
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
