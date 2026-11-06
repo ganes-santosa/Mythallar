@@ -1223,6 +1223,15 @@ export default function App() {
         <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10">
           {activeCharacter ? (
             <>
+          {/* Right Character Header Accordion (Animates closed when Left Pane toggles to Character Sheet) */}
+          <div
+            className={`grid transition-[grid-template-rows,opacity,margin] duration-300 ease-in-out ${
+              leftPaneView === 'spells'
+                ? 'grid-rows-[1fr] opacity-100 mb-2.5'
+                : 'grid-rows-[0fr] opacity-0 mb-0 pointer-events-none'
+            }`}
+          >
+            <div className="overflow-hidden">
               <CharacterHeader
                 activeCharacter={activeCharacter}
                 profiles={profiles}
@@ -1233,6 +1242,8 @@ export default function App() {
                 onExport={handleExport}
                 onImport={handleImport}
               />
+            </div>
+          </div>
 
               <SpellSlotTracker
                 character={activeCharacter}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, Plus } from 'lucide-react';
+import { X, FlaskRound, Plus } from 'lucide-react';
 
 const SCHOOLS = [
   'Abjuration',
@@ -100,7 +100,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-dnd-card">
           <div className="flex items-center space-x-2">
-            <Sparkles size={18} className="text-dnd-gold" />
+            <FlaskRound size={18} className="text-dnd-gold" />
             <h2 className="text-base font-bold text-slate-100">Create Homebrew Spell</h2>
           </div>
           <button

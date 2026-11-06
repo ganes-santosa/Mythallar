@@ -17,6 +17,17 @@ describe('normalizeNotes', () => {
     expect(normalizeNotes(null)).toHaveLength(1);
   });
 
+  it('prunes empty clutter notes that have no content or custom title', () => {
+    const raw = [
+      { id: 'n1', title: 'Quests', content: 'Find the relic', updatedAt: '2026-11-04T10:00:00.000Z', pinned: false },
+      { id: 'n2', title: 'New Note', content: '', updatedAt: '2026-11-04T10:00:00.000Z', pinned: false },
+      { id: 'n3', title: '', content: '   ', updatedAt: '2026-11-04T10:00:00.000Z', pinned: false },
+    ];
+    const res = normalizeNotes(raw);
+    expect(res).toHaveLength(1);
+    expect(res[0].id).toBe('n1');
+  });
+
   it('preserves valid array of notes', () => {
     const raw = [
       { id: 'n1', title: 'Quests', content: 'Find the relic', updatedAt: '2026-11-04T10:00:00.000Z', pinned: false },
@@ -61,33 +72,64 @@ describe('NotesCard', () => {
     );
   });
 
-  it('updates note title on edit', () => {
+  it('allows selecting entire title and backspacing to empty without deleting note or exiting editor', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
-    fireEvent.change(screen.getByLabelText('Note Title'), {
-      target: { value: 'Active Quests' },
-    });
+    const titleInput = screen.getByLabelText('Note Title');
+    expect(titleInput).toHaveValue('Quests');
 
+    // User selects all and presses backspace (clearing title)
+    fireEvent.change(titleInput, { target: { value: '' } });
+
+    // Note should NOT be deleted, and editor remains open
     expect(handleUpdate).toHaveBeenCalledWith(
       expect.arrayContaining([
-        expect.objectContaining({ id: 'n1', title: 'Active Quests' }),
+        expect.objectContaining({ id: 'n1', title: '' }),
         mockNotes[1],
       ])
     );
+    expect(screen.getByLabelText('Note Title')).toBeInTheDocument();
+    expect(screen.getByLabelText('Note Content')).toBeInTheDocument();
   });
 
-  it('creates new note and enters note view on "+ New Note"', () => {
+  it('does not save new note if user inputs nothing and returns to list', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+
+    // Switch to list view
+    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
 
     const newBtn = screen.getByRole('button', { name: /New Note/i });
     fireEvent.click(newBtn);
 
+    // Editor is open with blank title
+    expect(screen.getByLabelText('Note Title')).toHaveValue('');
+    expect(handleUpdate).not.toHaveBeenCalled();
+
+    // User navigates back without typing anything
+    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
+
+    // Still in list view, onUpdateNotes was never called with empty note
+    expect(handleUpdate).not.toHaveBeenCalled();
+    expect(screen.queryByRole('heading', { name: 'New Note' })).not.toBeInTheDocument();
+  });
+
+  it('saves new note as soon as user types title or content', () => {
+    const handleUpdate = vi.fn();
+    render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
+    fireEvent.click(screen.getByRole('button', { name: /New Note/i }));
+
+    fireEvent.change(screen.getByLabelText('Note Title'), {
+      target: { value: 'Secret Door' },
+    });
+
     expect(handleUpdate).toHaveBeenCalledWith(
       expect.arrayContaining([
         ...mockNotes,
-        expect.objectContaining({ title: 'New Note', content: '' }),
+        expect.objectContaining({ title: 'Secret Door' }),
       ])
     );
   });

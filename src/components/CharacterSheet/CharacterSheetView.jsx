@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Swords,
   Pyramid,
   Eye,
   Award,
   Flame,
-  Package,
+  Backpack,
   Search,
   RotateCcw,
   Plus,
-  UserPen,
+  Settings2,
   Check,
   NotebookPen,
+  Blend,
+  ChevronDown,
+  Waypoints,
 } from 'lucide-react';
 import AccordionSection from '../Common/AccordionSection';
 import CharacterSheetHeader from './CharacterSheetHeader';
@@ -66,6 +69,18 @@ export default function CharacterSheetView({
   const [isAddingResource, setIsAddingResource] = useState(false);
   const [isAttuneMode, setIsAttuneMode] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
+  const [showItemFilters, setShowItemFilters] = useState(false);
+  const [itemFilters, setItemFilters] = useState({ category: 'all', color: 'all' });
+  const isItemFiltered = itemFilters.category !== 'all' || itemFilters.color !== 'all';
+
+  // Smooth entrance transition from 0 height when mounting
+  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setIsHeaderExpanded(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   const safeItems = Array.isArray(sheet.items) ? sheet.items : [];
   const attunedCount = safeItems.filter((i) => i.requiresAttunement && i.attuned).length;
@@ -92,17 +107,25 @@ export default function CharacterSheetView({
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
       <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll p-1 pr-1.5 pb-4">
-        {/* Section 1: Character Header Accordion */}
-        <CharacterSheetHeader
-          character={character}
-          profiles={profiles}
-          onUpdateCharacter={onUpdateCharacter}
-          onSelectProfile={onSelectProfile}
-          onCreateProfile={onCreateProfile}
-          onDeleteProfile={onDeleteProfile}
-          onExport={onExport}
-          onImport={onImport}
-        />
+        {/* Section 1: Character Header Accordion (Animates expanding from 0 height on mount) */}
+        <div
+          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+            isHeaderExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          }`}
+        >
+          <div className="overflow-hidden">
+            <CharacterSheetHeader
+              character={character}
+              profiles={profiles}
+              onUpdateCharacter={onUpdateCharacter}
+              onSelectProfile={onSelectProfile}
+              onCreateProfile={onCreateProfile}
+              onDeleteProfile={onDeleteProfile}
+              onExport={onExport}
+              onImport={onImport}
+            />
+          </div>
+        </div>
 
         {/* Section 2: Combat Stats */}
         <AccordionSection
@@ -128,7 +151,7 @@ export default function CharacterSheetView({
                 className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer"
                 title="Edit combat vitals"
               >
-                <UserPen size={13} />
+                <Settings2 size={13} />
               </button>
             )
           }
@@ -193,7 +216,7 @@ export default function CharacterSheetView({
                   className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                   title="Edit features and tracked resources"
                 >
-                  <UserPen size={13} />
+                  <Settings2 size={13} />
                 </button>
               )}
             </div>
@@ -242,7 +265,7 @@ export default function CharacterSheetView({
                 className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
                 title="Edit ability scores and saving throws"
               >
-                <UserPen size={13} />
+                <Settings2 size={13} />
               </button>
             )
           }
@@ -290,7 +313,7 @@ export default function CharacterSheetView({
                   className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
                   title="Edit skills and senses"
                 >
-                  <UserPen size={13} />
+                  <Settings2 size={13} />
                 </button>
               )}
             </div>
@@ -312,15 +335,32 @@ export default function CharacterSheetView({
         {/* Section 6: Items & Inventory */}
         <AccordionSection
           title="Items & Inventory"
-          icon={Package}
+          icon={Backpack}
           defaultOpen={true}
           actions={
             <div className="flex flex-wrap items-center gap-1.5">
-              <div className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card text-xs shadow-sm">
-                <span className="text-[11px] text-slate-400">Attuned:</span>
+              <button
+                type="button"
+                aria-label="Manage Attunement"
+                onClick={() => setIsAttuneMode((prev) => !prev)}
+                className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-lg text-xs transition-colors shadow-sm cursor-pointer ${
+                  isAttuneMode
+                    ? 'bg-dnd-gold text-slate-950 font-semibold shadow-sm'
+                    : 'bg-dnd-card hover:bg-dnd-hover hover:ring-1 hover:ring-dnd-gold/40 text-slate-300'
+                }`}
+                title={isAttuneMode ? 'Finish managing attunement' : 'Click to manage attunement slots'}
+              >
+                <Waypoints size={11} className={isAttuneMode ? 'text-slate-950' : 'text-dnd-gold'} />
+                <span className={`text-[11px] ${isAttuneMode ? 'text-slate-900 font-semibold' : 'text-slate-300'}`}>
+                  Attune:
+                </span>
                 <span
-                  className={`text-[11px] font-semibold flex items-center ${
-                    attunedCount > maxAttunement ? 'text-red-400' : 'text-dnd-gold'
+                  className={`text-[11px] font-bold ${
+                    isAttuneMode
+                      ? 'text-slate-950'
+                      : attunedCount > maxAttunement
+                      ? 'text-red-400'
+                      : 'text-dnd-gold'
                   }`}
                 >
                   {attunedCount} /{' '}
@@ -333,33 +373,30 @@ export default function CharacterSheetView({
                     maxAttunement
                   )}
                 </span>
-              </div>
-
-              <button
-                type="button"
-                aria-label="Manage Attunement"
-                onClick={() => setIsAttuneMode((prev) => !prev)}
-                className={`flex items-center space-x-1.5 px-2 py-0.5 rounded-lg text-xs transition-colors ${
-                  isAttuneMode
-                    ? 'bg-dnd-gold text-slate-950 font-medium'
-                    : 'bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-white'
-                }`}
-              >
-                <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isAttuneMode ? 'bg-slate-950 animate-pulse' : 'bg-dnd-gold'
-                  }`}
-                />
-                <span className="text-[11px]">{isAttuneMode ? 'Finish Attuning' : 'Manage Attunement'}</span>
               </button>
 
               <button
                 type="button"
+                aria-label="Toggle Items Filters"
+                onClick={() => setShowItemFilters((prev) => !prev)}
+                className={`relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs transition-colors ${
+                  isItemFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Filter items in inventory"
+              >
+                <Blend size={11} className="text-dnd-gold" />
+                <span className="text-[11px] font-semibold text-slate-200">Filters</span>
+                <ChevronDown size={10} className={`text-slate-400 transition-transform duration-200 ${showItemFilters ? '' : '-rotate-90'}`} />
+              </button>
+
+              <button
+                type="button"
+                aria-label="Add Item"
                 onClick={() => setIsAddingItem((prev) => !prev)}
                 className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
               >
                 <Plus size={11} />
-                <span className="text-[11px]">Add Item</span>
+                <span className="text-[11px]">Add</span>
               </button>
             </div>
           }
@@ -372,6 +409,10 @@ export default function CharacterSheetView({
             onToggleAttuneMode={() => setIsAttuneMode((prev) => !prev)}
             isAdding={isAddingItem}
             onSetIsAdding={setIsAddingItem}
+            showFilters={showItemFilters}
+            onToggleFilters={() => setShowItemFilters((prev) => !prev)}
+            filters={itemFilters}
+            onFilterChange={setItemFilters}
             hideHeaderActions={true}
             onUpdateItems={(items) => updateSheet({ items })}
           />
@@ -401,7 +442,7 @@ export default function CharacterSheetView({
                 className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
                 title="Edit proficiencies and training"
               >
-                <UserPen size={13} />
+                <Settings2 size={13} />
               </button>
             )
           }

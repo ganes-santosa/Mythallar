@@ -248,7 +248,7 @@ export default function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all">
+    <div className="p-2.5 rounded-lg bg-dnd-panel transition-all">
       <div className="flex items-center gap-2">
         <button
           type="button"

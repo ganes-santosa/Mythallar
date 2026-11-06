@@ -4,16 +4,25 @@ import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 
 /**
  * Normalizes legacy string notes or empty arrays into structured note objects.
+ * Prunes empty 'New Note' artifacts that have no content or custom title.
  */
 export function normalizeNotes(rawNotes) {
   const now = new Date().toISOString();
   if (Array.isArray(rawNotes)) {
-    if (rawNotes.length === 0) {
+    const cleaned = rawNotes.filter((n) => {
+      const hasContent = typeof n?.content === 'string' && n.content.trim().length > 0;
+      const titleTrim = typeof n?.title === 'string' ? n.title.trim() : '';
+      const isClutter = (titleTrim === 'New Note' || titleTrim === '') && !hasContent;
+      return !isClutter;
+    });
+
+    const targetList = cleaned.length > 0 ? cleaned : rawNotes;
+    if (targetList.length === 0) {
       return [{ id: 'note_default', title: 'General', content: '', updatedAt: now, pinned: false }];
     }
-    return rawNotes.map((n, i) => ({
+    return targetList.map((n, i) => ({
       id: n?.id || `note_${i}_${Date.now()}`,
-      title: typeof n?.title === 'string' && n.title.length > 0 ? n.title : `Note ${i + 1}`,
+      title: typeof n?.title === 'string' ? n.title : '',
       content: typeof n?.content === 'string' ? n.content : '',
       updatedAt: n?.updatedAt || now,
       pinned: Boolean(n?.pinned),
@@ -47,8 +56,7 @@ function NoteDeleteButton({ title, onDelete }) {
 
 /**
  * Phone-style notes app with dark inset containers for title and notes body,
- * and a pin-to-top feature in the notes list.
- * Adheres to minimal nested elements and zero-outline convention (contrast & soft shadows).
+ * pin-to-top feature, and zero empty-note clutter saving.
  */
 export default function NotesCard({
   notes = [],
@@ -56,10 +64,21 @@ export default function NotesCard({
 }) {
   const normalizedNotes = normalizeNotes(notes);
   const [activeNoteId, setActiveNoteId] = useState(() => normalizedNotes[0]?.id || 'note_default');
+  const [pendingNote, setPendingNote] = useState(null);
   const [viewMode, setViewMode] = useState('editor'); // 'editor' | 'list'
   const [searchQuery, setSearchQuery] = useState('');
 
-  const activeNote = normalizedNotes.find((n) => n.id === activeNoteId) || normalizedNotes[0];
+  // Prune any legacy empty clutter notes from storage on load
+  useEffect(() => {
+    if (Array.isArray(notes) && notes.length > normalizedNotes.length) {
+      onUpdateNotes?.(normalizedNotes);
+    }
+  }, []);
+
+  const activeNote = (pendingNote && pendingNote.id === activeNoteId)
+    ? pendingNote
+    : normalizedNotes.find((n) => n.id === activeNoteId) || normalizedNotes[0];
+
   const textareaRef = useRef(null);
 
   // Auto-resize document canvas body
@@ -79,6 +98,7 @@ export default function NotesCard({
   }, [activeNote?.content, activeNote?.id, viewMode]);
 
   const handleSelectNote = (id) => {
+    setPendingNote(null);
     setActiveNoteId(id);
     setViewMode('editor');
   };
@@ -87,28 +107,65 @@ export default function NotesCard({
     const newId = `note_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newNote = {
       id: newId,
-      title: 'New Note',
+      title: '',
       content: '',
       updatedAt: new Date().toISOString(),
       pinned: false,
     };
-    const updated = [...normalizedNotes, newNote];
+    // Kept in pending state in memory; not saved until user inputs content or title
+    setPendingNote(newNote);
     setActiveNoteId(newId);
     setViewMode('editor');
-    onUpdateNotes?.(updated);
+  };
+
+  const handleBackToList = () => {
+    if (pendingNote) {
+      // Discard un-entered pending note
+      setPendingNote(null);
+      setActiveNoteId(normalizedNotes[0]?.id || 'note_default');
+    } else if (activeNote) {
+      // If user cleared out an existing note completely (no title AND no content), prune it on exit
+      const hasContent = activeNote.content.trim().length > 0;
+      const hasTitle = activeNote.title.trim().length > 0;
+      if (!hasContent && !hasTitle && normalizedNotes.length > 1) {
+        const remaining = normalizedNotes.filter((n) => n.id !== activeNote.id);
+        onUpdateNotes?.(remaining);
+        setActiveNoteId(remaining[0]?.id || 'note_default');
+      }
+    }
+    setViewMode('list');
   };
 
   const handleUpdateActiveField = (field, value) => {
     const now = new Date().toISOString();
-    const updated = normalizedNotes.map((n) =>
-      n.id === activeNote.id ? { ...n, [field]: value, updatedAt: now } : n
-    );
-    onUpdateNotes?.(updated);
+    if (pendingNote && pendingNote.id === activeNote.id) {
+      const updatedPending = { ...pendingNote, [field]: value, updatedAt: now };
+      const hasContent = updatedPending.content.trim().length > 0;
+      const hasTitle = updatedPending.title.trim().length > 0;
+
+      if (hasContent || hasTitle) {
+        // Save note now that user entered text
+        const updated = [...normalizedNotes, updatedPending];
+        setPendingNote(null);
+        onUpdateNotes?.(updated);
+      } else {
+        setPendingNote(updatedPending);
+      }
+    } else {
+      const updated = normalizedNotes.map((n) =>
+        n.id === activeNote.id ? { ...n, [field]: value, updatedAt: now } : n
+      );
+      onUpdateNotes?.(updated);
+    }
   };
 
   const handleTogglePin = (id, e) => {
     if (e && typeof e.stopPropagation === 'function') {
       e.stopPropagation();
+    }
+    if (pendingNote && pendingNote.id === id) {
+      setPendingNote({ ...pendingNote, pinned: !pendingNote.pinned });
+      return;
     }
     const updated = normalizedNotes.map((n) =>
       n.id === id ? { ...n, pinned: !n.pinned } : n
@@ -117,6 +174,11 @@ export default function NotesCard({
   };
 
   const handleDeleteActive = () => {
+    if (pendingNote && pendingNote.id === activeNote.id) {
+      setPendingNote(null);
+      setActiveNoteId(normalizedNotes[0]?.id || 'note_default');
+      return;
+    }
     const remaining = normalizedNotes.filter((n) => n.id !== activeNote.id);
     const nextNotes = remaining.length > 0
       ? remaining
@@ -238,7 +300,7 @@ export default function NotesCard({
       <div className="flex items-center justify-between gap-2 text-xs pb-0.5">
         <button
           type="button"
-          onClick={() => setViewMode('list')}
+          onClick={handleBackToList}
           aria-label="All Notes"
           className="flex items-center gap-1 px-2 py-1 -ml-1 rounded-md text-slate-300 hover:text-dnd-gold hover:bg-dnd-hover transition-colors font-medium"
         >
@@ -250,7 +312,7 @@ export default function NotesCard({
           <button
             type="button"
             onClick={(e) => handleTogglePin(activeNote.id, e)}
-            aria-label={activeNote.pinned ? `Unpin note ${activeNote.title}` : `Pin note ${activeNote.title}`}
+            aria-label={activeNote.pinned ? `Unpin note ${activeNote.title || 'Note'}` : `Pin note ${activeNote.title || 'Note'}`}
             title={activeNote.pinned ? 'Unpin note' : 'Pin note to top'}
             className={`p-1.5 rounded-md transition-colors ${
               activeNote.pinned
@@ -259,17 +321,6 @@ export default function NotesCard({
             }`}
           >
             <Pin size={13} className={activeNote.pinned ? 'fill-dnd-gold rotate-45' : ''} />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleAddNote}
-            aria-label="New Note"
-            title="Create new note"
-            className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors shrink-0"
-          >
-            <Plus size={11} />
-            <span className="text-[11px]">New Note</span>
           </button>
 
           <NoteDeleteButton
