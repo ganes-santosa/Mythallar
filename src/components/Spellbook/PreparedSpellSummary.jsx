@@ -110,8 +110,9 @@ export default function PreparedSpellSummary({ character, catalog, onUpdateChara
 
   const isLeveledActive = (spell) => {
     if (spell.copying) return false;
-    const lvl = catalog?.[spell.id]?.level;
-    return typeof lvl === 'number' ? lvl > 0 : true;
+    const item = catalog?.[spell.id];
+    if (!item) return false;
+    return typeof item.level === 'number' && item.level > 0;
   };
 
   const preparedCount = (character?.spells || []).filter((s) => s.prepared && isLeveledActive(s)).length;

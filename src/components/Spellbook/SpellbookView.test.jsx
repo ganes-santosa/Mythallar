@@ -395,6 +395,31 @@ describe('SpellbookView', () => {
     expect(screen.getByText('1 / 0')).toHaveClass('text-red-500');
   });
 
+  it('does not count spells absent from catalog as prepared or known', () => {
+    const handleUpdate = vi.fn();
+    const charWithMissingSpell = {
+      id: 'char_wiz',
+      name: 'Wizard',
+      className: 'Wizard',
+      level: 5,
+      spells: [
+        { id: 'nonexistent-custom-spell', prepared: true, copying: false },
+      ],
+    };
+
+    render(
+      <SpellbookView
+        character={charWithMissingSpell}
+        catalog={mockCatalog}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    expect(screen.getByText('Prepared:')).toBeInTheDocument();
+    // Should be 0 / 8 (level 5 + INT mod 3 = 8), NOT 1 / 8
+    expect(screen.getByText('0 / 8')).toBeInTheDocument();
+  });
+
   it('displays cantrips count as x / max cantrips and turns red when exceeding limit', () => {
     // mockCharacter is Wizard level 5 -> max 4 cantrips (from CANTRIPS_KNOWN_TABLE)
     // mockCharacter currently has 1 cantrip (acid-splash)

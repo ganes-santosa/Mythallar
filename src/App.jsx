@@ -477,6 +477,15 @@ export default function App() {
         showToast(error, 'error');
         return;
       }
+
+      if (Array.isArray(character.homebrewSpells) && character.homebrewSpells.length > 0) {
+        setHomebrewSpells((prev) => {
+          const existingIds = new Set(prev.map((s) => s.id));
+          const toAdd = character.homebrewSpells.filter((s) => !existingIds.has(s.id));
+          return toAdd.length > 0 ? [...toAdd, ...prev] : prev;
+        });
+      }
+
       setProfileData((prev) => ({
         profiles: [...prev.profiles, character],
         activeId: character.id,
