@@ -33,6 +33,8 @@ export function validateAndImportCharacterJSON(jsonString) {
         : [],
       slotsUsed: typeof data.slotsUsed === 'object' && data.slotsUsed !== null ? data.slotsUsed : {},
       customSlots: typeof data.customSlots === 'object' && data.customSlots !== null ? data.customSlots : {},
+      ...(Array.isArray(data.classes) && data.classes.length > 0 ? { classes: data.classes } : {}),
+      ...(typeof data.sheet === 'object' && data.sheet !== null ? { sheet: data.sheet } : {}),
     };
 
     return { character: normalized };

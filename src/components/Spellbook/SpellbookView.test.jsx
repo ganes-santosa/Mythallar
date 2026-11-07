@@ -594,4 +594,25 @@ describe('SpellbookView', () => {
     expect(screen.getByText('Your Spellbook is Empty')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Mythallar Logo' })).toHaveClass('bg-slate-300');
   });
+
+  it('toggles collapsed state on spellbook-dropzone while keeping content mounted for smooth transitions', () => {
+    render(<SpellbookView character={mockCharacter} catalog={mockCatalog} />);
+
+    const dropzone = screen.getByTestId('spellbook-dropzone');
+    expect(dropzone).toHaveAttribute('data-collapsed', 'false');
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+
+    const collapseButton = screen.getByLabelText('Collapse Spellbook');
+    fireEvent.click(collapseButton);
+
+    expect(dropzone).toHaveAttribute('data-collapsed', 'true');
+    // Content stays mounted in DOM so CSS height transition interpolates smoothly
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+
+    const expandButton = screen.getByLabelText('Expand Spellbook');
+    fireEvent.click(expandButton);
+
+    expect(dropzone).toHaveAttribute('data-collapsed', 'false');
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+  });
 });

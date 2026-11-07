@@ -211,9 +211,7 @@ export default function ShortRestModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-2 border-b border-white/5">
           <div className="flex items-center space-x-2.5">
-            <span className="p-1.5 rounded-lg bg-dnd-panel text-amber-400">
-              <Sun size={18} />
-            </span>
+            <Sun size={18} className="text-amber-400 flex-shrink-0" />
             <div>
               <h3 id="short-rest-modal-title" className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display">
                 Short Rest
@@ -348,9 +346,7 @@ export default function ShortRestModal({
             <div className="space-y-2.5 pt-2 border-t border-white/5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="p-1 rounded-md bg-dnd-panel text-dnd-gold">
-                    <Sparkles size={15} />
-                  </span>
+                  <Sparkles size={15} className="text-dnd-gold flex-shrink-0" />
                   <div>
                     <h4 className="text-sm font-bold text-dnd-ivory font-display leading-tight">
                       Arcane Recovery

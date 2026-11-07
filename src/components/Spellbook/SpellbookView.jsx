@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
@@ -66,7 +66,7 @@ function SpellbookView({
   const spellHintRef = useClickOutside(showSpellHint, () => setShowSpellHint(false));
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const spellbookAccordionRef = useAutoScrollOnExpand(!isCollapsed);
+  const spellbookAccordionRef = useAutoScrollOnExpand(!isCollapsed, { durationMs: 200, offset: 0 });
   const [showFilters, setShowFilters] = useState(false);
   const filtersAccordionRef = useAutoScrollOnExpand(showFilters);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
@@ -75,6 +75,16 @@ function SpellbookView({
   const { armed: finishAllArmed, handleClick: handleFinishAllClick } = useTwoClickConfirm(() => onFinishCopyingAll?.());
   const isWizard = isWizardCharacter(character);
   const cantripsInfo = getEffectiveMaxCantripsInfo(character);
+
+  const headerRef = useRef(null);
+  const [collapsedHeight, setCollapsedHeight] = useState(48);
+
+  useEffect(() => {
+    if (headerRef.current) {
+      const h = headerRef.current.offsetHeight + 24; // 24px = p-3 (12px top + 12px bottom)
+      if (h > 0) setCollapsedHeight(h);
+    }
+  }, [character?.spells?.length, finishAllArmed, isWizard, showFilters]);
 
   const updateFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -194,12 +204,14 @@ function SpellbookView({
       role="region"
       aria-label="Character Spellbook Drop Zone"
       data-testid="spellbook-dropzone"
+      data-collapsed={isCollapsed ? 'true' : 'false'}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative p-2.5 rounded-lg bg-dnd-panel transition-all flex flex-col ${
-        isCollapsed ? '' : 'flex-1 h-full min-h-[75vh] max-h-[80vh]'
-      } ${isDragOver ? 'ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]' : ''}`}
+      style={{ height: isCollapsed ? `${collapsedHeight}px` : 'max(100%, 75vh)' }}
+      className={`relative p-3 rounded-lg bg-dnd-panel shrink-0 overflow-hidden transition-[height] duration-200 ease-in-out flex flex-col ${
+        isDragOver ? 'ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]' : ''
+      }`}
     >
       {/* Drop overlay badge when dragging */}
       {isDragOver && (
@@ -212,7 +224,10 @@ function SpellbookView({
       )}
 
       {/* Accordion header matching Spell Slots */}
-      <div className={`relative z-20 flex-shrink-0 flex flex-wrap items-center justify-between gap-2 bg-dnd-panel ${isCollapsed ? '' : 'pb-1.5 mb-1.5'}`}>
+      <div
+        ref={headerRef}
+        className="relative z-20 flex-shrink-0 flex flex-wrap items-center justify-between gap-2 bg-dnd-panel"
+      >
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -268,9 +283,16 @@ function SpellbookView({
         </div>
       </div>
 
-      {/* Expandable Spellbook Filter Accordion */}
-      {!isCollapsed && showFilters && (
-        <div ref={filtersAccordionRef} className="flex-shrink-0 mb-2 space-y-2 pb-2 border-b border-white/5">
+      {/* Collapsible Body Wrapper: kept mounted in DOM so height transition interpolates smoothly */}
+      <div
+        className={`flex-1 min-h-0 flex flex-col pt-3 transition-opacity duration-200 ${
+          isCollapsed ? 'invisible pointer-events-none opacity-0' : 'visible opacity-100'
+        }`}
+        aria-hidden={isCollapsed}
+      >
+        {/* Expandable Spellbook Filter Accordion */}
+        {showFilters && (
+          <div ref={filtersAccordionRef} className="flex-shrink-0 mb-2 space-y-2 pb-2 border-b border-white/5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <select
               value={filters.level}
@@ -424,59 +446,60 @@ function SpellbookView({
         </div>
       )}
 
-      {!isCollapsed && <div className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll px-1 pb-1">
-      {!hasAnySpells ? (
-        <div className="flex-1 flex flex-col items-center justify-center pb-20 pt-4 px-8 text-center text-slate-500 rounded-xl bg-dnd-card/40">
-          <div
-            role="img"
-            aria-label="Mythallar Logo"
-            className="w-10 h-10 mb-2 bg-slate-300 select-none pointer-events-none"
-            style={{
-              WebkitMaskImage: "url('/mythallar_logo.png')",
-              WebkitMaskSize: 'contain',
-              WebkitMaskRepeat: 'no-repeat',
-              WebkitMaskPosition: 'center',
-              maskImage: "url('/mythallar_logo.png')",
-              maskSize: 'contain',
-              maskRepeat: 'no-repeat',
-              maskPosition: 'center',
-            }}
-          />
-          <h3 className="font-semibold text-slate-300 text-base">Your Spellbook is Empty</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-xs">
-            Drag and drop spells from the catalog on the left, or click "Add to Spellbook" in the spell detail drawer.
-          </p>
-        </div>
-      ) : visibleSpellCount === 0 ? (
-        <div className="flex flex-col items-center justify-center h-40 text-center text-slate-500 rounded-xl p-6 bg-dnd-card/40">
-          <p className="text-xs text-slate-400">No spells match the active filters.</p>
-        </div>
-      ) : (
-        <div>
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
-            <SpellbookLevelGroup
-              key={lvl}
-              level={lvl}
-              spells={spellsByLevel[lvl]}
-              isOpen={!collapsedLevels[lvl]}
-              onToggle={handleToggleLevel}
-              preparedMap={preparedMap}
-              copyingMap={copyingMap}
-              notesMap={notesMap}
-              maxCantrips={lvl === 0 ? cantripsInfo.total : null}
-              onTogglePrepare={onTogglePrepare}
-              onFinishCopying={onFinishCopying}
-              onCast={onCastSpell}
-              onRemove={onRemoveSpell}
-              onSelect={onSelectSpell}
-              onUpdateNote={onUpdateNote}
-              expandedSpellId={expandedSpellId}
-              onToggleSpell={handleToggleSpell}
+        <div className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll -mx-1 px-1 -mb-1 pb-1">
+        {!hasAnySpells ? (
+          <div className="flex-1 flex flex-col items-center justify-center pb-20 pt-4 px-8 text-center text-slate-500 rounded-xl bg-dnd-card/40">
+            <div
+              role="img"
+              aria-label="Mythallar Logo"
+              className="w-10 h-10 mb-2 bg-slate-300 select-none pointer-events-none"
+              style={{
+                WebkitMaskImage: "url('/mythallar_logo.png')",
+                WebkitMaskSize: 'contain',
+                WebkitMaskRepeat: 'no-repeat',
+                WebkitMaskPosition: 'center',
+                maskImage: "url('/mythallar_logo.png')",
+                maskSize: 'contain',
+                maskRepeat: 'no-repeat',
+                maskPosition: 'center',
+              }}
             />
-          ))}
+            <h3 className="font-semibold text-slate-300 text-base">Your Spellbook is Empty</h3>
+            <p className="text-xs text-slate-400 mt-1 max-w-xs">
+              Drag and drop spells from the catalog on the left, or click "Add to Spellbook" in the spell detail drawer.
+            </p>
+          </div>
+        ) : visibleSpellCount === 0 ? (
+          <div className="flex flex-col items-center justify-center h-40 text-center text-slate-500 rounded-xl p-6 bg-dnd-card/40">
+            <p className="text-xs text-slate-400">No spells match the active filters.</p>
+          </div>
+        ) : (
+          <div>
+            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((lvl) => (
+              <SpellbookLevelGroup
+                key={lvl}
+                level={lvl}
+                spells={spellsByLevel[lvl]}
+                isOpen={!collapsedLevels[lvl]}
+                onToggle={handleToggleLevel}
+                preparedMap={preparedMap}
+                copyingMap={copyingMap}
+                notesMap={notesMap}
+                maxCantrips={lvl === 0 ? cantripsInfo.total : null}
+                onTogglePrepare={onTogglePrepare}
+                onFinishCopying={onFinishCopying}
+                onCast={onCastSpell}
+                onRemove={onRemoveSpell}
+                onSelect={onSelectSpell}
+                onUpdateNote={onUpdateNote}
+                expandedSpellId={expandedSpellId}
+                onToggleSpell={handleToggleSpell}
+              />
+            ))}
+          </div>
+        )}
         </div>
-      )}
-      </div>}
+      </div>
     </div>
   );
 }

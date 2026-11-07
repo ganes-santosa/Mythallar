@@ -1003,8 +1003,54 @@ export default function App() {
     [handleUseSlot, showToast]
   );
 
+  const rightPaneScrollRef = useRef(null);
+  const [hasRightScrollbar, setHasRightScrollbar] = useState(leftPaneView === 'spells');
+
+  useEffect(() => {
+    const el = rightPaneScrollRef.current;
+    if (!el || typeof window === 'undefined') return undefined;
+
+    const updateScrollbarState = () => {
+      if (!el.clientHeight) return;
+      const headerInner = el.children[0]?.firstElementChild?.firstElementChild;
+      const slotsWrapper = el.children[1];
+      const spellbookRoot = el.children[2]?.firstElementChild;
+      const headerTargetH = leftPaneView === 'spells' && headerInner ? headerInner.offsetHeight + 10 : 0;
+      const slotsH = slotsWrapper ? slotsWrapper.offsetHeight : 0;
+      const isSbCollapsed = spellbookRoot?.getAttribute('data-collapsed') === 'true';
+      const sbTargetH = isSbCollapsed
+        ? (spellbookRoot.offsetHeight || 48)
+        : Math.max(spellbookRoot.offsetHeight || 0, window.innerHeight * 0.75);
+      const next = 4 + headerTargetH + slotsH + sbTargetH > el.clientHeight + 1;
+      setHasRightScrollbar((prev) => (prev === next ? prev : next));
+    };
+
+    updateScrollbarState();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(updateScrollbarState);
+    ro.observe(el);
+    const headerInner = el.children[0]?.firstElementChild?.firstElementChild;
+    const slotsWrapper = el.children[1];
+    const spellbookRoot = el.children[2]?.firstElementChild;
+    if (headerInner) ro.observe(headerInner);
+    if (slotsWrapper) ro.observe(slotsWrapper);
+    if (spellbookRoot) ro.observe(spellbookRoot);
+
+    const mo = typeof MutationObserver !== 'undefined' && spellbookRoot
+      ? new MutationObserver(updateScrollbarState)
+      : null;
+    if (mo && spellbookRoot) {
+      mo.observe(spellbookRoot, { attributes: true, attributeFilter: ['data-collapsed'] });
+    }
+
+    return () => {
+      ro.disconnect();
+      mo?.disconnect();
+    };
+  }, [leftPaneView, activeCharacter?.id]);
+
   return (
-    <div className="relative flex flex-col h-screen w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
+    <div className="relative flex flex-col h-screen h-[100dvh] w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
       {/* Per-Theme Background Texture Overlay (z-0, behind opaque panels) */}
       {activeTexture === 'celestial' && (
         <div
@@ -1271,8 +1317,11 @@ export default function App() {
         <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10">
           {activeCharacter ? (
             <div
+              ref={rightPaneScrollRef}
               data-testid="right-pane-scroll"
-              className="flex-1 min-h-0 overflow-y-auto custom-scroll p-1 pr-1.5 pb-4 flex flex-col"
+              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-1 pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
+                hasRightScrollbar ? 'mr-0' : '-mr-2.5 [--scrollbar-alpha:0%]'
+              }`}
             >
               {/* Right Character Header Accordion (Animates closed when Left Pane toggles to Character Sheet) */}
               <div

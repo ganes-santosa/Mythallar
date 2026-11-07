@@ -405,7 +405,7 @@ export default function VitalsCard({
   };
 
   return (
-    <div className="space-y-2.5 p-0.5 relative">
+    <div className="space-y-2.5 relative">
       {!onShowToast && internalToast && (
         <div className="absolute top-2 right-2 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-white/5 pointer-events-none">
           <CheckCircle2 size={16} className="text-emerald-400" />

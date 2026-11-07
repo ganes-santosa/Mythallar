@@ -110,7 +110,7 @@ export default function SkillsCard({
   });
 
   return (
-    <div className="space-y-2.5 p-0.5">
+    <div className="space-y-2.5">
       {/* Search & Quick Filter */}
       {showSearch && (
         <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">

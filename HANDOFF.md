@@ -1,15 +1,17 @@
 # HANDOFF
 
-## Current state (v2.2.2 - master)
-- **Scroll & Transition Polish**:
-  - Dual-level right-pane scrolling (`right-pane-scroll` + `SpellbookView`) and left-pane Character Sheet <-> Spell Library scroll preservation.
-  - Scrollbars rest at `24%` opacity with native arrows, fading to `100%` on scroll and back after 3s without inherited `scrollbar-color` recalculation lag.
-  - Upgraded `useAutoScrollOnExpand` with a synchronized `requestAnimationFrame` + `ResizeObserver` loop (`keepBottomInView`) so bottom accordions (`Notes`, `Proficiencies & Training`, `Items & Inventory`, `SpellCard`, `SpellbookCard`, etc.) open smoothly upwards along the CSS transition curve.
-- **Notes, Inventory & Catalog Polish**:
-  - `NotesCard` defaults to the list view, inserts new/edited notes at top, adds `ArrowDown`/`ArrowUp` direction toggle + `"Sort By"` (`Recent`, `Date`, `Alphabetical`), and restores scroll positions on editor exit.
-  - `ItemsCard` removes duplicate viewer delete button and prevents `ring-1` outline clipping on `item-viewer-card`.
-  - `Legacy` tag chip matches `In Book` chip size across `SpellCard` and `SpellbookCard`.
-- **Verification**: 41 test files (289 tests) passing; production build clean.
+## Current state (v2.2.3 - master)
+- **PWA & Standalone Support**:
+  - Web App Manifest (`manifest.webmanifest`), standalone display mode, dark icons (`pwa-192x192.png`, `pwa-512x512.png`), and caching service worker (`sw.js`).
+  - Seamless support for tablet/desktop installable PWA without header clutter.
+- **Scroll, Padding & Accordion Polish**:
+  - Gutter and symmetric 20px margins across both panes with smooth 300ms scrollbar margin transitions.
+  - Uniform `p-3` (12px) inner padding across all accordion sections, aligning bottom edge of `SpellbookView` with the left pane (`870px`).
+  - Single-curve 60fps expand/collapse animation on `SpellbookView` dropzone.
+  - Removed icon background spans in `ShortRestModal`.
+- **Character Import & Data Preservation**:
+  - Enhanced `validateAndImportCharacterJSON` to preserve full character sheet state (abilities, vitals, items, tracked resources, feats, notes, identity) and multiclass configuration.
+- **Verification**: 42 test files (294 tests) passing; production build verified clean.
 
 ## Next up
 - Ready for next user instructions or feature development.

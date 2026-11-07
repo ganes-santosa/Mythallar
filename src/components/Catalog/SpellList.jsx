@@ -119,7 +119,7 @@ export default React.memo(function SpellList({
         <span>Showing {spells.length} spells</span>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-1 pr-1.5 space-y-1">
+      <div className="flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] px-1 pr-1.5 space-y-1">
         {spells.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center text-slate-500">
             <p className="text-sm">No spells match your search or filter.</p>

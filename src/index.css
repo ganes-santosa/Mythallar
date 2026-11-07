@@ -42,7 +42,7 @@ textarea {
   --scrollbar-alpha: 24%;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--color-muted) var(--scrollbar-alpha), transparent) transparent;
-  transition: --scrollbar-alpha 300ms ease;
+  transition: --scrollbar-alpha 300ms ease, margin-right 300ms ease-in-out;
 }
 
 /* ponytail: stop inherited scrollbar-color recalculation at direct children; upgrade if CSS adds non-inherited scrollbar opacity */

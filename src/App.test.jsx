@@ -577,7 +577,9 @@ describe('App End-to-End Integration', () => {
     // CharacterHeader, SpellSlotTracker, and SpellbookView all live inside the single scrollable right pane
     const dropzone = screen.getByTestId('spellbook-dropzone');
     expect(rightScroll.contains(dropzone)).toBe(true);
-    expect(dropzone).toHaveClass('min-h-[75vh]', 'max-h-[80vh]');
+    expect(dropzone).toHaveClass('shrink-0', 'transition-[height]');
+    expect(dropzone).toHaveAttribute('data-collapsed', 'false');
+    expect(dropzone.style.height).toBe('max(100%, 75vh)');
     expect(dropzone.querySelector('.overflow-y-auto')).toBeInTheDocument();
   });
 

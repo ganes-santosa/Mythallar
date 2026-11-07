@@ -54,7 +54,7 @@ export default function AbilitiesCard({ abilities, level, isEditing = false, onU
 
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center p-1">
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
         {ABILITIES.map(({ key, label }) => {
           const score = currentAbilities[key] ?? 10;
           const mod = getAbilityModifier(score);

@@ -15,7 +15,7 @@ export default function AccordionSection({
   const sectionRef = useAutoScrollOnExpand(isOpen);
 
   return (
-    <div ref={sectionRef} className={`p-2.5 rounded-lg bg-dnd-panel transition-all ${className}`}>
+    <div ref={sectionRef} className={`p-3 rounded-lg bg-dnd-panel transition-all ${className}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <button
           type="button"
@@ -47,8 +47,8 @@ export default function AccordionSection({
           isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         }`}
       >
-        <div className="overflow-hidden">
-          <div className="pt-2 pb-1.5 px-0.5">{children}</div>
+        <div className="overflow-hidden -mx-1 px-1 -mb-1 pb-1">
+          <div className="pt-2">{children}</div>
         </div>
       </div>
     </div>

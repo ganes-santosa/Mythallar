@@ -40,7 +40,7 @@ function SpellbookLevelGroup({
     : `${spells.length} cantrips`;
 
   return (
-    <div ref={groupRef} className={`transition-all duration-200 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
+    <div ref={groupRef} className={`transition-all duration-200 last:mb-0 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
       {/* Group Header */}
       <button
         type="button"

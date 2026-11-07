@@ -250,7 +250,7 @@ function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div ref={headerAccordionRef} className="p-2.5 rounded-lg bg-dnd-panel transition-all">
+    <div ref={headerAccordionRef} className="p-3 rounded-lg bg-dnd-panel transition-all">
       <div className="flex items-center gap-2">
         <button
           type="button"

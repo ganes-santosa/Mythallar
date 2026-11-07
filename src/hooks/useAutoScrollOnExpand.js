@@ -131,12 +131,14 @@ export default function useAutoScrollOnExpand(isExpanded, { offset = 10, enabled
       (bodyWrapper.classList && bodyWrapper.classList.contains('overflow-hidden') && bodyWrapper) ||
       (typeof bodyWrapper.querySelector === 'function' && bodyWrapper.querySelector('.overflow-hidden')) ||
       (typeof el.querySelector === 'function' && el.querySelector('.overflow-hidden')) ||
+      (el.classList && el.classList.contains('overflow-hidden') && el) ||
       null;
     const inner = overflowBox && overflowBox.firstElementChild;
     const expectedGrowth = Math.max(
       overflowBox?.scrollHeight || 0,
       inner?.scrollHeight || 0,
-      inner?.offsetHeight || 0
+      inner?.offsetHeight || 0,
+      (el.dataset?.collapsed === 'false' ? (Math.max(parent.clientHeight, (typeof window !== 'undefined' ? window.innerHeight * 0.75 : 0)) - initialHeight) : 0)
     );
 
     const syncFrame = () => {

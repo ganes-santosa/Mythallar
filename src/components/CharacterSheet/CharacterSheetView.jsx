@@ -132,8 +132,8 @@ function CharacterSheetView({
         onScroll={isActive ? handleSheetScroll : undefined}
         className={
           isActive
-            ? 'flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll p-1 pr-1.5 pb-4 [overflow-anchor:none]'
-            : 'px-1 pr-1.5 overflow-hidden [overflow-anchor:none]'
+            ? 'flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll [scrollbar-gutter:stable] p-1 pr-1.5 pb-0 [overflow-anchor:none]'
+            : 'custom-scroll [scrollbar-gutter:stable] px-1 pr-1.5 overflow-hidden [overflow-anchor:none]'
         }
       >
         {/* Section 1: Character Header Accordion (Animates open on Character Sheet, animates closed from its current scroll offset on Spell Library) */}

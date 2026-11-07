@@ -377,7 +377,7 @@ export default function NotesCard({
         </div>
 
         {/* Notes Grid / Stack */}
-        <div ref={listScrollRef} className="space-y-1.5 max-h-[420px] overflow-y-auto custom-scroll p-0.5">
+        <div ref={listScrollRef} className="space-y-1.5 max-h-[420px] overflow-y-auto custom-scroll -m-0.5 p-0.5">
           {filteredAndSortedNotes.length === 0 ? (
             <div className="py-8 text-center text-xs text-slate-500 bg-dnd-panel/60 rounded-lg shadow-sm">
               No notes match &ldquo;{searchQuery}&rdquo;

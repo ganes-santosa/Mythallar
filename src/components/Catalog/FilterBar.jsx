@@ -52,7 +52,7 @@ function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSourc
   );
 
   return (
-    <div ref={filterAccordionRef} className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
+    <div ref={filterAccordionRef} className="p-3 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* Search Bar + Homebrew Spell Button */}
       <div className="flex items-center space-x-2">
         <div className="relative flex-1">

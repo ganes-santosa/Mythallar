@@ -85,7 +85,7 @@ function SpellSlotTracker({
   const usedPactSlots = Number(character?.pactSlotsUsed) || 0;
 
   return (
-    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
+    <div className="p-3 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* ================= SHARED SPELL SLOTS SECTION ================= */}
       <div ref={slotsAccordionRef}>
         {/* Header / Accordion Trigger */}
