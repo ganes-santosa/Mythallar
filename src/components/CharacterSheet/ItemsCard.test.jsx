@@ -239,11 +239,12 @@ describe('ItemsCard', () => {
     // Click item chip to expand
     fireEvent.click(screen.getByTestId('item-chip-itm_desc'));
 
-    // Shows expanded details: description, category, edit pencil, and attune button
+    // Shows expanded details: description, category, edit pencil, and attune button (without duplicate invisible delete button in viewer)
     expect(screen.getByText('Deals radiant damage, emits bright sunlight.')).toBeInTheDocument();
     expect(screen.getAllByText('Magic Item').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: 'Edit Sunblade' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Attune Sunblade' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Delete Sunblade' })).toHaveLength(1);
   });
 
   it('allows editing an item via the edit pencil button in expanded card', () => {

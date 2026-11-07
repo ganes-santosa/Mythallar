@@ -1,6 +1,24 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Plus, Trash2, ChevronLeft, Search, Pin } from 'lucide-react';
+import React, { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react';
+import {
+  Plus,
+  Trash2,
+  ChevronLeft,
+  ChevronDown,
+  Search,
+  Pin,
+  ArrowDownWideNarrow,
+  ArrowUp,
+  ArrowDown,
+} from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useClickOutside from '../../hooks/useClickOutside';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
+
+const SORT_MODES = [
+  { id: 'recent', label: 'Recent' },
+  { id: 'date', label: 'Date' },
+  { id: 'alpha', label: 'Alphabetical' },
+];
 
 /**
  * Normalizes legacy string notes or empty arrays into structured note objects.
@@ -24,6 +42,7 @@ export function normalizeNotes(rawNotes) {
       id: n?.id || `note_${i}_${Date.now()}`,
       title: typeof n?.title === 'string' ? n.title : '',
       content: typeof n?.content === 'string' ? n.content : '',
+      ...(n?.createdAt ? { createdAt: n.createdAt } : {}),
       updatedAt: n?.updatedAt || now,
       pinned: Boolean(n?.pinned),
     }));
@@ -65,8 +84,13 @@ export default function NotesCard({
   const normalizedNotes = normalizeNotes(notes);
   const [activeNoteId, setActiveNoteId] = useState(() => normalizedNotes[0]?.id || 'note_default');
   const [pendingNote, setPendingNote] = useState(null);
-  const [viewMode, setViewMode] = useState('editor'); // 'editor' | 'list'
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'editor'
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState('recent'); // 'recent' | 'date' | 'alpha'
+  const [sortDir, setSortDir] = useState('desc'); // 'desc' | 'asc'
+  const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
+  const sortMenuRef = useRef(null);
+  useClickOutside(sortMenuRef, () => setIsSortMenuOpen(false), isSortMenuOpen);
 
   // Prune any legacy empty clutter notes from storage on load
   useEffect(() => {
@@ -80,6 +104,35 @@ export default function NotesCard({
     : normalizedNotes.find((n) => n.id === activeNoteId) || normalizedNotes[0];
 
   const textareaRef = useRef(null);
+  const cardRef = useAutoScrollOnExpand(viewMode === 'editor');
+  const listScrollRef = useRef(null);
+  const savedSheetScrollTopRef = useRef(null);
+  const savedListScrollTopRef = useRef(0);
+
+  const captureScrollPositions = () => {
+    if (listScrollRef.current) {
+      savedListScrollTopRef.current = listScrollRef.current.scrollTop;
+    }
+    const parentScroller = cardRef.current?.closest('.overflow-y-auto');
+    if (parentScroller) {
+      savedSheetScrollTopRef.current = parentScroller.scrollTop;
+    }
+  };
+
+  useLayoutEffect(() => {
+    if (viewMode === 'list') {
+      if (listScrollRef.current) {
+        listScrollRef.current.scrollTop = savedListScrollTopRef.current;
+      }
+      if (savedSheetScrollTopRef.current !== null) {
+        const parentScroller = cardRef.current?.closest('.overflow-y-auto');
+        if (parentScroller) {
+          parentScroller.scrollTop = savedSheetScrollTopRef.current;
+        }
+        savedSheetScrollTopRef.current = null;
+      }
+    }
+  }, [viewMode]);
 
   // Auto-resize document canvas body
   const adjustHeight = () => {
@@ -98,18 +151,22 @@ export default function NotesCard({
   }, [activeNote?.content, activeNote?.id, viewMode]);
 
   const handleSelectNote = (id) => {
+    captureScrollPositions();
     setPendingNote(null);
     setActiveNoteId(id);
     setViewMode('editor');
   };
 
   const handleAddNote = () => {
+    captureScrollPositions();
+    const now = new Date().toISOString();
     const newId = `note_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
     const newNote = {
       id: newId,
       title: '',
       content: '',
-      updatedAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
       pinned: false,
     };
     // Kept in pending state in memory; not saved until user inputs content or title
@@ -144,17 +201,19 @@ export default function NotesCard({
       const hasTitle = updatedPending.title.trim().length > 0;
 
       if (hasContent || hasTitle) {
-        // Save note now that user entered text
-        const updated = [...normalizedNotes, updatedPending];
+        // Save new note at the top now that user entered text
+        const updated = [updatedPending, ...normalizedNotes];
         setPendingNote(null);
         onUpdateNotes?.(updated);
       } else {
         setPendingNote(updatedPending);
       }
     } else {
-      const updated = normalizedNotes.map((n) =>
-        n.id === activeNote.id ? { ...n, [field]: value, updatedAt: now } : n
-      );
+      const editedNote = { ...activeNote, [field]: value, updatedAt: now };
+      const updated = [
+        editedNote,
+        ...normalizedNotes.filter((n) => n.id !== activeNote.id),
+      ];
       onUpdateNotes?.(updated);
     }
   };
@@ -187,6 +246,18 @@ export default function NotesCard({
     onUpdateNotes?.(nextNotes);
   };
 
+  const handleSelectSortBy = (nextMode) => {
+    setSortBy(nextMode);
+    if (nextMode === 'alpha' && sortBy !== 'alpha') {
+      setSortDir('asc');
+    } else if (nextMode !== 'alpha' && sortBy === 'alpha') {
+      setSortDir('desc');
+    }
+    setIsSortMenuOpen(false);
+  };
+
+  const currentSortLabel = SORT_MODES.find((m) => m.id === sortBy)?.label || 'Recent';
+
   const filteredAndSortedNotes = useMemo(() => {
     const filtered = searchQuery.trim()
       ? normalizedNotes.filter((n) => {
@@ -195,22 +266,45 @@ export default function NotesCard({
         })
       : normalizedNotes;
 
-    // Pinned notes sort to the top; maintain relative order within each tier
+    // Pinned notes sort to the top; sort within each tier by selected mode & direction
     return [...filtered].sort((a, b) => {
       const aPinned = Boolean(a.pinned);
       const bPinned = Boolean(b.pinned);
-      if (aPinned === bPinned) return 0;
-      return aPinned ? -1 : 1;
+      if (aPinned !== bPinned) return aPinned ? -1 : 1;
+
+      if (sortBy === 'alpha') {
+        const aTitle = (a.title || 'Untitled Note').toLowerCase();
+        const bTitle = (b.title || 'Untitled Note').toLowerCase();
+        const cmp = aTitle.localeCompare(bTitle);
+        return sortDir === 'asc' ? cmp : -cmp;
+      }
+
+      if (sortBy === 'date') {
+        const aTime = new Date(a.createdAt || a.updatedAt || 0).getTime() || 0;
+        const bTime = new Date(b.createdAt || b.updatedAt || 0).getTime() || 0;
+        if (aTime !== bTime) {
+          return sortDir === 'desc' ? bTime - aTime : aTime - bTime;
+        }
+        return 0;
+      }
+
+      // 'recent': most recently edited/made first when desc
+      const aTime = new Date(a.updatedAt || 0).getTime() || 0;
+      const bTime = new Date(b.updatedAt || 0).getTime() || 0;
+      if (aTime !== bTime) {
+        return sortDir === 'desc' ? bTime - aTime : aTime - bTime;
+      }
+      return 0;
     });
-  }, [normalizedNotes, searchQuery]);
+  }, [normalizedNotes, searchQuery, sortBy, sortDir]);
 
   // List View (All Notes overview)
   if (viewMode === 'list') {
     return (
-      <div className="w-full rounded-xl bg-dnd-card shadow-sm p-3 space-y-2.5">
-        {/* Navigation & Search Bar Container */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+      <div ref={cardRef} className="w-full rounded-xl bg-dnd-card shadow-sm p-3 space-y-2.5">
+        {/* Navigation, Sort & Search Bar Container */}
+        <div className="flex items-center gap-1.5">
+          <div className="relative flex-1 min-w-0">
             <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-500" />
             <input
               type="text"
@@ -222,11 +316,60 @@ export default function NotesCard({
             />
           </div>
 
+          {/* Left Button: Sort Direction (ArrowDown = desc, ArrowUp = asc) */}
+          <button
+            type="button"
+            onClick={() => setSortDir((d) => (d === 'desc' ? 'asc' : 'desc'))}
+            aria-label={`Toggle sort direction (${sortDir === 'desc' ? 'Descending' : 'Ascending'})`}
+            title={sortDir === 'desc' ? 'Sorting Top to Bottom (click for Bottom to Top)' : 'Sorting Bottom to Top (click for Top to Bottom)'}
+            className="flex items-center justify-center p-1.5 rounded-lg bg-dnd-panel/60 hover:bg-dnd-hover text-slate-300 hover:text-dnd-gold transition-colors shrink-0 cursor-pointer"
+          >
+            {sortDir === 'desc' ? <ArrowDown size={13} /> : <ArrowUp size={13} />}
+          </button>
+
+          {/* Right Button: Sort By Dropdown with ArrowDownWideNarrow icon */}
+          <div className="relative shrink-0" ref={sortMenuRef}>
+            <button
+              type="button"
+              onClick={() => setIsSortMenuOpen((prev) => !prev)}
+              aria-label="Sort By"
+              title={`Sort By: ${currentSortLabel}`}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-dnd-panel/60 hover:bg-dnd-hover text-slate-300 hover:text-dnd-ivory text-[11px] font-medium transition-colors cursor-pointer"
+            >
+              <ArrowDownWideNarrow size={11} className="text-dnd-gold shrink-0" />
+              <span className="text-slate-200">Sort By</span>
+              <ChevronDown size={10} className={`text-slate-400 transition-transform ${isSortMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isSortMenuOpen && (
+              <div className="absolute right-0 top-full mt-1.5 py-1 rounded-lg bg-dnd-card shadow-lg z-30 min-w-[120px]">
+                {SORT_MODES.map((mode) => {
+                  const isSelected = sortBy === mode.id;
+                  return (
+                    <button
+                      key={mode.id}
+                      type="button"
+                      aria-label={`Sort by ${mode.label}`}
+                      onClick={() => handleSelectSortBy(mode.id)}
+                      className={`w-full text-left px-3 py-1.5 text-[11px] font-medium transition-colors cursor-pointer ${
+                        isSelected
+                          ? 'text-dnd-gold font-bold bg-dnd-panel/60'
+                          : 'text-slate-300 hover:text-dnd-ivory hover:bg-dnd-hover'
+                      }`}
+                    >
+                      {mode.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={handleAddNote}
             aria-label="New Note"
-            className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors shrink-0"
+            className="flex items-center space-x-1 px-2 py-1 rounded-lg bg-dnd-panel/60 hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors shrink-0 cursor-pointer"
           >
             <Plus size={11} />
             <span className="text-[11px]">New Note</span>
@@ -234,7 +377,7 @@ export default function NotesCard({
         </div>
 
         {/* Notes Grid / Stack */}
-        <div className="space-y-1.5 max-h-[420px] overflow-y-auto custom-scroll p-0.5">
+        <div ref={listScrollRef} className="space-y-1.5 max-h-[420px] overflow-y-auto custom-scroll p-0.5">
           {filteredAndSortedNotes.length === 0 ? (
             <div className="py-8 text-center text-xs text-slate-500 bg-dnd-panel/60 rounded-lg shadow-sm">
               No notes match &ldquo;{searchQuery}&rdquo;
@@ -295,7 +438,7 @@ export default function NotesCard({
 
   // Document Canvas View (Editor)
   return (
-    <div className="w-full rounded-xl bg-dnd-card shadow-sm p-3 space-y-2.5">
+    <div ref={cardRef} className="w-full rounded-xl bg-dnd-card shadow-sm p-3 space-y-2.5">
       {/* 1. Header Toolbar */}
       <div className="flex items-center justify-between gap-2 text-xs pb-0.5">
         <button

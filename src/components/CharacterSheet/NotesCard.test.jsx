@@ -44,8 +44,14 @@ describe('NotesCard', () => {
     { id: 'n2', title: 'NPCs', content: 'Elminster at Shadowdale', updatedAt: '2026-11-04T11:00:00.000Z', pinned: false },
   ];
 
-  it('renders active note in unified document canvas with title and content', () => {
+  it('renders notes list view on initial load and opens note editor when selecting a note', () => {
     render(<NotesCard notes={mockNotes} onUpdateNotes={() => {}} />);
+
+    expect(screen.getByLabelText('Search notes')).toBeInTheDocument();
+    expect(screen.getByText('Quests')).toBeInTheDocument();
+    expect(screen.getByText('NPCs')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Quests'));
 
     const titleInput = screen.getByLabelText('Note Title');
     expect(titleInput).toBeInTheDocument();
@@ -56,26 +62,26 @@ describe('NotesCard', () => {
     expect(contentArea).toHaveValue('Find the crystal');
   });
 
-  it('updates note content on edit', () => {
+  it('updates note content on edit and moves edited note to top', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
+    fireEvent.click(screen.getByText('NPCs'));
     fireEvent.change(screen.getByLabelText('Note Content'), {
-      target: { value: 'Find the crystal in Netheril' },
+      target: { value: 'Elminster at Waterdeep' },
     });
 
-    expect(handleUpdate).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ id: 'n1', content: 'Find the crystal in Netheril' }),
-        mockNotes[1],
-      ])
-    );
+    expect(handleUpdate).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'n2', content: 'Elminster at Waterdeep' }),
+      mockNotes[0],
+    ]);
   });
 
   it('allows selecting entire title and backspacing to empty without deleting note or exiting editor', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
+    fireEvent.click(screen.getByText('Quests'));
     const titleInput = screen.getByLabelText('Note Title');
     expect(titleInput).toHaveValue('Quests');
 
@@ -97,9 +103,6 @@ describe('NotesCard', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
-    // Switch to list view
-    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
-
     const newBtn = screen.getByRole('button', { name: /New Note/i });
     fireEvent.click(newBtn);
 
@@ -115,29 +118,27 @@ describe('NotesCard', () => {
     expect(screen.queryByRole('heading', { name: 'New Note' })).not.toBeInTheDocument();
   });
 
-  it('saves new note as soon as user types title or content', () => {
+  it('saves new note at the top of the list as soon as user types title or content', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
     fireEvent.click(screen.getByRole('button', { name: /New Note/i }));
 
     fireEvent.change(screen.getByLabelText('Note Title'), {
       target: { value: 'Secret Door' },
     });
 
-    expect(handleUpdate).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        ...mockNotes,
-        expect.objectContaining({ title: 'Secret Door' }),
-      ])
-    );
+    expect(handleUpdate).toHaveBeenCalledWith([
+      expect.objectContaining({ title: 'Secret Door' }),
+      ...mockNotes,
+    ]);
   });
 
   it('deletes note with two-click confirmation', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
+    fireEvent.click(screen.getByText('Quests'));
     const deleteBtn = screen.getByRole('button', { name: 'Delete note Quests' });
     fireEvent.click(deleteBtn);
     expect(handleUpdate).not.toHaveBeenCalled();
@@ -151,11 +152,7 @@ describe('NotesCard', () => {
   it('navigates between list view and note editor view', () => {
     render(<NotesCard notes={mockNotes} onUpdateNotes={() => {}} />);
 
-    // Switch to All Notes list view
-    const allNotesBtn = screen.getByRole('button', { name: /All Notes/i });
-    fireEvent.click(allNotesBtn);
-
-    // List view shows note titles and preview snippets
+    // List view shows note titles and preview snippets on initial load
     expect(screen.getByText('Quests')).toBeInTheDocument();
     expect(screen.getByText('Find the crystal')).toBeInTheDocument();
     expect(screen.getByText('NPCs')).toBeInTheDocument();
@@ -165,12 +162,15 @@ describe('NotesCard', () => {
     fireEvent.click(screen.getByText('NPCs'));
     expect(screen.getByLabelText('Note Title')).toHaveValue('NPCs');
     expect(screen.getByLabelText('Note Content')).toHaveValue('Elminster at Shadowdale');
+
+    // Switch back to All Notes list view
+    const allNotesBtn = screen.getByRole('button', { name: /All Notes/i });
+    fireEvent.click(allNotesBtn);
+    expect(screen.getByLabelText('Search notes')).toBeInTheDocument();
   });
 
   it('filters notes in list view via search bar', () => {
     render(<NotesCard notes={mockNotes} onUpdateNotes={() => {}} />);
-
-    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
 
     const searchInput = screen.getByLabelText('Search notes');
     fireEvent.change(searchInput, { target: { value: 'Elminster' } });
@@ -182,9 +182,6 @@ describe('NotesCard', () => {
   it('allows pinning note to the top of the list view', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
-
-    // Switch to list view
-    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
 
     // Click pin button on second note (NPCs)
     const pinBtn = screen.getByRole('button', { name: 'Pin note NPCs' });
@@ -201,17 +198,94 @@ describe('NotesCard', () => {
 
   it('renders pinned notes at the top of the list view', () => {
     const notesWithPin = [
-      { id: 'n1', title: 'Unpinned Note A', content: 'AAA', pinned: false },
-      { id: 'n2', title: 'Pinned Note B', content: 'BBB', pinned: true },
-      { id: 'n3', title: 'Unpinned Note C', content: 'CCC', pinned: false },
+      { id: 'n1', title: 'Unpinned Note A', content: 'AAA', updatedAt: '2026-11-04T12:00:00.000Z', pinned: false },
+      { id: 'n2', title: 'Pinned Note B', content: 'BBB', updatedAt: '2026-11-04T10:00:00.000Z', pinned: true },
+      { id: 'n3', title: 'Unpinned Note C', content: 'CCC', updatedAt: '2026-11-04T11:00:00.000Z', pinned: false },
     ];
 
     render(<NotesCard notes={notesWithPin} onUpdateNotes={() => {}} />);
-    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
 
     const titles = screen.getAllByRole('heading', { level: 4 }).map((el) => el.textContent);
     expect(titles[0]).toBe('Pinned Note B');
     expect(titles[1]).toBe('Unpinned Note A');
     expect(titles[2]).toBe('Unpinned Note C');
+  });
+
+  it('sorts notes by Recent, Date, and Alphabetical in ascending and descending order via left direction button and right Sort By dropdown', () => {
+    const sortableNotes = [
+      { id: 'n1', title: 'B-Quest', content: '1', createdAt: '2026-11-02T10:00:00.000Z', updatedAt: '2026-11-05T10:00:00.000Z', pinned: false },
+      { id: 'n2', title: 'A-Lore', content: '2', createdAt: '2026-11-03T10:00:00.000Z', updatedAt: '2026-11-04T10:00:00.000Z', pinned: false },
+      { id: 'n3', title: 'C-NPCs', content: '3', createdAt: '2026-11-01T10:00:00.000Z', updatedAt: '2026-11-06T10:00:00.000Z', pinned: false },
+    ];
+
+    render(<NotesCard notes={sortableNotes} onUpdateNotes={() => {}} />);
+
+    const getTitles = () => screen.getAllByRole('heading', { level: 4 }).map((el) => el.textContent);
+
+    // Default: Recent descending (updatedAt newest first: C-NPCs, B-Quest, A-Lore) and button reads "Sort By" all the time
+    expect(screen.getByRole('button', { name: 'Sort By' })).toBeInTheDocument();
+    expect(getTitles()).toEqual(['C-NPCs', 'B-Quest', 'A-Lore']);
+
+    // Toggle left sort direction button to ascending (Recent oldest first: A-Lore, B-Quest, C-NPCs)
+    fireEvent.click(screen.getByRole('button', { name: /Toggle sort direction/i }));
+    expect(getTitles()).toEqual(['A-Lore', 'B-Quest', 'C-NPCs']);
+
+    // Open right Sort By dropdown and select Date; button label stays "Sort By"
+    fireEvent.click(screen.getByRole('button', { name: 'Sort By' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Date' }));
+    expect(screen.getByRole('button', { name: 'Sort By' })).toBeInTheDocument();
+    expect(getTitles()).toEqual(['C-NPCs', 'B-Quest', 'A-Lore']);
+
+    // Toggle left sort direction button back to descending (Date newest first: A-Lore (Nov 3), B-Quest (Nov 2), C-NPCs (Nov 1))
+    fireEvent.click(screen.getByRole('button', { name: /Toggle sort direction/i }));
+    expect(getTitles()).toEqual(['A-Lore', 'B-Quest', 'C-NPCs']);
+
+    // Open right Sort By dropdown and select Alphabetical; button label stays "Sort By"
+    fireEvent.click(screen.getByRole('button', { name: 'Sort By' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Sort by Alphabetical' }));
+    expect(screen.getByRole('button', { name: 'Sort By' })).toBeInTheDocument();
+    expect(getTitles()).toEqual(['A-Lore', 'B-Quest', 'C-NPCs']);
+
+    // Toggle left sort direction button to Z-A
+    fireEvent.click(screen.getByRole('button', { name: /Toggle sort direction/i }));
+    expect(getTitles()).toEqual(['C-NPCs', 'B-Quest', 'A-Lore']);
+  });
+
+  it('restores both the parent character sheet scroll position and inner notes list scroll position when returning to list view from editor', () => {
+    const manyNotes = Array.from({ length: 10 }, (_, i) => ({
+      id: `n_${i}`,
+      title: `Note ${i}`,
+      content: `Content ${i}`,
+      updatedAt: `2026-11-0${(i % 9) + 1}T10:00:00.000Z`,
+      pinned: false,
+    }));
+
+    const { container } = render(
+      <div className="overflow-y-auto" data-testid="mock-sheet-scroller">
+        <NotesCard notes={manyNotes} onUpdateNotes={() => {}} />
+      </div>
+    );
+
+    const sheetScroller = screen.getByTestId('mock-sheet-scroller');
+    const innerListScroller = container.querySelector('.max-h-\\[420px\\]');
+
+    // Simulate scrolling down the left pane and the inner notes list before opening a note
+    sheetScroller.scrollTop = 650;
+    innerListScroller.scrollTop = 180;
+
+    // Enter note editor
+    fireEvent.click(screen.getByText('Note 2'));
+    expect(screen.getByLabelText('Note Title')).toHaveValue('Note 2');
+
+    // Simulate user scrolling while in editor
+    sheetScroller.scrollTop = 920;
+
+    // Exit editor back to All Notes list
+    fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
+
+    // Both parent sheet scroller and inner list scroller are restored to pre-editor positions
+    expect(sheetScroller.scrollTop).toBe(650);
+    const restoredInnerScroller = container.querySelector('.max-h-\\[420px\\]');
+    expect(restoredInnerScroller.scrollTop).toBe(180);
   });
 });

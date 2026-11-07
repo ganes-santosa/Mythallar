@@ -31,7 +31,7 @@ const CatalogLevelGroup = React.memo(function CatalogLevelGroup({
       {/* Level Divider / Accordion Trigger */}
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => onToggle(level)}
         className="flex items-center justify-between w-full py-1 px-2.5 mb-1.5 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
       >
         <div className="flex items-center space-x-1.5">
@@ -132,7 +132,7 @@ export default React.memo(function SpellList({
               level={lvl}
               spells={groupedSpells[lvl]}
               isOpen={openLevel === null || openLevel === lvl}
-              onToggle={() => handleToggleLevel(lvl)}
+              onToggle={handleToggleLevel}
               spellbookSpellIds={spellbookSpellIds}
               notesMap={notesMap}
               onSelectSpell={onSelectSpell}

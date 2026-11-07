@@ -51,9 +51,7 @@ export default function App() {
   }, [profiles, activeId]);
 
   const activeCharacterRef = useRef(activeCharacter);
-  useEffect(() => {
-    activeCharacterRef.current = activeCharacter;
-  }, [activeCharacter]);
+  activeCharacterRef.current = activeCharacter;
 
   // Persist profiles on change
   useEffect(() => {
@@ -93,6 +91,30 @@ export default function App() {
   useEffect(() => {
     applyTheme(activeThemeId);
   }, [activeThemeId, customThemeRev]);
+
+  useEffect(() => {
+    const timers = new WeakMap();
+    const handleScroll = (e) => {
+      const el = e.target;
+      if (!el || !el.classList) return;
+      if (!el.classList.contains('is-scrolling')) {
+        el.classList.add('is-scrolling');
+      }
+      const prev = timers.get(el);
+      if (prev) clearTimeout(prev);
+      timers.set(
+        el,
+        setTimeout(() => {
+          el.classList.remove('is-scrolling');
+          timers.delete(el);
+        }, 3000)
+      );
+    };
+    window.addEventListener('scroll', handleScroll, { capture: true, passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll, { capture: true });
+    };
+  }, []);
 
   useEffect(() => {
     if (activeTexture !== 'stars') return;
@@ -306,18 +328,31 @@ export default function App() {
     return map;
   }, [allSpells]);
 
-  // Spellbook spell ID set for fast in-book checks
+  // Spellbook spell ID set for fast in-book checks (keeps reference stable when only prepared/copying changes)
+  const spellIdsSignature = useMemo(() => {
+    if (!activeCharacter?.spells) return '';
+    return activeCharacter.spells.map((item) => item.id).join('\0');
+  }, [activeCharacter?.spells]);
+
   const spellbookSpellIds = useMemo(() => {
     const ids = new Set();
-    if (activeCharacter?.spells) {
-      for (const item of activeCharacter.spells) {
-        ids.add(item.id);
+    if (spellIdsSignature) {
+      for (const id of spellIdsSignature.split('\0')) {
+        ids.add(id);
       }
     }
     return ids;
+  }, [spellIdsSignature]);
+
+  // Spell notes map for active character (keeps reference stable when only prepared/copying changes)
+  const spellNotesSignature = useMemo(() => {
+    if (!activeCharacter?.spells) return '';
+    return activeCharacter.spells
+      .filter((item) => item.note)
+      .map((item) => `${item.id}:${item.note}`)
+      .join('\0');
   }, [activeCharacter?.spells]);
 
-  // Spell notes map for active character
   const spellNotesMap = useMemo(() => {
     const map = {};
     if (activeCharacter?.spells) {
@@ -328,7 +363,7 @@ export default function App() {
       }
     }
     return map;
-  }, [activeCharacter?.spells]);
+  }, [spellNotesSignature]);
 
   // --- Filter State ---
   const [filters, setFilters] = useState({
@@ -384,13 +419,17 @@ export default function App() {
     []
   );
 
-  const handleSelectProfile = (id) => {
+  const handleSelectProfile = useCallback((id) => {
     setProfileData((prev) => ({ ...prev, activeId: id }));
-  };
+  }, []);
 
-  const handleOpenCreateCharacter = () => {
+  const handleOpenCreateCharacter = useCallback(() => {
     setIsCreateCharacterModalOpen(true);
-  };
+  }, []);
+
+  const handleOpenHomebrewModal = useCallback(() => {
+    setIsHomebrewSpellModalOpen(true);
+  }, []);
 
   const handleSaveNewCharacter = ({ name, className }) => {
     const newChar = createDefaultProfile(name, className);
@@ -423,25 +462,29 @@ export default function App() {
     [profileData, supabase, user, showToast]
   );
 
-  const handleExport = () => {
-    if (activeCharacter) {
-      exportCharacterJSON(activeCharacter);
-      showToast(`Exported ${activeCharacter.name}'s spellbook`, 'success');
+  const handleExport = useCallback(() => {
+    const char = activeCharacterRef.current;
+    if (char) {
+      exportCharacterJSON(char);
+      showToast(`Exported ${char.name}'s spellbook`, 'success');
     }
-  };
+  }, [showToast]);
 
-  const handleImport = (jsonStr) => {
-    const { character, error } = validateAndImportCharacterJSON(jsonStr);
-    if (error) {
-      showToast(error, 'error');
-      return;
-    }
-    setProfileData((prev) => ({
-      profiles: [...prev.profiles, character],
-      activeId: character.id,
-    }));
-    showToast(`Imported ${character.name}!`, 'success');
-  };
+  const handleImport = useCallback(
+    (jsonStr) => {
+      const { character, error } = validateAndImportCharacterJSON(jsonStr);
+      if (error) {
+        showToast(error, 'error');
+        return;
+      }
+      setProfileData((prev) => ({
+        profiles: [...prev.profiles, character],
+        activeId: character.id,
+      }));
+      showToast(`Imported ${character.name}!`, 'success');
+    },
+    [showToast]
+  );
 
   // --- Homebrew Spell Action ---
   const handleSaveHomebrewSpell = (newSpell) => {
@@ -532,32 +575,34 @@ export default function App() {
 
   const handleRemoveSpell = useCallback(
     (spellId) => {
-      if (!activeCharacter) return;
+      const char = activeCharacterRef.current;
+      if (!char) return;
       const spell = catalogMap[spellId];
-      const updatedSpells = (activeCharacter.spells || []).filter((s) => s.id !== spellId);
+      const updatedSpells = (char.spells || []).filter((s) => s.id !== spellId);
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         spells: updatedSpells,
       });
       if (spell) {
         showToast(`Removed ${spell.name} from spellbook`, 'info');
       }
     },
-    [activeCharacter, catalogMap, updateActiveCharacter, showToast]
+    [catalogMap, updateActiveCharacter, showToast]
   );
 
   const handleTogglePrepare = useCallback(
     (spellId) => {
-      if (!activeCharacter) return;
-      const updatedSpells = (activeCharacter.spells || []).map((s) =>
+      const char = activeCharacterRef.current;
+      if (!char) return;
+      const updatedSpells = (char.spells || []).map((s) =>
         s.id === spellId ? { ...s, prepared: !s.prepared } : s
       );
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         spells: updatedSpells,
       });
     },
-    [activeCharacter, updateActiveCharacter]
+    [updateActiveCharacter]
   );
 
   const handleUpdateSpellNote = useCallback(
@@ -606,50 +651,53 @@ export default function App() {
   const handleUseSlot = useCallback(
     (level, explicitUsed) => {
       slotBaselinesRef.current = {};
-      if (!activeCharacter) return;
-      const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
+      const char = activeCharacterRef.current;
+      if (!char) return;
+      const currentUsed = char.slotsUsed?.[level] || 0;
       const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : currentUsed + 1;
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         slotsUsed: {
-          ...activeCharacter.slotsUsed,
+          ...char.slotsUsed,
           [level]: nextUsed,
         },
       });
     },
-    [activeCharacter, updateActiveCharacter]
+    [updateActiveCharacter]
   );
 
   const handleRestoreSlot = useCallback(
     (level, explicitUsed) => {
       slotBaselinesRef.current = {};
-      if (!activeCharacter) return;
-      const currentUsed = activeCharacter.slotsUsed?.[level] || 0;
+      const char = activeCharacterRef.current;
+      if (!char) return;
+      const currentUsed = char.slotsUsed?.[level] || 0;
       const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : Math.max(0, currentUsed - 1);
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         slotsUsed: {
-          ...activeCharacter.slotsUsed,
+          ...char.slotsUsed,
           [level]: nextUsed,
         },
       });
     },
-    [activeCharacter, updateActiveCharacter]
+    [updateActiveCharacter]
   );
 
   const handleSetSlotsUsed = useCallback(
     (level, used) => {
       slotBaselinesRef.current = {};
-      if (!activeCharacter) return;
+      const char = activeCharacterRef.current;
+      if (!char) return;
       updateActiveCharacter({
-        ...activeCharacter,
+        ...char,
         slotsUsed: {
-          ...activeCharacter.slotsUsed,
+          ...char.slotsUsed,
           [level]: Math.max(0, used),
         },
       });
     },
-    [activeCharacter, updateActiveCharacter]
+    [updateActiveCharacter]
   );
 
   const handleUpdateMaxSlot = useCallback(
@@ -914,7 +962,8 @@ export default function App() {
 
   const handleCastSpell = useCallback(
     (spell) => {
-      if (!activeCharacter || !spell) return;
+      const char = activeCharacterRef.current;
+      if (!char || !spell) return;
       if (spell.level === 0) {
         showToast(`Cast ${spell.name} (Cantrip, at will)`, 'info');
         return;
@@ -922,17 +971,17 @@ export default function App() {
 
       // Check available slots
       const maxSlots = getEffectiveMaxSlots(
-        activeCharacter.className,
-        activeCharacter.level,
-        activeCharacter.customSlots,
-        activeCharacter
+        char.className,
+        char.level,
+        char.customSlots,
+        char
       );
 
       // Find lowest available slot level >= spell.level
       let slotToUse = null;
       for (let lvl = spell.level; lvl <= 9; lvl++) {
         const max = maxSlots[lvl] || 0;
-        const used = activeCharacter.slotsUsed?.[lvl] || 0;
+        const used = char.slotsUsed?.[lvl] || 0;
         if (used < max) {
           slotToUse = lvl;
           break;
@@ -951,7 +1000,7 @@ export default function App() {
         'success'
       );
     },
-    [activeCharacter, handleUseSlot, showToast]
+    [handleUseSlot, showToast]
   );
 
   return (
@@ -1159,26 +1208,25 @@ export default function App() {
             </div>
           </div>
 
-          {leftPaneView === 'sheet' && (
-            <CharacterSheetView
-              character={activeCharacter}
-              profiles={profiles}
-              onUpdateCharacter={updateActiveCharacter}
-              onSelectProfile={handleSelectProfile}
-              onCreateProfile={handleOpenCreateCharacter}
-              onDeleteProfile={handleDeleteCharacter}
-              onExport={handleExport}
-              onImport={handleImport}
-              onShortRest={handleShortRest}
-              onShowToast={showLeftToast}
-            />
-          )}
+          <CharacterSheetView
+            character={activeCharacter}
+            profiles={profiles}
+            isActive={leftPaneView === 'sheet'}
+            onUpdateCharacter={updateActiveCharacter}
+            onSelectProfile={handleSelectProfile}
+            onCreateProfile={handleOpenCreateCharacter}
+            onDeleteProfile={handleDeleteCharacter}
+            onExport={handleExport}
+            onImport={handleImport}
+            onShortRest={handleShortRest}
+            onShowToast={showLeftToast}
+          />
 
           <div className={leftPaneView === 'spells' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
             <FilterBar
               filters={filters}
               onChange={setFilters}
-              onOpenHomebrewSpellModal={() => setIsHomebrewSpellModalOpen(true)}
+              onOpenHomebrewSpellModal={handleOpenHomebrewModal}
               availableSources={availableSources}
             />
 
@@ -1222,48 +1270,54 @@ export default function App() {
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
         <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10">
           {activeCharacter ? (
-            <>
-          {/* Right Character Header Accordion (Animates closed when Left Pane toggles to Character Sheet) */}
-          <div
-            className={`grid transition-[grid-template-rows,opacity,margin] duration-300 ease-in-out ${
-              leftPaneView === 'spells'
-                ? 'grid-rows-[1fr] opacity-100 mb-2.5'
-                : 'grid-rows-[0fr] opacity-0 mb-0 pointer-events-none'
-            }`}
-          >
-            <div className="overflow-hidden">
-              <CharacterHeader
-                activeCharacter={activeCharacter}
-                profiles={profiles}
-                onUpdateCharacter={updateActiveCharacter}
-                onSelectProfile={handleSelectProfile}
-                onCreateProfile={handleOpenCreateCharacter}
-                onDeleteProfile={handleDeleteCharacter}
-                onExport={handleExport}
-                onImport={handleImport}
-              />
-            </div>
-          </div>
+            <div
+              data-testid="right-pane-scroll"
+              className="flex-1 min-h-0 overflow-y-auto custom-scroll p-1 pr-1.5 pb-4 flex flex-col"
+            >
+              {/* Right Character Header Accordion (Animates closed when Left Pane toggles to Character Sheet) */}
+              <div
+                aria-hidden={leftPaneView !== 'spells'}
+                className={`flex-shrink-0 grid transition-[grid-template-rows,opacity,margin] duration-300 ease-in-out ${
+                  leftPaneView === 'spells'
+                    ? 'grid-rows-[1fr] opacity-100 mb-2.5'
+                    : 'grid-rows-[0fr] opacity-0 mb-0 pointer-events-none'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <CharacterHeader
+                    activeCharacter={activeCharacter}
+                    profiles={profiles}
+                    onUpdateCharacter={updateActiveCharacter}
+                    onSelectProfile={handleSelectProfile}
+                    onCreateProfile={handleOpenCreateCharacter}
+                    onDeleteProfile={handleDeleteCharacter}
+                    onExport={handleExport}
+                    onImport={handleImport}
+                  />
+                </div>
+              </div>
 
-              <SpellSlotTracker
-                character={activeCharacter}
-                onUseSlot={handleUseSlot}
-                onRestoreSlot={handleRestoreSlot}
-                onSetSlotsUsed={handleSetSlotsUsed}
-                onUsePactSlot={handleUsePactSlot}
-                onRestorePactSlot={handleRestorePactSlot}
-                onSetPactSlotsUsed={handleSetPactSlotsUsed}
-                onUpdateMaxSlot={handleUpdateMaxSlot}
-                onResetMaxSlot={handleResetMaxSlot}
-                onDoneEditingMax={handleDoneEditingMax}
-                onLongRest={handleLongRest}
-                onShortRest={handleShortRest}
-                onArcaneRecovery={handleArcaneRecovery}
-                onResetArcaneRecoveryUsed={handleResetArcaneRecoveryUsed}
-                onUpdateCharacter={updateActiveCharacter}
-              />
+              <div className="flex-shrink-0">
+                <SpellSlotTracker
+                  character={activeCharacter}
+                  onUseSlot={handleUseSlot}
+                  onRestoreSlot={handleRestoreSlot}
+                  onSetSlotsUsed={handleSetSlotsUsed}
+                  onUsePactSlot={handleUsePactSlot}
+                  onRestorePactSlot={handleRestorePactSlot}
+                  onSetPactSlotsUsed={handleSetPactSlotsUsed}
+                  onUpdateMaxSlot={handleUpdateMaxSlot}
+                  onResetMaxSlot={handleResetMaxSlot}
+                  onDoneEditingMax={handleDoneEditingMax}
+                  onLongRest={handleLongRest}
+                  onShortRest={handleShortRest}
+                  onArcaneRecovery={handleArcaneRecovery}
+                  onResetArcaneRecoveryUsed={handleResetArcaneRecoveryUsed}
+                  onUpdateCharacter={updateActiveCharacter}
+                />
+              </div>
 
-              <div className="flex-1 min-h-[300px] flex flex-col">
+              <div className="flex-1 min-h-0 flex flex-col">
                 <SpellbookView
                   character={activeCharacter}
                   catalog={catalogMap}
@@ -1278,7 +1332,7 @@ export default function App() {
                   onUpdateNote={handleUpdateSpellNote}
                 />
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-2xl bg-dnd-panel/60 border border-white/5 space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center shadow-lg ring-1 ring-white/10 p-2.5">

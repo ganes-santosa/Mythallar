@@ -124,4 +124,67 @@ describe('useAutoScrollOnExpand', () => {
     rerender({ isExpanded: true });
     expect(parentEl.scrollBy).not.toHaveBeenCalled();
   });
+
+  it('tracks live layout growth with ResizeObserver so expanding elements appear to open upwards in real time', () => {
+    let resizeCallback = null;
+    const observeMock = vi.fn();
+    const disconnectMock = vi.fn();
+
+    class MockResizeObserver {
+      constructor(cb) {
+        resizeCallback = cb;
+      }
+      observe(el) {
+        observeMock(el);
+      }
+      disconnect() {
+        disconnectMock();
+      }
+    }
+
+    vi.stubGlobal('ResizeObserver', MockResizeObserver);
+
+    let scrollTopVal = 100;
+    Object.defineProperty(parentEl, 'scrollTop', {
+      get: () => scrollTopVal,
+      set: (v) => {
+        scrollTopVal = v;
+      },
+      configurable: true,
+    });
+
+    // Initially child is at bottom of viewport (top: 550, bottom: 590, parent bottom: 600)
+    let childBottom = 590;
+    childEl.getBoundingClientRect = () => ({
+      top: 550 - (scrollTopVal - 100),
+      bottom: childBottom - (scrollTopVal - 100),
+      left: 0,
+      right: 400,
+      width: 400,
+      height: childBottom - 550,
+    });
+
+    const { result, rerender } = renderHook(
+      ({ isExpanded }) => useAutoScrollOnExpand(isExpanded, { offset: 10 }),
+      { initialProps: { isExpanded: false } }
+    );
+
+    result.current.current = childEl;
+
+    // Expand accordion
+    rerender({ isExpanded: true });
+    expect(observeMock).toHaveBeenCalledWith(childEl);
+
+    // Frame 1 of CSS grid transition: child grows by 80px (bottom becomes 670, exceeding parent 600 by 70 + 10 offset = 80)
+    childBottom = 670;
+    resizeCallback();
+    expect(scrollTopVal).toBe(180);
+
+    // Frame 2 of CSS grid transition: child grows by another 120px (bottom becomes 790)
+    childBottom = 790;
+    resizeCallback();
+    expect(scrollTopVal).toBe(300);
+
+    vi.unstubAllGlobals();
+  });
 });

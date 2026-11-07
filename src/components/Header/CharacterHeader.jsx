@@ -3,6 +3,7 @@ import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound,
 import CharacterManagerModal from './CharacterManagerModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
 function ClassDeleteButton({ className, onRemove }) {
@@ -38,7 +39,7 @@ const CASTER_CLASSES = [
   'Wizard',
 ];
 
-export default function CharacterHeader({
+function CharacterHeader({
   activeCharacter,
   profiles,
   onUpdateCharacter,
@@ -58,6 +59,7 @@ export default function CharacterHeader({
   // Level Up popup modal
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const headerAccordionRef = useAutoScrollOnExpand(!isCollapsed);
   const [levelUpTarget, setLevelUpTarget] = useState('');
   const [newMulticlassChoice, setNewMulticlassChoice] = useState('');
 
@@ -248,7 +250,7 @@ export default function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div className="p-2.5 rounded-lg bg-dnd-panel transition-all">
+    <div ref={headerAccordionRef} className="p-2.5 rounded-lg bg-dnd-panel transition-all">
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -580,6 +582,8 @@ export default function CharacterHeader({
     </div>
   );
 }
+
+export default React.memo(CharacterHeader);
 
 
 

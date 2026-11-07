@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import React from 'react';
 import App from './App';
 import { STORAGE_KEY, createDefaultProfile } from './utils/storage';
@@ -82,15 +82,51 @@ describe('App End-to-End Integration', () => {
     const sheetTab = screen.getByRole('button', { name: /Character Sheet/i });
     fireEvent.click(sheetTab);
 
-    // Character Sheet elements should now be visible
+    // Character Sheet elements should now be visible and left character accordion expanded
     expect(screen.getByText('Combat Stats')).toBeInTheDocument();
     expect(screen.getByText('Ability Scores & Saving Throws')).toBeInTheDocument();
+    const leftHeaderAccordion = screen.getByTestId('left-character-header-accordion');
+    expect(leftHeaderAccordion).toHaveClass('grid-rows-[1fr]', 'opacity-100');
 
     // Toggle back to Spell Library
     const grimoireTab = screen.getByRole('button', { name: /Spell Library/i });
     fireEvent.click(grimoireTab);
 
+    // Left character accordion animates closed (with 300ms transition when at top)
+    expect(leftHeaderAccordion).toHaveClass('grid-rows-[0fr]', 'opacity-0', 'duration-300');
     expect(screen.getByPlaceholderText(/Search spells/i)).toBeInTheDocument();
+
+    // Toggle back to Character Sheet, scroll halfway through header, then switch back to Spell Library
+    fireEvent.click(sheetTab);
+    const sheetScroll = leftHeaderAccordion.parentElement;
+    Object.defineProperty(sheetScroll, 'scrollTop', { value: 60, writable: true });
+    fireEvent.scroll(sheetScroll);
+
+    fireEvent.click(grimoireTab);
+    expect(leftHeaderAccordion).toHaveClass('grid-rows-[0fr]', 'opacity-0', 'duration-300');
+    expect(leftHeaderAccordion).toHaveStyle({ marginTop: '-60px' });
+
+    // Simulate browser firing synthetic scrollTop=0 when overflow-y-auto is removed
+    sheetScroll.scrollTop = 0;
+    fireEvent.scroll(sheetScroll);
+
+    // Toggle back to Character Sheet: restores halfway scrollTop (60) immediately
+    fireEvent.click(sheetTab);
+    expect(sheetScroll.scrollTop).toBe(60);
+    expect(leftHeaderAccordion).toHaveClass('grid-rows-[1fr]', 'opacity-100', 'duration-0');
+
+    Object.defineProperty(sheetScroll, 'scrollTop', { value: 500, writable: true });
+    fireEvent.scroll(sheetScroll);
+
+    fireEvent.click(grimoireTab);
+    expect(leftHeaderAccordion).toHaveClass('grid-rows-[0fr]', 'opacity-0', 'duration-0');
+
+    // Simulate browser resetting scrollTop when overflow-y-auto was removed
+    sheetScroll.scrollTop = 0;
+
+    // Toggle back to Character Sheet: restores previous scrollTop (500)
+    fireEvent.click(sheetTab);
+    expect(sheetScroll.scrollTop).toBe(500);
   });
 
   it('renders a spinning Mythallar logo during spell catalog loading', () => {
@@ -525,6 +561,53 @@ describe('App End-to-End Integration', () => {
 
     // AuthStatus text re-expands
     expect(authLabel).toHaveClass('opacity-100');
+  });
+
+  it('makes the entire right pane scrollable as a unified container', async () => {
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    const rightScroll = container.querySelector('[data-testid="right-pane-scroll"]');
+    expect(rightScroll).toBeInTheDocument();
+    expect(rightScroll).toHaveClass('overflow-y-auto');
+
+    // CharacterHeader, SpellSlotTracker, and SpellbookView all live inside the single scrollable right pane
+    const dropzone = screen.getByTestId('spellbook-dropzone');
+    expect(rightScroll.contains(dropzone)).toBe(true);
+    expect(dropzone).toHaveClass('min-h-[75vh]', 'max-h-[80vh]');
+    expect(dropzone.querySelector('.overflow-y-auto')).toBeInTheDocument();
+  });
+
+  it('shows scrollbar class on scroll and hides it after 3 seconds of inactivity', async () => {
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    vi.useFakeTimers();
+    try {
+      const rightScroll = container.querySelector('[data-testid="right-pane-scroll"]');
+      expect(rightScroll).not.toHaveClass('is-scrolling');
+
+      fireEvent.scroll(rightScroll);
+      expect(rightScroll).toHaveClass('is-scrolling');
+
+      act(() => {
+        vi.advanceTimersByTime(2999);
+      });
+      expect(rightScroll).toHaveClass('is-scrolling');
+
+      act(() => {
+        vi.advanceTimersByTime(1);
+      });
+      expect(rightScroll).not.toHaveClass('is-scrolling');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('keeps static state on touch devices without sticky hover artifacts', async () => {

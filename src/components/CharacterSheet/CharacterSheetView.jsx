@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Swords,
   Pyramid,
@@ -28,9 +28,10 @@ import NotesCard from './NotesCard';
 import { getProficiencyBonus } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 
-export default function CharacterSheetView({
+function CharacterSheetView({
   character,
   profiles = [],
+  isActive = true,
   onUpdateCharacter,
   onSelectProfile,
   onCreateProfile,
@@ -45,21 +46,6 @@ export default function CharacterSheetView({
   onShortRest,
   onShowToast,
 }) {
-  if (!character) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 text-sm">
-        <p className="font-medium text-slate-300 mb-1">No character selected</p>
-        <p className="text-xs text-slate-500">
-          Select or create a character to view and manage their character sheet.
-        </p>
-      </div>
-    );
-  }
-
-  const sheet = character.sheet || createDefaultSheet(character.className);
-  const safeLevel = Number(character.level) || 1;
-  const profBonus = getProficiencyBonus(safeLevel);
-
   const [skillsFilter, setSkillsFilter] = useState('');
   const [isEditingVitals, setIsEditingVitals] = useState(false);
   const [isEditingAbilities, setIsEditingAbilities] = useState(false);
@@ -73,14 +59,40 @@ export default function CharacterSheetView({
   const [itemFilters, setItemFilters] = useState({ category: 'all', color: 'all' });
   const isItemFiltered = itemFilters.category !== 'all' || itemFilters.color !== 'all';
 
-  // Smooth entrance transition from 0 height when mounting
-  const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
-  useEffect(() => {
-    const frame = requestAnimationFrame(() => {
-      setIsHeaderExpanded(true);
-    });
-    return () => cancelAnimationFrame(frame);
-  }, []);
+  // Track how far the sheet is scrolled in refs (zero re-renders during scroll) so when collapsing
+  // Section 1 into Spell Library, we preserve the exact scrolled-up offset (or skip the close animation
+  // if scrolled past Section 1), and restore that scroll position when returning to Character Sheet.
+  const sheetScrollRef = React.useRef(null);
+  const headerRef = React.useRef(null);
+  const savedScrollTopRef = React.useRef(0);
+  const headerHeightRef = React.useRef(120);
+  const isRestoringScrollRef = React.useRef(false);
+
+  React.useLayoutEffect(() => {
+    if (isActive && sheetScrollRef.current) {
+      const targetScroll = savedScrollTopRef.current;
+      isRestoringScrollRef.current = true;
+      sheetScrollRef.current.scrollTop = targetScroll;
+      headerHeightRef.current = headerRef.current?.offsetHeight || 120;
+      isRestoringScrollRef.current = false;
+    }
+  }, [isActive]);
+
+  if (!character) {
+    if (!isActive) return null;
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 text-sm">
+        <p className="font-medium text-slate-300 mb-1">No character selected</p>
+        <p className="text-xs text-slate-500">
+          Select or create a character to view and manage their character sheet.
+        </p>
+      </div>
+    );
+  }
+
+  const sheet = character.sheet || createDefaultSheet(character.className);
+  const safeLevel = Number(character.level) || 1;
+  const profBonus = getProficiencyBonus(safeLevel);
 
   const safeItems = Array.isArray(sheet.items) ? sheet.items : [];
   const attunedCount = safeItems.filter((i) => i.requiresAttunement && i.attuned).length;
@@ -104,13 +116,44 @@ export default function CharacterSheetView({
     updateSheet({ trackedResources: updated });
   };
 
+  const handleSheetScroll = (e) => {
+    if (!isActive || isRestoringScrollRef.current) return;
+    savedScrollTopRef.current = e.currentTarget.scrollTop;
+    headerHeightRef.current = headerRef.current?.lastChild?.offsetHeight || headerRef.current?.offsetHeight || 120;
+  };
+
+  const savedScrollTop = savedScrollTopRef.current;
+  const isHeaderVisible = savedScrollTop < headerHeightRef.current;
+
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll p-1 pr-1.5 pb-4">
-        {/* Section 1: Character Header Accordion (Animates expanding from 0 height on mount) */}
+    <div className={isActive ? 'flex-1 flex flex-col min-h-0 overflow-hidden' : 'flex-shrink-0 overflow-hidden'}>
+      <div
+        ref={sheetScrollRef}
+        onScroll={isActive ? handleSheetScroll : undefined}
+        className={
+          isActive
+            ? 'flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll p-1 pr-1.5 pb-4 [overflow-anchor:none]'
+            : 'px-1 pr-1.5 overflow-hidden [overflow-anchor:none]'
+        }
+      >
+        {/* Section 1: Character Header Accordion (Animates open on Character Sheet, animates closed from its current scroll offset on Spell Library) */}
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-            isHeaderExpanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+          ref={headerRef}
+          data-testid="left-character-header-accordion"
+          aria-hidden={!isActive}
+          style={
+            !isActive && isHeaderVisible && savedScrollTop > 0
+              ? { marginTop: `-${savedScrollTop}px` }
+              : undefined
+          }
+          className={`grid ${
+            (isActive && savedScrollTop === 0) || (!isActive && isHeaderVisible)
+              ? 'transition-[grid-template-rows,opacity] duration-300 ease-in-out'
+              : 'duration-0'
+          } ${
+            isActive
+              ? 'grid-rows-[1fr] opacity-100'
+              : 'grid-rows-[0fr] opacity-0 mb-0 pointer-events-none'
           }`}
         >
           <div className="overflow-hidden">
@@ -127,6 +170,8 @@ export default function CharacterSheetView({
           </div>
         </div>
 
+        {isActive && (
+          <>
         {/* Section 2: Combat Stats */}
         <AccordionSection
           title="Combat Stats"
@@ -465,7 +510,11 @@ export default function CharacterSheetView({
             onUpdateNotes={(notes) => updateSheet({ notes })}
           />
         </AccordionSection>
+          </>
+        )}
       </div>
     </div>
   );
 }
+
+export default React.memo(CharacterSheetView);

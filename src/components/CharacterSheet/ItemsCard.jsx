@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 export const ITEM_COLORS = [
   { id: 'slate', label: 'Slate', bg: 'bg-slate-800/40', text: 'text-slate-300', dot: 'bg-slate-400' },
@@ -221,6 +222,10 @@ export default function ItemsCard({
     if (!viewingItemId) return null;
     return safeItems.find((i) => i.id === viewingItemId) || null;
   }, [safeItems, viewingItemId]);
+
+  const addFormRef = useAutoScrollOnExpand(Boolean(isAdding));
+  const filtersRef = useAutoScrollOnExpand(Boolean(showFilters));
+  const viewerAccordionRef = useAutoScrollOnExpand(Boolean(viewingItem && !isAdding), { durationMs: 360 });
 
   const viewerTextRef = useRef(null);
   const [measuredViewerLines, setMeasuredViewerLines] = useState(null);
@@ -468,6 +473,7 @@ export default function ItemsCard({
       {/* Inline Add / Edit Item Form */}
       {isAdding && (
         <form
+          ref={addFormRef}
           noValidate
           onSubmit={handleSaveItem}
           className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30 animate-fadeIn"
@@ -648,7 +654,7 @@ export default function ItemsCard({
 
       {/* Expandable Items Filter Accordion */}
       {showFilters && (
-        <div className="flex flex-wrap items-center justify-between gap-1.5 text-xs py-1 px-1.5 rounded-lg bg-dnd-card shadow-sm animate-fadeIn">
+        <div ref={filtersRef} className="flex flex-wrap items-center justify-between gap-1.5 text-xs py-1 px-1.5 rounded-lg bg-dnd-card shadow-sm animate-fadeIn">
           {/* Category Filters */}
           <div className="flex items-center gap-1">
             <button
@@ -729,6 +735,7 @@ export default function ItemsCard({
 
       {/* Persistent Item Viewer (Accordion Grid Animation + Stepped Line Buckets 4/8/12/16) */}
       <div
+        ref={viewerAccordionRef}
         className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
           viewingItem && !isAdding ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         }`}
@@ -745,7 +752,7 @@ export default function ItemsCard({
             const noteHeightPx = viewerBucket * 19.5;
 
             return (
-              <div className="pb-3">
+              <div className="p-0.5 pb-3">
                 <div
                   data-testid="item-viewer-card"
                   className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text}`}
@@ -799,8 +806,6 @@ export default function ItemsCard({
                       >
                         <Pencil size={12} />
                       </button>
-
-                      <ItemDeleteButton item={viewingItem} onDelete={handleDeleteItem} />
 
                       <button
                         type="button"

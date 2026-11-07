@@ -28,9 +28,38 @@ h1, h2, h3, h4, .font-display {
   font-family: 'Funnel Display', system-ui, -apple-system, sans-serif;
 }
 
-* {
+@property --scrollbar-alpha {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 24%;
+}
+
+.custom-scroll,
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto,
+textarea {
+  --scrollbar-alpha: 24%;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-muted) var(--color-bg);
+  scrollbar-color: color-mix(in srgb, var(--color-muted) var(--scrollbar-alpha), transparent) transparent;
+  transition: --scrollbar-alpha 300ms ease;
+}
+
+/* ponytail: stop inherited scrollbar-color recalculation at direct children; upgrade if CSS adds non-inherited scrollbar opacity */
+.custom-scroll > :not(.custom-scroll):not(.overflow-y-auto):not(.overflow-x-auto):not(.overflow-auto):not(textarea),
+.overflow-y-auto > :not(.custom-scroll):not(.overflow-y-auto):not(.overflow-x-auto):not(.overflow-auto):not(textarea),
+.overflow-x-auto > :not(.custom-scroll):not(.overflow-y-auto):not(.overflow-x-auto):not(.overflow-auto):not(textarea),
+.overflow-auto > :not(.custom-scroll):not(.overflow-y-auto):not(.overflow-x-auto):not(.overflow-auto):not(textarea) {
+  scrollbar-color: auto;
+}
+
+.custom-scroll,
+.overflow-y-auto {
+  will-change: transform;
+}
+
+.is-scrolling {
+  --scrollbar-alpha: 100%;
 }
 
 *::-webkit-scrollbar {
@@ -39,17 +68,18 @@ h1, h2, h3, h4, .font-display {
 }
 
 *::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: transparent;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--color-muted);
-  border: 2px solid var(--color-bg);
+  background-color: color-mix(in srgb, var(--color-muted) var(--scrollbar-alpha), transparent);
+  border: 2px solid transparent;
+  background-clip: padding-box;
   border-radius: 999px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ivory);
+  background-color: var(--color-ivory);
 }
 
 .no-scrollbar {
@@ -174,7 +204,7 @@ h1, h2, h3, h4, .font-display {
 
 .catalog-spell-card {
   content-visibility: auto;
-  contain-intrinsic-size: auto 40px;
+  contain-intrinsic-size: auto 54px;
 }
 
 /* Hide native browser spin buttons on number inputs across the app */

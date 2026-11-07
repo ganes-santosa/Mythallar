@@ -40,7 +40,7 @@ const CASTER_CLASSES = [
   'Wizard',
 ];
 
-export default function CharacterSheetHeader({
+function CharacterSheetHeader({
   character,
   profiles = [],
   onUpdateCharacter,
@@ -57,6 +57,7 @@ export default function CharacterSheetHeader({
   const [showManagerModal, setShowManagerModal] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const headerAccordionRef = useAutoScrollOnExpand(!isCollapsed);
   const [levelUpTarget, setLevelUpTarget] = useState('');
   const [newMulticlassChoice, setNewMulticlassChoice] = useState('');
 
@@ -291,7 +292,7 @@ export default function CharacterSheetHeader({
   if (!character) return null;
 
   return (
-    <div className="p-2.5 rounded-lg bg-dnd-panel transition-all">
+    <div ref={headerAccordionRef} className="p-2.5 rounded-lg bg-dnd-panel transition-all">
       <div className="flex items-center gap-2">
         <button
           type="button"
@@ -834,3 +835,5 @@ export default function CharacterSheetHeader({
     </div>
   );
 }
+
+export default React.memo(CharacterSheetHeader);

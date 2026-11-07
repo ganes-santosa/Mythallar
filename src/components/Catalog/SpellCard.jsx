@@ -126,7 +126,7 @@ function SpellCard({
 
               {spell.isLegacy && (
                 <span
-                  className="inline-flex items-center justify-center h-4 leading-none text-[9px] font-medium tracking-wide px-1.5 pb-0.5 rounded bg-dnd-panel/80 text-dnd-pewter"
+                  className="flex items-center text-[11px] font-medium px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter"
                   title="2014 Legacy PHB version"
                 >
                   Legacy

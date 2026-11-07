@@ -19,9 +19,10 @@ import {
 import SlotLevelRow from './SlotLevelRow';
 import useClickOutside from '../../hooks/useClickOutside';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import ArcaneRecoveryModal from '../Modal/ArcaneRecoveryModal';
 
-export default function SpellSlotTracker({
+function SpellSlotTracker({
   character,
   onUseSlot,
   onRestoreSlot,
@@ -42,6 +43,8 @@ export default function SpellSlotTracker({
   const [showArcaneModal, setShowArcaneModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPactCollapsed, setIsPactCollapsed] = useState(false);
+  const slotsAccordionRef = useAutoScrollOnExpand(!isCollapsed);
+  const pactAccordionRef = useAutoScrollOnExpand(!isPactCollapsed);
 
   const { armed: longRestArmed, handleClick: handleLongRestClick } = useTwoClickConfirm(onLongRest);
   const { armed: pactRestArmed, handleClick: handlePactRestClick } = useTwoClickConfirm(onShortRest);
@@ -84,7 +87,7 @@ export default function SpellSlotTracker({
   return (
     <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* ================= SHARED SPELL SLOTS SECTION ================= */}
-      <div>
+      <div ref={slotsAccordionRef}>
         {/* Header / Accordion Trigger */}
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
@@ -267,7 +270,7 @@ export default function SpellSlotTracker({
 
       {/* ================= PACT MAGIC ACCORDION (WARLOCK) ================= */}
       {hasPactMagic && (
-        <div className="pt-2">
+        <div ref={pactAccordionRef} className="pt-2">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
               <button
@@ -395,6 +398,8 @@ export default function SpellSlotTracker({
     </div>
   );
 }
+
+export default React.memo(SpellSlotTracker);
 
 
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
@@ -6,6 +6,7 @@ import { getSpellcastingHints } from './spellcastingHints';
 import { isWizardCharacter, getEffectiveMaxCantripsInfo } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 const CLASSES = [
   'Artificer',
@@ -47,7 +48,7 @@ const INITIAL_FILTERS = {
   compM: false,
 };
 
-export default function SpellbookView({
+function SpellbookView({
   character,
   catalog,
   skipCopying = false,
@@ -65,7 +66,9 @@ export default function SpellbookView({
   const spellHintRef = useClickOutside(showSpellHint, () => setShowSpellHint(false));
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const spellbookAccordionRef = useAutoScrollOnExpand(!isCollapsed);
   const [showFilters, setShowFilters] = useState(false);
+  const filtersAccordionRef = useAutoScrollOnExpand(showFilters);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [collapsedLevels, setCollapsedLevels] = useState({});
   const [expandedSpellId, setExpandedSpellId] = useState(null);
@@ -110,72 +113,92 @@ export default function SpellbookView({
     }
   };
 
+  const handleToggleSpell = useCallback((id) => {
+    setExpandedSpellId((current) => (current === id ? null : id));
+  }, []);
+
+  const handleToggleLevel = useCallback((lvl) => {
+    setCollapsedLevels((prev) => ({ ...prev, [lvl]: !prev[lvl] }));
+  }, []);
+
   // Group spells by level
-  const preparedMap = {};
-  const copyingMap = {};
-  const notesMap = {};
-  let hasCopyingSpells = false;
-  let visibleSpellCount = 0;
-  const spellsByLevel = {
-    0: [],
-    1: [],
-    2: [],
-    3: [],
-    4: [],
-    5: [],
-    6: [],
-    7: [],
-    8: [],
-    9: [],
-  };
+  const { preparedMap, copyingMap, notesMap, hasCopyingSpells, visibleSpellCount, spellsByLevel } = useMemo(() => {
+    const pMap = {};
+    const cMap = {};
+    const nMap = {};
+    let hasCopying = false;
+    let visibleCount = 0;
+    const byLevel = {
+      0: [],
+      1: [],
+      2: [],
+      3: [],
+      4: [],
+      5: [],
+      6: [],
+      7: [],
+      8: [],
+      9: [],
+    };
 
-  if (character && Array.isArray(character.spells)) {
-    for (const item of character.spells) {
-      preparedMap[item.id] = item.prepared;
-      if (item.note) notesMap[item.id] = item.note;
-      const spell = catalog[item.id];
-      if (spell) {
-        const lvl = typeof spell.level === 'number' ? spell.level : 0;
-        const copying = Boolean(!skipCopying && isWizard && item.copying && lvl > 0);
-        const effectivePrepared = Boolean(item.prepared && !copying);
-        copyingMap[item.id] = copying;
-        if (copying) hasCopyingSpells = true;
+    if (character && Array.isArray(character.spells)) {
+      for (const item of character.spells) {
+        pMap[item.id] = item.prepared;
+        if (item.note) nMap[item.id] = item.note;
+        const spell = catalog[item.id];
+        if (spell) {
+          const lvl = typeof spell.level === 'number' ? spell.level : 0;
+          const copying = Boolean(!skipCopying && isWizard && item.copying && lvl > 0);
+          const effectivePrepared = Boolean(item.prepared && !copying);
+          cMap[item.id] = copying;
+          if (copying) hasCopying = true;
 
-        if (filters.level !== 'all' && lvl !== filters.level) continue;
-        if (filters.className !== 'all' && (!Array.isArray(spell.classes) || !spell.classes.includes(filters.className))) continue;
-        if (filters.school !== 'all' && spell.school !== filters.school && (!Array.isArray(spell.specializations) || !spell.specializations.includes(filters.school))) continue;
-        if (filters.prepared && !effectivePrepared) continue;
-        if (filters.copying && !copying) continue;
-        if (filters.concentration && !spell.concentration) continue;
-        if (filters.ritual && !spell.ritual) continue;
-        if (filters.compV && !spell.components?.v) continue;
-        if (filters.compS && !spell.components?.s) continue;
-        if (filters.compM && !spell.components?.m) continue;
+          if (filters.level !== 'all' && lvl !== filters.level) continue;
+          if (filters.className !== 'all' && (!Array.isArray(spell.classes) || !spell.classes.includes(filters.className))) continue;
+          if (filters.school !== 'all' && spell.school !== filters.school && (!Array.isArray(spell.specializations) || !spell.specializations.includes(filters.school))) continue;
+          if (filters.prepared && !effectivePrepared) continue;
+          if (filters.copying && !copying) continue;
+          if (filters.concentration && !spell.concentration) continue;
+          if (filters.ritual && !spell.ritual) continue;
+          if (filters.compV && !spell.components?.v) continue;
+          if (filters.compS && !spell.components?.s) continue;
+          if (filters.compM && !spell.components?.m) continue;
 
-        if (!spellsByLevel[lvl]) spellsByLevel[lvl] = [];
-        spellsByLevel[lvl].push(spell);
-        visibleSpellCount++;
+          if (!byLevel[lvl]) byLevel[lvl] = [];
+          byLevel[lvl].push(spell);
+          visibleCount++;
+        }
       }
     }
-  }
 
-  // Sort within each level alphabetically
-  for (const lvl of Object.keys(spellsByLevel)) {
-    spellsByLevel[lvl].sort((a, b) => a.name.localeCompare(b.name));
-  }
+    // Sort within each level alphabetically
+    for (const lvl of Object.keys(byLevel)) {
+      byLevel[lvl].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return {
+      preparedMap: pMap,
+      copyingMap: cMap,
+      notesMap: nMap,
+      hasCopyingSpells: hasCopying,
+      visibleSpellCount: visibleCount,
+      spellsByLevel: byLevel,
+    };
+  }, [character?.spells, catalog, skipCopying, isWizard, filters]);
 
   const hasAnySpells = character && character.spells && character.spells.length > 0;
 
   return (
     <div
+      ref={spellbookAccordionRef}
       role="region"
       aria-label="Character Spellbook Drop Zone"
       data-testid="spellbook-dropzone"
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`relative p-2.5 rounded-lg bg-dnd-panel transition-all flex flex-col min-h-0 ${
-        isCollapsed ? '' : 'flex-1 h-full'
+      className={`relative p-2.5 rounded-lg bg-dnd-panel transition-all flex flex-col ${
+        isCollapsed ? '' : 'flex-1 h-full min-h-[75vh] max-h-[80vh]'
       } ${isDragOver ? 'ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]' : ''}`}
     >
       {/* Drop overlay badge when dragging */}
@@ -247,7 +270,7 @@ export default function SpellbookView({
 
       {/* Expandable Spellbook Filter Accordion */}
       {!isCollapsed && showFilters && (
-        <div className="flex-shrink-0 mb-2 space-y-2 pb-2 border-b border-white/5">
+        <div ref={filtersAccordionRef} className="flex-shrink-0 mb-2 space-y-2 pb-2 border-b border-white/5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <select
               value={filters.level}
@@ -401,7 +424,7 @@ export default function SpellbookView({
         </div>
       )}
 
-      {!isCollapsed && <div className="flex-1 min-h-0 flex flex-col overflow-y-auto px-1 pb-1">
+      {!isCollapsed && <div className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll px-1 pb-1">
       {!hasAnySpells ? (
         <div className="flex-1 flex flex-col items-center justify-center pb-20 pt-4 px-8 text-center text-slate-500 rounded-xl bg-dnd-card/40">
           <div
@@ -436,7 +459,7 @@ export default function SpellbookView({
               level={lvl}
               spells={spellsByLevel[lvl]}
               isOpen={!collapsedLevels[lvl]}
-              onToggle={() => setCollapsedLevels((prev) => ({ ...prev, [lvl]: !prev[lvl] }))}
+              onToggle={handleToggleLevel}
               preparedMap={preparedMap}
               copyingMap={copyingMap}
               notesMap={notesMap}
@@ -448,7 +471,7 @@ export default function SpellbookView({
               onSelect={onSelectSpell}
               onUpdateNote={onUpdateNote}
               expandedSpellId={expandedSpellId}
-              onToggleSpell={(id) => setExpandedSpellId((current) => current === id ? null : id)}
+              onToggleSpell={handleToggleSpell}
             />
           ))}
         </div>
@@ -457,4 +480,6 @@ export default function SpellbookView({
     </div>
   );
 }
+
+export default React.memo(SpellbookView);
 

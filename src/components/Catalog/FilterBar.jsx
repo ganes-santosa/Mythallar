@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, X, Brain, ScrollText, Plus, Blend, FlaskRound, ChevronDown } from 'lucide-react';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 const CLASSES = [
   'Artificer',
@@ -28,8 +29,9 @@ const SCHOOLS = [
   'Transmutation',
 ];
 
-export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSources = [] }) {
+function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSources = [] }) {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const filterAccordionRef = useAutoScrollOnExpand(!isCollapsed);
   const update = (key, value) => {
     onChange({ ...filters, [key]: value });
   };
@@ -50,7 +52,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
   );
 
   return (
-    <div className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
+    <div ref={filterAccordionRef} className="p-2.5 mb-2.5 rounded-lg bg-dnd-panel transition-all space-y-2">
       {/* Search Bar + Homebrew Spell Button */}
       <div className="flex items-center space-x-2">
         <div className="relative flex-1">
@@ -297,5 +299,7 @@ export default function FilterBar({ filters, onChange, onOpenHomebrewSpellModal,
     </div>
   );
 }
+
+export default React.memo(FilterBar);
 
 

@@ -104,10 +104,9 @@ describe('CharacterSheetView', () => {
     // Items Card
     expect(screen.getByText('The Tuvala Sundial')).toBeInTheDocument();
 
-    // Notes Card
+    // Notes Card (starts in Notes list view)
     expect(screen.getByText('Notes')).toBeInTheDocument();
-    expect(screen.getByLabelText('Note Content')).toBeInTheDocument();
-    expect(screen.getByLabelText('Note Title')).toBeInTheDocument();
+    expect(screen.getByLabelText('Search notes')).toBeInTheDocument();
   });
 
   it('allows collapsing and expanding accordion sections', () => {
@@ -268,6 +267,9 @@ describe('CharacterSheetView', () => {
   it('updates character notes on change', () => {
     const handleUpdate = vi.fn();
     render(<CharacterSheetView character={mockCharacter} onUpdateCharacter={handleUpdate} />);
+
+    // Open note from initial list view
+    fireEvent.click(screen.getByText('General'));
 
     const notesTextarea = screen.getByLabelText('Note Content');
     fireEvent.change(notesTextarea, { target: { value: 'Discovered hidden tomb in the ruins.' } });

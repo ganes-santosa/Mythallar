@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import SpellbookCard from './SpellbookCard';
+import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 function getLevelTitle(level) {
   if (level === 0) return 'Cantrips';
@@ -10,7 +11,7 @@ function getLevelTitle(level) {
   return `${level}${ord} Level Spells`;
 }
 
-export default function SpellbookLevelGroup({
+function SpellbookLevelGroup({
   level,
   spells,
   isOpen,
@@ -28,6 +29,8 @@ export default function SpellbookLevelGroup({
   expandedSpellId,
   onToggleSpell,
 }) {
+  const groupRef = useAutoScrollOnExpand(isOpen);
+
   if (!spells || spells.length === 0) return null;
 
   const preparedCount = spells.filter((s) => preparedMap[s.id] && !copyingMap[s.id]).length;
@@ -37,11 +40,11 @@ export default function SpellbookLevelGroup({
     : `${spells.length} cantrips`;
 
   return (
-    <div className={`transition-all duration-200 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
+    <div ref={groupRef} className={`transition-all duration-200 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
       {/* Group Header */}
       <button
         type="button"
-        onClick={onToggle}
+        onClick={() => onToggle(level)}
         className="flex items-center justify-between w-full py-1 px-2 mb-1 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
       >
         <div className="flex items-center space-x-1.5">
@@ -82,4 +85,6 @@ export default function SpellbookLevelGroup({
     </div>
   );
 }
+
+export default React.memo(SpellbookLevelGroup);
 
