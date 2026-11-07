@@ -109,6 +109,63 @@ describe('ResourcesCard', () => {
     ]);
   });
 
+  it('allows dragging to reorder tracked resources when isEditing is true', () => {
+    const handleUpdate = vi.fn();
+    const twoResources = [
+      { id: 'res_1', name: 'Lucky', current: 2, max: 3, resetOn: 'LR', note: 'Eldritch Adept' },
+      { id: 'res_2', name: 'Arcane Recovery', current: 1, max: 1, resetOn: 'SR', note: '' },
+    ];
+    render(
+      <ResourcesCard
+        trackedResources={twoResources}
+        featuresNotes=""
+        isEditing={true}
+        onUpdateResources={handleUpdate}
+        onUpdateNotes={() => {}}
+      />
+    );
+
+    // Grip icons rendered in edit mode
+    const grips = screen.getAllByTestId('resource-drag-handle');
+    expect(grips).toHaveLength(2);
+
+    const cards = screen.getAllByTestId('tracked-resource-item');
+    expect(cards[0]).toHaveAttribute('draggable', 'true');
+
+    // Simulate drag start on first item ("Lucky")
+    fireEvent.dragStart(cards[0], {
+      dataTransfer: { setData: vi.fn(), effectAllowed: 'move' },
+    });
+
+    // Simulate drag over and drop onto second item ("Arcane Recovery")
+    fireEvent.dragOver(cards[1], {
+      dataTransfer: { dropEffect: 'move' },
+    });
+    fireEvent.drop(cards[1]);
+
+    // Order should be swapped: Arcane Recovery first, then Lucky
+    expect(handleUpdate).toHaveBeenCalledWith([
+      twoResources[1],
+      twoResources[0],
+    ]);
+  });
+
+  it('does not allow dragging or render grip handles when isEditing is false', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={false}
+        onUpdateResources={() => {}}
+        onUpdateNotes={() => {}}
+      />
+    );
+
+    expect(screen.queryByTestId('resource-drag-handle')).not.toBeInTheDocument();
+    const cards = screen.getAllByTestId('tracked-resource-item');
+    expect(cards[0]).toHaveAttribute('draggable', 'false');
+  });
+
   it('renders Feats subdivision and allows adding and removing feats when isEditing is true', () => {
     const handleUpdateFeats = vi.fn();
     render(

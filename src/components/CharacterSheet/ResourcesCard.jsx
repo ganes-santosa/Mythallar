@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Plus, X, RotateCcw, Award } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Plus, X, RotateCcw, Award, GripVertical } from 'lucide-react';
 
 export default function ResourcesCard({
   trackedResources = [],
@@ -21,6 +21,9 @@ export default function ResourcesCard({
   const [newResourceReset, setNewResourceReset] = useState('LR');
   const [newResourceNote, setNewResourceNote] = useState('');
   const [nameError, setNameError] = useState(false);
+
+  const [draggedResId, setDraggedResId] = useState(null);
+  const [dragOverResId, setDragOverResId] = useState(null);
 
   const [isAddingFeat, setIsAddingFeat] = useState(false);
   const [newFeat, setNewFeat] = useState('');
@@ -101,6 +104,55 @@ export default function ResourcesCard({
   const handleDeleteResource = (id) => {
     const filtered = (trackedResources || []).filter((r) => r.id !== id);
     onUpdateResources?.(filtered);
+  };
+
+  const handleDragStart = (e, id) => {
+    if (!isEditing) return;
+    setDraggedResId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  };
+
+  const handleDragOver = (e, id) => {
+    if (!isEditing || !draggedResId || draggedResId === id) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverResId !== id) {
+      setDragOverResId(id);
+    }
+  };
+
+  const handleDragLeave = (_e, id) => {
+    if (dragOverResId === id) {
+      setDragOverResId(null);
+    }
+  };
+
+  const handleDrop = (e, targetId) => {
+    e.preventDefault();
+    if (!isEditing || !draggedResId || draggedResId === targetId) {
+      setDraggedResId(null);
+      setDragOverResId(null);
+      return;
+    }
+
+    const currentList = [...(trackedResources || [])];
+    const fromIndex = currentList.findIndex((r) => r.id === draggedResId);
+    const toIndex = currentList.findIndex((r) => r.id === targetId);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      const [moved] = currentList.splice(fromIndex, 1);
+      currentList.splice(toIndex, 0, moved);
+      onUpdateResources?.(currentList);
+    }
+
+    setDraggedResId(null);
+    setDragOverResId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedResId(null);
+    setDragOverResId(null);
   };
 
   return (
@@ -231,51 +283,80 @@ export default function ResourcesCard({
       {/* Steppers Grid */}
       {trackedResources && trackedResources.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
-          {trackedResources.map((res) => (
-            <div
-              key={res.id}
-              className="bg-dnd-card p-2 rounded-lg flex items-center justify-between group shadow-sm"
-            >
-              <div className="min-w-0 pr-1">
-                <div className="text-[11px] font-semibold text-slate-200 truncate">{res.name}</div>
-                <div className="text-[10px] text-slate-400 truncate">
-                  {res.resetOn ? `Recovers @ ${res.resetOn}` : ''}
+          {trackedResources.map((res) => {
+            const isDraggingThis = draggedResId === res.id;
+            const isOverThis = dragOverResId === res.id;
+
+            return (
+              <div
+                key={res.id}
+                data-testid="tracked-resource-item"
+                draggable={isEditing}
+                onDragStart={(e) => handleDragStart(e, res.id)}
+                onDragOver={(e) => handleDragOver(e, res.id)}
+                onDragLeave={(e) => handleDragLeave(e, res.id)}
+                onDrop={(e) => handleDrop(e, res.id)}
+                onDragEnd={handleDragEnd}
+                className={`bg-dnd-card p-2 rounded-lg flex items-center justify-between group shadow-sm transition-all duration-150 ${
+                  isEditing ? 'cursor-grab active:cursor-grabbing' : ''
+                } ${isDraggingThis ? 'opacity-40 scale-95' : ''} ${
+                  isOverThis ? 'ring-1 ring-dnd-gold shadow-md' : ''
+                }`}
+              >
+                <div className="flex items-center min-w-0 pr-1 flex-1">
+                  {isEditing && (
+                    <div
+                      data-testid="resource-drag-handle"
+                      className="text-slate-500 group-hover:text-slate-300 mr-1.5 flex-shrink-0"
+                    >
+                      <GripVertical size={13} />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] font-semibold text-slate-200 truncate">{res.name}</div>
+                    <div className="text-[10px] text-slate-400 truncate">
+                      {res.resetOn ? `Recovers @ ${res.resetOn}` : ''}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center space-x-1 font-bold text-dnd-gold text-xs bg-dnd-panel px-1.5 py-0.5 rounded-md flex-shrink-0">
-                <button
-                  type="button"
-                  aria-label={`Decrement ${res.name}`}
-                  onClick={() => handleStep(res.id, -1)}
-                  className="px-1 hover:text-white"
+                <div
+                  className="flex items-center space-x-1 font-bold text-dnd-gold text-xs bg-dnd-panel px-1.5 py-0.5 rounded-md flex-shrink-0"
+                  onMouseDown={(e) => e.stopPropagation()}
                 >
-                  -
-                </button>
-                <span className="min-w-[34px] text-center">
-                  {res.current ?? 0} / {res.max ?? 0}
-                </span>
-                <button
-                  type="button"
-                  aria-label={`Increment ${res.name}`}
-                  onClick={() => handleStep(res.id, 1)}
-                  className="px-1 hover:text-white"
-                >
-                  +
-                </button>
-                {isEditing && (
                   <button
                     type="button"
-                    aria-label={`Delete ${res.name}`}
-                    title="Remove resource"
-                    onClick={() => handleDeleteResource(res.id)}
-                    className="text-slate-500 hover:text-red-400 pl-1 ml-0.5 transition-opacity"
+                    aria-label={`Decrement ${res.name}`}
+                    onClick={() => handleStep(res.id, -1)}
+                    className="px-1 hover:text-white"
                   >
-                    <X size={10} />
+                    -
                   </button>
-                )}
+                  <span className="min-w-[34px] text-center">
+                    {res.current ?? 0} / {res.max ?? 0}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label={`Increment ${res.name}`}
+                    onClick={() => handleStep(res.id, 1)}
+                    className="px-1 hover:text-white"
+                  >
+                    +
+                  </button>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      aria-label={`Delete ${res.name}`}
+                      title="Remove resource"
+                      onClick={() => handleDeleteResource(res.id)}
+                      className="text-slate-500 hover:text-red-400 pl-1 ml-0.5 transition-opacity"
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

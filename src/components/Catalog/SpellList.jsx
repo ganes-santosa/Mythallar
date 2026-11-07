@@ -95,7 +95,7 @@ export default React.memo(function SpellList({
     return groups;
   }, [spells]);
 
-  const [openLevel, setOpenLevel] = useState(null);
+  const [collapsedLevels, setCollapsedLevels] = useState({});
   const [expandedSpellId, setExpandedSpellId] = useState(null);
 
   const handleToggleSpell = useCallback((id) => {
@@ -103,7 +103,7 @@ export default React.memo(function SpellList({
   }, []);
 
   const handleToggleLevel = useCallback((lvl) => {
-    setOpenLevel((prev) => (prev === lvl ? null : lvl));
+    setCollapsedLevels((prev) => ({ ...prev, [lvl]: !prev[lvl] }));
   }, []);
 
   const activeLevels = useMemo(() => {
@@ -131,7 +131,7 @@ export default React.memo(function SpellList({
               key={lvl}
               level={lvl}
               spells={groupedSpells[lvl]}
-              isOpen={openLevel === null || openLevel === lvl}
+              isOpen={!collapsedLevels[lvl]}
               onToggle={handleToggleLevel}
               spellbookSpellIds={spellbookSpellIds}
               notesMap={notesMap}
