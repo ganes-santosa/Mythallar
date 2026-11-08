@@ -1,8 +1,10 @@
 # HANDOFF
 
-## Current state (v2.3.2 - master)
-- **Notes Scroll & Height Fixes (v2.3.2)**:
-  - Short entries stay compact (no `minHeight` void, gentle scroll only if overflowing); long entries (>400 chars or >15 lines) expand and scroll header to top bar.
+## Current state (v2.3.3 - master)
+- **Notes Adaptive Editor (v2.3.3)**:
+  - No short/long split and no forced `minHeight`: card is always content-height. Opening any note sweeps toward header-at-top-bar, clamped per frame to real max scroll.
+  - Typing grows the card upward (ResizeObserver scrolls by height delta while card bottom sits at viewport edge) until header hits top bar / editor hits 500px cap.
+- **Notes Scroll Fixes (v2.3.2)**:
   - Exit restores sheet scroll via per-frame eased sweep over 300ms synced with grid expansion, so bottom-of-page positions restore exactly without clamping or jitter.
   - Note: JSDOM can't verify layout/scroll clamping; always browser-test scroll changes in `NotesCard.jsx`.
 - **Character Sheet Notes Overhaul**:
