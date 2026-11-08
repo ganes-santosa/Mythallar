@@ -135,13 +135,41 @@ export default function NotesCard({
       if (listScrollRef.current) {
         listScrollRef.current.scrollTop = savedListScrollTopRef.current;
       }
-      if (savedSheetScrollTopRef.current !== null) {
-        const parentScroller = cardRef.current?.closest('.overflow-y-auto');
-        if (parentScroller) {
-          parentScroller.scrollTop = savedSheetScrollTopRef.current;
+      // Shrink any editor min-height alongside the 300ms grid transition, then release it
+      const card = cardRef.current;
+      if (card && card.style.minHeight) card.style.minHeight = '0px';
+      const clearTimer = setTimeout(() => {
+        if (card) card.style.minHeight = '';
+      }, 300);
+
+      const targetScroll = savedSheetScrollTopRef.current;
+      savedSheetScrollTopRef.current = null;
+      const parentScroller = card?.closest('.overflow-y-auto');
+      if (targetScroll === null || !parentScroller) return () => clearTimeout(clearTimer);
+
+      // One eased sweep, re-applied every frame while the list grows back. A single scrollTo
+      // gets clamped by the still-short scrollHeight mid-transition and stops above the target.
+      const startScroll = parentScroller.scrollTop;
+      const DURATION = 300;
+      let startTime = null;
+      let frameId = null;
+      const step = (now) => {
+        if (startTime === null) startTime = now;
+        const t = Math.min(1, (now - startTime) / DURATION);
+        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        parentScroller.scrollTop = startScroll + (targetScroll - startScroll) * eased;
+        if (t < 1) {
+          frameId = requestAnimationFrame(step);
+        } else {
+          parentScroller.scrollTop = targetScroll;
         }
-        savedSheetScrollTopRef.current = null;
-      }
+      };
+      frameId = requestAnimationFrame(step);
+      return () => {
+        clearTimeout(clearTimer);
+        if (frameId) cancelAnimationFrame(frameId);
+        parentScroller.scrollTop = targetScroll;
+      };
     } else if (viewMode === 'editor') {
       // Find parent scroll container and Notes section container
       const parentScroller = cardRef.current?.closest('.overflow-y-auto');
@@ -152,17 +180,59 @@ export default function NotesCard({
         const accordionRect = accordionSection.getBoundingClientRect();
         const targetScroll = parentScroller.scrollTop + (accordionRect.top - parentRect.top);
 
-        // Defer scroll to next animation frame so DOM layout/height updates before scrolling
-        requestAnimationFrame(() => {
-          if (typeof parentScroller.scrollTo === 'function') {
-            parentScroller.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-          } else {
-            parentScroller.scrollTop = Math.max(0, targetScroll);
+        // Detect if entry is short or long
+        const rawContent = activeNote?.content || '';
+        const plainText = extractPlainTextFromHtml(rawContent);
+        const lineCount = plainText.split('\n').filter((l) => l.trim().length > 0).length;
+        const isLongNote = plainText.length > 400 || lineCount > 15;
+
+        if (isLongNote) {
+          // Long entry: expand min-height so scroller can reach top bar, optimizing reading/editing canvas
+          if (cardRef.current) {
+            const currentMinHeight = parseFloat(cardRef.current.style.minHeight) || 0;
+            const minHeightNeeded = Math.max(currentMinHeight, parentScroller.clientHeight - 80);
+            cardRef.current.style.minHeight = `${minHeightNeeded}px`;
           }
-        });
+
+          requestAnimationFrame(() => {
+            if (typeof parentScroller.scrollTo === 'function') {
+              parentScroller.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+            } else {
+              parentScroller.scrollTop = Math.max(0, targetScroll);
+            }
+          });
+        } else {
+          // Short entry: keep natural compact height without expanding giant empty space
+          if (cardRef.current) {
+            cardRef.current.style.minHeight = '';
+          }
+
+          // If note extends below bottom of viewport, gently scroll just enough to keep it fully visible
+          requestAnimationFrame(() => {
+            if (cardRef.current) {
+              const cardRect = cardRef.current.getBoundingClientRect();
+              const overflowBottom = cardRect.bottom - parentRect.bottom + 16;
+              if (overflowBottom > 0) {
+                const gentleScroll = Math.min(parentScroller.scrollTop + overflowBottom, targetScroll);
+                if (typeof parentScroller.scrollTo === 'function') {
+                  parentScroller.scrollTo({ top: Math.max(0, gentleScroll), behavior: 'smooth' });
+                } else {
+                  parentScroller.scrollTop = Math.max(0, gentleScroll);
+                }
+              } else if (accordionRect.top < parentRect.top) {
+                // Header was scrolled off above: bring header into view
+                if (typeof parentScroller.scrollTo === 'function') {
+                  parentScroller.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
+                } else {
+                  parentScroller.scrollTop = Math.max(0, targetScroll);
+                }
+              }
+            }
+          });
+        }
       }
     }
-  }, [viewMode]);
+  }, [viewMode, activeNote?.id]);
 
   useEffect(() => {
     if (viewMode === 'editor' && editorRef.current) {
@@ -381,7 +451,7 @@ export default function NotesCard({
   }, [normalizedNotes, searchQuery, sortBy, sortDir]);
 
   return (
-    <div ref={cardRef} className="w-full rounded-xl bg-dnd-card shadow-sm p-3">
+    <div ref={cardRef} className="w-full rounded-xl bg-dnd-card shadow-sm p-3 transition-[min-height] duration-300 ease-in-out">
       {/* List View */}
       <div
         className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${

@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import NotesCard, { normalizeNotes } from './NotesCard';
 
 describe('normalizeNotes', () => {
@@ -253,7 +253,7 @@ describe('NotesCard', () => {
     expect(getTitles()).toEqual(['C-NPCs', 'B-Quest', 'A-Lore']);
   });
 
-  it('restores both the parent character sheet scroll position and inner notes list scroll position when returning to list view from editor', () => {
+  it('restores both the parent character sheet scroll position and inner notes list scroll position when returning to list view from editor', async () => {
     const manyNotes = Array.from({ length: 10 }, (_, i) => ({
       id: `n_${i}`,
       title: `Note ${i}`,
@@ -285,7 +285,8 @@ describe('NotesCard', () => {
     // Exit editor back to All Notes list
     fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
 
-    expect(sheetScroller.scrollTop).toBe(650);
+    // Restore animates over ~300ms in sync with the list's grid expansion
+    await waitFor(() => expect(sheetScroller.scrollTop).toBe(650));
     const restoredInnerScroller = container.querySelector('.max-h-\\[420px\\]');
     expect(restoredInnerScroller.scrollTop).toBe(180);
   });
