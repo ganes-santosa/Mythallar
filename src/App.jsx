@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LibraryBig, UserRound, Sparkles, AlertCircle, CheckCircle2, Settings, Plus } from 'lucide-react';
+import { LibraryBig, UserRound, Sparkles, AlertCircle, CheckCircle2, Settings, Plus, Upload } from 'lucide-react';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -10,6 +10,8 @@ import {
   saveAppSettings,
   normalizeHitDice,
   recoverHitDiceOnLongRest,
+  loadDeletedIds,
+  saveDeletedId,
 } from './utils/storage';
 import { getEffectiveMaxSlots, isWizardCharacter } from './utils/spellSlots';
 import { getAbilityModifier, formatModifier, rollHitDie } from './utils/dndCalculations';
@@ -21,7 +23,10 @@ import {
   syncCharactersToCloud,
   syncHomebrewToCloud,
   deleteCloudCharacter,
+  deleteCloudHomebrew,
   mergeLocalAndCloud,
+  reconcileCloudPull,
+  subscribeToUserChanges,
 } from './utils/syncService';
 import { getStoredThemeId, setTheme, applyTheme, getActiveTheme } from './utils/themeService';
 import FilterBar from './components/Catalog/FilterBar';
@@ -186,6 +191,8 @@ export default function App() {
   }, [supabase]);
 
   // Pull cloud data on user login
+  const hasSyncedBeforeRef = useRef(false);
+
   useEffect(() => {
     if (!supabase || !user) return;
 
@@ -196,18 +203,38 @@ export default function App() {
       .then(({ characters: cloudChars, homebrewSpells: cloudHb }) => {
         if (cancelled) return;
 
-        // Merge cloud characters with local profiles
+        const deletedIds = loadDeletedIds();
+
+        // Reconcile cloud characters with local profiles
         setProfileData((prev) => {
-          const merged = mergeLocalAndCloud(prev.profiles, cloudChars);
+          const reconciled = reconcileCloudPull(
+            prev.profiles,
+            cloudChars,
+            deletedIds,
+            hasSyncedBeforeRef.current || cloudChars.length > 0
+          );
+          const nextActiveId =
+            prev.activeId && reconciled.some((p) => p.id === prev.activeId)
+              ? prev.activeId
+              : (reconciled[0]?.id || null);
+
           return {
-            ...prev,
-            profiles: merged.length > 0 ? merged : prev.profiles,
+            profiles: reconciled,
+            activeId: nextActiveId,
           };
         });
 
-        // Merge homebrew spells
-        setHomebrewSpells((prev) => mergeLocalAndCloud(prev, cloudHb));
+        // Reconcile homebrew spells
+        setHomebrewSpells((prev) =>
+          reconcileCloudPull(
+            prev,
+            cloudHb,
+            deletedIds,
+            hasSyncedBeforeRef.current || cloudHb.length > 0
+          )
+        );
 
+        hasSyncedBeforeRef.current = true;
         setSyncStatus('saved');
         showToast('Characters synced with cloud', 'success');
       })
@@ -221,6 +248,65 @@ export default function App() {
       cancelled = true;
     };
   }, [user, supabase]);
+
+  // Real-time synchronization across devices
+  useEffect(() => {
+    if (!supabase || !user) return;
+
+    const unsubscribe = subscribeToUserChanges(supabase, user.id, {
+      onCharacterDelete: (charId) => {
+        if (!charId) return;
+        saveDeletedId(charId);
+        setProfileData((prev) => {
+          const remaining = prev.profiles.filter((p) => p.id !== charId);
+          const nextActiveId =
+            prev.activeId === charId ? (remaining[0]?.id || null) : prev.activeId;
+          return {
+            profiles: remaining,
+            activeId: nextActiveId,
+          };
+        });
+      },
+      onCharacterChange: (updatedChar) => {
+        if (!updatedChar || !updatedChar.id) return;
+        setProfileData((prev) => {
+          const existingIdx = prev.profiles.findIndex((p) => p.id === updatedChar.id);
+          let nextProfiles;
+          if (existingIdx >= 0) {
+            nextProfiles = [...prev.profiles];
+            nextProfiles[existingIdx] = updatedChar;
+          } else {
+            nextProfiles = [...prev.profiles, updatedChar];
+          }
+          return {
+            ...prev,
+            profiles: nextProfiles,
+          };
+        });
+      },
+      onHomebrewDelete: (spellId) => {
+        if (!spellId) return;
+        saveDeletedId(spellId);
+        setHomebrewSpells((prev) => prev.filter((s) => s.id !== spellId));
+      },
+      onHomebrewChange: (updatedSpell) => {
+        if (!updatedSpell || !updatedSpell.id) return;
+        setHomebrewSpells((prev) => {
+          const existingIdx = prev.findIndex((s) => s.id === updatedSpell.id);
+          if (existingIdx >= 0) {
+            const copy = [...prev];
+            copy[existingIdx] = updatedSpell;
+            return copy;
+          }
+          return [updatedSpell, ...prev];
+        });
+      },
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [supabase, user]);
 
   // Debounced push to cloud when local profileData or homebrew changes
   useEffect(() => {
@@ -453,6 +539,8 @@ export default function App() {
         activeId: nextActiveId,
       });
 
+      saveDeletedId(charId);
+
       if (supabase && user) {
         deleteCloudCharacter(supabase, user.id, charId);
       }
@@ -495,6 +583,19 @@ export default function App() {
     [showToast]
   );
 
+  const emptyStateFileInputRef = useRef(null);
+
+  const handleEmptyStateFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      handleImport(event.target.result);
+      if (emptyStateFileInputRef.current) emptyStateFileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  };
+
   // --- Homebrew Spell Action ---
   const handleSaveHomebrewSpell = (newSpell) => {
     setHomebrewSpells((prev) => [newSpell, ...prev]);
@@ -504,6 +605,11 @@ export default function App() {
   const handleDeleteHomebrewSpell = useCallback((spellId) => {
     const spell = homebrewSpells.find((s) => s.id === spellId);
     setHomebrewSpells((prev) => prev.filter((s) => s.id !== spellId));
+
+    saveDeletedId(spellId);
+    if (supabase && user) {
+      deleteCloudHomebrew(supabase, user.id, spellId);
+    }
 
     // Also remove from all character profiles if they have it added
     setProfileData((prev) => ({
@@ -1418,14 +1524,32 @@ export default function App() {
                   Begin your journey by creating your first character profile to manage spell slots and maintain your grimoire.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleOpenCreateCharacter}
-                className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-xs shadow-lg transition-all"
-              >
-                <Plus size={15} />
-                <span>Create First Character</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleOpenCreateCharacter}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-xs shadow-lg transition-all"
+                >
+                  <Plus size={15} />
+                  <span>Create First Character</span>
+                </button>
+                <input
+                  ref={emptyStateFileInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={handleEmptyStateFileChange}
+                  className="hidden"
+                  aria-label="Import Character JSON File"
+                />
+                <button
+                  type="button"
+                  onClick={() => emptyStateFileInputRef.current?.click()}
+                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-card hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold text-xs border border-white/5 transition-all shadow-sm"
+                >
+                  <Upload size={15} />
+                  <span>Import Character</span>
+                </button>
+              </div>
             </div>
           )}
         </section>

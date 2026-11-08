@@ -217,4 +217,174 @@ describe('CharacterSheetHeader', () => {
     fireEvent.click(screen.getByLabelText('Collapse Character Lore'));
     expect(screen.getByLabelText('Expand Character Lore')).toBeInTheDocument();
   });
+
+  it('renders background inside Character Lore section and updates background on edit', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterSheetHeader
+        character={mockCharacter}
+        profiles={[mockCharacter]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // Expand lore
+    const expandBtn = screen.getByLabelText('Expand Character Lore');
+    fireEvent.click(expandBtn);
+
+    // Background label is inside lore
+    expect(screen.getByText('Background')).toBeInTheDocument();
+    expect(screen.getByText('Sage')).toBeInTheDocument();
+
+    // Enter edit mode
+    const editBtn = screen.getByLabelText('Edit Profile');
+    fireEvent.click(editBtn);
+
+    const bgInput = screen.getByLabelText('Background');
+    fireEvent.change(bgInput, { target: { value: 'Cloistered Scholar' } });
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          identity: expect.objectContaining({
+            background: 'Cloistered Scholar',
+          }),
+        }),
+      })
+    );
+  });
+
+  it('renders speed horizontally below race and subclass and allows updating walking speed and optional speeds', () => {
+    const handleUpdate = vi.fn();
+    const charWithSpeeds = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        vitals: {
+          ...mockCharacter.sheet.vitals,
+          speed: 30,
+          speeds: { walk: 30, fly: 60 },
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={charWithSpeeds}
+        profiles={[charWithSpeeds]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    expect(screen.getByText('Walking Speed')).toBeInTheDocument();
+    expect(screen.getByText('30 ft')).toBeInTheDocument();
+    expect(screen.getByText('Fly:')).toBeInTheDocument();
+    expect(screen.getByText('60 ft')).toBeInTheDocument();
+
+    // Enter edit mode
+    const editBtn = screen.getByLabelText('Edit Profile');
+    fireEvent.click(editBtn);
+
+    // Walking speed input
+    const walkInput = screen.getByLabelText('Walking Speed');
+    fireEvent.change(walkInput, { target: { value: '35' } });
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          vitals: expect.objectContaining({
+            speed: 35,
+            speeds: expect.objectContaining({ walk: 35 }),
+          }),
+        }),
+      })
+    );
+
+    // Remove flying speed
+    const removeFlyBtn = screen.getByLabelText('Remove Fly speed');
+    fireEvent.click(removeFlyBtn);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          vitals: expect.objectContaining({
+            speeds: { walk: 30 },
+          }),
+        }),
+      })
+    );
+  });
+
+  it('allows adding optional speed types like swim or custom speed types via + Speed button', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterSheetHeader
+        character={mockCharacter}
+        profiles={[mockCharacter]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // Click + Speed button
+    const addSpeedBtn = screen.getByLabelText('+ Add Speed');
+    fireEvent.click(addSpeedBtn);
+
+    // Select custom speed
+    const select = screen.getByLabelText('Movement Type');
+    fireEvent.change(select, { target: { value: 'custom' } });
+
+    const customNameInput = screen.getByLabelText('Custom Speed Name');
+    fireEvent.change(customNameInput, { target: { value: 'Hover' } });
+
+    const distInput = screen.getByLabelText('Speed Distance');
+    fireEvent.change(distInput, { target: { value: '25' } });
+
+    const submitBtn = screen.getByRole('button', { name: 'Add' });
+    fireEvent.click(submitBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          vitals: expect.objectContaining({
+            speeds: expect.objectContaining({
+              hover: 25,
+            }),
+          }),
+        }),
+      })
+    );
+  });
+
+  it('applies uniform Level 3 bg-dnd-panel/70 to race, subclass, and secondary speed chips', () => {
+    const charWithDetails = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        identity: {
+          race: 'Elf',
+          subclass: 'Evocation',
+        },
+        vitals: {
+          ...mockCharacter.sheet.vitals,
+          speeds: { walk: 30, fly: 60 },
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={charWithDetails}
+        profiles={[charWithDetails]}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    const raceEl = screen.getByText('Elf');
+    expect(raceEl.className).toContain('bg-dnd-panel/70');
+
+    const subclassEl = screen.getByText('Evocation');
+    expect(subclassEl.className).toContain('bg-dnd-panel/70');
+
+    const flyEl = screen.getByText('Fly:').closest('div');
+    expect(flyEl.className).toContain('bg-dnd-panel/70');
+  });
 });

@@ -1,15 +1,37 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, ShieldHalf, Heart, Zap, Lightbulb, Footprints, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check } from 'lucide-react';
-import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
-import { normalizeSpeeds, normalizeHitDice } from '../../utils/storage';
-import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import { Shield, ShieldHalf, Heart, Zap, Lightbulb, Sparkles, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check } from 'lucide-react';
 
-const OPTIONAL_SPEED_TYPES = [
-  { key: 'climb', label: 'Climbing' },
-  { key: 'swim', label: 'Swimming' },
-  { key: 'fly', label: 'Flying' },
-  { key: 'burrow', label: 'Burrowing' },
-];
+export function CrystalBallIcon({ size = 16, className = '', ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M6.73 17.018a8 8 0 1 1 10.54 0" />
+      <path d="M5 19a2 2 0 0 0 2 2h10a2 2 0 1 0 0 -4h-10a2 2 0 0 0 -2 2" />
+      <path d="M11 7a3 3 0 0 0 -3 3" />
+    </svg>
+  );
+}
+import {
+  getAbilityModifier,
+  formatModifier,
+  rollHitDie,
+  getDefaultSpellcastingAbility,
+  calculateSpellDC,
+  calculateSpellAttack,
+} from '../../utils/dndCalculations';
+import { normalizeHitDice } from '../../utils/storage';
+import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-pool inside .map()
 function HitDieRollChip({ dieKey, pool, onRoll, disabled, conScore }) {
@@ -43,6 +65,7 @@ export default function VitalsCard({
   vitals,
   dexScore = 10,
   conScore = 10,
+  abilities = {},
   classes = [],
   isEditing = false,
   onUpdateVitals,
@@ -75,33 +98,24 @@ export default function VitalsCard({
   const [isEditingAcNote, setIsEditingAcNote] = useState(false);
   const [acNoteDraft, setAcNoteDraft] = useState('');
 
-  const speeds = normalizeSpeeds(currentVitals);
-  const [isAddingSpeed, setIsAddingSpeed] = useState(false);
-  const [newSpeedType, setNewSpeedType] = useState('fly');
-  const [newSpeedValue, setNewSpeedValue] = useState('30');
+  const totalLevel = Array.isArray(classes) && classes.length > 0
+    ? classes.reduce((sum, c) => sum + (Number(c.level) || 0), 0)
+    : 1;
+  const primaryClass = classes?.[0]?.className || 'Wizard';
+  const defaultAbility = getDefaultSpellcastingAbility(primaryClass);
+  const effectiveAbility = currentVitals.spellcastingAbility || defaultAbility;
+  const abilityScore = abilities?.[effectiveAbility] ?? 10;
 
-  const availableSpeedTypes = OPTIONAL_SPEED_TYPES.filter((t) => speeds[t.key] === undefined);
+  const calculatedAttack = calculateSpellAttack(abilityScore, totalLevel);
+  const calculatedDc = calculateSpellDC(abilityScore, totalLevel);
 
-  const handleUpdateSpeed = (key, val) => {
-    const nextSpeeds = { ...speeds };
-    if (val === null || val === undefined) {
-      delete nextSpeeds[key];
-    } else {
-      nextSpeeds[key] = Math.max(0, Number(val) || 0);
-    }
-    onUpdateVitals?.({
-      ...currentVitals,
-      speed: nextSpeeds.walk ?? 30,
-      speeds: nextSpeeds,
-    });
-  };
+  const displayAttack = currentVitals.spellAttackOverride !== null && currentVitals.spellAttackOverride !== undefined
+    ? currentVitals.spellAttackOverride
+    : calculatedAttack;
 
-  const handleSaveSpeed = (e) => {
-    e.preventDefault();
-    if (!newSpeedType) return;
-    handleUpdateSpeed(newSpeedType, Math.max(0, Number(newSpeedValue) || 30));
-    setIsAddingSpeed(false);
-  };
+  const displayDc = currentVitals.spellDcOverride !== null && currentVitals.spellDcOverride !== undefined
+    ? currentVitals.spellDcOverride
+    : calculatedDc;
 
   const [currentHpDraft, setCurrentHpDraft] = useState(String(hpCurrent));
   const [tempHpDraft, setTempHpDraft] = useState(String(hpTemp));
@@ -142,8 +156,18 @@ export default function VitalsCard({
     }
   };
 
-  const currentPercent = Math.min(100, Math.max(0, (hpCurrent / effectiveMax) * 100));
-  const tempPercent = Math.min(100 - currentPercent, Math.max(0, (hpTemp / effectiveMax) * 100));
+  const isBuffed = hpMaxBuff > 0 && effectiveMax > 0;
+  const basePercent = isBuffed ? Math.min(100, Math.max(0, (baseMax / effectiveMax) * 100)) : 100;
+  const baseCurrentPercent = isBuffed
+    ? Math.min(basePercent, Math.max(0, (Math.min(hpCurrent, baseMax) / effectiveMax) * 100))
+    : Math.min(100, Math.max(0, (hpCurrent / (effectiveMax || 1)) * 100));
+  const buffedCurrentPercent = isBuffed
+    ? Math.min(100 - baseCurrentPercent, Math.max(0, (Math.max(0, hpCurrent - baseMax) / effectiveMax) * 100))
+    : 0;
+  const tempPercent = Math.min(
+    100 - (baseCurrentPercent + buffedCurrentPercent),
+    Math.max(0, (hpTemp / (effectiveMax || 1)) * 100)
+  );
 
   const inspirationCount =
     typeof currentVitals.inspiration === 'number'
@@ -433,7 +457,7 @@ export default function VitalsCard({
                   aria-label="Current HP"
                   value={hpCurrent}
                   onChange={(e) => handleFieldChange('hpCurrent', Number(e.target.value))}
-                  className="w-full px-1 py-0.5 rounded bg-dnd-panel text-xs font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
+                  className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
               <div>
@@ -443,7 +467,7 @@ export default function VitalsCard({
                   aria-label="Base Max HP"
                   value={baseMax}
                   onChange={(e) => handleFieldChange('hpMax', Number(e.target.value))}
-                  className="w-full px-1 py-0.5 rounded bg-dnd-panel text-xs font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
+                  className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
               <div>
@@ -454,7 +478,7 @@ export default function VitalsCard({
                   placeholder="+0"
                   value={hpMaxBuff || ''}
                   onChange={(e) => handleFieldChange('hpMaxBuff', e.target.value === '' ? 0 : Number(e.target.value))}
-                  className="w-full px-1 py-0.5 rounded bg-dnd-panel text-xs font-bold text-amber-300 text-center border border-amber-500/30 focus:border-dnd-gold/60 outline-none"
+                  className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-amber-400 text-center border border-amber-500/30 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
               <div>
@@ -464,7 +488,7 @@ export default function VitalsCard({
                   aria-label="Temp HP"
                   value={hpTemp}
                   onChange={(e) => handleFieldChange('hpTemp', Number(e.target.value))}
-                  className="w-full px-1 py-0.5 rounded bg-dnd-panel text-xs font-bold text-blue-300 text-center border border-blue-500/30 focus:border-dnd-gold/60 outline-none"
+                  className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-blue-300 text-center border border-blue-500/30 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
             </div>
@@ -481,16 +505,11 @@ export default function VitalsCard({
                 <span className="text-[11px] font-bold text-red-400 flex items-center gap-1">
                   <Heart size={12} className="text-red-400 fill-red-400/20" /> Hit Points
                 </span>
-                {hpMaxBuff !== 0 && (
-                  <span className="text-[9px] font-bold text-amber-300 bg-amber-950/40 border border-amber-500/30 px-1.5 py-0.2 rounded">
-                    {hpMaxBuff > 0 ? `+${hpMaxBuff} Buff` : `${hpMaxBuff} Buff`}
-                  </span>
-                )}
               </div>
 
               <div className="flex items-center gap-1.5 my-0.5">
                 {/* Sub-container 1: Current & Max */}
-                <div className="bg-dnd-panel/60 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between">
+                <div className="bg-dnd-panel/70 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between">
                   <div className="flex justify-between items-center text-[8px] font-semibold text-slate-400 px-0.5 mb-0.5">
                     <span>Current</span>
                     <span>Max</span>
@@ -518,14 +537,23 @@ export default function VitalsCard({
                       className="text-right text-xl font-black text-slate-100 hover:text-dnd-gold bg-transparent outline-none focus:ring-1 focus:ring-dnd-gold/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
                     />
                     <span className="text-base text-slate-600 font-bold self-center px-1.5 select-none">/</span>
-                    <div className="text-xl font-black text-slate-400 leading-none self-center text-left">
+                    <div
+                      className={`text-xl font-black leading-none self-center text-left ${
+                        hpMaxBuff > 0 ? 'text-amber-400' : hpMaxBuff < 0 ? 'text-rose-400' : 'text-slate-400'
+                      }`}
+                      title={
+                        hpMaxBuff !== 0
+                          ? `Base Max: ${baseMax} (${hpMaxBuff > 0 ? `+${hpMaxBuff}` : hpMaxBuff} ${hpMaxBuff > 0 ? 'Buff' : 'Drain'})`
+                          : undefined
+                      }
+                    >
                       {effectiveMax}
                     </div>
                   </div>
                 </div>
 
                 {/* Sub-container 2: Temp HP */}
-                <div className="bg-dnd-panel/60 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between self-stretch min-w-[2.75rem]">
+                <div className="bg-dnd-panel/70 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between self-stretch min-w-[2.75rem]">
                   <div className="text-[8px] font-semibold text-blue-400 text-center mb-0.5">
                     Temp
                   </div>
@@ -556,12 +584,35 @@ export default function VitalsCard({
               </div>
 
               {/* Mini Health Bar */}
-              <div className="bg-dnd-panel h-1.5 rounded-full overflow-hidden mt-1 border border-white/5 flex">
+              <div className="relative bg-dnd-panel h-1.5 rounded-full overflow-hidden mt-1 border border-white/5 flex">
+                {isBuffed && (
+                  <>
+                    <div
+                      data-testid="hp-buff-track"
+                      className="absolute top-0 bottom-0 bg-amber-400/20 pointer-events-none"
+                      style={{ left: `${basePercent}%`, width: `${100 - basePercent}%` }}
+                    />
+                    <div
+                      data-testid="hp-base-max-notch"
+                      className="absolute top-0 bottom-0 w-[1.5px] bg-amber-400/80 z-10 pointer-events-none"
+                      style={{ left: `${basePercent}%` }}
+                    />
+                  </>
+                )}
                 <div
+                  data-testid="hp-bar-base-current"
                   className="bg-emerald-500 h-full transition-all duration-200"
-                  style={{ width: `${currentPercent}%` }}
+                  style={{ width: `${baseCurrentPercent}%` }}
                 />
+                {isBuffed && (
+                  <div
+                    data-testid="hp-bar-buffed-current"
+                    className="bg-amber-400 h-full transition-all duration-200"
+                    style={{ width: `${buffedCurrentPercent}%` }}
+                  />
+                )}
                 <div
+                  data-testid="hp-bar-temp"
                   className="bg-blue-400 h-full transition-all duration-200"
                   style={{ width: `${tempPercent}%` }}
                 />
@@ -573,7 +624,7 @@ export default function VitalsCard({
 
             {/* Right: Treatment A Capsule */}
             <div className="flex flex-col justify-center">
-              <div className="bg-dnd-panel/60 border border-white/5 rounded-md p-1 flex flex-col gap-1 w-16 box-border">
+              <div className="bg-dnd-panel/70 border border-white/5 rounded-md p-1 flex flex-col gap-1 w-16 box-border">
                 <button
                   type="button"
                   aria-label="Apply Damage"
@@ -588,7 +639,7 @@ export default function VitalsCard({
                   placeholder="0"
                   value={quickHpAmount}
                   onChange={(e) => setQuickHpAmount(e.target.value)}
-                  className="w-full text-center bg-dnd-panel/90 border border-white/10 rounded text-[10px] font-bold text-slate-100 py-0.5 outline-none focus:border-dnd-gold/60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full text-center bg-dnd-panel/70 border border-white/10 rounded text-[10px] font-bold text-slate-100 py-0.5 outline-none focus:border-dnd-gold/60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <button
                   type="button"
@@ -603,112 +654,207 @@ export default function VitalsCard({
           </div>
         )}
 
-        {/* Card 2: Stacked AC & Initiative Cards */}
-        <div className="flex flex-col gap-2 min-w-0 sm:col-span-1 xl:col-span-1">
-          {/* Armor Class Card */}
-          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
-            <div className="text-[10px] text-slate-400 flex items-center justify-between">
-              <span className="flex items-center gap-1 font-bold text-slate-400">
-                <ShieldHalf size={12} className="text-dnd-gold" /> AC
-              </span>
-              {!isEditing && !isEditingAcNote && !currentVitals.acFormula && (
-                <button
-                  type="button"
-                  aria-label="+ Note"
-                  onClick={() => {
-                    setAcNoteDraft('');
-                    setIsEditingAcNote(true);
-                  }}
-                  className="text-[10px] text-slate-400 hover:text-dnd-gold font-medium flex items-center gap-0.5 transition-colors cursor-pointer"
-                >
-                  <Plus size={10} /> Note
-                </button>
-              )}
-            </div>
+        {/* Card 2: Dedicated Armor Class Card (Full height matching Hit Points) */}
+        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 xl:col-span-1">
+          <div className="text-[10px] text-slate-400 flex items-center justify-between mb-0.5">
+            <span className="flex items-center gap-1 font-bold text-slate-400">
+              <ShieldHalf size={12} className="text-dnd-gold" /> AC
+            </span>
+            {!isEditing && !isEditingAcNote && !currentVitals.acFormula && (
+              <button
+                type="button"
+                aria-label="+ Note"
+                onClick={() => {
+                  setAcNoteDraft('');
+                  setIsEditingAcNote(true);
+                }}
+                className="text-[10px] text-slate-400 hover:text-dnd-gold font-medium flex items-center gap-0.5 transition-colors cursor-pointer"
+              >
+                <Plus size={10} /> Note
+              </button>
+            )}
+          </div>
 
-            {isEditing ? (
-              <div className="flex items-center gap-1.5 mt-1 mb-1">
+          {isEditing ? (
+            <div className="flex flex-col gap-1.5 my-auto">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[9px] text-slate-400 font-semibold w-8">Score:</label>
                 <input
                   type="number"
                   aria-label="Armor Class"
                   value={currentVitals.ac ?? 10}
                   onChange={(e) => handleFieldChange('ac', Number(e.target.value))}
-                  className="w-12 px-1.5 py-0.5 rounded bg-dnd-panel text-sm font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-14 px-1.5 py-0.5 rounded bg-dnd-panel/70 text-sm font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20"
                 />
+              </div>
+              <div className="flex flex-col gap-0.5">
+                <label className="text-[9px] text-slate-400 font-semibold">Note / Breakdown:</label>
                 <input
                   type="text"
                   aria-label="AC Formula Breakdown"
-                  placeholder="e.g. 14 + 2 DEX"
+                  placeholder="e.g. 14 + 2 DEX, Shield"
                   value={currentVitals.acFormula ?? ''}
                   onChange={(e) => handleFieldChange('acFormula', e.target.value)}
-                  className="flex-1 min-w-0 px-1 py-0.5 rounded bg-dnd-panel text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-white/20"
+                  className="w-full px-1.5 py-0.5 rounded bg-dnd-panel/70 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-white/20"
                 />
               </div>
-            ) : isEditingAcNote ? (
-              <div className="mt-1 flex flex-col gap-1">
-                <textarea
-                  value={acNoteDraft}
-                  onChange={(e) => setAcNoteDraft(e.target.value)}
-                  placeholder="e.g. 14 + 2 DEX, Shield"
-                  rows={2}
-                  autoFocus
-                  className="w-full bg-dnd-panel rounded p-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold resize-none"
-                />
-                <div className="flex items-center justify-end gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingAcNote(false)}
-                    className="px-1.5 py-0.5 rounded text-[10px] text-slate-400 hover:text-slate-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
+            </div>
+          ) : isEditingAcNote ? (
+            <div className="mt-1 flex flex-col gap-1 my-auto">
+              <textarea
+                value={acNoteDraft}
+                onChange={(e) => setAcNoteDraft(e.target.value)}
+                placeholder="e.g. 14 + 2 DEX, Shield"
+                rows={2}
+                autoFocus
+                className="w-full bg-dnd-panel/70 rounded p-1 text-[11px] text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold resize-none"
+              />
+              <div className="flex items-center justify-end gap-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingAcNote(false)}
+                  className="px-1.5 py-0.5 rounded text-[10px] text-slate-400 hover:text-slate-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleFieldChange('acFormula', acNoteDraft.trim());
+                    setIsEditingAcNote(false);
+                  }}
+                  className="px-2 py-0.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-[10px]"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col justify-between my-auto">
+              <div className="text-xl font-black text-slate-100 leading-none my-0.5">
+                {currentVitals.ac ?? 10}
+              </div>
+              {currentVitals.acFormula ? (
+                <div className="flex items-start justify-between gap-1 mt-1">
+                  <span
                     onClick={() => {
-                      handleFieldChange('acFormula', acNoteDraft.trim());
-                      setIsEditingAcNote(false);
+                      setAcNoteDraft(currentVitals.acFormula);
+                      setIsEditingAcNote(true);
                     }}
-                    className="px-2 py-0.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-[10px]"
+                    className="text-[11px] text-slate-300 cursor-pointer hover:text-dnd-gold transition-colors flex-1 line-clamp-2 break-words"
+                    title={currentVitals.acFormula}
                   >
-                    Save
+                    {currentVitals.acFormula}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Edit AC Note"
+                    onClick={() => {
+                      setAcNoteDraft(currentVitals.acFormula);
+                      setIsEditingAcNote(true);
+                    }}
+                    className="text-slate-400 hover:text-dnd-gold p-0.5 rounded hover:bg-white/5 transition-colors flex-shrink-0"
+                    title="Edit note"
+                  >
+                    <Edit3 size={10} />
                   </button>
                 </div>
-              </div>
-            ) : (
-              <div className="flex flex-col justify-between my-auto">
-                <div className="text-xl font-black text-slate-100 leading-none my-0.5">
-                  {currentVitals.ac ?? 10}
-                </div>
-                {currentVitals.acFormula ? (
-                  <div className="flex items-center justify-between gap-1 mt-0.5">
-                    <span
-                      onClick={() => {
-                        setAcNoteDraft(currentVitals.acFormula);
-                        setIsEditingAcNote(true);
-                      }}
-                      className="text-[11px] text-slate-300 truncate cursor-pointer hover:text-dnd-gold transition-colors flex-1"
-                      title={currentVitals.acFormula}
-                    >
-                      {currentVitals.acFormula}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label="Edit AC Note"
-                      onClick={() => {
-                        setAcNoteDraft(currentVitals.acFormula);
-                        setIsEditingAcNote(true);
-                      }}
-                      className="text-slate-400 hover:text-dnd-gold p-0.5 rounded hover:bg-white/5 transition-colors flex-shrink-0"
-                      title="Edit note"
-                    >
-                      <Edit3 size={10} />
-                    </button>
-                  </div>
+              ) : (
+                <div className="text-[10px] text-slate-500 italic mt-0.5">Armor Class</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Card 3: Stacked Spellcasting & Initiative Group */}
+        <div className="flex flex-col gap-1.5 min-w-0 sm:col-span-1 xl:col-span-1">
+          {/* Spellcasting Card */}
+          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
+            {/* Header */}
+            <div className="text-[10px] text-slate-400 flex items-center justify-between mb-0.5">
+              <span className="flex items-center gap-1 font-bold text-slate-400">
+                <CrystalBallIcon size={12} className="text-dnd-gold" /> Spellcasting
+              </span>
+              {isEditing ? (
+                <select
+                  aria-label="Spellcasting Ability"
+                  value={effectiveAbility}
+                  onChange={(e) =>
+                    onUpdateVitals?.({
+                      ...currentVitals,
+                      spellcastingAbility: e.target.value,
+                    })
+                  }
+                  className="bg-dnd-panel/70 text-slate-200 uppercase font-semibold text-[9px] px-1 py-0.2 rounded focus:outline-none focus:ring-1 focus:ring-dnd-gold/60"
+                >
+                  <option value="int">INT</option>
+                  <option value="wis">WIS</option>
+                  <option value="cha">CHA</option>
+                </select>
+              ) : (
+                <span className="text-[9px] uppercase font-semibold text-slate-400 bg-dnd-panel/70 px-1 py-0.2 rounded leading-none">
+                  {effectiveAbility.toUpperCase()}
+                </span>
+              )}
+            </div>
+
+            {/* Body */}
+            <div className="flex items-center justify-around my-auto py-1">
+              {/* Left: Spell Attack */}
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {isEditing ? (
+                  <input
+                    type="number"
+                    aria-label="Spell Attack Override"
+                    placeholder={formatModifier(calculatedAttack)}
+                    value={currentVitals.spellAttackOverride ?? ''}
+                    onChange={(e) =>
+                      onUpdateVitals?.({
+                        ...currentVitals,
+                        spellAttackOverride: e.target.value === '' ? null : Number(e.target.value),
+                      })
+                    }
+                    className="w-12 px-1 py-0.5 rounded bg-dnd-panel/70 text-sm font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
+                  />
                 ) : (
-                  <div className="text-[10px] text-slate-500 italic">Armor Class</div>
+                  <div className="text-xl font-black text-slate-100 leading-none">
+                    {formatModifier(displayAttack)}
+                  </div>
                 )}
+                <div className="text-[10px] text-slate-400 font-medium mt-1">
+                  Spell Attack
+                </div>
               </div>
-            )}
+
+              {/* Middle Divider */}
+              <div className="w-px self-stretch bg-white/5 my-0.5" />
+
+              {/* Right: Spell DC */}
+              <div className="flex-1 flex flex-col items-center justify-center">
+                {isEditing ? (
+                  <input
+                    type="number"
+                    aria-label="Spell DC Override"
+                    placeholder={String(calculatedDc)}
+                    value={currentVitals.spellDcOverride ?? ''}
+                    onChange={(e) =>
+                      onUpdateVitals?.({
+                        ...currentVitals,
+                        spellDcOverride: e.target.value === '' ? null : Number(e.target.value),
+                      })
+                    }
+                    className="w-12 px-1 py-0.5 rounded bg-dnd-panel/70 text-sm font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
+                  />
+                ) : (
+                  <div className="text-xl font-black text-slate-100 leading-none">
+                    {displayDc}
+                  </div>
+                )}
+                <div className="text-[10px] text-slate-400 font-medium mt-1">
+                  Spell DC
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Initiative Card */}
@@ -720,7 +866,7 @@ export default function VitalsCard({
             </div>
             {isEditing ? (
               <div className="flex items-center gap-1">
-                <span className="text-xs font-bold text-slate-100">
+                <span className="text-xs font-bold text-slate-100 pr-1">
                   {formatModifier(initMod)}
                 </span>
                 <input
@@ -734,151 +880,17 @@ export default function VitalsCard({
                       e.target.value === '' ? null : Number(e.target.value)
                     )
                   }
-                  className="w-11 px-1 py-0.5 rounded bg-dnd-panel text-[10px] text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
+                  className="w-11 px-1 py-0.5 rounded bg-dnd-panel/70 text-[10px] text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
                 />
               </div>
             ) : (
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-slate-100">
+              <div className="flex items-center">
+                <span className="text-xs font-bold text-slate-100 pr-1">
                   {formatModifier(initMod)}
                 </span>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Card 3: Dedicated Movement Speeds Card */}
-        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 xl:col-span-1">
-          {/* Header */}
-          <div className="text-[10px] text-slate-400 flex items-center justify-between">
-            <span className="flex items-center gap-1 font-bold text-slate-400">
-              <Footprints size={12} className="text-emerald-400" /> Speed
-            </span>
-            {availableSpeedTypes.length > 0 && !isAddingSpeed && (
-              <button
-                type="button"
-                aria-label="+ Add"
-                onClick={() => {
-                  setNewSpeedType(availableSpeedTypes[0].key);
-                  setNewSpeedValue('30');
-                  setIsAddingSpeed(true);
-                }}
-                className="text-[10px] text-dnd-gold hover:text-dnd-gold-light font-medium flex items-center gap-0.5 transition-colors cursor-pointer"
-              >
-                <Plus size={10} /> Add
-              </button>
-            )}
-          </div>
-
-          {/* Body */}
-          <div className="flex items-center justify-between gap-2 my-auto pt-1">
-            {/* Left: Walking Speed Hero */}
-            <div className="flex-shrink-0 flex flex-col justify-center">
-              {isEditing ? (
-                <div className="flex items-center gap-1">
-                  <input
-                    type="number"
-                    aria-label="Walking Speed"
-                    value={speeds.walk ?? 30}
-                    onChange={(e) => handleUpdateSpeed('walk', Number(e.target.value))}
-                    className="w-14 px-1 py-0.5 rounded bg-dnd-panel text-sm font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
-                  />
-                  <span className="text-[10px] text-slate-400 font-bold">ft</span>
-                </div>
-              ) : (
-                <div className="text-xl font-black text-slate-100 leading-none">
-                  {speeds.walk ?? 30} ft
-                </div>
-              )}
-              <div className="text-[10px] text-slate-500 font-medium mt-0.5">
-                Walking
-              </div>
-            </div>
-
-            {/* Right: Optional Speeds List */}
-            <div className="flex-1 min-w-0 flex flex-col items-end gap-1 overflow-hidden">
-              {OPTIONAL_SPEED_TYPES.filter((t) => speeds[t.key] !== undefined).map(({ key, label }) => (
-                <div
-                  key={key}
-                  className="max-w-full flex items-center gap-1 text-[11px] bg-dnd-panel/60 border border-white/5 rounded px-1.5 py-0.5 text-slate-200"
-                >
-                  <span className="text-slate-400 text-[10px] truncate">{label}:</span>
-                  {isEditing ? (
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <input
-                        type="number"
-                        aria-label={`${label} Speed`}
-                        value={speeds[key]}
-                        onChange={(e) => handleUpdateSpeed(key, Number(e.target.value))}
-                        className="w-10 px-1 py-0.5 rounded bg-dnd-panel text-[11px] font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
-                      />
-                      <span className="font-bold text-slate-100 text-[10px]">ft</span>
-                      <button
-                        type="button"
-                        aria-label={`Remove ${label} speed`}
-                        onClick={() => handleUpdateSpeed(key, null)}
-                        className="ml-0.5 text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
-                      >
-                        <X size={10} />
-                      </button>
-                    </div>
-                  ) : (
-                    <span className="font-bold text-slate-100 flex-shrink-0">{speeds[key]} ft</span>
-                  )}
-                </div>
-              ))}
-              {OPTIONAL_SPEED_TYPES.every((t) => speeds[t.key] === undefined) && !isAddingSpeed && (
-                <span className="text-[10px] text-slate-500 italic">No extra speeds</span>
-              )}
-            </div>
-          </div>
-
-          {/* Inline Add Speed Form */}
-          {isAddingSpeed && (
-            <form
-              noValidate
-              onSubmit={handleSaveSpeed}
-              className="mt-1.5 pt-1.5 border-t border-white/5 flex items-center gap-1 text-[10px]"
-            >
-              <select
-                aria-label="Movement Type"
-                value={newSpeedType}
-                onChange={(e) => setNewSpeedType(e.target.value)}
-                className="bg-dnd-panel text-slate-200 rounded px-1 py-0.5 border border-white/10 text-[10px] focus:outline-none"
-              >
-                {availableSpeedTypes.map((t) => (
-                  <option key={t.key} value={t.key}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="number"
-                aria-label="Speed Distance"
-                value={newSpeedValue}
-                onChange={(e) => setNewSpeedValue(e.target.value)}
-                className="w-10 bg-dnd-panel text-slate-100 rounded px-1 py-0.5 text-center border border-white/10 text-[10px] focus:outline-none"
-              />
-              <span className="text-slate-400 text-[9px]">ft</span>
-              <button
-                type="submit"
-                aria-label="Add"
-                title="Add speed"
-                className="p-1 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 transition-colors shrink-0 cursor-pointer"
-              >
-                <Check size={11} strokeWidth={2.5} />
-              </button>
-              <button
-                type="button"
-                aria-label="Cancel"
-                title="Cancel"
-                onClick={() => setIsAddingSpeed(false)}
-                className="p-1 rounded text-slate-400 hover:text-white transition-colors shrink-0 cursor-pointer"
-              >
-                <X size={11} />
-              </button>
-            </form>
-          )}
         </div>
 
         {/* Row 2: Compact Trackers Strip (Hit Dice, Inspiration, Death Saves) in ONE Single Card */}
@@ -914,7 +926,7 @@ export default function VitalsCard({
                 {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
                   <div
                     key={dieKey}
-                    className="flex items-center space-x-1 bg-dnd-panel/60 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
+                    className="flex items-center space-x-1 bg-dnd-panel/70 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
                   >
                     <button
                       type="button"
@@ -972,7 +984,7 @@ export default function VitalsCard({
                 type="button"
                 aria-label="Decrement inspiration"
                 onClick={() => handleInspirationStep(-1)}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel/70 text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
               >
                 -
               </button>
@@ -983,7 +995,7 @@ export default function VitalsCard({
                 type="button"
                 aria-label="Increment inspiration"
                 onClick={() => handleInspirationStep(1)}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel/70 text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
               >
                 +
               </button>
@@ -1014,7 +1026,7 @@ export default function VitalsCard({
                         className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                           active
                             ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
-                            : 'bg-dnd-panel hover:bg-emerald-400/40'
+                            : 'bg-dnd-panel/70 hover:bg-emerald-400/40'
                         }`}
                       />
                     );
@@ -1037,7 +1049,7 @@ export default function VitalsCard({
                         className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                           active
                             ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
-                            : 'bg-dnd-panel hover:bg-red-400/40'
+                            : 'bg-dnd-panel/70 hover:bg-red-400/40'
                         }`}
                       />
                     );
@@ -1057,6 +1069,7 @@ export default function VitalsCard({
           </span>
           <button
             type="button"
+            aria-label="+ Add Condition"
             onClick={() => setIsAddingCondition(!isAddingCondition)}
             className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
           >
@@ -1097,7 +1110,7 @@ export default function VitalsCard({
             className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg text-[11px] shadow-sm bg-dnd-card text-slate-300"
           >
             <span className="font-medium">Exhaustion</span>
-            <div className="flex items-center space-x-0.5 bg-dnd-panel/80 px-1 py-0.2 rounded">
+            <div className="flex items-center space-x-0.5 bg-dnd-panel/70 px-1 py-0.2 rounded">
               <button
                 type="button"
                 aria-label="Decrease exhaustion"
@@ -1154,6 +1167,7 @@ export default function VitalsCard({
           </span>
           <button
             type="button"
+            aria-label="+ Add Defense"
             onClick={() => setIsAddingDefense(!isAddingDefense)}
             className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
           >
@@ -1163,7 +1177,7 @@ export default function VitalsCard({
 
         {isAddingDefense && (
           <form noValidate onSubmit={handleAddDefense} className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-1 px-0.5">
-            <div className="inline-flex rounded-lg bg-dnd-panel/90 p-0.5 border border-white/10 shrink-0 text-xs">
+            <div className="inline-flex rounded-lg bg-dnd-panel/70 p-0.5 shrink-0 text-xs">
               <button
                 type="button"
                 onClick={() => setDefenseType('resistance')}

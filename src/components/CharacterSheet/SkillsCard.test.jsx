@@ -194,4 +194,45 @@ describe('SkillsCard', () => {
     // Divider should have symmetrical margin (my-2.5) for equal spacing above and below
     expect(dividers[0].className).toContain('my-2.5');
   });
+
+  it('displays misc bonus in view mode and allows editing misc bonus in edit mode', () => {
+    const handleUpdateSkillBonuses = vi.fn();
+    const { rerender } = render(
+      <SkillsCard
+        abilities={mockAbilities}
+        skills={mockSkills}
+        skillBonuses={{ arcana: 1 }}
+        level={5}
+        senses={mockSenses}
+        isEditing={false}
+      />
+    );
+
+    // View mode: Arcana has base +10 (INT 18 = +4, lvl 5 expertise = +6) + 1 misc = +11
+    // Misc input not present
+    expect(screen.queryByLabelText('Arcana misc bonus')).toBeNull();
+    expect(screen.getByText('+11')).toBeInTheDocument();
+
+    // Edit mode: Arcana misc bonus input rendered
+    rerender(
+      <SkillsCard
+        abilities={mockAbilities}
+        skills={mockSkills}
+        skillBonuses={{ arcana: 1 }}
+        level={5}
+        senses={mockSenses}
+        isEditing={true}
+        onUpdateSkillBonuses={handleUpdateSkillBonuses}
+      />
+    );
+
+    const arcanaMiscInput = screen.getByLabelText('Arcana misc bonus');
+    expect(arcanaMiscInput).toBeInTheDocument();
+    expect(arcanaMiscInput.value).toBe('1');
+
+    fireEvent.change(arcanaMiscInput, { target: { value: '2' } });
+    expect(handleUpdateSkillBonuses).toHaveBeenCalledWith({
+      arcana: 2,
+    });
+  });
 });

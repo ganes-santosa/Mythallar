@@ -1,19 +1,17 @@
 # HANDOFF
 
-## Current state (v2.2.4 - master)
-- **Prepared Spell Calculation & Homebrew Spells**:
-  - Fixed prepared count logic so uncataloged custom spells and cantrips do not increment prepared or known totals.
-  - JSON character import preserves and registers `homebrewSpells` into catalog.
-- **Scrollbar Track**:
-  - Restored subtle scrollbar track background (`rgba(255, 255, 255, 0.04)`) across custom scroll containers and WebKit pseudo-elements.
-- **Independent Catalog Level Accordions**:
-  - Resolved mutual exclusivity bug in `SpellList`: each level opens/collapses independently via `collapsedLevels` map.
-- **Tracked Resources Drag Reordering**:
-  - Drag-and-drop reordering for tracked resources in `ResourcesCard` edit state with `GripVertical` handle and drop target indicator.
-- **Verification**: 42 test files (298 tests) passing; production build verified clean.
+## Current state (v2.3.1 - master)
+- **Character Sheet Notes Overhaul**:
+  - Full WYSIWYG note formatting toolbar: Bold, Italic, Underline, Strikethrough with clean HTML serialization.
+  - Smooth 300ms bidirectional grid animations between note list and document canvas without layout snapping.
+  - Auto-scroll to top on opening note and accurate scroll restoration on exit back to note list.
+  - Directional sorting icon consistency: natural top-to-bottom order (`ArrowDown`) across Recent, Date, and Alphabetical (A-Z).
+- **Spellbook Filters & UI Polish**:
+  - Animated expandable filter drawer with 200ms accordion transitions (`useAccordionMount`).
+- **Verification**: 44 test files (342 tests) passing; production build clean.
 
 ## Next up
-- Ready for upcoming relayouting work.
+- Ready for next planned character sheet and spellbook feature milestones.
 
 ## Open questions
 - (none)

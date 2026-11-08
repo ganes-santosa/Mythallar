@@ -28,6 +28,10 @@ h1, h2, h3, h4, .font-display {
   font-family: 'Funnel Display', system-ui, -apple-system, sans-serif;
 }
 
+b, strong {
+  font-weight: 700;
+}
+
 @property --scrollbar-alpha {
   syntax: '<percentage>';
   inherits: false;
@@ -191,6 +195,8 @@ textarea {
 
 .animate-accordion-down {
   display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
   animation: accordionExpand 200ms ease-out forwards;
   will-change: grid-template-rows, opacity;
   contain: layout paint;
@@ -198,6 +204,8 @@ textarea {
 
 .animate-accordion-up {
   display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
   animation: accordionCollapse 200ms ease-in forwards;
   will-change: grid-template-rows, opacity;
   contain: layout paint;

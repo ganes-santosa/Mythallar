@@ -56,7 +56,7 @@ function SlotLevelRow({
             {getLevelLabel(level)}
           </span>
           {!isEditingMax && (
-            <span className="text-[10px] sm:text-[11px] font-medium px-1 sm:px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter tabular-nums whitespace-nowrap">
+            <span className="text-[10px] sm:text-[11px] font-medium px-1 sm:px-1.5 py-0.2 rounded bg-dnd-panel/70 text-dnd-pewter tabular-nums whitespace-nowrap">
               {remainingSlots} / {safeMax}
             </span>
           )}
@@ -90,7 +90,7 @@ function SlotLevelRow({
                   if (e.key === 'Enter') e.target.blur();
                 }}
                 aria-label={`Max ${getLevelLabel(level)} slots`}
-                className="w-6 h-4 bg-dnd-panel/90 border border-white/10 rounded px-0.5 text-center text-xs text-dnd-gold font-bold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none select-none"
+                className="w-6 h-4 bg-dnd-panel/70 rounded px-0.5 text-center text-xs text-dnd-gold font-bold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none select-none"
               />
               <button
                 type="button"
@@ -107,7 +107,7 @@ function SlotLevelRow({
                 type="button"
                 aria-label={`Reset max ${getLevelLabel(level)} slots to default`}
                 onClick={() => onResetMaxSlot(level)}
-                className="p-1 rounded bg-dnd-panel hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors ml-0.5 select-none cursor-pointer"
+                className="p-1 rounded bg-dnd-panel/70 hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors ml-0.5 select-none cursor-pointer"
                 title="Reset to 5e rules"
               >
                 <RotateCcw size={10} />

@@ -4,6 +4,9 @@ import {
   fetchCloudData,
   syncCharactersToCloud,
   syncHomebrewToCloud,
+  deleteCloudHomebrew,
+  reconcileCloudPull,
+  subscribeToUserChanges,
 } from './syncService';
 
 describe('syncService', () => {
@@ -35,6 +38,25 @@ describe('syncService', () => {
       const cloud = [{ id: 'char1', name: 'Wizard Cloud', updated_at: 200 }];
       const merged = mergeLocalAndCloud(local, cloud);
       expect(merged[0].name).toBe('Wizard Cloud');
+    });
+
+    it('filters out items present in deletedIds whose updated_at is older than or equal to deletion', () => {
+      const local = [
+        { id: 'c1', name: 'Keep', updated_at: 500 },
+        { id: 'c2', name: 'Delete Local', updated_at: 300 },
+      ];
+      const cloud = [
+        { id: 'c2', name: 'Delete Cloud', updated_at: 400 },
+        { id: 'c3', name: 'Resurrect Cloud', updated_at: 200 },
+      ];
+      const deletedIds = {
+        c2: 400, // exact or newer than c2's updated_at
+        c3: 500, // deleted after c3 was created
+      };
+
+      const merged = mergeLocalAndCloud(local, cloud, deletedIds);
+      expect(merged).toHaveLength(1);
+      expect(merged[0].id).toBe('c1');
     });
   });
 
@@ -128,6 +150,81 @@ describe('syncService', () => {
       expect(deleteMock).toHaveBeenCalled();
       expect(eqIdMock).toHaveBeenCalledWith('id', 'char-1');
       expect(eqUserMock).toHaveBeenCalledWith('user_id', 'user-123');
+    });
+  });
+
+  describe('deleteCloudHomebrew', () => {
+    it('deletes homebrew spell from homebrew_spells table by id and user_id', async () => {
+      const eqUserMock = vi.fn(() => Promise.resolve({ error: null }));
+      const eqIdMock = vi.fn(() => ({ eq: eqUserMock }));
+      const deleteMock = vi.fn(() => ({ eq: eqIdMock }));
+      const mockClient = {
+        from: vi.fn(() => ({
+          delete: deleteMock,
+        })),
+      };
+
+      const res = await deleteCloudHomebrew(mockClient, 'user-123', 'spell-1');
+      expect(res.success).toBe(true);
+      expect(mockClient.from).toHaveBeenCalledWith('homebrew_spells');
+      expect(eqIdMock).toHaveBeenCalledWith('id', 'spell-1');
+      expect(eqUserMock).toHaveBeenCalledWith('user_id', 'user-123');
+    });
+  });
+
+  describe('reconcileCloudPull', () => {
+    it('authoritatively prunes local profiles that were deleted in cloud if already synced before', () => {
+      // Local has Arthur and Mordenkainen
+      const local = [
+        { id: 'arthur', name: 'Arthur', updated_at: 100 },
+        { id: 'mordenkainen', name: 'Mordenkainen', updated_at: 100 },
+      ];
+      // Cloud only has Arthur (Mordenkainen was deleted on another device)
+      const cloud = [
+        { id: 'arthur', name: 'Arthur', updated_at: 100 },
+      ];
+
+      const reconciled = reconcileCloudPull(local, cloud, {}, true);
+      expect(reconciled.map((p) => p.id)).toEqual(['arthur']);
+    });
+
+    it('merges new local items if first-time sync', () => {
+      const local = [
+        { id: 'local-1', name: 'Guest Character', updated_at: 100 },
+      ];
+      const cloud = [
+        { id: 'cloud-1', name: 'Existing Cloud Character', updated_at: 100 },
+      ];
+
+      // hasSyncedBefore = false
+      const reconciled = reconcileCloudPull(local, cloud, {}, false);
+      expect(reconciled).toHaveLength(2);
+      expect(reconciled.map((p) => p.id)).toContain('local-1');
+      expect(reconciled.map((p) => p.id)).toContain('cloud-1');
+    });
+  });
+
+  describe('subscribeToUserChanges', () => {
+    it('subscribes to postgres_changes on user channel and returns unsubscribe handle', () => {
+      const onMock = vi.fn().mockReturnThis();
+      const subscribeMock = vi.fn().mockReturnThis();
+      const removeChannelMock = vi.fn();
+      const mockChannel = {
+        on: onMock,
+        subscribe: subscribeMock,
+      };
+      const mockClient = {
+        channel: vi.fn(() => mockChannel),
+        removeChannel: removeChannelMock,
+      };
+
+      const unsubscribe = subscribeToUserChanges(mockClient, 'user-123', {});
+      expect(mockClient.channel).toHaveBeenCalledWith('user_sync:user-123');
+      expect(onMock).toHaveBeenCalledTimes(2); // characters and homebrew_spells
+      expect(subscribeMock).toHaveBeenCalled();
+
+      unsubscribe();
+      expect(removeChannelMock).toHaveBeenCalledWith(mockChannel);
     });
   });
 });

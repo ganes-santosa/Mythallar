@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check, Sliders, Palette, Feather } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import {
   THEMES,
   getCustomThemeConfig,
@@ -42,6 +43,8 @@ export default function SettingsModal({
     }
   }, [isOpen]);
 
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const handleCustomColorChange = (key, value) => {
@@ -76,7 +79,7 @@ export default function SettingsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain">
       <div className="bg-dnd-card rounded-2xl p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-2 flex-shrink-0">

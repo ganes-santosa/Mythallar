@@ -31,14 +31,24 @@ describe('ItemsCard', () => {
     },
   ];
 
-  it('renders items with attunement count and bookmark glow on attuned items', () => {
+  it('renders items with attunement count and compact attunement icon', () => {
     render(<ItemsCard items={mockItems} maxAttunement={3} onUpdateItems={() => {}} />);
     expect(screen.getByText('1 / 3')).toBeInTheDocument();
     expect(screen.getByText('The Tuvala Sundial')).toBeInTheDocument();
 
     const attunedChip = screen.getByTestId('item-chip-itm_1');
-    const bookmark = attunedChip.querySelector('[data-testid="attunement-bookmark-strip"]');
-    expect(bookmark.className).toContain('bg-[#EFE9E0]');
+    const attuneIcon = attunedChip.querySelector('[data-testid="attunement-icon"]');
+    expect(attuneIcon).toBeInTheDocument();
+    expect(attuneIcon.className).toContain('text-white');
+    // Does not have wide text badge on chip
+    expect(attunedChip.textContent).not.toContain('(attunable)');
+
+    // Ease-out gradient originates from the right side and ends at the 2/3 mark
+    const rightGradient = attunedChip.querySelector('[data-testid="item-right-gradient"]');
+    expect(rightGradient).toBeInTheDocument();
+    expect(rightGradient.style.background).toContain('linear-gradient(to left');
+    expect(rightGradient.style.background).toContain('transparent 33.3%');
+    expect(attunedChip.className).not.toContain('border-b');
   });
 
   it('toggles attunement when in Manage Attunement mode', () => {
@@ -247,9 +257,15 @@ describe('ItemsCard', () => {
     expect(screen.getAllByRole('button', { name: 'Delete Sunblade' })).toHaveLength(1);
   });
 
-  it('allows editing an item via the edit pencil button in expanded card', () => {
+  it('allows editing an item via the edit pencil button in expanded card directly in its category section', () => {
     const handleUpdate = vi.fn();
     const customItems = [
+      {
+        id: 'itm_gear_1',
+        name: 'Rope',
+        category: 'gear',
+        quantity: 1,
+      },
       {
         id: 'itm_edit',
         name: 'Sunblade',
@@ -270,8 +286,16 @@ describe('ItemsCard', () => {
     const editBtn = screen.getByRole('button', { name: 'Edit Sunblade' });
     fireEvent.click(editBtn);
 
-    // Form opens in "Edit Item" mode
+    // Form opens in "Edit Item" mode inside the Magic Item category section, NOT at top above categories
     expect(screen.getByText('Edit Item')).toBeInTheDocument();
+    const editForm = screen.getByTestId('item-edit-form');
+    expect(editForm).toBeInTheDocument();
+    
+    // Check form is inside category detail viewer / category section
+    const magicHeader = screen.getAllByText('Magic Item').find((el) => el.tagName === 'SPAN');
+    const magicSection = magicHeader.closest('div.space-y-1\\.5');
+    expect(magicSection).toContainElement(editForm);
+
     const nameInput = screen.getByLabelText('Item Name');
     expect(nameInput).toHaveValue('Sunblade');
     const noteInput = screen.getByLabelText('Item Description');
@@ -286,6 +310,7 @@ describe('ItemsCard', () => {
     fireEvent.click(updateBtn);
 
     expect(handleUpdate).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'itm_gear_1', name: 'Rope' }),
       expect.objectContaining({
         id: 'itm_edit',
         name: 'Sunblade +1',
@@ -400,6 +425,71 @@ describe('ItemsCard', () => {
       expect(getLineBucket(12)).toBe(12);
       expect(getLineBucket(13)).toBe(16);
       expect(getLineBucket(20)).toBe(16);
+    });
+
+    it('filters visible items by search query matching name or notes, and clears search', () => {
+      const searchItems = [
+        { id: 's1', name: 'Ring of Spell Storing', category: 'magic', note: 'Holds up to 5 levels of spells' },
+        { id: 's2', name: 'Pearl of Power', category: 'magic', note: 'Restores a slot' },
+        { id: 's3', name: 'Rations', category: 'consumable', note: 'Dry meat' },
+      ];
+      render(<ItemsCard items={searchItems} maxAttunement={3} onUpdateItems={() => {}} />);
+
+      const searchInput = screen.getByPlaceholderText(/search inventory/i);
+      expect(searchInput).toBeInTheDocument();
+
+      // Search by note content
+      fireEvent.change(searchInput, { target: { value: 'meat' } });
+      expect(screen.getByText('Rations')).toBeInTheDocument();
+      expect(screen.queryByText('Ring of Spell Storing')).not.toBeInTheDocument();
+      expect(screen.queryByText('Pearl of Power')).not.toBeInTheDocument();
+
+      // Clear search via clear button
+      const clearBtn = screen.getByRole('button', { name: /clear search/i });
+      fireEvent.click(clearBtn);
+      expect(screen.getByText('Ring of Spell Storing')).toBeInTheDocument();
+      expect(screen.getByText('Pearl of Power')).toBeInTheDocument();
+      expect(screen.getByText('Rations')).toBeInTheDocument();
+
+      // Search matching nothing displays empty state
+      fireEvent.change(searchInput, { target: { value: 'vorpal' } });
+      expect(screen.getByText(/no items matching "vorpal"/i)).toBeInTheDocument();
+    });
+
+    it('renders the detail viewer inside the item category subsection and moves when selecting item in another category', () => {
+      const categoryItems = [
+        { id: 'm1', name: 'Wand of Magic Missiles', category: 'magic', note: 'Fires 3 darts.' },
+        { id: 'c1', name: 'Potion of Invisibility', category: 'consumable', note: 'Turn invisible.' },
+      ];
+      render(<ItemsCard items={categoryItems} maxAttunement={3} onUpdateItems={() => {}} />);
+
+      // Click wand (magic item)
+      fireEvent.click(screen.getByTestId('item-chip-m1'));
+      const viewer = screen.getByTestId('item-viewer-card');
+      expect(viewer).toBeInTheDocument();
+      expect(viewer.textContent).toContain('Wand of Magic Missiles');
+
+      // Animated wrapper has accordion expand animation
+      const wrapper = screen.getByTestId('item-viewer-wrapper');
+      expect(wrapper.className).toContain('animate-accordion-down');
+
+      // Card element has animated height transition
+      expect(viewer.className).toContain('transition-[height,background-color]');
+      expect(viewer.style.height).toBe('142px'); // 64px header/paddings + 4 lines * 19.5px
+
+      // Header does not have redundant color dot
+      expect(viewer.querySelector('.w-2.h-2.rounded-full')).toBeNull();
+
+      // Click potion (consumable item)
+      fireEvent.click(screen.getByTestId('item-chip-c1'));
+      expect(screen.getByTestId('item-viewer-card')).toBeInTheDocument();
+      expect(screen.getByTestId('item-viewer-card').textContent).toContain('Potion of Invisibility');
+
+      // Close viewer
+      const closeBtn = screen.getByRole('button', { name: 'Close Potion of Invisibility details' });
+      fireEvent.click(closeBtn);
+      // In JSDOM useAccordionMount unmounts synchronously
+      expect(screen.queryByTestId('item-viewer-card')).toBeNull();
     });
 
     it('expands edit textarea rows to match line bucket when editing an 8-line item', () => {

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X, Clock, Compass, Hourglass, Shield, BookPlus, Check } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 function formatSpellLevelSchool(level, school) {
   const levelText = level === 0 ? 'Cantrip' : `${level}${getOrdinal(level)} Level`;
@@ -13,6 +14,8 @@ function getOrdinal(n) {
 }
 
 export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbook, onClose }) {
+  useScrollLock(Boolean(spell));
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -34,7 +37,7 @@ export default function SpellDetailDrawer({ spell, isInSpellbook, onAddToSpellbo
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in overscroll-contain">
       {/* Background click to dismiss */}
       <div className="absolute inset-0" onClick={onClose} />
 

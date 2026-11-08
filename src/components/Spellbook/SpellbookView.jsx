@@ -7,6 +7,7 @@ import { isWizardCharacter, getEffectiveMaxCantripsInfo } from '../../utils/spel
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
+import useAccordionMount from '../../hooks/useAccordionMount';
 
 const CLASSES = [
   'Artificer',
@@ -68,7 +69,8 @@ function SpellbookView({
   const [isCollapsed, setIsCollapsed] = useState(false);
   const spellbookAccordionRef = useAutoScrollOnExpand(!isCollapsed, { durationMs: 200, offset: 0 });
   const [showFilters, setShowFilters] = useState(false);
-  const filtersAccordionRef = useAutoScrollOnExpand(showFilters);
+  const { shouldRender: showFiltersMounted, isClosing: isFiltersClosing } = useAccordionMount(showFilters, 200);
+  const filtersAccordionRef = useAutoScrollOnExpand(showFiltersMounted);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [collapsedLevels, setCollapsedLevels] = useState({});
   const [expandedSpellId, setExpandedSpellId] = useState(null);
@@ -291,8 +293,14 @@ function SpellbookView({
         aria-hidden={isCollapsed}
       >
         {/* Expandable Spellbook Filter Accordion */}
-        {showFilters && (
-          <div ref={filtersAccordionRef} className="flex-shrink-0 mb-2 space-y-2 pb-2 border-b border-white/5">
+        {showFiltersMounted && (
+          <div
+            ref={filtersAccordionRef}
+            className={`flex-shrink-0 ${
+              isFiltersClosing ? 'animate-accordion-up' : 'animate-accordion-down'
+            }`}
+          >
+            <div className="overflow-hidden min-h-0 space-y-2 pb-2 mb-2 border-b border-white/5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <select
               value={filters.level}
@@ -443,8 +451,9 @@ function SpellbookView({
               </button>
             )}
           </div>
-        </div>
-      )}
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll -mx-1 px-1 -mb-1 pb-1">
         {!hasAnySpells ? (

@@ -19,7 +19,7 @@ describe('ResourcesCard', () => {
       />
     );
     expect(screen.getByText('Lucky')).toBeInTheDocument();
-    expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    expect(screen.getByText((_, el) => el?.textContent?.replace(/\s+/g, ' ').trim() === '2 / 3')).toBeInTheDocument();
 
     const incBtn = screen.getByLabelText('Increment Lucky');
     fireEvent.click(incBtn);
@@ -214,5 +214,17 @@ describe('ResourcesCard', () => {
     Object.defineProperty(textarea, 'scrollHeight', { value: 150, configurable: true });
     rerender(<ResourcesCard featuresNotes={'Line 1\nLine 2\nLine 3\nLine 4\nLine 5'} />);
     expect(textarea.style.height).toBe('150px');
+  });
+
+  it('renders resource counter stepper with Level 3 bg-dnd-panel/70', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={() => {}}
+      />
+    );
+    const counterPill = screen.getByText((_, el) => el?.textContent?.replace(/\s+/g, ' ').trim() === '2 / 3').closest('div');
+    expect(counterPill.className).toContain('bg-dnd-panel/70');
   });
 });

@@ -15,12 +15,14 @@ const SKILL_COLUMNS = [
 export default function SkillsCard({
   abilities = {},
   skills = {},
+  skillBonuses = {},
   level = 1,
   senses = {},
   filterQuery: externalFilterQuery,
   hideSearch = false,
   isEditing = false,
   onUpdateSkills,
+  onUpdateSkillBonuses,
   onUpdateSenses,
 }) {
   const [internalFilterQuery, setInternalFilterQuery] = useState('');
@@ -28,24 +30,31 @@ export default function SkillsCard({
   const showSearch = !hideSearch && externalFilterQuery === undefined;
 
   const currentSkills = skills || {};
-  const currentSenses = senses || { darkvision: 0, custom: '' };
+  const currentSkillBonuses = skillBonuses || {};
+  const currentSenses = senses || { darkvision: 0, custom: '', bonuses: {} };
   const safeLevel = Number(level) || 1;
 
   // Passives calculation
   const autoPerception = calculatePassiveScore(
     abilities.wis ?? 10,
     currentSkills.perception || 'none',
-    safeLevel
+    safeLevel,
+    currentSenses.bonuses?.perception || 0,
+    currentSkillBonuses.perception || 0
   );
   const autoInvestigation = calculatePassiveScore(
     abilities.int ?? 10,
     currentSkills.investigation || 'none',
-    safeLevel
+    safeLevel,
+    currentSenses.bonuses?.investigation || 0,
+    currentSkillBonuses.investigation || 0
   );
   const autoInsight = calculatePassiveScore(
     abilities.wis ?? 10,
     currentSkills.insight || 'none',
-    safeLevel
+    safeLevel,
+    currentSenses.bonuses?.insight || 0,
+    currentSkillBonuses.insight || 0
   );
 
   const passivePerception = currentSenses.overrides?.perception ?? autoPerception;
@@ -90,6 +99,15 @@ export default function SkillsCard({
     onUpdateSkills?.({
       ...currentSkills,
       [skillKey]: next,
+    });
+  };
+
+  const handleSkillBonusChange = (skillKey, value) => {
+    if (!isEditing) return;
+    const num = value === '' ? 0 : Number(value);
+    onUpdateSkillBonuses?.({
+      ...currentSkillBonuses,
+      [skillKey]: isNaN(num) ? 0 : num,
     });
   };
 
@@ -138,7 +156,7 @@ export default function SkillsCard({
                 aria-label="Passive Perception score"
                 value={passivePerception}
                 onChange={(e) => handlePassiveChange('perception', e.target.value)}
-                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20"
+                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {isPerceptionOverridden && (
                 <button
@@ -168,7 +186,7 @@ export default function SkillsCard({
                 aria-label="Passive Investigation score"
                 value={passiveInvestigation}
                 onChange={(e) => handlePassiveChange('investigation', e.target.value)}
-                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20"
+                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {isInvestigationOverridden && (
                 <button
@@ -198,7 +216,7 @@ export default function SkillsCard({
                 aria-label="Passive Insight score"
                 value={passiveInsight}
                 onChange={(e) => handlePassiveChange('insight', e.target.value)}
-                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20"
+                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
               {isInsightOverridden && (
                 <button
@@ -229,7 +247,7 @@ export default function SkillsCard({
             aria-label="Darkvision distance"
             value={currentSenses.darkvision ?? 0}
             onChange={isEditing ? (e) => handleSensesChange('darkvision', Number(e.target.value)) : undefined}
-            className={`w-12 px-1 py-0.2 rounded text-xs font-bold text-center text-purple-300 transition-colors ${
+            className={`w-12 px-1 py-0.2 rounded text-xs font-bold text-center text-purple-300 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
               isEditing
                 ? 'bg-dnd-panel focus:outline-none focus:ring-1 focus:ring-white/25 focus:border-white/30 focus:shadow-[0_0_8px_rgba(255,255,255,0.08)]'
                 : 'bg-transparent cursor-default select-none focus:outline-none'
@@ -258,7 +276,8 @@ export default function SkillsCard({
                       {groupSkills.map((s) => {
                         const prof = currentSkills[s.key] || 'none';
                         const abilityScore = abilities[s.ability] ?? 10;
-                        const bonus = calculateSkillBonus(abilityScore, prof, safeLevel);
+                        const skillMiscBonus = currentSkillBonuses[s.key] || 0;
+                        const bonus = calculateSkillBonus(abilityScore, prof, safeLevel, undefined, skillMiscBonus);
                         const isProf = prof === 'proficient';
                         const isExp = prof === 'expertise';
 
@@ -313,13 +332,29 @@ export default function SkillsCard({
                               </span>
                             </div>
 
-                            <span
-                              className={`text-xs font-bold ${
-                                isExp ? 'text-amber-400' : isProf ? 'text-dnd-gold' : 'text-slate-400'
-                              }`}
-                            >
-                              {formatModifier(bonus)}
-                            </span>
+                            <div className="flex items-center">
+                              <span
+                                className={`text-xs font-bold ${
+                                  isExp ? 'text-amber-400' : isProf ? 'text-dnd-gold' : 'text-slate-400'
+                                }`}
+                              >
+                                {formatModifier(bonus)}
+                              </span>
+                              {isEditing && (
+                                <input
+                                  type="number"
+                                  aria-label={`${s.label} misc bonus`}
+                                  placeholder="+0"
+                                  value={
+                                    currentSkillBonuses[s.key] !== undefined && currentSkillBonuses[s.key] !== 0
+                                      ? currentSkillBonuses[s.key]
+                                      : ''
+                                  }
+                                  onChange={(e) => handleSkillBonusChange(s.key, e.target.value)}
+                                  className="w-9 px-1 py-0.5 rounded bg-dnd-panel text-[11px] font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ml-1.5"
+                                />
+                              )}
+                            </div>
                           </div>
                         );
                       })}

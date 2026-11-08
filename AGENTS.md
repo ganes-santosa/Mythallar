@@ -45,13 +45,14 @@ Mythallar: D&D 5e spellbook SPA. React 18, Vite 6, Tailwind 3, Vitest, lucide-re
   1. Version updated in `package.json` AND `src/version.js`.
   2. Test and build pass (`npm.cmd test -- --run`, `npm.cmd run build`).
   3. Stage the intended files explicitly (including `src/version.js`, `package.json`, `HANDOFF.md`). Never use `git add -A`.
-  4. `git commit -m "release: vX.Y.Z - summary"`, `git tag vX.Y.Z`, `git push origin master --tags` (append `[skip netlify]` if not deploying to production).
+  4. `git commit -m "release: vX.Y.Z - summary [skip ci]"`, `git tag vX.Y.Z`, `git push origin master --tags` (omit `[skip ci]` or trigger deployment only when ready to ship).
 - Never move or force-push a published tag. If something is wrong, ship the next patch.
 
-## Handoff & Netlify credits
-- Every push to `master` without `[skip netlify]` costs 15 Netlify credits (free plan: 300/month).
-- Commit locally as often as needed. Push to `master` only for a release or a cross-machine handoff.
+## Deployment & Handoff
+- Live deployment: Vercel (`https://mythallar.vercel.app/`). Single-page app routing handled by `vercel.json`.
+- Commit locally as often as needed. Push to `master` for releases or cross-machine handoffs.
+- Always include `[skip ci] [skip netlify]` (or `[skip vercel]` / `[skip ci]`) in commit messages when pushing routine commits or switching machines to avoid burning Vercel build minutes and Netlify credits. Only push without skip flags when deploying production releases.
 - When user says **"wrap up for handoff"** (or before any commit/push):
   1. Update `HANDOFF.md` (~25 lines max: current state, next up, open questions; do not duplicate `git log`).
   2. Stage intended files explicitly (including `HANDOFF.md`). Never use `git add -A`.
-  3. If pushing only to switch machines (not deploying), append `[skip netlify]` to the commit message and `git push origin master`.
+  3. `git commit -m "... [skip ci] [skip netlify]"` and `git push origin master`.

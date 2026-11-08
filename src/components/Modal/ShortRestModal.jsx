@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Sun, Heart, Dices, X, AlertCircle, Zap, CheckCircle2, Sparkles } from 'lucide-react';
-import { getAbilityModifier, formatModifier, rollHitDie } from '../../utils/dndCalculations';
+import { useScrollLock } from '../../hooks/useScrollLock';
+import { getAbilityModifier, formatModifier, rollHitDie, getEffectiveAbilities } from '../../utils/dndCalculations';
 import { normalizeHitDice } from '../../utils/storage';
 import { getMaxArcaneRecoveryLevels, getWizardLevel } from '../../utils/spellSlots';
 import { SlotPipStar } from './ArcaneRecoveryModal';
@@ -20,9 +21,12 @@ export default function ShortRestModal({
   const [toast, setToast] = useState(null);
   const toastTimeoutRef = useRef(null);
 
+  useScrollLock(isOpen);
+
   const vitals = character?.sheet?.vitals || {};
   const hitDice = normalizeHitDice(vitals, character || {});
-  const conScore = character?.sheet?.abilities?.con ?? 10;
+  const effectiveAbilities = getEffectiveAbilities(character?.sheet?.abilities || {});
+  const conScore = effectiveAbilities.con ?? 10;
   const conMod = getAbilityModifier(conScore);
 
   const baseMax = Number.isFinite(vitals.hpMax) ? vitals.hpMax : 10;
@@ -197,7 +201,7 @@ export default function ShortRestModal({
     <div
       role="dialog"
       aria-labelledby="short-rest-modal-title"
-      className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in"
+      className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain"
     >
       <div className="relative bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
         {/* Floating Toast Popup for Hit Die Rolls */}

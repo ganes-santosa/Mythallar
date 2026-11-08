@@ -62,4 +62,10 @@ describe('ProficienciesCard', () => {
     fireEvent.pointerDown(document.body);
     expect(screen.queryByPlaceholderText('e.g. Shields')).not.toBeInTheDocument();
   });
+
+  it('renders proficiency tag chips with Level 3 bg-dnd-panel/70', () => {
+    render(<ProficienciesCard proficiencies={mockProficiencies} onUpdateProficiencies={() => {}} />);
+    const chip = screen.getByText('Light Armor').closest('.group');
+    expect(chip.className).toContain('bg-dnd-panel/70');
+  });
 });

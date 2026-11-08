@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, X, Feather } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 export const DND_CLASSES = [
   'Artificer',
@@ -21,6 +22,8 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate }) {
   const [name, setName] = useState('');
   const [className, setClassName] = useState('Wizard');
 
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const handleSubmit = (e) => {
@@ -33,7 +36,7 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain">
       <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-md w-full shadow-2xl space-y-4">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-2 border-b border-white/5">

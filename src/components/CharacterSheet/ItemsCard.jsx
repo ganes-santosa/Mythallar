@@ -4,7 +4,6 @@ import {
   Wand,
   Amphora,
   ScrollText,
-  Stone,
   LayoutGridCircles,
   Plus,
   X,
@@ -12,18 +11,91 @@ import {
   Blend,
   Waypoints,
   Pencil,
+  Circle,
+  Search,
 } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
+import useAccordionMount from '../../hooks/useAccordionMount';
+
+export function OctahedronIcon({ size = 16, className = '', ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M12.859 21.652l8.845 -8.949a.984 .984 0 0 0 0 -1.407l-8.845 -8.948a1.233 1.233 0 0 0 -1.718 0l-8.845 8.949a.984 .984 0 0 0 0 1.407l8.845 8.949a1.234 1.234 0 0 0 1.718 -.001" />
+      <path d="M2 12c.004 .086 .103 .178 .296 .246l8.845 2.632c.459 .163 1.259 .163 1.718 0l8.845 -2.632c.195 -.07 .294 -.156 .296 -.243" />
+      <path d="M12 2.12v19.76" />
+    </svg>
+  );
+}
 
 export const ITEM_COLORS = [
-  { id: 'slate', label: 'Slate', bg: 'bg-slate-800/40', text: 'text-slate-300', dot: 'bg-slate-400' },
-  { id: 'emerald', label: 'Emerald', bg: 'bg-emerald-950/40', text: 'text-emerald-300', dot: 'bg-emerald-400' },
-  { id: 'sky', label: 'Sky', bg: 'bg-sky-950/40', text: 'text-sky-300', dot: 'bg-sky-400' },
-  { id: 'purple', label: 'Purple', bg: 'bg-purple-950/40', text: 'text-purple-300', dot: 'bg-purple-400' },
-  { id: 'amber', label: 'Amber', bg: 'bg-amber-950/60', text: 'text-amber-300', dot: 'bg-amber-400' },
-  { id: 'rose', label: 'Rose', bg: 'bg-rose-950/40', text: 'text-rose-300', dot: 'bg-rose-400' },
+  {
+    id: 'slate',
+    label: 'Slate',
+    bg: 'bg-slate-800/40',
+    text: 'text-slate-300',
+    dot: 'bg-slate-400',
+    color: '#94a3b8',
+    glow: 'linear-gradient(to left, rgba(148, 163, 184, 0.3) 0%, rgba(148, 163, 184, 0.22) 10%, rgba(148, 163, 184, 0.13) 18%, rgba(148, 163, 184, 0.05) 25%, transparent 33.3%)',
+  },
+  {
+    id: 'emerald',
+    label: 'Emerald',
+    bg: 'bg-emerald-950/40',
+    text: 'text-emerald-300',
+    dot: 'bg-emerald-400',
+    color: '#10b981',
+    glow: 'linear-gradient(to left, rgba(16, 185, 129, 0.35) 0%, rgba(16, 185, 129, 0.25) 10%, rgba(16, 185, 129, 0.15) 18%, rgba(16, 185, 129, 0.06) 25%, transparent 33.3%)',
+  },
+  {
+    id: 'sky',
+    label: 'Sky',
+    bg: 'bg-sky-950/40',
+    text: 'text-sky-300',
+    dot: 'bg-sky-400',
+    color: '#0ea5e9',
+    glow: 'linear-gradient(to left, rgba(14, 165, 233, 0.35) 0%, rgba(14, 165, 233, 0.25) 10%, rgba(14, 165, 233, 0.15) 18%, rgba(14, 165, 233, 0.06) 25%, transparent 33.3%)',
+  },
+  {
+    id: 'purple',
+    label: 'Purple',
+    bg: 'bg-purple-950/40',
+    text: 'text-purple-300',
+    dot: 'bg-purple-400',
+    color: '#a855f7',
+    glow: 'linear-gradient(to left, rgba(168, 85, 247, 0.35) 0%, rgba(168, 85, 247, 0.25) 10%, rgba(168, 85, 247, 0.15) 18%, rgba(168, 85, 247, 0.06) 25%, transparent 33.3%)',
+  },
+  {
+    id: 'amber',
+    label: 'Amber',
+    bg: 'bg-amber-950/60',
+    text: 'text-amber-300',
+    dot: 'bg-amber-400',
+    color: '#f59e0b',
+    glow: 'linear-gradient(to left, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0.29) 10%, rgba(245, 158, 11, 0.17) 18%, rgba(245, 158, 11, 0.07) 25%, transparent 33.3%)',
+  },
+  {
+    id: 'rose',
+    label: 'Rose',
+    bg: 'bg-rose-950/40',
+    text: 'text-rose-300',
+    dot: 'bg-rose-400',
+    color: '#f43f5e',
+    glow: 'linear-gradient(to left, rgba(244, 63, 94, 0.4) 0%, rgba(244, 63, 94, 0.29) 10%, rgba(244, 63, 94, 0.17) 18%, rgba(244, 63, 94, 0.07) 25%, transparent 33.3%)',
+  },
 ];
 
 export const COLOR_ORDER = {
@@ -42,7 +114,7 @@ export const ITEM_CATEGORIES = [
   { id: 'magic', label: 'Magic Item', shortLabel: 'Magic', icon: Wand },
   { id: 'consumable', label: 'Consumables', shortLabel: 'Consumables', icon: Amphora },
   { id: 'scroll', label: 'Spell Scrolls', shortLabel: 'Scrolls', icon: ScrollText },
-  { id: 'component', label: 'Spell Components', shortLabel: 'Components', icon: Stone },
+  { id: 'component', label: 'Spell Components', shortLabel: 'Components', icon: OctahedronIcon },
   { id: 'other', label: 'Other', shortLabel: 'Other', icon: LayoutGridCircles },
 ];
 
@@ -107,8 +179,8 @@ function ItemDeleteButton({ item, onDelete }) {
       }}
       className={`ml-1.5 p-0.5 rounded transition-all cursor-pointer ${
         armed
-          ? 'opacity-100 text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
-          : 'opacity-0 group-hover:opacity-100 text-slate-500 hover:text-red-400'
+          ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'text-slate-600 hover:text-red-400'
       }`}
     >
       <X size={10} />
@@ -161,6 +233,380 @@ export function MaxAttunementInput({ value, onChange }) {
   );
 }
 
+function CategoryDetailViewer({
+  viewingItem,
+  groupCategory,
+  editingItemId,
+  editFormProps,
+  onClose,
+  onStartEdit,
+  onToggleAttune,
+}) {
+  const isMatch =
+    Boolean(viewingItem) &&
+    (viewingItem.category === groupCategory ||
+      (viewingItem.category === 'general' && groupCategory === 'gear'));
+
+  const isEditingThisItem = isMatch && Boolean(editingItemId) && editingItemId === viewingItem?.id;
+
+  const { shouldRender, isClosing } = useAccordionMount(isMatch, 200);
+
+  // Keep rendering item data while accordion is collapsing
+  const cachedItemRef = useRef(viewingItem);
+  if (isMatch && viewingItem) {
+    cachedItemRef.current = viewingItem;
+  }
+  const itemToDisplay = isMatch ? viewingItem : cachedItemRef.current;
+
+  if (!shouldRender || !itemToDisplay) return null;
+
+  return (
+    <ItemDetailViewer
+      viewingItem={itemToDisplay}
+      isEditing={isEditingThisItem}
+      editFormProps={editFormProps}
+      isClosing={isClosing}
+      onClose={onClose}
+      onStartEdit={onStartEdit}
+      onToggleAttune={onToggleAttune}
+    />
+  );
+}
+
+function ItemDetailViewer({
+  viewingItem,
+  isEditing = false,
+  editFormProps,
+  isClosing = false,
+  onClose,
+  onStartEdit,
+  onToggleAttune,
+}) {
+  if (!viewingItem) return null;
+
+  if (isEditing && editFormProps) {
+    return (
+      <div
+        data-testid="item-viewer-wrapper"
+        className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
+      >
+        <div className="overflow-hidden p-0.5 pb-2">
+          <ItemForm {...editFormProps} />
+        </div>
+      </div>
+    );
+  }
+
+  const viewerColorCfg = getColorConfig(viewingItem.color || viewingItem.rarity);
+  const viewerCatCfg = getCategoryConfig(viewingItem.category);
+  const ViewerCategoryIcon = viewerCatCfg.icon;
+  const isViewerAttuned = Boolean(viewingItem.attuned && viewingItem.requiresAttunement);
+
+  const noteText = viewingItem.note || viewingItem.description || '';
+  const bucket = getLineBucket(noteText);
+  // Base card header + paddings + border is ~64px; notes area is bucket * 19.5px
+  const totalViewerHeight = Math.round(64 + bucket * 19.5);
+
+  return (
+    <div
+      data-testid="item-viewer-wrapper"
+      className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
+    >
+      <div className="overflow-hidden p-0.5 pb-2">
+        <div
+          data-testid="item-viewer-card"
+          style={{ height: `${totalViewerHeight}px` }}
+          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
+        >
+          <div className="flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <ViewerCategoryIcon size={14} className="shrink-0 text-dnd-gold opacity-90" />
+              <span className="font-bold text-sm text-slate-100 truncate">
+                {viewingItem.name}
+              </span>
+              {viewingItem.quantity > 1 && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-200">
+                  x{viewingItem.quantity}
+                </span>
+              )}
+              <span className="text-[11px] text-slate-400 font-medium">
+                {viewerCatCfg.label}
+              </span>
+            </div>
+
+            <div className="flex items-center space-x-1.5 shrink-0">
+              {viewingItem.requiresAttunement && (
+                <button
+                  type="button"
+                  aria-label={isViewerAttuned ? `Unattune ${viewingItem.name}` : `Attune ${viewingItem.name}`}
+                  onClick={() => onToggleAttune(viewingItem.id)}
+                  className={`flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
+                    isViewerAttuned
+                      ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40'
+                      : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      isViewerAttuned
+                        ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]'
+                        : 'bg-slate-500'
+                    }`}
+                  />
+                  <span>{isViewerAttuned ? 'Attuned' : 'Attune'}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                aria-label={`Edit ${viewingItem.name}`}
+                title={`Edit ${viewingItem.name}`}
+                onClick={(e) => onStartEdit(viewingItem, e)}
+                className="p-1 rounded text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <Pencil size={12} />
+              </button>
+
+              <button
+                type="button"
+                aria-label={`Close ${viewingItem.name} details`}
+                title="Close details"
+                onClick={onClose}
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+
+          <div
+            data-testid="item-viewer-notes"
+            className="flex-1 min-h-0 pt-2 mt-2 border-t border-white/5 text-slate-300 text-xs overflow-y-auto pr-1"
+          >
+            {viewingItem.note || viewingItem.description ? (
+              <p className="whitespace-pre-wrap leading-relaxed text-slate-300">
+                {viewingItem.note || viewingItem.description}
+              </p>
+            ) : (
+              <p className="text-slate-500 italic text-[11px] leading-relaxed">
+                No description or notes recorded.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ItemForm({
+  formRef,
+  editingItemId,
+  name,
+  setName,
+  nameError,
+  setNameError,
+  quantity,
+  setQuantity,
+  color,
+  setColor,
+  isColorMenuOpen,
+  setIsColorMenuOpen,
+  colorDropdownRef,
+  selectedColorConfig,
+  category,
+  setCategory,
+  note,
+  setNote,
+  editBucket,
+  requiresAttunement,
+  setRequiresAttunement,
+  onSubmit,
+  onCancel,
+}) {
+  return (
+    <form
+      ref={formRef}
+      noValidate
+      data-testid={editingItemId ? 'item-edit-form' : 'item-add-form'}
+      onSubmit={onSubmit}
+      className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30 animate-fadeIn"
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-bold text-dnd-gold text-[11px]">
+          {editingItemId ? 'Edit Item' : 'Add New Item'}
+        </span>
+        <button
+          type="button"
+          aria-label="Cancel"
+          onClick={onCancel}
+          className="text-slate-400 hover:text-white"
+        >
+          <X size={13} />
+        </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-2">
+        {/* Item Name */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-0.5">
+            <label htmlFor={editingItemId ? `itm-name-${editingItemId}` : 'itm-name'} className="block text-[10px] text-slate-400">
+              Item Name
+            </label>
+            {nameError && (
+              <span className="text-[9px] text-red-400 font-semibold">Name required</span>
+            )}
+          </div>
+          <input
+            id={editingItemId ? `itm-name-${editingItemId}` : 'itm-name'}
+            aria-label="Item Name"
+            type="text"
+            placeholder="e.g. Ring of Spell Storing"
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError(false);
+            }}
+            className={`w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none transition-colors ${
+              nameError
+                ? 'border border-red-500/60 ring-1 ring-red-500/40'
+                : 'focus:ring-1 focus:ring-white/20'
+            }`}
+          />
+        </div>
+
+        {/* Quantity */}
+        <div className="w-14 shrink-0">
+          <label htmlFor={editingItemId ? `itm-qty-${editingItemId}` : 'itm-qty'} className="block text-[10px] text-slate-400 mb-0.5 text-center">
+            Qty
+          </label>
+          <input
+            id={editingItemId ? `itm-qty-${editingItemId}` : 'itm-qty'}
+            aria-label="Quantity"
+            type="number"
+            min="1"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+            className="w-full px-1.5 py-1 rounded bg-dnd-panel text-slate-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-white/20 h-[26px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        </div>
+
+        {/* Color Tag Dropdown */}
+        <div className="w-11 shrink-0 relative" ref={colorDropdownRef}>
+          <label className="block text-[10px] text-slate-400 mb-0.5 text-center">
+            Color
+          </label>
+          <button
+            type="button"
+            aria-label="Select color tag"
+            onClick={() => setIsColorMenuOpen((prev) => !prev)}
+            className="w-full px-1 py-1 rounded bg-dnd-panel text-slate-200 text-xs flex items-center justify-center gap-1 hover:bg-dnd-panel/90 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors h-[26px]"
+          >
+            <span className={`w-3.5 h-3.5 rounded-full ${selectedColorConfig.dot} shadow-sm shrink-0`} />
+            <ChevronDown size={10} className={`text-slate-400 transition-transform ${isColorMenuOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isColorMenuOpen && (
+            <div className="absolute left-0 top-full mt-1.5 p-1.5 rounded-lg bg-dnd-card shadow-lg ring-1 ring-white/10 z-30 grid grid-cols-3 gap-1.5 w-[84px]">
+              {ITEM_COLORS.map((c) => {
+                const isSelected = color === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    aria-label={`Select ${c.id}`}
+                    onClick={() => {
+                      setColor(c.id);
+                      setIsColorMenuOpen(false);
+                    }}
+                    className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                      isSelected
+                        ? 'ring-2 ring-white scale-110 shadow-sm'
+                        : 'opacity-70 hover:opacity-100 hover:scale-105'
+                    }`}
+                  >
+                    <span className={`w-3.5 h-3.5 rounded-full ${c.dot}`} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Category */}
+        <div className="w-40 shrink-0">
+          <label htmlFor={editingItemId ? `itm-cat-${editingItemId}` : 'itm-cat'} className="block text-[10px] text-slate-400 mb-0.5">
+            Category
+          </label>
+          <select
+            id={editingItemId ? `itm-cat-${editingItemId}` : 'itm-cat'}
+            aria-label="Category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 h-[26px]"
+          >
+            <option value="gear">Gear & Equipment</option>
+            <option value="magic">Magic Item</option>
+            <option value="consumable">Consumables</option>
+            <option value="scroll">Spell Scrolls</option>
+            <option value="component">Spell Components</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Description / Notes */}
+      <div>
+        <label htmlFor={editingItemId ? `itm-note-${editingItemId}` : 'itm-note'} className="block text-[10px] text-slate-400 mb-0.5">
+          Description / Notes
+        </label>
+        <textarea
+          id={editingItemId ? `itm-note-${editingItemId}` : 'itm-note'}
+          aria-label="Item Description"
+          rows={editBucket}
+          placeholder="Effects, charges, properties, or details..."
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          style={{
+            minHeight: `${editBucket * 20 + 16}px`,
+            maxHeight: `${Math.max(editBucket, 16) * 20 + 16}px`,
+          }}
+          className="w-full px-2 py-1.5 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 transition-[min-height,height] duration-300 ease-in-out resize-y"
+        />
+      </div>
+
+      <div className="flex items-center justify-between pt-1">
+        <label className="flex items-center space-x-2 text-slate-300 text-xs cursor-pointer select-none">
+          <input
+            type="checkbox"
+            aria-label="Requires Attunement"
+            checked={requiresAttunement}
+            onChange={(e) => setRequiresAttunement(e.target.checked)}
+            className="rounded bg-dnd-panel text-dnd-gold focus:ring-0"
+          />
+          <span>Requires Attunement</span>
+        </label>
+
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-2.5 py-1 rounded bg-dnd-panel text-slate-300 text-xs hover:text-white"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="px-3 py-1 rounded bg-dnd-gold text-slate-950 font-bold hover:bg-dnd-gold-light text-xs"
+          >
+            {editingItemId ? 'Update Item' : 'Save Item'}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
 export default function ItemsCard({
   items = [],
   maxAttunement = 3,
@@ -201,6 +647,7 @@ export default function ItemsCard({
   // Active viewed item & edit state
   const [viewingItemId, setViewingItemId] = useState(null);
   const [editingItemId, setEditingItemId] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // New/Edit item form state
   const [name, setName] = useState('');
@@ -223,34 +670,9 @@ export default function ItemsCard({
     return safeItems.find((i) => i.id === viewingItemId) || null;
   }, [safeItems, viewingItemId]);
 
-  const addFormRef = useAutoScrollOnExpand(Boolean(isAdding));
+  const addFormRef = useAutoScrollOnExpand(Boolean(isAdding && !editingItemId));
+  const editFormRef = useAutoScrollOnExpand(Boolean(editingItemId));
   const filtersRef = useAutoScrollOnExpand(Boolean(showFilters));
-  const viewerAccordionRef = useAutoScrollOnExpand(Boolean(viewingItem && !isAdding), { durationMs: 360 });
-
-  const viewerTextRef = useRef(null);
-  const [measuredViewerLines, setMeasuredViewerLines] = useState(null);
-
-  useEffect(() => {
-    if (!viewingItemId || !viewerTextRef.current) {
-      setMeasuredViewerLines(null);
-      return;
-    }
-    const update = () => {
-      if (viewerTextRef.current) {
-        const computed = window.getComputedStyle(viewerTextRef.current);
-        const lh = parseFloat(computed.lineHeight) || 19.5;
-        const sh = viewerTextRef.current.scrollHeight;
-        if (sh > 0) {
-          const lines = Math.max(1, Math.round(sh / lh));
-          setMeasuredViewerLines(lines);
-        }
-      }
-    };
-    update();
-    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
-    if (ro && viewerTextRef.current) ro.observe(viewerTextRef.current);
-    return () => ro?.disconnect();
-  }, [viewingItemId, safeItems]);
 
   const toggleAttune = (itemId) => {
     const updated = safeItems.map((item) => {
@@ -273,7 +695,6 @@ export default function ItemsCard({
     setNote(item.note || item.description || '');
     setEditingItemId(item.id);
     setNameError(false);
-    setIsAdding(true);
   };
 
   const handleCancel = () => {
@@ -345,6 +766,7 @@ export default function ItemsCard({
   };
 
   const { groupedItems, totalFilteredCount } = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     const filtered = safeItems.filter((item) => {
       if (selectedCategory !== 'all') {
         const itemCat = item.category === 'general' ? 'gear' : item.category;
@@ -355,6 +777,13 @@ export default function ItemsCard({
       if (selectedColor !== 'all') {
         const itemColor = getColorConfig(item.color || item.rarity).id;
         if (itemColor !== selectedColor) {
+          return false;
+        }
+      }
+      if (query) {
+        const nameMatch = (item.name || '').toLowerCase().includes(query);
+        const noteMatch = (item.note || item.description || '').toLowerCase().includes(query);
+        if (!nameMatch && !noteMatch) {
           return false;
         }
       }
@@ -390,12 +819,37 @@ export default function ItemsCard({
       groupedItems: groups,
       totalFilteredCount: filtered.length,
     };
-  }, [safeItems, selectedCategory, selectedColor]);
+  }, [safeItems, selectedCategory, selectedColor, searchQuery]);
 
   const selectedColorConfig = getColorConfig(color);
 
   return (
     <div className="space-y-2.5">
+      {/* Search Bar & Toolbar */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+          <input
+            type="text"
+            aria-label="Search inventory"
+            placeholder="Search inventory..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card text-slate-200 placeholder-slate-500 border border-white/5 focus:outline-none focus:ring-1 focus:ring-dnd-gold/60"
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Header action bar (fallback when not mounted in AccordionSection) */}
       {!hideHeaderActions && (
         <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">
@@ -470,186 +924,33 @@ export default function ItemsCard({
         </p>
       )}
 
-      {/* Inline Add / Edit Item Form */}
-      {isAdding && (
-        <form
-          ref={addFormRef}
-          noValidate
+      {/* Inline Add Item Form (New items only) */}
+      {isAdding && !editingItemId && (
+        <ItemForm
+          formRef={addFormRef}
+          editingItemId={null}
+          name={name}
+          setName={setName}
+          nameError={nameError}
+          setNameError={setNameError}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          color={color}
+          setColor={setColor}
+          isColorMenuOpen={isColorMenuOpen}
+          setIsColorMenuOpen={setIsColorMenuOpen}
+          colorDropdownRef={colorDropdownRef}
+          selectedColorConfig={selectedColorConfig}
+          category={category}
+          setCategory={setCategory}
+          note={note}
+          setNote={setNote}
+          editBucket={editBucket}
+          requiresAttunement={requiresAttunement}
+          setRequiresAttunement={setRequiresAttunement}
           onSubmit={handleSaveItem}
-          className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30 animate-fadeIn"
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-dnd-gold text-[11px]">
-              {editingItemId ? 'Edit Item' : 'Add New Item'}
-            </span>
-            <button
-              type="button"
-              aria-label="Cancel"
-              onClick={handleCancel}
-              className="text-slate-400 hover:text-white"
-            >
-              <X size={13} />
-            </button>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-2">
-            {/* Item Name (takes all remaining flex space) */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-0.5">
-                <label htmlFor="itm-name" className="block text-[10px] text-slate-400">
-                  Item Name
-                </label>
-                {nameError && (
-                  <span className="text-[9px] text-red-400 font-semibold">Name required</span>
-                )}
-              </div>
-              <input
-                id="itm-name"
-                aria-label="Item Name"
-                type="text"
-                placeholder="e.g. Ring of Spell Storing"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (nameError) setNameError(false);
-                }}
-                className={`w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none transition-colors ${
-                  nameError
-                    ? 'border border-red-500/60 ring-1 ring-red-500/40'
-                    : 'focus:ring-1 focus:ring-white/20'
-                }`}
-              />
-            </div>
-
-            {/* Quantity */}
-            <div className="w-14 shrink-0">
-              <label htmlFor="itm-qty" className="block text-[10px] text-slate-400 mb-0.5 text-center">
-                Qty
-              </label>
-              <input
-                id="itm-qty"
-                aria-label="Quantity"
-                type="number"
-                min="1"
-                value={quantity}
-                onChange={(e) => setQuantity(e.target.value)}
-                className="w-full px-1.5 py-1 rounded bg-dnd-panel text-slate-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-white/20 h-[26px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-            </div>
-
-            {/* Color Tag Dropdown (to the left of Category) */}
-            <div className="w-11 shrink-0 relative" ref={colorDropdownRef}>
-              <label className="block text-[10px] text-slate-400 mb-0.5 text-center">
-                Color
-              </label>
-              <button
-                type="button"
-                aria-label="Select color tag"
-                onClick={() => setIsColorMenuOpen((prev) => !prev)}
-                className="w-full px-1 py-1 rounded bg-dnd-panel text-slate-200 text-xs flex items-center justify-center gap-1 hover:bg-dnd-panel/90 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors h-[26px]"
-              >
-                <span className={`w-3.5 h-3.5 rounded-full ${selectedColorConfig.dot} shadow-sm shrink-0`} />
-                <ChevronDown size={10} className={`text-slate-400 transition-transform ${isColorMenuOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {isColorMenuOpen && (
-                <div className="absolute left-0 top-full mt-1.5 p-1.5 rounded-lg bg-dnd-card shadow-lg ring-1 ring-white/10 z-30 grid grid-cols-3 gap-1.5 w-[84px]">
-                  {ITEM_COLORS.map((c) => {
-                    const isSelected = color === c.id;
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        aria-label={`Select ${c.id}`}
-                        onClick={() => {
-                          setColor(c.id);
-                          setIsColorMenuOpen(false);
-                        }}
-                        className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                          isSelected
-                            ? 'ring-2 ring-white scale-110 shadow-sm'
-                            : 'opacity-70 hover:opacity-100 hover:scale-105'
-                        }`}
-                      >
-                        <span className={`w-3.5 h-3.5 rounded-full ${c.dot}`} />
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Category */}
-            <div className="w-40 shrink-0">
-              <label htmlFor="itm-cat" className="block text-[10px] text-slate-400 mb-0.5">
-                Category
-              </label>
-              <select
-                id="itm-cat"
-                aria-label="Category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 h-[26px]"
-              >
-                <option value="gear">Gear & Equipment</option>
-                <option value="magic">Magic Item</option>
-                <option value="consumable">Consumables</option>
-                <option value="scroll">Spell Scrolls</option>
-                <option value="component">Spell Components</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Description / Notes */}
-          <div>
-            <label htmlFor="itm-note" className="block text-[10px] text-slate-400 mb-0.5">
-              Description / Notes
-            </label>
-            <textarea
-              id="itm-note"
-              aria-label="Item Description"
-              rows={editBucket}
-              placeholder="Effects, charges, properties, or details..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              style={{
-                minHeight: `${editBucket * 20 + 16}px`,
-                maxHeight: `${Math.max(editBucket, 16) * 20 + 16}px`,
-              }}
-              className="w-full px-2 py-1.5 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 transition-[min-height,height] duration-300 ease-in-out resize-y"
-            />
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center space-x-2 text-slate-300 text-xs cursor-pointer select-none">
-              <input
-                type="checkbox"
-                aria-label="Requires Attunement"
-                checked={requiresAttunement}
-                onChange={(e) => setRequiresAttunement(e.target.checked)}
-                className="rounded bg-dnd-panel text-dnd-gold focus:ring-0"
-              />
-              <span>Requires Attunement</span>
-            </label>
-
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="px-2.5 py-1 rounded bg-dnd-panel text-slate-300 text-xs hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-3 py-1 rounded bg-dnd-gold text-slate-950 font-bold hover:bg-dnd-gold-light text-xs"
-              >
-                {editingItemId ? 'Update Item' : 'Save Item'}
-              </button>
-            </div>
-          </div>
-        </form>
+          onCancel={handleCancel}
+        />
       )}
 
       {/* Expandable Items Filter Accordion */}
@@ -733,116 +1034,6 @@ export default function ItemsCard({
         </div>
       )}
 
-      {/* Persistent Item Viewer (Accordion Grid Animation + Stepped Line Buckets 4/8/12/16) */}
-      <div
-        ref={viewerAccordionRef}
-        className={`grid transition-[grid-template-rows] duration-300 ease-in-out ${
-          viewingItem && !isAdding ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-        }`}
-      >
-        <div className="overflow-hidden">
-          {viewingItem && !isAdding && (() => {
-            const viewerColorCfg = getColorConfig(viewingItem.color || viewingItem.rarity);
-            const viewerCatCfg = getCategoryConfig(viewingItem.category);
-            const ViewerCategoryIcon = viewerCatCfg.icon;
-            const isViewerAttuned = Boolean(viewingItem.attuned && viewingItem.requiresAttunement);
-            const noteText = viewingItem.note || viewingItem.description || '';
-            const rawLines = measuredViewerLines !== null ? measuredViewerLines : estimateLinesFromText(noteText);
-            const viewerBucket = getLineBucket(rawLines);
-            const noteHeightPx = viewerBucket * 19.5;
-
-            return (
-              <div className="p-0.5 pb-3">
-                <div
-                  data-testid="item-viewer-card"
-                  className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text}`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center space-x-2 min-w-0">
-                      <span className={`w-2 h-2 rounded-full ${viewerColorCfg.dot} shadow-sm shrink-0`} />
-                      <ViewerCategoryIcon size={14} className="shrink-0 text-dnd-gold opacity-90" />
-                      <span className="font-bold text-sm text-slate-100 truncate">
-                        {viewingItem.name}
-                      </span>
-                      {viewingItem.quantity > 1 && (
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-200">
-                          x{viewingItem.quantity}
-                        </span>
-                      )}
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        {viewerCatCfg.label}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-1.5 shrink-0">
-                      {viewingItem.requiresAttunement && (
-                        <button
-                          type="button"
-                          aria-label={isViewerAttuned ? `Unattune ${viewingItem.name}` : `Attune ${viewingItem.name}`}
-                          onClick={() => toggleAttune(viewingItem.id)}
-                          className={`flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-colors cursor-pointer ${
-                            isViewerAttuned
-                              ? 'bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/40'
-                              : 'bg-white/5 text-slate-400 hover:text-slate-200 hover:bg-white/10'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              isViewerAttuned
-                                ? 'bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]'
-                                : 'bg-slate-500'
-                            }`}
-                          />
-                          <span>{isViewerAttuned ? 'Attuned' : 'Attune'}</span>
-                        </button>
-                      )}
-
-                      <button
-                        type="button"
-                        aria-label={`Edit ${viewingItem.name}`}
-                        title={`Edit ${viewingItem.name}`}
-                        onClick={(e) => handleStartEdit(viewingItem, e)}
-                        className="p-1 rounded text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer"
-                      >
-                        <Pencil size={12} />
-                      </button>
-
-                      <button
-                        type="button"
-                        aria-label={`Close ${viewingItem.name} details`}
-                        title="Close details"
-                        onClick={() => setViewingItemId(null)}
-                        className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
-                      >
-                        <X size={13} />
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      minHeight: `${noteHeightPx}px`,
-                      maxHeight: `${noteHeightPx}px`,
-                    }}
-                    className="pt-1.5 mt-1 border-t border-white/5 text-slate-300 text-xs overflow-y-auto pr-1 transition-[min-height,max-height] duration-300 ease-in-out"
-                  >
-                    {viewingItem.note || viewingItem.description ? (
-                      <p ref={viewerTextRef} className="whitespace-pre-wrap leading-relaxed text-slate-300">
-                        {viewingItem.note || viewingItem.description}
-                      </p>
-                    ) : (
-                      <p ref={viewerTextRef} className="text-slate-500 italic text-[11px] leading-relaxed">
-                        No description or notes recorded.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      </div>
-
       {/* Items Inventory List */}
       <div className="space-y-3 min-h-[22px]">
         {safeItems.length === 0 && !isAdding && (
@@ -851,10 +1042,15 @@ export default function ItemsCard({
 
         {safeItems.length > 0 && totalFilteredCount === 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-500 italic">No items match current filters</span>
+            <span className="text-[10px] text-slate-500 italic">
+              {searchQuery ? `No items matching "${searchQuery}"` : 'No items match current filters'}
+            </span>
             <button
               type="button"
-              onClick={() => setFilters({ category: 'all', color: 'all' })}
+              onClick={() => {
+                setFilters({ category: 'all', color: 'all' });
+                setSearchQuery('');
+              }}
               className="text-[10px] text-dnd-gold hover:underline"
             >
               Reset
@@ -882,8 +1078,46 @@ export default function ItemsCard({
                 </span>
               </div>
 
+              {/* Inline Item Detail Viewer or In-Place Edit Form for this category */}
+              <CategoryDetailViewer
+                viewingItem={viewingItem}
+                groupCategory={group.category}
+                editingItemId={editingItemId}
+                editFormProps={{
+                  formRef: editFormRef,
+                  editingItemId,
+                  name,
+                  setName,
+                  nameError,
+                  setNameError,
+                  quantity,
+                  setQuantity,
+                  color,
+                  setColor,
+                  isColorMenuOpen,
+                  setIsColorMenuOpen,
+                  colorDropdownRef,
+                  selectedColorConfig,
+                  category,
+                  setCategory,
+                  note,
+                  setNote,
+                  editBucket,
+                  requiresAttunement,
+                  setRequiresAttunement,
+                  onSubmit: handleSaveItem,
+                  onCancel: handleCancel,
+                }}
+                onClose={() => {
+                  setViewingItemId(null);
+                  if (editingItemId) handleCancel();
+                }}
+                onStartEdit={handleStartEdit}
+                onToggleAttune={toggleAttune}
+              />
+
               {/* Grid of Items */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-1.5">
                 {group.items.map((item) => {
                   const isAttuned = Boolean(item.attuned && item.requiresAttunement);
                   const colorCfg = getColorConfig(item.color || item.rarity);
@@ -913,30 +1147,26 @@ export default function ItemsCard({
                           }
                         }
                       }}
-                      className={`group relative flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs select-none transition-all shadow-sm cursor-pointer ${
+                      className={`group relative flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
                         isViewing
                           ? 'bg-dnd-card ring-2 ring-white/80 shadow-[0_0_12px_rgba(255,255,255,0.18)] brightness-110'
                           : isAttuned
-                          ? 'bg-dnd-card/90 hover:bg-dnd-hover/90 ring-1 ring-white/20'
-                          : 'bg-dnd-card/60 hover:bg-dnd-hover/80 text-slate-300'
+                          ? 'bg-dnd-card hover:bg-dnd-hover'
+                          : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
                       }`}
                     >
-                      {/* Glowing Bookmark Strip (Spellbook prepared card style) */}
-                      {item.requiresAttunement && (
-                        <div
-                          data-testid="attunement-bookmark-strip"
-                          aria-hidden="true"
-                          className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-lg transition-all duration-300 ${
-                            isAttuned
-                              ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
-                              : 'bg-white/10'
-                          }`}
-                        />
-                      )}
+                      {/* Ease-out gradient originating from the right side and ending at the 2/3 mark */}
+                      <div
+                        aria-hidden="true"
+                        data-testid="item-right-gradient"
+                        style={{
+                          background: colorCfg.glow,
+                        }}
+                        className="absolute inset-0 pointer-events-none rounded-lg"
+                      />
 
-                      {/* Left: Color dot + Item Name */}
-                      <div className={`flex items-center space-x-2 min-w-0 ${item.requiresAttunement ? 'pl-1' : ''}`}>
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${colorCfg.dot}`} />
+                      {/* Left: Item Name */}
+                      <div className="relative z-10 flex items-center space-x-1.5 min-w-0">
                         <span
                           className={`font-semibold truncate ${
                             isViewing ? 'text-white' : isAttuned ? 'text-slate-100' : 'text-slate-200'
@@ -946,8 +1176,8 @@ export default function ItemsCard({
                         </span>
                       </div>
 
-                      {/* Right: Quantity + Attuned Badge + Delete */}
-                      <div className="flex items-center space-x-1.5 shrink-0 ml-2">
+                      {/* Right: Quantity + Compact Attunement Ring Icon + Delete */}
+                      <div className="relative z-10 flex items-center space-x-1.5 shrink-0 ml-2">
                         {item.quantity > 1 && (
                           <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-slate-300">
                             x{item.quantity}
@@ -955,13 +1185,20 @@ export default function ItemsCard({
                         )}
                         {item.requiresAttunement && (
                           <span
-                            className={`text-[9px] px-1.5 py-0.2 rounded font-medium ${
+                            data-testid="attunement-icon"
+                            title={isAttuned ? 'Attuned' : 'Requires Attunement'}
+                            aria-label={isAttuned ? 'Attuned' : 'Requires attunement'}
+                            className={`flex items-center justify-center transition-colors ${
                               isAttuned
-                                ? 'bg-amber-500/20 text-amber-300'
-                                : 'text-slate-500 group-hover:text-slate-400'
+                                ? 'text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.9)]'
+                                : 'text-slate-600 group-hover:text-slate-400'
                             }`}
                           >
-                            {isAttuned ? 'Attuned' : '(attunable)'}
+                            <Circle
+                              size={11}
+                              strokeWidth={isAttuned ? 2.5 : 2}
+                              className={isAttuned ? 'fill-white/20' : ''}
+                            />
                           </span>
                         )}
                         <ItemDeleteButton item={item} onDelete={handleDeleteItem} />

@@ -4,6 +4,7 @@ export const STORAGE_KEY = 'dnd_spellbook_data';
 export const HOMEBREW_SPELLS_KEY = 'dnd_homebrew_spells';
 export const LEGACY_CUSTOM_SPELLS_KEY = 'dnd_custom_spells';
 export const SETTINGS_KEY = 'dnd_spellbook_settings';
+export const DELETED_IDS_STORAGE_KEY = 'mythallar_deleted_ids_v1';
 
 /**
  * Normalizes vitals movement speeds supporting both legacy numeric speed
@@ -298,6 +299,8 @@ export function createDefaultSheet(className = 'Wizard') {
       wis: 10,
       cha: 10,
       saveProficiencies: defaultProficientSaves,
+      scoreBonuses: {},
+      saveBonuses: {},
       overrides: {},
     },
     skills: {
@@ -320,9 +323,11 @@ export function createDefaultSheet(className = 'Wizard') {
       stealth: 'none',
       survival: 'none',
     },
+    skillBonuses: {},
     senses: {
       darkvision: 0,
       custom: '',
+      bonuses: {},
     },
     proficiencies: {
       armor: [],
@@ -391,9 +396,19 @@ export function loadCharacterProfiles() {
           ...defaultSheet,
           ...p.sheet,
           vitals: { ...defaultSheet.vitals, ...(p.sheet.vitals || {}) },
-          abilities: { ...defaultSheet.abilities, ...(p.sheet.abilities || {}) },
+          abilities: {
+            ...defaultSheet.abilities,
+            ...(p.sheet.abilities || {}),
+            scoreBonuses: { ...defaultSheet.abilities.scoreBonuses, ...(p.sheet.abilities?.scoreBonuses || {}) },
+            saveBonuses: { ...defaultSheet.abilities.saveBonuses, ...(p.sheet.abilities?.saveBonuses || {}) },
+          },
           skills: { ...defaultSheet.skills, ...(p.sheet.skills || {}) },
-          senses: { ...defaultSheet.senses, ...(p.sheet.senses || {}) },
+          skillBonuses: { ...defaultSheet.skillBonuses, ...(p.sheet.skillBonuses || {}) },
+          senses: {
+            ...defaultSheet.senses,
+            ...(p.sheet.senses || {}),
+            bonuses: { ...defaultSheet.senses.bonuses, ...(p.sheet.senses?.bonuses || {}) },
+          },
           proficiencies: { ...defaultSheet.proficiencies, ...(p.sheet.proficiencies || {}) },
           identity: { ...defaultSheet.identity, ...(p.sheet.identity || {}) },
         },
@@ -428,3 +443,62 @@ export function saveCharacterProfiles(data) {
     console.error('Error saving character profiles to localStorage', err);
   }
 }
+
+/**
+ * Loads tombstone deleted IDs map { [id]: deletionTimestamp }
+ */
+export function loadDeletedIds() {
+  try {
+    const raw = localStorage.getItem(DELETED_IDS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Records an ID as deleted with a timestamp (defaults to Date.now())
+ */
+export function saveDeletedId(id, timestamp = Date.now()) {
+  if (!id) return;
+  try {
+    const current = loadDeletedIds();
+    const ts = typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime() || Date.now();
+    current[id] = ts;
+    localStorage.setItem(DELETED_IDS_STORAGE_KEY, JSON.stringify(current));
+  } catch (err) {
+    console.error('Error saving deleted ID', err);
+  }
+}
+
+/**
+ * Removes an ID from the deleted tombstone record (e.g. if newly created or restored)
+ */
+export function removeDeletedId(id) {
+  if (!id) return;
+  try {
+    const current = loadDeletedIds();
+    if (id in current) {
+      delete current[id];
+      localStorage.setItem(DELETED_IDS_STORAGE_KEY, JSON.stringify(current));
+    }
+  } catch (err) {
+    console.error('Error removing deleted ID', err);
+  }
+}
+
+/**
+ * Checks whether an item ID was tombstoned and not superseded by a newer updated_at timestamp.
+ */
+export function isDeletedId(id, updatedAt = 0) {
+  if (!id) return false;
+  const deletedIds = loadDeletedIds();
+  const deletedAt = deletedIds[id];
+  if (!deletedAt) return false;
+
+  const itemTs = typeof updatedAt === 'number' ? updatedAt : new Date(updatedAt).getTime() || 0;
+  return itemTs <= deletedAt;
+}
+

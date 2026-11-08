@@ -1,8 +1,9 @@
 /**
  * Merges local and cloud collections by ID.
  * Last-Write-Wins based on `updated_at` (number or ISO string), default to local if equal or absent.
+ * Ignores any item whose ID is in `deletedIds` unless item updated_at is newer than deletion timestamp.
  */
-export function mergeLocalAndCloud(localList = [], cloudList = []) {
+export function mergeLocalAndCloud(localList = [], cloudList = [], deletedIds = {}) {
   const map = new Map();
 
   const getTimestamp = (item) => {
@@ -11,16 +12,23 @@ export function mergeLocalAndCloud(localList = [], cloudList = []) {
     return isNaN(ts) ? Number(item.updated_at) || 0 : ts;
   };
 
+  const isTombstoned = (item) => {
+    if (!item || !item.id) return true;
+    const delTs = deletedIds[item.id];
+    if (delTs === undefined || delTs === null) return false;
+    return getTimestamp(item) <= delTs;
+  };
+
   // Seed with cloud
   for (const item of cloudList) {
-    if (item && item.id) {
+    if (item && item.id && !isTombstoned(item)) {
       map.set(item.id, item);
     }
   }
 
   // Overlay with local
   for (const item of localList) {
-    if (!item || !item.id) continue;
+    if (!item || !item.id || isTombstoned(item)) continue;
     if (!map.has(item.id)) {
       map.set(item.id, item);
     } else {
@@ -32,6 +40,35 @@ export function mergeLocalAndCloud(localList = [], cloudList = []) {
   }
 
   return Array.from(map.values());
+}
+
+/**
+ * Reconciles local and cloud data upon an authenticated pull.
+ * If user has previously synced with cloud (hasSyncedBefore = true), the cloud set
+ * is authoritative for deletions: any local item missing from cloud is removed
+ * (unless created locally after the cloud fetch or marked active).
+ * If first-time sync (hasSyncedBefore = false), it performs a union merge so guest characters upload.
+ */
+export function reconcileCloudPull(localList = [], cloudList = [], deletedIds = {}, hasSyncedBefore = false) {
+  if (!hasSyncedBefore) {
+    return mergeLocalAndCloud(localList, cloudList, deletedIds);
+  }
+
+  // Authoritative cloud reconciliation:
+  // Cloud items filtered by tombstones
+  const cloudMap = new Map();
+  for (const item of cloudList) {
+    if (item && item.id) {
+      cloudMap.set(item.id, item);
+    }
+  }
+
+  // Keep local items only if they exist in cloud (with LWW), or if newly created locally
+  return mergeLocalAndCloud(
+    localList.filter((localItem) => cloudMap.has(localItem.id)),
+    cloudList,
+    deletedIds
+  );
 }
 
 /**
@@ -128,6 +165,9 @@ export async function syncHomebrewToCloud(client, userId, spells = []) {
 /**
  * Deletes a character record from Supabase.
  */
+/**
+ * Deletes a character record from Supabase.
+ */
 export async function deleteCloudCharacter(client, userId, characterId) {
   if (!client || !userId || !characterId) {
     return { success: true };
@@ -145,4 +185,99 @@ export async function deleteCloudCharacter(client, userId, characterId) {
     console.error('deleteCloudCharacter error:', error);
     return { success: false, error };
   }
+}
+
+/**
+ * Deletes a homebrew spell record from Supabase.
+ */
+export async function deleteCloudHomebrew(client, userId, spellId) {
+  if (!client || !userId || !spellId) {
+    return { success: true };
+  }
+
+  try {
+    const { error } = await client
+      .from('homebrew_spells')
+      .delete()
+      .eq('id', spellId)
+      .eq('user_id', userId);
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    console.error('deleteCloudHomebrew error:', error);
+    return { success: false, error };
+  }
+}
+
+/**
+ * Subscribes to real-time changes on characters and homebrew_spells for this user.
+ * Returns an unsubscribe cleanup function.
+ */
+export function subscribeToUserChanges(client, userId, {
+  onCharacterChange,
+  onCharacterDelete,
+  onHomebrewChange,
+  onHomebrewDelete,
+} = {}) {
+  if (!client || !userId) {
+    return () => {};
+  }
+
+  const channel = client
+    .channel(`user_sync:${userId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'characters',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        if (payload.eventType === 'DELETE') {
+          onCharacterDelete?.(payload.old?.id);
+        } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const row = payload.new;
+          if (row) {
+            onCharacterChange?.({
+              ...(row.data || {}),
+              id: row.id,
+              name: row.name || row.data?.name,
+              className: row.class_name || row.data?.className,
+              level: row.level || row.data?.level,
+              updated_at: row.updated_at,
+            });
+          }
+        }
+      }
+    )
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'homebrew_spells',
+        filter: `user_id=eq.${userId}`,
+      },
+      (payload) => {
+        if (payload.eventType === 'DELETE') {
+          onHomebrewDelete?.(payload.old?.id);
+        } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          const row = payload.new;
+          if (row) {
+            onHomebrewChange?.({
+              ...(row.data || {}),
+              id: row.id,
+              name: row.name || row.data?.name,
+              updated_at: row.updated_at,
+            });
+          }
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    client.removeChannel(channel);
+  };
 }

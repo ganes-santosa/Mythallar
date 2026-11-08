@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, FlaskRound, Plus } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 const SCHOOLS = [
   'Abjuration',
@@ -45,6 +46,8 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
   const [entriesText, setEntriesText] = useState('');
   const [higherLevels, setHigherLevels] = useState('');
   const [error, setError] = useState('');
+
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 
@@ -95,7 +98,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 animate-in fade-in overscroll-contain">
       <div className="relative w-full max-w-2xl bg-dnd-panel rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 bg-dnd-card">

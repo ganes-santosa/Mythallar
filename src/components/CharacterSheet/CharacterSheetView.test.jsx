@@ -272,7 +272,8 @@ describe('CharacterSheetView', () => {
     fireEvent.click(screen.getByText('General'));
 
     const notesTextarea = screen.getByLabelText('Note Content');
-    fireEvent.change(notesTextarea, { target: { value: 'Discovered hidden tomb in the ruins.' } });
+    notesTextarea.innerHTML = 'Discovered hidden tomb in the ruins.';
+    fireEvent.input(notesTextarea);
 
     expect(handleUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -285,5 +286,54 @@ describe('CharacterSheetView', () => {
         }),
       })
     );
+  });
+
+  it('propagates ability score misc bonuses to dependent skills, passives, and spell stats', () => {
+    const charWithBonus = {
+      ...mockCharacter,
+      level: 10,
+      classes: [{ className: 'Wizard', level: 10 }],
+      sheet: {
+        ...mockCharacter.sheet,
+        abilities: {
+          str: 10,
+          dex: 14,
+          con: 12,
+          int: 18,
+          wis: 10,
+          cha: 10,
+          saveProficiencies: ['int'],
+          scoreBonuses: {
+            int: 2, // INT 18 + 2 = 20 (+5 mod)
+            wis: 4, // WIS 10 + 4 = 14 (+2 mod)
+          },
+        },
+        skills: {
+          arcana: 'proficient', // INT +5, prof +4 (lvl 10) = +9
+          perception: 'none', // WIS +2
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetView
+        character={charWithBonus}
+        onUpdateCharacter={() => {}}
+      />
+    );
+
+    // Spell DC for level 10 Wizard with INT 20 is 8 + 4 (prof) + 5 (INT mod) = 17
+    expect(screen.getByText('17')).toBeInTheDocument();
+    expect(screen.getByText('Spell DC')).toBeInTheDocument();
+    // Spell Attack and Arcana are both +9 (+4 prof + 5 INT mod)
+    const plusNines = screen.getAllByText('+9');
+    expect(plusNines.length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText('Spell Attack')).toBeInTheDocument();
+
+    // Arcana skill bonus should be present
+    expect(screen.getByText('Arcana')).toBeInTheDocument();
+    expect(screen.getByText('Perception')).toBeInTheDocument();
+    // Passive Perception: 10 + WIS mod (+2) = 12
+    expect(screen.getByTestId('passive-perception-value').textContent).toBe('12');
   });
 });

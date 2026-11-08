@@ -9,10 +9,11 @@ export default function AccordionSection({
   actions = null,
   children,
   defaultOpen = true,
+  autoScroll = true,
   className = '',
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const sectionRef = useAutoScrollOnExpand(isOpen);
+  const sectionRef = useAutoScrollOnExpand(isOpen, { enabled: autoScroll });
 
   return (
     <div ref={sectionRef} className={`p-3 rounded-lg bg-dnd-panel transition-all ${className}`}>

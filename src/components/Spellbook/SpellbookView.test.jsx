@@ -520,6 +520,7 @@ describe('SpellbookView', () => {
     // Open filter accordion
     fireEvent.click(filterToggle);
     const levelSelect = screen.getByLabelText('Filter Spellbook by Level');
+    expect(levelSelect.closest('.animate-accordion-down')).toBeInTheDocument();
     const classSelect = screen.getByLabelText('Filter Spellbook by Class');
     const schoolSelect = screen.getByLabelText('Filter Spellbook by School');
 

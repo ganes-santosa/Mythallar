@@ -96,4 +96,92 @@ describe('AbilitiesCard', () => {
       })
     );
   });
+
+  it('calculates save with misc bonus and allows editing save bonus in edit mode', () => {
+    const handleUpdate = vi.fn();
+    const { rerender } = render(
+      <AbilitiesCard
+        abilities={{
+          ...mockAbilities,
+          saveBonuses: { int: 1 },
+        }}
+        level={10}
+        isEditing={false}
+      />
+    );
+
+    // INT 20 (+5 mod) at lvl 10 (+4 prof) + 1 misc save bonus = Save +10
+    expect(screen.queryByLabelText('INT save bonus')).toBeNull();
+    expect(screen.getByText('Save +10')).toBeInTheDocument();
+
+    // In edit mode: save bonus input rendered
+    rerender(
+      <AbilitiesCard
+        abilities={{
+          ...mockAbilities,
+          saveBonuses: { int: 1 },
+        }}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+
+    const intSaveBonusInput = screen.getByLabelText('INT save bonus');
+    expect(intSaveBonusInput).toBeInTheDocument();
+    expect(intSaveBonusInput.value).toBe('1');
+
+    fireEvent.change(intSaveBonusInput, { target: { value: '2' } });
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        saveBonuses: expect.objectContaining({ int: 2 }),
+      })
+    );
+  });
+
+  it('calculates ability score and derived modifier with score bonus and allows editing score bonus in edit mode', () => {
+    const handleUpdate = vi.fn();
+    const { rerender } = render(
+      <AbilitiesCard
+        abilities={{
+          ...mockAbilities,
+          str: 10,
+          scoreBonuses: { str: 4 }, // 10 + 4 = 14 (+2 mod)
+        }}
+        level={10}
+        isEditing={false}
+      />
+    );
+
+    // Score displays effective 14 outside edit mode, modifier is +2
+    expect(screen.queryByLabelText('STR score bonus')).toBeNull();
+    const strInput = screen.getByLabelText('STR Score');
+    expect(strInput.value).toBe('14');
+
+    // In edit mode: raw score and score bonus input rendered
+    rerender(
+      <AbilitiesCard
+        abilities={{
+          ...mockAbilities,
+          str: 10,
+          scoreBonuses: { str: 4 },
+        }}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+
+    expect(screen.getByLabelText('STR Score').value).toBe('10');
+    const strScoreBonusInput = screen.getByLabelText('STR score bonus');
+    expect(strScoreBonusInput).toBeInTheDocument();
+    expect(strScoreBonusInput.value).toBe('4');
+
+    fireEvent.change(strScoreBonusInput, { target: { value: '2' } });
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scoreBonuses: expect.objectContaining({ str: 2 }),
+      })
+    );
+  });
 });

@@ -4,6 +4,7 @@ import CharacterManagerModal from './CharacterManagerModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
 function ClassDeleteButton({ className, onRemove }) {
@@ -79,6 +80,8 @@ function CharacterHeader({
   const unselectedClasses = CASTER_CLASSES.filter(
     (cls) => !classes.some((c) => c.className === cls)
   );
+
+  useScrollLock(showLevelUpModal);
 
   useEffect(() => {
     setNameDraft(activeCharacter?.name || '');
@@ -466,7 +469,7 @@ function CharacterHeader({
 
       {/* Level Up Selection Popup Modal */}
       {showLevelUpModal && (
-        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in overscroll-contain">
           <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-sm w-full shadow-2xl space-y-3.5">
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center space-x-2">

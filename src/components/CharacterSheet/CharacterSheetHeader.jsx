@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
+import { normalizeSpeeds } from '../../utils/storage';
+import { OPTIONAL_SPEED_TYPES } from '../../utils/dndCalculations';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { compressImageFile } from '../../utils/imageCompressor';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
@@ -77,8 +80,52 @@ function CharacterSheetHeader({
     (cls) => !classes.some((c) => c.className === cls)
   );
 
+  useScrollLock(showLevelUpModal);
+
   const sheet = character?.sheet || {};
   const identity = sheet.identity || { race: '', subclass: '', background: '', portrait: '', lore: '' };
+  const vitals = sheet.vitals || {};
+  const speeds = normalizeSpeeds(vitals);
+  const [isAddingSpeed, setIsAddingSpeed] = useState(false);
+  const [newSpeedType, setNewSpeedType] = useState('fly');
+  const [customSpeedLabel, setCustomSpeedLabel] = useState('');
+  const [newSpeedValue, setNewSpeedValue] = useState('30');
+
+  const availableSpeedTypes = OPTIONAL_SPEED_TYPES.filter((t) => speeds[t.key] === undefined);
+
+  const handleUpdateSpeed = (key, val) => {
+    const nextSpeeds = { ...speeds };
+    if (val === null || val === undefined) {
+      delete nextSpeeds[key];
+    } else {
+      nextSpeeds[key] = Math.max(0, Number(val) || 0);
+    }
+    onUpdateCharacter?.({
+      ...character,
+      sheet: {
+        ...sheet,
+        vitals: {
+          ...vitals,
+          speed: nextSpeeds.walk ?? 30,
+          speeds: nextSpeeds,
+        },
+      },
+    });
+  };
+
+  const handleSaveSpeed = (e) => {
+    e.preventDefault();
+    let key = newSpeedType;
+    if (newSpeedType === 'custom') {
+      const cleanKey = customSpeedLabel.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+      if (!cleanKey) return;
+      key = cleanKey;
+    }
+    if (!key) return;
+    handleUpdateSpeed(key, Math.max(0, Number(newSpeedValue) || 30));
+    setIsAddingSpeed(false);
+    setCustomSpeedLabel('');
+  };
 
   const [isLoreCollapsed, setIsLoreCollapsed] = useState(true);
   const loreRef = useAutoScrollOnExpand(!isLoreCollapsed);
@@ -324,7 +371,7 @@ function CharacterSheetHeader({
                     className="w-full h-full object-cover object-center"
                   />
                 ) : (
-                  <div className="w-full h-full min-h-[110px] bg-dnd-panel/60 flex flex-col items-center justify-center text-slate-500 group-hover:text-dnd-gold transition-colors p-2 text-center">
+                  <div className="w-full h-full min-h-[110px] bg-dnd-panel/70 flex flex-col items-center justify-center text-slate-500 group-hover:text-dnd-gold transition-colors p-2 text-center">
                     <User size={32} />
                     <span className="text-[10px] mt-1 text-slate-400 font-medium">Add Portrait</span>
                   </div>
@@ -369,7 +416,7 @@ function CharacterSheetHeader({
                         onChange={(e) => setNameDraft(e.target.value)}
                         placeholder="Character Name"
                         autoFocus
-                        className="bg-dnd-panel rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
+                        className="bg-dnd-panel/70 rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
                       />
                     ) : (
                       <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
@@ -407,7 +454,7 @@ function CharacterSheetHeader({
                           type="button"
                           aria-label="Cancel Edit Profile"
                           onClick={handleCancelEdit}
-                          className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          className="p-1 rounded-md bg-dnd-panel/70 hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
                           title="Cancel editing"
                         >
                           <X size={12} />
@@ -420,7 +467,7 @@ function CharacterSheetHeader({
                           onClick={() => setShowManagerModal(true)}
                           aria-label="Manage Characters"
                           title="Open character manager modal"
-                          className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer"
+                          className="p-1 rounded-md bg-dnd-panel/70 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer"
                         >
                           <Users size={13} />
                         </button>
@@ -429,7 +476,7 @@ function CharacterSheetHeader({
                           type="button"
                           aria-label="Edit Profile"
                           onClick={() => setIsEditing(true)}
-                          className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors cursor-pointer"
+                          className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/70 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors cursor-pointer"
                           title="Edit character name and classes"
                         >
                           <UserPen size={11} className="text-slate-400" />
@@ -461,7 +508,7 @@ function CharacterSheetHeader({
                         return (
                           <div
                             key={idx}
-                            className="flex items-center space-x-1 bg-dnd-panel rounded-md px-1.5 py-0.5 text-xs animate-in fade-in"
+                            className="flex items-center space-x-1 bg-dnd-panel/70 rounded-md px-1.5 py-0.5 text-xs animate-in fade-in"
                           >
                             <select
                               value={clsItem.className}
@@ -481,7 +528,7 @@ function CharacterSheetHeader({
                               <select
                                 value={clsItem.level}
                                 onChange={(e) => handleSetClassLevel(idx, e.target.value)}
-                                className="bg-dnd-panel/80 rounded px-1 py-0.5 text-[11px] text-slate-100 font-normal focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
+                                className="bg-dnd-panel/70 rounded px-1 py-0.5 text-[11px] text-slate-100 font-normal focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
                                 aria-label={`Level for ${clsItem.className}`}
                               >
                                 {Array.from({ length: maxLvlForThisClass }, (_, i) => i + 1).map((lvl) => (
@@ -506,7 +553,7 @@ function CharacterSheetHeader({
                         <button
                           type="button"
                           onClick={handleAddClass}
-                          className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs transition-colors cursor-pointer"
+                          className="flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/70 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs transition-colors cursor-pointer"
                           title="Add another class for multiclassing"
                         >
                           <Plus size={12} className="mr-1" />
@@ -518,7 +565,7 @@ function CharacterSheetHeader({
                     classes.map((clsItem, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center space-x-1.5 bg-dnd-panel/60 rounded-md px-2 py-0.5 text-xs text-slate-200"
+                        className="flex items-center space-x-1.5 bg-dnd-panel/70 rounded-md px-2 py-0.5 text-xs text-slate-200"
                       >
                         <span className="font-normal text-slate-200">{clsItem.className}</span>
                         <span className="text-[11px] text-dnd-gold font-normal">Lvl {clsItem.level}</span>
@@ -527,8 +574,8 @@ function CharacterSheetHeader({
                   )}
                 </div>
 
-                {/* Row 3: Identity Metadata Fields (Race above Subclass & Background) */}
-                <div className="space-y-1.5 pt-2 border-t border-white/5 text-[11px]">
+                {/* Row 3: Identity Metadata Fields (Race & Subclass on one line) */}
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/5 text-[11px]">
                   <div>
                     <label htmlFor="sheet-id-race" className="block text-[9px] text-slate-400 mb-0.5">
                       Race / Species
@@ -540,56 +587,178 @@ function CharacterSheetHeader({
                         placeholder="e.g. High Elf"
                         value={identity.race || ''}
                         onChange={(e) => handleIdentityChange('race', e.target.value)}
-                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
                       />
                     ) : (
-                      <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/60 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                      <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
                         {identity.race || <span className="text-slate-500 italic">None</span>}
                       </div>
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label htmlFor="sheet-id-subclass" className="block text-[9px] text-slate-400 mb-0.5">
-                        Subclass / Tradition
-                      </label>
+                  <div>
+                    <label htmlFor="sheet-id-subclass" className="block text-[9px] text-slate-400 mb-0.5">
+                      Subclass / Tradition
+                    </label>
+                    {isEditing ? (
+                      <input
+                        id="sheet-id-subclass"
+                        type="text"
+                        placeholder="e.g. Chronurgy"
+                        value={identity.subclass || ''}
+                        onChange={(e) => handleIdentityChange('subclass', e.target.value)}
+                        className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                      />
+                    ) : (
+                      <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                        {identity.subclass || <span className="text-slate-500 italic">None</span>}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Row 4: Speed Strip */}
+                <div className="pt-2 border-t border-white/5 text-[11px] space-y-1.5">
+                  {/* Line 1: Walking Speed */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-1 font-bold text-slate-400 text-[10px]">
+                        <Footprints size={12} className="text-emerald-400" /> Walking Speed
+                      </span>
                       {isEditing ? (
-                        <input
-                          id="sheet-id-subclass"
-                          type="text"
-                          placeholder="e.g. Chronurgy"
-                          value={identity.subclass || ''}
-                          onChange={(e) => handleIdentityChange('subclass', e.target.value)}
-                          className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                        />
-                      ) : (
-                        <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/60 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
-                          {identity.subclass || <span className="text-slate-500 italic">None</span>}
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            aria-label="Walking Speed"
+                            value={speeds.walk ?? 30}
+                            onChange={(e) => handleUpdateSpeed('walk', Number(e.target.value))}
+                            className="w-12 px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
+                          />
+                          <span className="text-[10px] text-slate-400 font-bold">ft</span>
                         </div>
+                      ) : (
+                        <span className="font-bold text-slate-100 text-xs">{speeds.walk ?? 30} ft</span>
                       )}
                     </div>
 
-                    <div>
-                      <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
-                        Background
-                      </label>
-                      {isEditing ? (
-                        <input
-                          id="sheet-id-background"
-                          type="text"
-                          placeholder="e.g. Sage"
-                          value={identity.background || ''}
-                          onChange={(e) => handleIdentityChange('background', e.target.value)}
-                          className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                        />
-                      ) : (
-                        <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/60 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
-                          {identity.background || <span className="text-slate-500 italic">None</span>}
-                        </div>
+                    {!isAddingSpeed && (
+                      <button
+                        type="button"
+                        aria-label="+ Add Speed"
+                        onClick={() => {
+                          const firstAvailable = availableSpeedTypes[0]?.key || 'custom';
+                          setNewSpeedType(firstAvailable);
+                          setCustomSpeedLabel('');
+                          setNewSpeedValue('30');
+                          setIsAddingSpeed(true);
+                        }}
+                        className="text-[10px] text-dnd-gold hover:text-dnd-gold-light font-medium flex items-center gap-0.5 transition-colors cursor-pointer"
+                      >
+                        <Plus size={10} /> Add Speed
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Line 2: Other Speeds (cleanly below walking speed) */}
+                  {(Object.keys(speeds).some((k) => k !== 'walk') || isAddingSpeed) && (
+                    <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                      {Object.entries(speeds)
+                        .filter(([k]) => k !== 'walk')
+                        .map(([key, val]) => {
+                          const typeDef = OPTIONAL_SPEED_TYPES.find((t) => t.key === key);
+                          const label = typeDef ? typeDef.label : (key.charAt(0).toUpperCase() + key.slice(1));
+                          return (
+                            <div
+                              key={key}
+                              className="flex items-center gap-1 text-[10px] bg-dnd-panel/70 rounded px-1.5 py-0.5 text-slate-200"
+                            >
+                              <span className="text-slate-400">{label}:</span>
+                              {isEditing ? (
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <input
+                                    type="number"
+                                    aria-label={`${label} Speed`}
+                                    value={val}
+                                    onChange={(e) => handleUpdateSpeed(key, Number(e.target.value))}
+                                    className="w-9 px-1 py-0.5 rounded bg-dnd-panel/70 text-[10px] font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
+                                  />
+                                  <span className="font-bold text-slate-100 text-[9px]">ft</span>
+                                  <button
+                                    type="button"
+                                    aria-label={`Remove ${label} speed`}
+                                    onClick={() => handleUpdateSpeed(key, null)}
+                                    className="text-slate-400 hover:text-red-400 transition-colors cursor-pointer"
+                                  >
+                                    <X size={10} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="font-bold text-slate-100">{val} ft</span>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                      {/* Inline Add Speed Form */}
+                      {isAddingSpeed && (
+                        <form
+                          noValidate
+                          onSubmit={handleSaveSpeed}
+                          className="flex items-center gap-1 text-[10px] bg-dnd-panel/70 ring-1 ring-dnd-gold/30 rounded px-1.5 py-0.5"
+                        >
+                          <select
+                            aria-label="Movement Type"
+                            value={newSpeedType}
+                            onChange={(e) => setNewSpeedType(e.target.value)}
+                            className="bg-transparent text-slate-200 rounded text-[10px] focus:outline-none"
+                          >
+                            {availableSpeedTypes.map((t) => (
+                              <option key={t.key} value={t.key} className="bg-dnd-panel">
+                                {t.label}
+                              </option>
+                            ))}
+                            <option value="custom" className="bg-dnd-panel">Custom...</option>
+                          </select>
+                          {newSpeedType === 'custom' && (
+                            <input
+                              type="text"
+                              placeholder="e.g. Hover"
+                              aria-label="Custom Speed Name"
+                              value={customSpeedLabel}
+                              onChange={(e) => setCustomSpeedLabel(e.target.value)}
+                              className="w-14 bg-dnd-panel/70 text-slate-100 rounded px-1 py-0.2 text-[10px] focus:outline-none focus:ring-1 focus:ring-white/20"
+                              autoFocus
+                            />
+                          )}
+                          <input
+                            type="number"
+                            aria-label="Speed Distance"
+                            value={newSpeedValue}
+                            onChange={(e) => setNewSpeedValue(e.target.value)}
+                            className="w-9 bg-dnd-panel/70 text-slate-100 rounded px-1 py-0.2 text-center text-[10px] focus:outline-none focus:ring-1 focus:ring-white/20"
+                          />
+                          <span className="text-slate-400 text-[9px]">ft</span>
+                          <button
+                            type="submit"
+                            aria-label="Add"
+                            title="Add speed"
+                            className="p-0.5 rounded bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 transition-colors shrink-0 cursor-pointer"
+                          >
+                            <Check size={10} strokeWidth={2.5} />
+                          </button>
+                          <button
+                            type="button"
+                            aria-label="Cancel"
+                            title="Cancel"
+                            onClick={() => setIsAddingSpeed(false)}
+                            className="p-0.5 rounded text-slate-400 hover:text-white transition-colors shrink-0 cursor-pointer"
+                          >
+                            <X size={10} />
+                          </button>
+                        </form>
                       )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -608,6 +777,11 @@ function CharacterSheetHeader({
                   <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
                     Character Lore
                   </h4>
+                  {identity.background && (
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      • {identity.background}
+                    </span>
+                  )}
                   <ChevronDown
                     size={12}
                     className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
@@ -665,7 +839,28 @@ function CharacterSheetHeader({
                 }`}
               >
                 <div className="overflow-hidden">
-                  <div className="pt-2 mt-2 border-t border-white/5">
+                  <div className="pt-2 mt-2 border-t border-white/5 space-y-2">
+                    {/* Background Field */}
+                    <div>
+                      <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
+                        Background
+                      </label>
+                      {isEditing || isEditingLore ? (
+                        <input
+                          id="sheet-id-background"
+                          type="text"
+                          placeholder="e.g. Sage"
+                          value={identity.background || ''}
+                          onChange={(e) => handleIdentityChange('background', e.target.value)}
+                          className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                        />
+                      ) : (
+                        <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                          {identity.background || <span className="text-slate-500 italic">None</span>}
+                        </div>
+                      )}
+                    </div>
+
                     {isEditingLore ? (
                       <div className="space-y-1.5">
                         <textarea
@@ -674,8 +869,9 @@ function CharacterSheetHeader({
                           placeholder="Write character backstory, personality traits, appearance, or campaign lore..."
                           rows={4}
                           autoFocus
+                          spellCheck={false}
                           aria-label="Character Lore Text Editor"
-                          className="w-full bg-dnd-panel rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/60 resize-y leading-relaxed font-sans min-h-[80px]"
+                          className="w-full bg-dnd-panel/70 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 resize-y leading-relaxed font-sans min-h-[80px]"
                         />
                       </div>
                     ) : (
@@ -721,7 +917,7 @@ function CharacterSheetHeader({
 
       {/* Level Up Selection Popup Modal */}
       {showLevelUpModal && (
-        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in">
+        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in overscroll-contain">
           <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-sm w-full shadow-2xl space-y-3.5">
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center space-x-2">

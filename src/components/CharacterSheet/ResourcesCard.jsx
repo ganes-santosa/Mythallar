@@ -224,7 +224,7 @@ export default function ResourcesCard({
                   setNewResourceName(e.target.value);
                   if (nameError) setNameError(false);
                 }}
-                className={`w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none transition-colors ${
+                className={`w-full px-2 py-1 rounded bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none transition-colors ${
                   nameError
                     ? 'border border-red-500/60 ring-1 ring-red-500/40'
                     : 'focus:ring-1 focus:ring-white/20'
@@ -242,7 +242,7 @@ export default function ResourcesCard({
                 min="1"
                 value={newResourceMax}
                 onChange={(e) => setNewResourceMax(e.target.value)}
-                className="w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                className="w-full px-2 py-1 rounded bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
               />
             </div>
             <div>
@@ -254,7 +254,7 @@ export default function ResourcesCard({
                 aria-label="Reset Timing"
                 value={newResourceReset}
                 onChange={(e) => setNewResourceReset(e.target.value)}
-                className="w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                className="w-full px-2 py-1 rounded bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
               >
                 <option value="LR">Long Rest</option>
                 <option value="SR">Short Rest</option>
@@ -266,7 +266,7 @@ export default function ResourcesCard({
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-2.5 py-1 rounded bg-dnd-panel text-slate-300 text-xs hover:text-white"
+              className="px-2.5 py-1 rounded bg-dnd-panel/70 text-slate-300 text-xs hover:text-white"
             >
               Cancel
             </button>
@@ -282,7 +282,7 @@ export default function ResourcesCard({
 
       {/* Steppers Grid */}
       {trackedResources && trackedResources.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-2 text-xs">
           {trackedResources.map((res) => {
             const isDraggingThis = draggedResId === res.id;
             const isOverThis = dragOverResId === res.id;
@@ -320,25 +320,26 @@ export default function ResourcesCard({
                   </div>
                 </div>
                 <div
-                  className="flex items-center space-x-1 font-bold text-dnd-gold text-xs bg-dnd-panel px-1.5 py-0.5 rounded-md flex-shrink-0"
+                  className="flex items-center space-x-1 text-xs bg-dnd-panel/70 px-1.5 py-0.5 rounded-md flex-shrink-0"
                   onMouseDown={(e) => e.stopPropagation()}
                 >
                   <button
                     type="button"
                     aria-label={`Decrement ${res.name}`}
                     onClick={() => handleStep(res.id, -1)}
-                    className="px-1 hover:text-white"
+                    className="px-1 font-bold text-dnd-gold hover:text-white"
                   >
                     -
                   </button>
-                  <span className="min-w-[34px] text-center">
-                    {res.current ?? 0} / {res.max ?? 0}
+                  <span className="min-w-[34px] text-center tabular-nums">
+                    <span className="font-bold text-slate-100">{res.current ?? 0}</span>
+                    <span className="font-medium text-dnd-pewter"> / {res.max ?? 0}</span>
                   </span>
                   <button
                     type="button"
                     aria-label={`Increment ${res.name}`}
                     onClick={() => handleStep(res.id, 1)}
-                    className="px-1 hover:text-white"
+                    className="px-1 font-bold text-dnd-gold hover:text-white"
                   >
                     +
                   </button>

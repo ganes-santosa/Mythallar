@@ -59,7 +59,7 @@ describe('NotesCard', () => {
 
     const contentArea = screen.getByLabelText('Note Content');
     expect(contentArea).toBeInTheDocument();
-    expect(contentArea).toHaveValue('Find the crystal');
+    expect(contentArea.innerHTML).toBe('Find the crystal');
   });
 
   it('updates note content on edit and moves edited note to top', () => {
@@ -67,9 +67,9 @@ describe('NotesCard', () => {
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
 
     fireEvent.click(screen.getByText('NPCs'));
-    fireEvent.change(screen.getByLabelText('Note Content'), {
-      target: { value: 'Elminster at Waterdeep' },
-    });
+    const contentArea = screen.getByLabelText('Note Content');
+    contentArea.innerHTML = 'Elminster at Waterdeep';
+    fireEvent.input(contentArea);
 
     expect(handleUpdate).toHaveBeenCalledWith([
       expect.objectContaining({ id: 'n2', content: 'Elminster at Waterdeep' }),
@@ -161,7 +161,7 @@ describe('NotesCard', () => {
     // Clicking a note card in list view opens it in note editor
     fireEvent.click(screen.getByText('NPCs'));
     expect(screen.getByLabelText('Note Title')).toHaveValue('NPCs');
-    expect(screen.getByLabelText('Note Content')).toHaveValue('Elminster at Shadowdale');
+    expect(screen.getByLabelText('Note Content').innerHTML).toBe('Elminster at Shadowdale');
 
     // Switch back to All Notes list view
     const allNotesBtn = screen.getByRole('button', { name: /All Notes/i });
@@ -244,10 +244,12 @@ describe('NotesCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sort By' }));
     fireEvent.click(screen.getByRole('button', { name: 'Sort by Alphabetical' }));
     expect(screen.getByRole('button', { name: 'Sort By' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Toggle sort direction \(Descending\)/i })).toBeInTheDocument();
     expect(getTitles()).toEqual(['A-Lore', 'B-Quest', 'C-NPCs']);
 
     // Toggle left sort direction button to Z-A
     fireEvent.click(screen.getByRole('button', { name: /Toggle sort direction/i }));
+    expect(screen.getByRole('button', { name: /Toggle sort direction \(Ascending\)/i })).toBeInTheDocument();
     expect(getTitles()).toEqual(['C-NPCs', 'B-Quest', 'A-Lore']);
   });
 
@@ -283,9 +285,43 @@ describe('NotesCard', () => {
     // Exit editor back to All Notes list
     fireEvent.click(screen.getByRole('button', { name: /All Notes/i }));
 
-    // Both parent sheet scroller and inner list scroller are restored to pre-editor positions
     expect(sheetScroller.scrollTop).toBe(650);
     const restoredInnerScroller = container.querySelector('.max-h-\\[420px\\]');
     expect(restoredInnerScroller.scrollTop).toBe(180);
+  });
+
+  it('renders Bold, Italic, Underline, and Strikethrough formatting buttons', () => {
+    const handleUpdate = vi.fn();
+    render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+    fireEvent.click(screen.getByText('Quests'));
+
+    expect(screen.getByRole('button', { name: 'Bold' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Italic' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Underline' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Strikethrough' })).toBeInTheDocument();
+  });
+
+  it('sanitizes pasted rich HTML into bold, italic, underline, strikethrough tags without dangerous attributes', () => {
+    const handleUpdate = vi.fn();
+    render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+    fireEvent.click(screen.getByText('Quests'));
+
+    const editor = screen.getByLabelText('Note Content');
+    fireEvent.paste(editor, {
+      clipboardData: {
+        getData: (type) =>
+          type === 'text/html'
+            ? '<b>Clean</b> <u>Line</u> <s>Strike</s><script>alert(1)</script>'
+            : 'Clean Line Strike',
+      },
+    });
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          content: expect.stringMatching(/<b>Clean<\/b>.*<u>Line<\/u>.*<s>Strike<\/s>/),
+        }),
+      ])
+    );
   });
 });

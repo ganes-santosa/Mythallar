@@ -364,6 +364,7 @@ describe('App End-to-End Integration', () => {
 
     expect(await screen.findByText('No Character Selected')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Create First Character/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Import Character/i })).toBeInTheDocument();
 
     // Renders MythallarLogo with color matching the text (bg-dnd-ivory) in empty container, sized ~15% larger
     const emptyStateContainer = screen.getByText('No Character Selected').closest('div');
@@ -387,6 +388,33 @@ describe('App End-to-End Integration', () => {
 
     // Character created and active
     expect(await screen.findByRole('heading', { level: 2, name: 'Gandalf the Grey' })).toBeInTheDocument();
+    expect(screen.queryByText('No Character Selected')).not.toBeInTheDocument();
+  });
+
+  it('allows importing a character directly from empty state', async () => {
+    localStorage.clear();
+    const { container } = render(<App />);
+
+    expect(await screen.findByText('No Character Selected')).toBeInTheDocument();
+    const importBtn = screen.getByRole('button', { name: /Import Character/i });
+    expect(importBtn).toBeInTheDocument();
+
+    const emptyContainer = screen.getByText('No Character Selected').closest('section');
+    const fileInput = emptyContainer.querySelector('input[type="file"]');
+    expect(fileInput).toBeInTheDocument();
+
+    const jsonContent = JSON.stringify({
+      id: 'custom-char-1',
+      name: 'Elminster Aumar',
+      className: 'Wizard',
+      level: 12,
+      spells: [],
+    });
+    const file = new File([jsonContent], 'elminster.json', { type: 'application/json' });
+
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    expect(await screen.findByRole('heading', { level: 2, name: 'Elminster Aumar' })).toBeInTheDocument();
     expect(screen.queryByText('No Character Selected')).not.toBeInTheDocument();
   });
 

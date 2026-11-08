@@ -25,6 +25,7 @@ describe('PWA standalone configuration', () => {
   it('links manifest and standalone meta tags in index.html', () => {
     const html = fs.readFileSync(path.resolve(process.cwd(), 'index.html'), 'utf8');
     expect(html).toContain('rel="manifest" href="/manifest.webmanifest"');
+    expect(html).toContain('rel="icon" type="image/png" href="/mythallar_logo.png"');
     expect(html).toContain('name="apple-mobile-web-app-capable" content="yes"');
     expect(html).toContain('name="mobile-web-app-capable" content="yes"');
     expect(html).toContain('name="theme-color" content="#17181B"');

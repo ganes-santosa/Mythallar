@@ -10,6 +10,10 @@ import {
   loadAppSettings,
   saveAppSettings,
   SETTINGS_KEY,
+  loadDeletedIds,
+  saveDeletedId,
+  removeDeletedId,
+  isDeletedId,
 } from './storage';
 
 describe('storage', () => {
@@ -31,7 +35,11 @@ describe('storage', () => {
     expect(char.sheet.maxAttunement).toBe(3);
     expect(char.sheet.items).toEqual([]);
     expect(char.sheet.skills.stealth).toBe('none');
+    expect(char.sheet.skillBonuses).toEqual({});
+    expect(char.sheet.abilities.scoreBonuses).toEqual({});
+    expect(char.sheet.abilities.saveBonuses).toEqual({});
     expect(char.sheet.senses.darkvision).toBe(0);
+    expect(char.sheet.senses.bonuses).toEqual({});
     expect(char.sheet.vitals.speed).toBe(30);
     expect(char.sheet.vitals.deathSaves).toEqual({ successes: 0, failures: 0 });
     expect(char.sheet.vitals.hpMaxBuff).toBe(0);
@@ -233,6 +241,35 @@ describe('storage', () => {
       const result = recoverHitDiceOnLongRest(hitDice, 5);
       expect(result.current).toBe(5);
       expect(result.pools.d10.current).toBe(5);
+    });
+  });
+
+  describe('deletedIds tracking', () => {
+    it('returns empty object when no deleted ids exist', () => {
+      expect(loadDeletedIds()).toEqual({});
+    });
+
+    it('saves deleted ID with timestamp and checks isDeletedId', () => {
+      saveDeletedId('char-1', 1000);
+      expect(loadDeletedIds()).toEqual({ 'char-1': 1000 });
+
+      // Older timestamp or equal is considered deleted
+      expect(isDeletedId('char-1', 500)).toBe(true);
+      expect(isDeletedId('char-1', 1000)).toBe(true);
+      expect(isDeletedId('char-1', '1970-01-01T00:00:01.000Z')).toBe(true);
+
+      // Newer timestamp is NOT considered deleted (resurrected with update)
+      expect(isDeletedId('char-1', 1500)).toBe(false);
+
+      // Non-deleted ID returns false
+      expect(isDeletedId('char-2', 500)).toBe(false);
+    });
+
+    it('allows removing a deleted ID', () => {
+      saveDeletedId('char-1');
+      expect(isDeletedId('char-1')).toBe(true);
+      removeDeletedId('char-1');
+      expect(isDeletedId('char-1')).toBe(false);
     });
   });
 });

@@ -84,7 +84,7 @@ function ProficiencyCategoryCard({
             onChange={(e) => setNewVal(e.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20"
+            className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-panel/70 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20"
           />
           <button
             type="submit"
@@ -112,7 +112,7 @@ function ProficiencyCategoryCard({
         {items.map((item) => (
           <span
             key={item}
-            className="group inline-flex items-center px-2 py-0.5 rounded-md bg-dnd-panel text-[11px] text-slate-300"
+            className="group inline-flex items-center px-2 py-0.5 rounded-md bg-dnd-panel/70 text-[11px] text-slate-300"
           >
             <span>{item}</span>
             {isEditing && (

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Sparkles, X, Check, RotateCcw, AlertCircle } from 'lucide-react';
 import { getMaxArcaneRecoveryLevels, getWizardLevel } from '../../utils/spellSlots';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 /**
  * ArcaneRecoveryModal: D&D 5e Arcane Recovery on Short Rest.
@@ -46,6 +47,8 @@ export default function ArcaneRecoveryModal({
   onResetUsedFlag,
 }) {
   const [selectedRecovery, setSelectedRecovery] = useState({});
+
+  useScrollLock(isOpen && Boolean(character));
 
   if (!isOpen || !character) return null;
 
@@ -104,7 +107,7 @@ export default function ArcaneRecoveryModal({
   const hasAnyExpendedSlots = eligibleLevels.some((lvl) => (slotsUsed[lvl] || 0) > 0);
 
   return (
-    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain">
       <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-md w-full shadow-2xl space-y-4">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-2 border-b border-white/5">

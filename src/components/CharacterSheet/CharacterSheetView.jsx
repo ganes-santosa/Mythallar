@@ -25,7 +25,7 @@ import ProficienciesCard from './ProficienciesCard';
 import ResourcesCard from './ResourcesCard';
 import ItemsCard, { MaxAttunementInput } from './ItemsCard';
 import NotesCard from './NotesCard';
-import { getProficiencyBonus } from '../../utils/dndCalculations';
+import { getProficiencyBonus, getEffectiveAbilities } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 
 function CharacterSheetView({
@@ -93,6 +93,7 @@ function CharacterSheetView({
   const sheet = character.sheet || createDefaultSheet(character.className);
   const safeLevel = Number(character.level) || 1;
   const profBonus = getProficiencyBonus(safeLevel);
+  const effectiveAbilities = getEffectiveAbilities(sheet.abilities || {});
 
   const safeItems = Array.isArray(sheet.items) ? sheet.items : [];
   const attunedCount = safeItems.filter((i) => i.requiresAttunement && i.attuned).length;
@@ -203,8 +204,9 @@ function CharacterSheetView({
         >
           <VitalsCard
             vitals={sheet.vitals}
-            dexScore={sheet.abilities?.dex ?? 10}
-            conScore={sheet.abilities?.con ?? 10}
+            dexScore={effectiveAbilities.dex ?? 10}
+            conScore={effectiveAbilities.con ?? 10}
+            abilities={effectiveAbilities}
             classes={character.classes || [{ className: character.className, level: character.level }]}
             isEditing={isEditingVitals}
             onUpdateVitals={(vitals) => updateSheet({ vitals })}
@@ -365,14 +367,16 @@ function CharacterSheetView({
           }
         >
           <SkillsCard
-            abilities={sheet.abilities}
+            abilities={effectiveAbilities}
             skills={sheet.skills}
+            skillBonuses={sheet.skillBonuses || {}}
             level={safeLevel}
             senses={sheet.senses}
             filterQuery={skillsFilter}
             hideSearch={true}
             isEditing={isEditingSkills}
             onUpdateSkills={(skills) => updateSheet({ skills })}
+            onUpdateSkillBonuses={(skillBonuses) => updateSheet({ skillBonuses })}
             onUpdateSenses={(senses) => updateSheet({ senses })}
           />
         </AccordionSection>

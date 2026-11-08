@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import {
   X,
   User,
@@ -94,6 +95,8 @@ export default function CharacterManagerModal({
     onClose();
   };
 
+  useScrollLock(isOpen);
+
   if (!isOpen) return null;
 
   const handleSelect = (id) => {
@@ -102,7 +105,7 @@ export default function CharacterManagerModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+    <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain">
       <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 flex-shrink-0">

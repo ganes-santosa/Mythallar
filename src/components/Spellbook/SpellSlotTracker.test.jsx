@@ -307,6 +307,21 @@ describe('SpellSlotTracker', () => {
     expect(handleShortRest).toHaveBeenCalledTimes(1);
   });
 
+  it('renders slot level badge with Level 3 bg-dnd-panel/70', () => {
+    render(
+      <SpellSlotTracker
+        character={mockCharacter}
+        onUseSlot={vi.fn()}
+        onRestoreSlot={vi.fn()}
+        onUpdateMaxSlot={vi.fn()}
+        onLongRest={vi.fn()}
+        onShortRest={vi.fn()}
+      />
+    );
+
+    const badge = screen.getByText('3 / 4');
+    expect(badge.className).toContain('bg-dnd-panel/70');
+  });
 });
 
 

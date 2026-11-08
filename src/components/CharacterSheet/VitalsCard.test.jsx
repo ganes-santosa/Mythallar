@@ -55,7 +55,7 @@ describe('VitalsCard', () => {
     const { rerender } = render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
     
     // Add condition ("+ Add" button under Conditions)
-    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[1];
+    const addBtn = screen.getByLabelText('+ Add Condition');
     fireEvent.click(addBtn);
 
     const input = screen.getByPlaceholderText(/e\.g\. Paralyzed, Blinded/i);
@@ -80,21 +80,34 @@ describe('VitalsCard', () => {
     }));
   });
 
-  it('renders initiative, speed, hit dice, and death saves', () => {
+  it('renders initiative, spell attack, spell dc, hit dice, and death saves', () => {
     const fullVitals = {
       ...mockVitals,
-      speed: 30,
       initiativeOverride: null,
       hitDice: { current: 5, max: 8, die: 'd6' },
       deathSaves: { successes: 2, failures: 1 },
       defenses: ['Fire (Resistance)', 'Poison (Immune)'],
     };
     const handleUpdate = vi.fn();
-    render(<VitalsCard vitals={fullVitals} dexScore={14} onUpdateVitals={handleUpdate} />);
+    render(
+      <VitalsCard
+        vitals={fullVitals}
+        dexScore={14}
+        abilities={{ int: 16 }}
+        classes={[{ className: 'Wizard', level: 8 }]}
+        onUpdateVitals={handleUpdate}
+      />
+    );
 
     // Initiative with DEX 14 (+2 mod)
     expect(screen.getByText('+2')).toBeInTheDocument();
-    expect(screen.getByText(/30\s*ft/i)).toBeInTheDocument();
+    // Spell attack (+3 prof + 3 mod = +6) and DC (8 + 3 prof + 3 mod = 14)
+    expect(screen.getByText('+6')).toBeInTheDocument();
+    expect(screen.getByText('14')).toBeInTheDocument();
+    expect(screen.getByText('Spell Attack')).toBeInTheDocument();
+    expect(screen.getByText('Spell DC')).toBeInTheDocument();
+    expect(screen.getByText('INT')).toBeInTheDocument();
+
     expect(screen.getByText(/5\/8 d6/)).toBeInTheDocument();
 
     // Death saves toggle
@@ -113,7 +126,7 @@ describe('VitalsCard', () => {
     render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} />);
 
     // Open add defense form ("+ Add" button under Defenses)
-    const addBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[2];
+    const addBtn = screen.getByLabelText('+ Add Defense');
     fireEvent.click(addBtn);
 
     // Toggle defaults to Resistance
@@ -233,9 +246,11 @@ describe('VitalsCard', () => {
 
     const { rerender } = render(<VitalsCard vitals={vitals} onUpdateVitals={handleUpdate} />);
 
-    // Renders effective max (25) and buff indicator (+5 Buff)
-    expect(screen.getByText('25')).toBeInTheDocument();
-    expect(screen.getByText('+5 Buff')).toBeInTheDocument();
+    // Renders effective max (25) colored with text-amber-400 when buffed, no buff chip
+    const maxHpEl = screen.getByText('25');
+    expect(maxHpEl).toBeInTheDocument();
+    expect(maxHpEl).toHaveClass('text-amber-400');
+    expect(screen.queryByText('+5 Buff')).not.toBeInTheDocument();
 
     const amtInput = screen.getByPlaceholderText('0');
     const dmgBtn = screen.getByRole('button', { name: /damage/i });
@@ -328,7 +343,8 @@ describe('VitalsCard', () => {
     const initMobile = screen.getByText('Init');
     expect(initMobile).toBeInTheDocument();
     expect(initMobile).toHaveAttribute('aria-label', 'Initiative');
-    expect(screen.getAllByText('Speed')[0]).toBeInTheDocument();
+    expect(screen.getByText('Spell Attack')).toBeInTheDocument();
+    expect(screen.getByText('Spell DC')).toBeInTheDocument();
     expect(screen.getByText('Hit Dice')).toBeInTheDocument();
     expect(screen.getByText('Death Saves')).toBeInTheDocument();
     expect(screen.getByText('Inspiration')).toBeInTheDocument();
@@ -354,7 +370,7 @@ describe('VitalsCard', () => {
     expect(acElement.className).not.toContain('text-dnd-gold');
 
     // Initiative number should be white (text-slate-100)
-    const initElement = screen.getByText('+2');
+    const initElement = screen.getAllByText('+2')[0];
     expect(initElement.className).toContain('text-slate-100');
     expect(initElement.className).not.toContain('text-dnd-gold');
 
@@ -384,7 +400,7 @@ describe('VitalsCard', () => {
     expect(screen.getByText('15')).toBeInTheDocument();
     expect(screen.getByText('10 + 2 DEX + 3 Armor')).toBeInTheDocument();
     expect(screen.getByText('Initiative')).toBeInTheDocument();
-    expect(screen.getByText('+2')).toBeInTheDocument();
+    expect(screen.getAllByText('+2')[0]).toBeInTheDocument();
   });
 
   it('renders always-interactive inputs for Current HP and Temp HP with slash between Current and Max, while keeping Max HP static', () => {
@@ -443,6 +459,49 @@ describe('VitalsCard', () => {
     expect(tempInput.value).toBe('10');
   });
 
+  it('colors Max HP value with text-amber-400 when buffed without a separate header chip', () => {
+    const buffedVitals = {
+      ...mockVitals,
+      hpCurrent: 73,
+      hpMax: 73,
+      hpMaxBuff: 12, // effectiveMax = 85
+    };
+    const { rerender } = render(<VitalsCard vitals={buffedVitals} />);
+
+    // Separate header chip should NOT exist
+    expect(screen.queryByText('+12 Buff')).not.toBeInTheDocument();
+
+    // Effective max (85) is colored with text-amber-400 and has tooltip
+    const effectiveMaxEl = screen.getByText('85');
+    expect(effectiveMaxEl).toHaveClass('text-amber-400');
+    expect(effectiveMaxEl).toHaveAttribute('title', 'Base Max: 73 (+12 Buff)');
+
+    // Negative buff (Max HP drain)
+    const drainedVitals = {
+      ...mockVitals,
+      hpCurrent: 40,
+      hpMax: 50,
+      hpMaxBuff: -10, // effectiveMax = 40
+    };
+    rerender(<VitalsCard vitals={drainedVitals} />);
+
+    const drainedMaxEl = screen.getByText('40');
+    expect(drainedMaxEl).toHaveClass('text-rose-400');
+    expect(drainedMaxEl).toHaveAttribute('title', 'Base Max: 50 (-10 Drain)');
+
+    // Unbuffed
+    const unbuffedVitals = {
+      ...mockVitals,
+      hpCurrent: 40,
+      hpMax: 50,
+      hpMaxBuff: 0,
+    };
+    rerender(<VitalsCard vitals={unbuffedVitals} />);
+    const unbuffedMaxEl = screen.getByText('50');
+    expect(unbuffedMaxEl).toHaveClass('text-slate-400');
+    expect(unbuffedMaxEl).not.toHaveClass('text-amber-400');
+  });
+
   it('clamps negative values to 0 when committing always-interactive Current HP and Temp HP', () => {
     const handleUpdate = vi.fn();
     render(<VitalsCard vitals={mockVitals} onUpdateVitals={handleUpdate} isEditing={false} />);
@@ -471,70 +530,74 @@ describe('VitalsCard', () => {
     expect(tempInput.value).toBe('0');
   });
 
-  it('renders walking speed and allows adding and removing optional secondary movement modes', () => {
+  it('renders spell attack and spell dc accurately and supports manual overrides', () => {
     const onUpdateVitals = vi.fn();
     const { rerender } = render(
       <VitalsCard
-        vitals={{ ...mockVitals, speeds: { walk: 30, fly: 60 } }}
+        vitals={mockVitals}
+        abilities={{ int: 18 }}
+        classes={[{ className: 'Wizard', level: 5 }]}
         onUpdateVitals={onUpdateVitals}
         isEditing={false}
       />
     );
 
-    expect(screen.getByText('30 ft')).toBeInTheDocument();
-    expect(screen.getByText('Walking')).toBeInTheDocument();
-    expect(screen.getByText('Flying:')).toBeInTheDocument();
-    expect(screen.getByText('60 ft')).toBeInTheDocument();
+    // INT 18 (+4), Level 5 (+3 prof) -> Attack +7, DC 15
+    expect(screen.getByText('+7')).toBeInTheDocument();
+    expect(screen.getByText('15')).toBeInTheDocument();
+    expect(screen.getByText('Spell Attack')).toBeInTheDocument();
+    expect(screen.getByText('Spell DC')).toBeInTheDocument();
 
-    // In normal view (isEditing: false), remove buttons should NOT be present
-    expect(screen.queryByLabelText('Remove Flying speed')).not.toBeInTheDocument();
-
-    // Rerender with isEditing: true
+    // Rerender in edit mode
     rerender(
       <VitalsCard
-        vitals={{ ...mockVitals, speeds: { walk: 30, fly: 60 } }}
+        vitals={mockVitals}
+        abilities={{ int: 18 }}
+        classes={[{ className: 'Wizard', level: 5 }]}
         onUpdateVitals={onUpdateVitals}
         isEditing={true}
       />
     );
 
-    // Remove flying speed
-    const removeFlyBtn = screen.getByLabelText('Remove Flying speed');
-    fireEvent.click(removeFlyBtn);
+    // Override inputs
+    const attackInput = screen.getByLabelText('Spell Attack Override');
+    fireEvent.change(attackInput, { target: { value: '9' } });
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
-        speeds: { walk: 30 },
+        spellAttackOverride: 9,
+      })
+    );
+
+    const dcInput = screen.getByLabelText('Spell DC Override');
+    fireEvent.change(dcInput, { target: { value: '17' } });
+    expect(onUpdateVitals).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spellDcOverride: 17,
       })
     );
   });
 
-  it('allows adding a new optional speed via + Add button', () => {
+  it('allows changing spellcasting ability in edit mode', () => {
     const onUpdateVitals = vi.fn();
     render(
       <VitalsCard
-        vitals={{ ...mockVitals, speeds: { walk: 30 } }}
+        vitals={mockVitals}
+        abilities={{ int: 14, cha: 18 }}
+        classes={[{ className: 'Sorcerer', level: 5 }]}
         onUpdateVitals={onUpdateVitals}
-        isEditing={false}
+        isEditing={true}
       />
     );
 
-    // Click + Add in Speed Card
-    const addSpeedBtn = screen.getAllByRole('button', { name: /\+ Add$/i })[0];
-    fireEvent.click(addSpeedBtn);
+    // Sorcerer defaults to CHA
+    const select = screen.getByLabelText('Spellcasting Ability');
+    expect(select.value).toBe('cha');
 
-    // Select Swimming and set 40 ft
-    const select = screen.getByLabelText('Movement Type');
-    fireEvent.change(select, { target: { value: 'swim' } });
-
-    const distInput = screen.getByLabelText('Speed Distance');
-    fireEvent.change(distInput, { target: { value: '40' } });
-
-    const submitBtn = screen.getByRole('button', { name: 'Add' });
-    fireEvent.click(submitBtn);
-
+    // Change to WIS
+    fireEvent.change(select, { target: { value: 'wis' } });
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
-        speeds: { walk: 30, swim: 40 },
+        spellcastingAbility: 'wis',
       })
     );
   });
@@ -711,6 +774,87 @@ describe('VitalsCard', () => {
 
       // Disabled because pool is 0
       expect(screen.getByRole('button', { name: /Roll d8/i })).toBeDisabled();
+    });
+  });
+
+  it('renders Level 3 nested subcontainers with bg-dnd-panel/70', () => {
+    render(
+      <VitalsCard
+        vitals={mockVitals}
+        abilities={{ int: 18 }}
+        classes={[{ className: 'Wizard', level: 5 }]}
+        onUpdateVitals={() => {}}
+      />
+    );
+
+    // HP capsule
+    const hpInput = screen.getByLabelText('Current HP');
+    const hpCapsule = hpInput.closest('.rounded-md');
+    expect(hpCapsule.className).toContain('bg-dnd-panel/70');
+
+    // Quick treatment capsule
+    const amtInput = screen.getByLabelText('Amount');
+    const treatmentCapsule = amtInput.closest('.rounded-md');
+    expect(treatmentCapsule.className).toContain('bg-dnd-panel/70');
+
+    // Spellcasting ability badge
+    const spellAbilityBadge = screen.getByText('INT');
+    expect(spellAbilityBadge.className).toContain('bg-dnd-panel/70');
+  });
+
+  describe('Mini Health Bar Buffed State Visualization', () => {
+    it('renders notch and buff zone when hpMaxBuff > 0, splitting base and buffed segments', () => {
+      // Base Max 73, Buff 12 -> Effective Max 85. Current 73, Temp 14.
+      const buffedVitals = {
+        ...mockVitals,
+        hpCurrent: 73,
+        hpMax: 73,
+        hpMaxBuff: 12,
+        hpTemp: 14,
+      };
+      const { rerender } = render(<VitalsCard vitals={buffedVitals} />);
+
+      const notch = screen.getByTestId('hp-base-max-notch');
+      expect(notch).toBeInTheDocument();
+      // basePercent = (73 / 85) * 100 =~ 85.8824%
+      expect(notch.style.left).toContain('85.88');
+
+      const buffZone = screen.getByTestId('hp-buff-track');
+      expect(buffZone).toBeInTheDocument();
+      expect(buffZone.style.left).toContain('85.88');
+
+      const baseCurrentBar = screen.getByTestId('hp-bar-base-current');
+      expect(baseCurrentBar.style.width).toContain('85.88');
+
+      const buffedCurrentBar = screen.getByTestId('hp-bar-buffed-current');
+      expect(buffedCurrentBar.style.width).toBe('0%');
+
+      const tempBar = screen.getByTestId('hp-bar-temp');
+      // 100 - 85.8824 =~ 14.1176%
+      expect(tempBar.style.width).toContain('14.11');
+
+      // Now Current HP expands into buffed capacity: Current 80 (73 base + 7 buffed)
+      rerender(<VitalsCard vitals={{ ...buffedVitals, hpCurrent: 80, hpTemp: 0 }} />);
+      expect(screen.getByTestId('hp-bar-base-current').style.width).toContain('85.88');
+      // (7 / 85) * 100 =~ 8.235%
+      expect(screen.getByTestId('hp-bar-buffed-current').style.width).toContain('8.23');
+    });
+
+    it('does not render notch or buff zone when hpMaxBuff <= 0', () => {
+      const normalVitals = {
+        ...mockVitals,
+        hpCurrent: 20,
+        hpMax: 20,
+        hpMaxBuff: 0,
+        hpTemp: 5,
+      };
+      render(<VitalsCard vitals={normalVitals} />);
+
+      expect(screen.queryByTestId('hp-base-max-notch')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('hp-buff-track')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('hp-bar-buffed-current')).not.toBeInTheDocument();
+      expect(screen.getByTestId('hp-bar-base-current')).toBeInTheDocument();
+      expect(screen.getByTestId('hp-bar-temp')).toBeInTheDocument();
     });
   });
 });
