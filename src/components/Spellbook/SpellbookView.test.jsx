@@ -641,4 +641,71 @@ describe('SpellbookView', () => {
     expect(dropzone).toHaveAttribute('data-collapsed', 'false');
     expect(screen.getByText('Fireball')).toBeInTheDocument();
   });
+
+  it('renders search input matching inventory search bar dimensions and filters spells by name, school, and notes', () => {
+    const charWithNotes = {
+      ...mockCharacter,
+      spells: [
+        { id: 'fireball', prepared: true, note: 'favorite explosion' },
+        { id: 'acid-splash', prepared: false },
+      ],
+    };
+
+    render(<SpellbookView character={charWithNotes} catalog={mockCatalog} />);
+
+    // Search bar is present with matching dimensions and classes
+    const searchInput = screen.getByRole('textbox', { name: /Search spellbook/i });
+    expect(searchInput).toBeInTheDocument();
+    expect(searchInput).toHaveAttribute('placeholder', 'Search spellbook...');
+    expect(searchInput.className).toContain('pl-7');
+    expect(searchInput.className).toContain('pr-7');
+    expect(searchInput.className).toContain('py-1');
+    expect(searchInput.className).toContain('text-xs');
+    expect(searchInput.className).toContain('rounded-lg');
+    expect(searchInput.className).toContain('bg-dnd-card');
+
+    // Initially both spells present
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.getByText('Acid Splash')).toBeInTheDocument();
+
+    // Search by spell name
+    fireEvent.change(searchInput, { target: { value: 'fire' } });
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.queryByText('Acid Splash')).not.toBeInTheDocument();
+
+    // Search by school (Acid Splash is Conjuration)
+    fireEvent.change(searchInput, { target: { value: 'conjuration' } });
+    expect(screen.getByText('Acid Splash')).toBeInTheDocument();
+    expect(screen.queryByText('Fireball')).not.toBeInTheDocument();
+
+    // Search by spell note
+    fireEvent.change(searchInput, { target: { value: 'explosion' } });
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.queryByText('Acid Splash')).not.toBeInTheDocument();
+
+    // Clear search using clear button
+    const clearBtn = screen.getByRole('button', { name: /Clear search/i });
+    fireEvent.click(clearBtn);
+    expect(searchInput).toHaveValue('');
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.getByText('Acid Splash')).toBeInTheDocument();
+  });
+
+  it('shows no spells matching message and resets search on click', () => {
+    render(<SpellbookView character={mockCharacter} catalog={mockCatalog} />);
+
+    const searchInput = screen.getByRole('textbox', { name: /Search spellbook/i });
+    fireEvent.change(searchInput, { target: { value: 'meteor' } });
+
+    expect(screen.queryByText('Fireball')).not.toBeInTheDocument();
+    expect(screen.queryByText('Acid Splash')).not.toBeInTheDocument();
+    expect(screen.getByText(/no spells matching "meteor"/i)).toBeInTheDocument();
+
+    const resetBtn = screen.getByRole('button', { name: /Reset filters/i });
+    fireEvent.click(resetBtn);
+
+    expect(searchInput).toHaveValue('');
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.getByText('Acid Splash')).toBeInTheDocument();
+  });
 });

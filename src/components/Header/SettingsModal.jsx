@@ -111,7 +111,7 @@ export default function SettingsModal({
         <div className="flex-1 overflow-y-auto space-y-4 p-2 -mx-2">
           {/* Spellbook Preferences */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+            <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 px-1">
               <Feather size={13} className="text-dnd-gold" />
               <span>Spellbook Preferences</span>
             </div>
@@ -150,7 +150,7 @@ export default function SettingsModal({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 uppercase tracking-wider px-1">
+          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-400 px-1">
             <Palette size={13} className="text-dnd-gold" />
             <span>Color Palettes</span>
           </div>

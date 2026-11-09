@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText } from 'lucide-react';
+import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText, Search } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
@@ -72,6 +72,7 @@ function SpellbookView({
   const { shouldRender: showFiltersMounted, isClosing: isFiltersClosing } = useAccordionMount(showFilters, 200);
   const filtersAccordionRef = useAutoScrollOnExpand(showFiltersMounted);
   const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [searchQuery, setSearchQuery] = useState('');
   const [collapsedLevels, setCollapsedLevels] = useState({});
   const [expandedSpellId, setExpandedSpellId] = useState(null);
   const { armed: finishAllArmed, handleClick: handleFinishAllClick } = useTwoClickConfirm(() => onFinishCopyingAll?.());
@@ -152,6 +153,7 @@ function SpellbookView({
       8: [],
       9: [],
     };
+    const searchLower = searchQuery.trim().toLowerCase();
 
     if (character && Array.isArray(character.spells)) {
       for (const item of character.spells) {
@@ -164,6 +166,22 @@ function SpellbookView({
           const effectivePrepared = Boolean(item.prepared && !copying);
           cMap[item.id] = copying;
           if (copying) hasCopying = true;
+
+          if (searchLower) {
+            const matchName = spell.name?.toLowerCase().includes(searchLower);
+            const matchSchool = spell.school?.toLowerCase().includes(searchLower);
+            const matchSource = spell.source?.toLowerCase().includes(searchLower);
+            const matchNote = item.note?.toLowerCase().includes(searchLower);
+            const matchSpecializations =
+              Array.isArray(spell.specializations) &&
+              spell.specializations.some((s) => s.toLowerCase().includes(searchLower));
+            const matchEntries =
+              Array.isArray(spell.entries) &&
+              spell.entries.some((e) => typeof e === 'string' && e.toLowerCase().includes(searchLower));
+            if (!matchName && !matchSchool && !matchSource && !matchNote && !matchSpecializations && !matchEntries) {
+              continue;
+            }
+          }
 
           if (filters.level !== 'all' && lvl !== filters.level) continue;
           if (filters.className !== 'all' && (!Array.isArray(spell.classes) || !spell.classes.includes(filters.className))) continue;
@@ -196,7 +214,7 @@ function SpellbookView({
       visibleSpellCount: visibleCount,
       spellsByLevel: byLevel,
     };
-  }, [character?.spells, catalog, skipCopying, isWizard, filters]);
+  }, [character?.spells, catalog, skipCopying, isWizard, filters, searchQuery]);
 
   const hasAnySpells = character && character.spells && character.spells.length > 0;
 
@@ -292,6 +310,34 @@ function SpellbookView({
         }`}
         aria-hidden={isCollapsed}
       >
+        {/* Search Bar matching Inventory Search dimensions */}
+        <div className="flex items-center gap-2 mb-2 flex-shrink-0">
+          <div className="relative flex-1">
+            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+            <input
+              type="text"
+              aria-label="Search spellbook"
+              placeholder="Search spellbook..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setSearchQuery('');
+              }}
+              className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Expandable Spellbook Filter Accordion */}
         {showFiltersMounted && (
           <div
@@ -456,7 +502,7 @@ function SpellbookView({
         )}
 
         <div className="flex-1 min-h-0 flex flex-col overflow-y-auto custom-scroll -mx-1 px-1 -mb-1 pb-1">
-        {!hasAnySpells ? (
+        {!hasAnySpells && !searchQuery ? (
           <div className="flex-1 flex flex-col items-center justify-center pb-20 pt-4 px-8 text-center text-slate-500 rounded-xl bg-dnd-card/40">
             <div
               role="img"
@@ -480,7 +526,21 @@ function SpellbookView({
           </div>
         ) : visibleSpellCount === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center text-slate-500 rounded-xl p-6 bg-dnd-card/40">
-            <p className="text-xs text-slate-400">No spells match the active filters.</p>
+            <p className="text-xs text-slate-400">
+              {searchQuery ? `No spells matching "${searchQuery}"` : 'No spells match the active filters.'}
+            </p>
+            {Boolean(searchQuery || isFiltered) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setFilters(INITIAL_FILTERS);
+                }}
+                className="text-xs text-dnd-gold hover:underline mt-2"
+              >
+                Reset filters
+              </button>
+            )}
           </div>
         ) : (
           <div>

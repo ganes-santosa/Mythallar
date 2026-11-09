@@ -1,7 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import ItemsCard, { getLineBucket } from './ItemsCard';
+import ItemsCard, {
+  getLineBucket,
+  calculateTotalGold,
+  CurrencyTracker,
+  isCurrencySearchMatch,
+  doesCurrencyFitSingleLine,
+} from './ItemsCard';
 
 describe('ItemsCard', () => {
   const mockItems = [
@@ -510,6 +516,175 @@ describe('ItemsCard', () => {
       // Textarea has rows={8} matching the bucket
       const textarea = screen.getByLabelText('Item Description');
       expect(textarea).toHaveAttribute('rows', '8');
+    });
+  });
+
+  describe('CurrencyTracker & calculateTotalGold', () => {
+    it('correctly calculates total wealth in gold pieces (gp)', () => {
+      expect(calculateTotalGold({ cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 })).toBe(0);
+      expect(calculateTotalGold({ cp: 100, sp: 10, ep: 2, gp: 5, pp: 1 })).toBe(18);
+      expect(calculateTotalGold({ cp: 50 })).toBe(0.5);
+      expect(calculateTotalGold({ pp: 3, gp: 25 })).toBe(55);
+      expect(calculateTotalGold({ cp: -10, sp: 'invalid' })).toBe(0);
+    });
+
+    it('renders all currency denomination inputs and displays total wealth with category styling', () => {
+      const currency = { cp: 50, sp: 20, ep: 4, gp: 10, pp: 2 };
+      const { container } = render(<CurrencyTracker currency={currency} onUpdateCurrency={() => {}} />);
+
+      // Category title and Coins icon
+      expect(screen.getByText('Currency')).toBeInTheDocument();
+      expect(container.querySelector('.lucide-coins')).toBeInTheDocument();
+
+      expect(screen.getByLabelText('Copper Pieces (CP)')).toHaveValue(50);
+      expect(screen.getByLabelText('Silver Pieces (SP)')).toHaveValue(20);
+      expect(screen.getByLabelText('Electrum Pieces (EP)')).toHaveValue(4);
+      expect(screen.getByLabelText('Gold Pieces (GP)')).toHaveValue(10);
+      expect(screen.getByLabelText('Platinum Pieces (PP)')).toHaveValue(2);
+
+      // Total: (2 * 10) + 10 + (4 * 0.5) + (20 * 0.1) + (50 * 0.01) = 20 + 10 + 2 + 2 + 0.5 = 34.5 gp
+      const totalAmount = screen.getByText('34.50 gp');
+      expect(totalAmount).toBeInTheDocument();
+      expect(totalAmount).toHaveClass('text-dnd-gold');
+    });
+
+    it('updates currency on input change and blur', () => {
+      const handleUpdate = vi.fn();
+      const currency = { cp: 0, sp: 0, ep: 0, gp: 10, pp: 0 };
+      render(<ItemsCard items={[]} currency={currency} onUpdateCurrency={handleUpdate} maxAttunement={3} />);
+
+      const gpInput = screen.getByLabelText('Gold Pieces (GP)');
+      expect(gpInput).toHaveValue(10);
+
+      fireEvent.change(gpInput, { target: { value: '45' } });
+      fireEvent.blur(gpInput);
+
+      expect(handleUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gp: 45,
+        })
+      );
+    });
+
+    it('matches currency search queries accurately with isCurrencySearchMatch', () => {
+      expect(isCurrencySearchMatch('')).toBe(true);
+      expect(isCurrencySearchMatch('gold')).toBe(true);
+      expect(isCurrencySearchMatch('gp')).toBe(true);
+      expect(isCurrencySearchMatch('silver')).toBe(true);
+      expect(isCurrencySearchMatch('sp')).toBe(true);
+      expect(isCurrencySearchMatch('coins')).toBe(true);
+      expect(isCurrencySearchMatch('currency')).toBe(true);
+      expect(isCurrencySearchMatch('spear')).toBe(false);
+      expect(isCurrencySearchMatch('apple')).toBe(false);
+      expect(isCurrencySearchMatch('vorpal')).toBe(false);
+    });
+
+    it('integrates Currency into category search behavior with uniform separation', () => {
+      const items = [
+        { id: 'itm_gold_ring', name: 'Gold Ring', category: 'gear' },
+        { id: 'itm_iron_dagger', name: 'Iron Dagger', category: 'gear' },
+      ];
+      const currency = { cp: 10, sp: 5, ep: 0, gp: 100, pp: 1 };
+
+      const { container } = render(
+        <ItemsCard items={items} currency={currency} maxAttunement={3} onUpdateItems={() => {}} />
+      );
+
+      const searchInput = screen.getByPlaceholderText(/search inventory/i);
+
+      // Search "gold" -> both Currency category and Gold Ring appear, Iron Dagger is hidden
+      fireEvent.change(searchInput, { target: { value: 'gold' } });
+      expect(screen.getByTestId('currency-tracker')).toBeInTheDocument();
+      expect(screen.getByText('Gold Ring')).toBeInTheDocument();
+      expect(screen.queryByText('Iron Dagger')).not.toBeInTheDocument();
+      expect(screen.getByText('1 item')).toBeInTheDocument();
+
+      // Divider exists between Currency and the matching item category
+      expect(container.querySelector('.border-t.border-white\\/10')).toBeInTheDocument();
+
+      // Search "dagger" -> Currency category is hidden, Iron Dagger appears
+      fireEvent.change(searchInput, { target: { value: 'dagger' } });
+      expect(screen.queryByTestId('currency-tracker')).not.toBeInTheDocument();
+      expect(screen.getByText('Iron Dagger')).toBeInTheDocument();
+      expect(screen.queryByText('Gold Ring')).not.toBeInTheDocument();
+
+      // Search "vorpal" -> neither Currency nor items match, shows empty search state
+      fireEvent.change(searchInput, { target: { value: 'vorpal' } });
+      expect(screen.queryByTestId('currency-tracker')).not.toBeInTheDocument();
+      expect(screen.getByText(/no items matching "vorpal"/i)).toBeInTheDocument();
+    });
+
+    it('renders single-line compact horizontal coin entries for standard values', () => {
+      const currency = { cp: 10, sp: 20, ep: 0, gp: 50, pp: 2 };
+      const { container } = render(<CurrencyTracker currency={currency} onUpdateCurrency={() => {}} />);
+
+      const tracker = container.querySelector('[data-testid="currency-tracker"]');
+      const labels = tracker.querySelectorAll('label');
+      expect(labels).toHaveLength(5);
+
+      labels.forEach((lbl) => {
+        // Single-line flex layout
+        expect(lbl.className).toContain('flex');
+        expect(lbl.className).toContain('items-center');
+        expect(lbl.className).toContain('justify-between');
+        expect(lbl.className).not.toContain('flex-col');
+        // Visual ordering: value input has order-1, unit span has order-2
+        const span = lbl.querySelector('span');
+        const input = lbl.querySelector('input');
+        expect(span.className).toContain('order-2');
+        expect(input.className).toContain('order-1');
+      });
+    });
+
+    it('switches all denominations uniformly to two-line format when any currency overflows', () => {
+      const currency = { cp: 10000, sp: 233, ep: 1, gp: 233, pp: 0 };
+      const { container } = render(<CurrencyTracker currency={currency} onUpdateCurrency={() => {}} />);
+
+      const tracker = container.querySelector('[data-testid="currency-tracker"]');
+      const labels = tracker.querySelectorAll('label');
+      expect(labels).toHaveLength(5);
+
+      // All 5 denominations become two-line flex-col uniformly
+      labels.forEach((lbl) => {
+        expect(lbl.className).toContain('flex-col');
+        expect(lbl.className).toContain('items-center');
+        expect(lbl.className).toContain('justify-center');
+        const span = lbl.querySelector('span');
+        const input = lbl.querySelector('input');
+        expect(span.className).toContain('order-1');
+        expect(input.className).toContain('order-2');
+      });
+
+      const cpInput = screen.getByLabelText('Copper Pieces (CP)');
+      expect(cpInput).toHaveValue(10000);
+      expect(cpInput.className).toContain('text-[11px]');
+    });
+
+    it('responsively decides single-line fit based on container/card width', () => {
+      // Wide card width (100px): 4 digits (1000) fits with plenty of space on 1 line
+      expect(doesCurrencyFitSingleLine(1000, 100)).toBe(true);
+      expect(doesCurrencyFitSingleLine(9999, 100)).toBe(true);
+
+      // Narrow card width (58px, narrowed aspect ratio / mobile): 4 digits (1000) wraps to 2-line to prevent culling
+      expect(doesCurrencyFitSingleLine(1000, 58)).toBe(false);
+      // But 2 or 3 digits still fit in 58px
+      expect(doesCurrencyFitSingleLine(233, 58)).toBe(true);
+      expect(doesCurrencyFitSingleLine(50, 58)).toBe(true);
+
+      // Standard card width (75px): 4 digits fits on 1 line, huge 6 digits wraps
+      expect(doesCurrencyFitSingleLine(1000, 75)).toBe(true);
+      expect(doesCurrencyFitSingleLine(100000, 75)).toBe(false);
+    });
+
+    it('handles giant edge case numbers with proportional font scaling', () => {
+      const currency = { cp: 10000000, sp: 0, ep: 0, gp: 500000000, pp: 0 };
+      render(<CurrencyTracker currency={currency} onUpdateCurrency={() => {}} />);
+
+      const cpInput = screen.getByLabelText('Copper Pieces (CP)');
+      expect(cpInput.className).toContain('text-[10px]'); // 8 digits
+
+      const gpInput = screen.getByLabelText('Gold Pieces (GP)');
+      expect(gpInput.className).toContain('text-[9px]'); // 9 digits
     });
   });
 });

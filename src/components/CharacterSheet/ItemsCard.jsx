@@ -13,6 +13,7 @@ import {
   Pencil,
   Circle,
   Search,
+  Coins,
 } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
@@ -668,8 +669,228 @@ function ItemForm({
   );
 }
 
+export const CURRENCY_KEYS = ['cp', 'sp', 'ep', 'gp', 'pp'];
+
+export const CURRENCY_CONFIG = {
+  cp: { label: 'CP', name: 'Copper Pieces', color: '#CD7F32', text: 'text-[#CD7F32]', rate: 0.01 },
+  sp: { label: 'SP', name: 'Silver Pieces', color: '#C0C6D4', text: 'text-[#C0C6D4]', rate: 0.1 },
+  ep: { label: 'EP', name: 'Electrum Pieces', color: '#DCCFA1', text: 'text-[#DCCFA1]', rate: 0.5 },
+  gp: { label: 'GP', name: 'Gold Pieces', color: '#F4D03F', text: 'text-[#F4D03F]', rate: 1 },
+  pp: { label: 'PP', name: 'Platinum Pieces', color: '#A7D8F0', text: 'text-[#A7D8F0]', rate: 10 },
+};
+
+export const CURRENCY_KEYWORDS = [
+  'currency',
+  'currencies',
+  'coin',
+  'coins',
+  'money',
+  'wealth',
+  'copper',
+  'coppers',
+  'cp',
+  'silver',
+  'silvers',
+  'sp',
+  'electrum',
+  'electrums',
+  'ep',
+  'gold',
+  'golds',
+  'gp',
+  'platinum',
+  'platinums',
+  'pp',
+  'piece',
+  'pieces',
+];
+
+export function isCurrencySearchMatch(query) {
+  if (!query) return true;
+  const q = query.trim().toLowerCase();
+  if (!q) return true;
+  const words = q.split(/\s+/);
+  return CURRENCY_KEYWORDS.some((kw) => {
+    if (kw.length <= 2) {
+      return q === kw || words.includes(kw);
+    }
+    return kw.includes(q) || q.includes(kw);
+  });
+}
+
+export function calculateTotalGold(currency = {}) {
+  const cp = Math.max(0, Number(currency?.cp) || 0);
+  const sp = Math.max(0, Number(currency?.sp) || 0);
+  const ep = Math.max(0, Number(currency?.ep) || 0);
+  const gp = Math.max(0, Number(currency?.gp) || 0);
+  const pp = Math.max(0, Number(currency?.pp) || 0);
+  const total = pp * 10 + gp + ep * 0.5 + sp * 0.1 + cp * 0.01;
+  return Math.round(total * 100) / 100;
+}
+
+export function doesCurrencyFitSingleLine(val, cardWidth) {
+  const str = String(val ?? '');
+  const len = str.length;
+  if (!cardWidth || cardWidth <= 0) {
+    return len <= 4;
+  }
+  // Overhead on single line:
+  // 12px card padding (px-1.5) + 4px gap + 15px unit label + 4px input padding = 35px
+  // In text-xs font-semibold, average digit width is ~6.7px
+  const requiredWidth = 35 + len * 6.7;
+  return cardWidth >= requiredWidth;
+}
+
+export function CurrencyTracker({ currency = {}, onUpdateCurrency }) {
+  const safeCurrency = {
+    cp: currency?.cp ?? 0,
+    sp: currency?.sp ?? 0,
+    ep: currency?.ep ?? 0,
+    gp: currency?.gp ?? 0,
+    pp: currency?.pp ?? 0,
+  };
+
+  const gridRef = useRef(null);
+  const [cardWidth, setCardWidth] = useState(0);
+
+  useEffect(() => {
+    const el = gridRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      const rect = el.getBoundingClientRect();
+      if (rect.width > 0) {
+        const isSm = window.innerWidth >= 640;
+        const gap = isSm ? 8 : 6;
+        const colW = (rect.width - 4 * gap) / 5;
+        setCardWidth(colW);
+      }
+    };
+
+    measure();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(measure);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }
+  }, []);
+
+  const [tempValues, setTempValues] = useState({});
+
+  const totalGold = useMemo(() => calculateTotalGold(safeCurrency), [safeCurrency]);
+  const formattedTotal = useMemo(() => {
+    return totalGold.toLocaleString('en-US', {
+      minimumFractionDigits: totalGold % 1 === 0 ? 0 : 2,
+      maximumFractionDigits: 2,
+    });
+  }, [totalGold]);
+
+  const isStacked = useMemo(() => {
+    return CURRENCY_KEYS.some((key) => {
+      const val = tempValues[key] !== undefined ? tempValues[key] : safeCurrency[key];
+      return !doesCurrencyFitSingleLine(val, cardWidth);
+    });
+  }, [tempValues, safeCurrency, cardWidth]);
+
+  const handleChange = (key, val) => {
+    setTempValues((prev) => ({ ...prev, [key]: val }));
+  };
+
+  const handleBlur = (key) => {
+    if (tempValues[key] !== undefined) {
+      const parsed = Math.max(0, parseInt(tempValues[key], 10) || 0);
+      onUpdateCurrency?.({
+        ...safeCurrency,
+        [key]: parsed,
+      });
+      setTempValues((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-1.5" data-testid="currency-tracker">
+      {/* Category Header */}
+      <div className="flex items-center justify-between text-xs px-1 text-slate-400 font-medium">
+        <div className="flex items-center space-x-1.5">
+          <Coins size={12} className="text-dnd-gold opacity-90" />
+          <span className="text-[11px] font-semibold text-slate-300 tracking-wide">
+            Currency
+          </span>
+        </div>
+        <span className="text-[11px] font-normal text-slate-400">
+          Total: <span className="font-semibold text-dnd-gold">{formattedTotal} gp</span>
+        </span>
+      </div>
+
+      {/* Grid of Coins - Responsively Single Line or Two-Line Configuration */}
+      <div ref={gridRef} className="grid grid-cols-5 gap-1.5 sm:gap-2">
+        {CURRENCY_KEYS.map((key) => {
+          const cfg = CURRENCY_CONFIG[key];
+          const displayVal =
+            tempValues[key] !== undefined ? tempValues[key] : safeCurrency[key];
+          const valLen = String(displayVal ?? '').length;
+
+          return (
+            <label
+              key={key}
+              title={`${displayVal} ${cfg.label}`}
+              className={`bg-dnd-card hover:bg-dnd-hover transition-colors rounded-lg text-xs shadow-sm cursor-text min-w-0 ${
+                isStacked
+                  ? 'py-1 px-1 flex flex-col items-center justify-center gap-0.5 min-h-[42px]'
+                  : 'py-1.5 px-1.5 sm:px-2 flex flex-row items-center justify-between gap-1 h-8'
+              }`}
+            >
+              <span
+                key="unit"
+                style={{ color: cfg.color }}
+                className={`text-[10px] font-bold tracking-wider shrink-0 select-none ${cfg.text} ${
+                  isStacked ? 'order-1 leading-none' : 'order-2'
+                }`}
+              >
+                {cfg.label}
+              </span>
+              <input
+                key="input"
+                type="number"
+                min="0"
+                aria-label={`${cfg.name} (${cfg.label})`}
+                value={displayVal}
+                onChange={(e) => handleChange(key, e.target.value)}
+                onBlur={() => handleBlur(key)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                }}
+                className={`w-full min-w-0 text-center bg-transparent font-semibold text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold/50 rounded py-0 px-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                  isStacked
+                    ? `order-2 ${
+                        valLen >= 9
+                          ? 'text-[9px]'
+                          : valLen >= 7
+                          ? 'text-[10px]'
+                          : valLen >= 5
+                          ? 'text-[11px]'
+                          : 'text-xs'
+                      }`
+                    : 'order-1 text-xs py-0.5'
+                }`}
+              />
+            </label>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function ItemsCard({
   items = [],
+  currency,
+  onUpdateCurrency,
   maxAttunement = 3,
   onUpdateMaxAttunement,
   isAttuneMode: externalIsAttuneMode,
@@ -882,6 +1103,14 @@ export default function ItemsCard({
     };
   }, [safeItems, selectedCategory, selectedColor, searchQuery]);
 
+  const isCurrencyVisible = useMemo(() => {
+    if (selectedCategory !== 'all') return false;
+    if (selectedColor !== 'all') return false;
+    return isCurrencySearchMatch(searchQuery);
+  }, [selectedCategory, selectedColor, searchQuery]);
+
+  const totalVisibleEntries = totalFilteredCount + (isCurrencyVisible ? 1 : 0);
+
   const selectedColorConfig = getColorConfig(color);
 
   return (
@@ -896,7 +1125,7 @@ export default function ItemsCard({
             placeholder="Search inventory..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card text-slate-200 placeholder-slate-500 border border-white/5 focus:outline-none focus:ring-1 focus:ring-dnd-gold/60"
+            className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
           />
           {searchQuery && (
             <button
@@ -1097,26 +1326,42 @@ export default function ItemsCard({
 
       {/* Items Inventory List */}
       <div className="space-y-3 min-h-[22px]">
-        {safeItems.length === 0 && !isAdding && (
-          <span className="text-[10px] text-slate-500 italic">No items recorded</span>
+        {/* Currency Category */}
+        {isCurrencyVisible && (
+          <CurrencyTracker currency={currency} onUpdateCurrency={onUpdateCurrency} />
         )}
 
-        {safeItems.length > 0 && totalFilteredCount === 0 && (
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-500 italic">
-              {searchQuery ? `No items matching "${searchQuery}"` : 'No items match current filters'}
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setFilters({ category: 'all', color: 'all' });
-                setSearchQuery('');
-              }}
-              className="text-[10px] text-dnd-gold hover:underline"
-            >
-              Reset
-            </button>
-          </div>
+        {/* Separation between Currency and subsequent item categories */}
+        {isCurrencyVisible && groupedItems.length > 0 && (
+          <div className="border-t border-white/10 my-3" />
+        )}
+
+        {/* Empty state when neither items nor currency matched */}
+        {totalVisibleEntries === 0 && (
+          safeItems.length === 0 && !searchQuery && selectedCategory === 'all' && selectedColor === 'all' && !isAdding ? (
+            <span className="text-[10px] text-slate-500 italic">No items recorded</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-slate-500 italic">
+                {searchQuery ? `No items matching "${searchQuery}"` : 'No items match current filters'}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters({ category: 'all', color: 'all' });
+                  setSearchQuery('');
+                }}
+                className="text-[10px] text-dnd-gold hover:underline"
+              >
+                Reset
+              </button>
+            </div>
+          )
+        )}
+
+        {/* If safeItems is empty and we're not searching, show note below Currency */}
+        {isCurrencyVisible && safeItems.length === 0 && !isAdding && !searchQuery && selectedCategory === 'all' && (
+          <span className="text-[10px] text-slate-500 italic block">No items recorded</span>
         )}
 
         {groupedItems.map((group, groupIdx) => {
@@ -1134,8 +1379,8 @@ export default function ItemsCard({
                     {group.config.label}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-medium px-1.5 py-0.2 rounded bg-white/5">
-                  {group.items.length}
+                <span className="text-[11px] font-normal text-slate-400">
+                  {group.items.length} {group.items.length === 1 ? 'item' : 'items'}
                 </span>
               </div>
 

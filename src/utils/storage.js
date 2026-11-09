@@ -341,6 +341,7 @@ export function createDefaultSheet(className = 'Wizard') {
     trackedResources: [],
     featuresNotes: '',
     feats: [],
+    currency: { cp: 0, sp: 0, ep: 0, gp: 0, pp: 0 },
     items: [],
     maxAttunement: 3,
     notes: '',
@@ -413,6 +414,7 @@ export function loadCharacterProfiles() {
             bonuses: { ...defaultSheet.senses.bonuses, ...(p.sheet.senses?.bonuses || {}) },
           },
           proficiencies: { ...defaultSheet.proficiencies, ...(p.sheet.proficiencies || {}) },
+          currency: { ...defaultSheet.currency, ...(p.sheet.currency || {}) },
           identity: { ...defaultSheet.identity, ...(p.sheet.identity || {}) },
         },
       };

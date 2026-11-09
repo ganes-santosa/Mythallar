@@ -453,6 +453,8 @@ function CharacterSheetView({
         >
           <ItemsCard
             items={sheet.items}
+            currency={sheet.currency}
+            onUpdateCurrency={(currency) => updateSheet({ currency })}
             maxAttunement={maxAttunement}
             onUpdateMaxAttunement={(maxAttunement) => updateSheet({ maxAttunement })}
             isAttuneMode={isAttuneMode}

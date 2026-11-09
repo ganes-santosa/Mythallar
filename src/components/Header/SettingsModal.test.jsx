@@ -127,4 +127,21 @@ describe('SettingsModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /Close settings/i }));
     expect(handleClose).toHaveBeenCalled();
   });
+
+  it('renders section headers in Title Case without uppercase text transform', () => {
+    render(
+      <SettingsModal
+        isOpen={true}
+        onClose={vi.fn()}
+        activeThemeId="mythallar-classic"
+        onSelectTheme={vi.fn()}
+      />
+    );
+
+    const prefHeader = screen.getByText('Spellbook Preferences').parentElement;
+    const paletteHeader = screen.getByText('Color Palettes').parentElement;
+
+    expect(prefHeader.className).not.toContain('uppercase');
+    expect(paletteHeader.className).not.toContain('uppercase');
+  });
 });
