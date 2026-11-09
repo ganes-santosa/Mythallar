@@ -98,6 +98,19 @@ export const ITEM_COLORS = [
   },
 ];
 
+export const RESOURCE_COLORS = [
+  {
+    id: 'none',
+    label: 'No Color',
+    bg: 'bg-dnd-card',
+    text: 'text-slate-200',
+    dot: 'border border-slate-500/80 bg-transparent',
+    color: 'transparent',
+    glow: 'none',
+  },
+  ...ITEM_COLORS,
+];
+
 export const COLOR_ORDER = {
   slate: 0,
   emerald: 1,
@@ -129,6 +142,9 @@ export function getCategoryIcon(category) {
 
 // Maps legacy rarity IDs to colors if present, or resolves color directly
 export function getColorConfig(colorId) {
+  if (colorId === 'none') {
+    return RESOURCE_COLORS[0];
+  }
   const legacyMap = {
     common: 'slate',
     uncommon: 'emerald',
@@ -136,9 +152,87 @@ export function getColorConfig(colorId) {
     very_rare: 'purple',
     legendary: 'amber',
     artifact: 'rose',
+    blue: 'sky',
   };
   const resolved = legacyMap[colorId] || colorId;
-  return ITEM_COLORS.find((c) => c.id === resolved) || ITEM_COLORS[0];
+  return (
+    ITEM_COLORS.find((c) => c.id === resolved) ||
+    RESOURCE_COLORS.find((c) => c.id === resolved) ||
+    ITEM_COLORS[0]
+  );
+}
+
+export function ColorDropdown({
+  color,
+  setColor,
+  isOpen,
+  setIsOpen,
+  dropdownRef,
+  colors = ITEM_COLORS,
+  align = 'right',
+  className = '',
+}) {
+  const selectedConfig = colors.find((c) => c.id === color) || getColorConfig(color);
+  const isNone = selectedConfig.id === 'none';
+  const gridClass = colors.length > 6 ? 'grid-cols-4 w-[110px]' : 'grid-cols-3 w-[84px]';
+  const alignClass = align === 'left' ? 'left-0' : 'right-0';
+
+  return (
+    <div className={`w-11 shrink-0 relative ${className}`} ref={dropdownRef}>
+      <label className="block text-[10px] text-slate-400 mb-0.5 text-center">
+        Color
+      </label>
+      <button
+        type="button"
+        aria-label="Select color tag"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full px-1 py-1 rounded bg-dnd-panel text-slate-200 text-xs flex items-center justify-center gap-1 hover:bg-dnd-panel/90 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors h-[26px]"
+      >
+        {isNone ? (
+          <span className="w-3.5 h-3.5 rounded-full border border-slate-500/80 bg-transparent flex items-center justify-center relative overflow-hidden shadow-sm shrink-0">
+            <span className="w-full h-[1.5px] bg-red-400/80 -rotate-45 block" />
+          </span>
+        ) : (
+          <span className={`w-3.5 h-3.5 rounded-full ${selectedConfig.dot} shadow-sm shrink-0`} />
+        )}
+        <ChevronDown size={10} className={`text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className={`absolute ${alignClass} top-full mt-1.5 p-1.5 rounded-lg bg-dnd-card shadow-lg ring-1 ring-white/10 z-30 grid ${gridClass} gap-1.5`}>
+          {colors.map((c) => {
+            const isSelected = color === c.id || (!color && c.id === 'none');
+            const isSwatchNone = c.id === 'none';
+            return (
+              <button
+                key={c.id}
+                type="button"
+                aria-label={`Select ${c.id}`}
+                title={c.label}
+                onClick={() => {
+                  setColor(c.id);
+                  setIsOpen(false);
+                }}
+                className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
+                  isSelected
+                    ? 'ring-2 ring-white scale-110 shadow-sm'
+                    : 'opacity-70 hover:opacity-100 hover:scale-105'
+                }`}
+              >
+                {isSwatchNone ? (
+                  <span className="w-3.5 h-3.5 rounded-full border border-slate-500/80 bg-transparent flex items-center justify-center relative overflow-hidden">
+                    <span className="w-full h-[1.5px] bg-red-400/80 -rotate-45 block" />
+                  </span>
+                ) : (
+                  <span className={`w-3.5 h-3.5 rounded-full ${c.dot}`} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ponytail: discrete buckets 4, 8, 12, 16 lines for stepped height transitions
@@ -492,46 +586,13 @@ function ItemForm({
         </div>
 
         {/* Color Tag Dropdown */}
-        <div className="w-11 shrink-0 relative" ref={colorDropdownRef}>
-          <label className="block text-[10px] text-slate-400 mb-0.5 text-center">
-            Color
-          </label>
-          <button
-            type="button"
-            aria-label="Select color tag"
-            onClick={() => setIsColorMenuOpen((prev) => !prev)}
-            className="w-full px-1 py-1 rounded bg-dnd-panel text-slate-200 text-xs flex items-center justify-center gap-1 hover:bg-dnd-panel/90 focus:outline-none focus:ring-1 focus:ring-white/20 transition-colors h-[26px]"
-          >
-            <span className={`w-3.5 h-3.5 rounded-full ${selectedColorConfig.dot} shadow-sm shrink-0`} />
-            <ChevronDown size={10} className={`text-slate-400 transition-transform ${isColorMenuOpen ? 'rotate-180' : ''}`} />
-          </button>
-
-          {isColorMenuOpen && (
-            <div className="absolute left-0 top-full mt-1.5 p-1.5 rounded-lg bg-dnd-card shadow-lg ring-1 ring-white/10 z-30 grid grid-cols-3 gap-1.5 w-[84px]">
-              {ITEM_COLORS.map((c) => {
-                const isSelected = color === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-label={`Select ${c.id}`}
-                    onClick={() => {
-                      setColor(c.id);
-                      setIsColorMenuOpen(false);
-                    }}
-                    className={`w-5 h-5 rounded-full flex items-center justify-center transition-all ${
-                      isSelected
-                        ? 'ring-2 ring-white scale-110 shadow-sm'
-                        : 'opacity-70 hover:opacity-100 hover:scale-105'
-                    }`}
-                  >
-                    <span className={`w-3.5 h-3.5 rounded-full ${c.dot}`} />
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <ColorDropdown
+          color={color}
+          setColor={setColor}
+          isOpen={isColorMenuOpen}
+          setIsOpen={setIsColorMenuOpen}
+          dropdownRef={colorDropdownRef}
+        />
 
         {/* Category */}
         <div className="w-40 shrink-0">

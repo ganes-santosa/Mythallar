@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import CharacterManagerModal from './CharacterManagerModal';
+import { CloudSyncContext } from '../../context/CloudSyncContext';
 
 const mockProfiles = [
   { id: 'c1', name: 'Mordenkainen', className: 'Wizard', level: 9, spells: [{ id: 's1' }] },
@@ -92,6 +93,44 @@ describe('CharacterManagerModal', () => {
 
     expect(handleSelect).toHaveBeenCalledWith('c2');
     expect(handleClose).toHaveBeenCalled();
+  });
+
+  describe('cloud status', () => {
+    const renderWithSync = (value) =>
+      render(
+        <CloudSyncContext.Provider value={value}>
+          <CharacterManagerModal
+            isOpen={true}
+            onClose={vi.fn()}
+            profiles={mockProfiles}
+            activeId="c1"
+            onSelectProfile={vi.fn()}
+            onCreateProfile={vi.fn()}
+            onDeleteProfile={vi.fn()}
+          />
+        </CloudSyncContext.Provider>
+      );
+
+    it('shows no status badges when signed out', () => {
+      renderWithSync({ signedIn: false });
+      expect(screen.queryByText('Local Only')).not.toBeInTheDocument();
+    });
+
+    it('shows a badge per character and a two-click Sync to Cloud on Local Only ones', () => {
+      const onSyncCharacter = vi.fn();
+      const statuses = { c1: 'synced', c2: 'local', c3: 'error' };
+      renderWithSync({ signedIn: true, getStatus: (c) => statuses[c.id], onSyncCharacter });
+
+      expect(screen.getByText('Synced')).toBeInTheDocument();
+      expect(screen.getByText('Local Only')).toBeInTheDocument();
+      expect(screen.getByText('Sync Error')).toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /Sync .* to Cloud/i })).toHaveLength(1);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Sync Astarion to Cloud' }));
+      expect(onSyncCharacter).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('button', { name: 'Click again to sync Astarion to Cloud' }));
+      expect(onSyncCharacter).toHaveBeenCalledWith('c2');
+    });
   });
 
   it('requires confirmation before calling onDeleteProfile', () => {

@@ -167,6 +167,8 @@ describe('CharacterSheetView', () => {
     // Features & Resources edit toggle
     const editResourcesBtn = screen.getByLabelText('Edit resources');
     expect(editResourcesBtn).toBeInTheDocument();
+    expect(editResourcesBtn).toHaveAttribute('title', 'Rearrange features and tracked resources');
+    expect(editResourcesBtn.querySelector('svg')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
     fireEvent.click(editResourcesBtn);
 

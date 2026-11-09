@@ -577,6 +577,84 @@ describe('VitalsCard', () => {
     );
   });
 
+  it('applies acBonus to calculate effective AC and allows editing AC misc bonus', () => {
+    const onUpdateVitals = vi.fn();
+    const { rerender } = render(
+      <VitalsCard
+        vitals={{ ...mockVitals, ac: 15, acBonus: 2 }}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={false}
+      />
+    );
+
+    // 15 base + 2 bonus = 17 effective AC
+    expect(screen.getByText('17')).toBeInTheDocument();
+
+    rerender(
+      <VitalsCard
+        vitals={{ ...mockVitals, ac: 15, acBonus: 2 }}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={true}
+      />
+    );
+
+    const bonusInput = screen.getByLabelText('AC Misc Bonus');
+    expect(bonusInput).toHaveValue(2);
+    fireEvent.change(bonusInput, { target: { value: '3' } });
+    expect(onUpdateVitals).toHaveBeenCalledWith(
+      expect.objectContaining({
+        acBonus: 3,
+      })
+    );
+  });
+
+  it('applies spellAttackBonus and spellDcBonus and allows editing misc bonuses in edit mode', () => {
+    const onUpdateVitals = vi.fn();
+    const { rerender } = render(
+      <VitalsCard
+        vitals={{ ...mockVitals, spellAttackBonus: 1, spellDcBonus: 2 }}
+        abilities={{ int: 18 }}
+        classes={[{ className: 'Wizard', level: 5 }]}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={false}
+      />
+    );
+
+    // INT 18 (+4), Level 5 (+3 prof) + bonus
+    // Attack: 4 + 3 + 1 = +8
+    // DC: 8 + 3 + 4 + 2 = 17
+    expect(screen.getByText('+8')).toBeInTheDocument();
+    expect(screen.getByText('17')).toBeInTheDocument();
+
+    rerender(
+      <VitalsCard
+        vitals={{ ...mockVitals, spellAttackBonus: 1, spellDcBonus: 2 }}
+        abilities={{ int: 18 }}
+        classes={[{ className: 'Wizard', level: 5 }]}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={true}
+      />
+    );
+
+    const attackBonusInput = screen.getByLabelText('Spell Attack Misc Bonus');
+    expect(attackBonusInput).toHaveValue(1);
+    fireEvent.change(attackBonusInput, { target: { value: '2' } });
+    expect(onUpdateVitals).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spellAttackBonus: 2,
+      })
+    );
+
+    const dcBonusInput = screen.getByLabelText('Spell DC Misc Bonus');
+    expect(dcBonusInput).toHaveValue(2);
+    fireEvent.change(dcBonusInput, { target: { value: '3' } });
+    expect(onUpdateVitals).toHaveBeenCalledWith(
+      expect.objectContaining({
+        spellDcBonus: 3,
+      })
+    );
+  });
+
   it('allows changing spellcasting ability in edit mode', () => {
     const onUpdateVitals = vi.fn();
     render(

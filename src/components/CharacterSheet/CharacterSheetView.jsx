@@ -15,6 +15,7 @@ import {
   Blend,
   ChevronDown,
   Waypoints,
+  ArrowLeftRight,
 } from 'lucide-react';
 import AccordionSection from '../Common/AccordionSection';
 import CharacterSheetHeader from './CharacterSheetHeader';
@@ -22,7 +23,7 @@ import VitalsCard from './VitalsCard';
 import AbilitiesCard from './AbilitiesCard';
 import SkillsCard from './SkillsCard';
 import ProficienciesCard from './ProficienciesCard';
-import ResourcesCard from './ResourcesCard';
+import ResourcesCard, { RearrangeIcon } from './ResourcesCard';
 import ItemsCard, { MaxAttunementInput } from './ItemsCard';
 import NotesCard from './NotesCard';
 import { getProficiencyBonus, getEffectiveAbilities } from '../../utils/dndCalculations';
@@ -261,9 +262,9 @@ function CharacterSheetView({
                   aria-label="Edit resources"
                   onClick={() => setIsEditingResources(true)}
                   className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-                  title="Edit features and tracked resources"
+                  title="Rearrange features and tracked resources"
                 >
-                  <Settings2 size={13} />
+                  <ArrowLeftRight size={13} />
                 </button>
               )}
             </div>

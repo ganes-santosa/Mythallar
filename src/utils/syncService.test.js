@@ -1,6 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
-  mergeLocalAndCloud,
+  fingerprint,
+  changedItems,
+  buildSynced,
+  isVisibleProfile,
+  splitForPull,
+  localConflictCopies,
+  loadPromptedLocalIds,
+  savePromptedLocalIds,
   fetchCloudData,
   syncCharactersToCloud,
   syncHomebrewToCloud,
@@ -10,56 +17,6 @@ import {
 } from './syncService';
 
 describe('syncService', () => {
-  describe('mergeLocalAndCloud', () => {
-    it('merges items by id preserving local changes if more recent or present', () => {
-      const local = [
-        { id: 'char1', name: 'Wizard Local', updated_at: 200 },
-        { id: 'char2', name: 'Rogue Local', updated_at: 100 },
-      ];
-      const cloud = [
-        { id: 'char1', name: 'Wizard Cloud', updated_at: 150 },
-        { id: 'char3', name: 'Cleric Cloud', updated_at: 300 },
-      ];
-
-      const merged = mergeLocalAndCloud(local, cloud);
-
-      expect(merged).toHaveLength(3);
-      const c1 = merged.find((c) => c.id === 'char1');
-      const c2 = merged.find((c) => c.id === 'char2');
-      const c3 = merged.find((c) => c.id === 'char3');
-
-      expect(c1.name).toBe('Wizard Local'); // higher timestamp wins
-      expect(c2.name).toBe('Rogue Local');
-      expect(c3.name).toBe('Cleric Cloud');
-    });
-
-    it('prefers cloud when cloud has newer updated_at timestamp', () => {
-      const local = [{ id: 'char1', name: 'Wizard Local', updated_at: 100 }];
-      const cloud = [{ id: 'char1', name: 'Wizard Cloud', updated_at: 200 }];
-      const merged = mergeLocalAndCloud(local, cloud);
-      expect(merged[0].name).toBe('Wizard Cloud');
-    });
-
-    it('filters out items present in deletedIds whose updated_at is older than or equal to deletion', () => {
-      const local = [
-        { id: 'c1', name: 'Keep', updated_at: 500 },
-        { id: 'c2', name: 'Delete Local', updated_at: 300 },
-      ];
-      const cloud = [
-        { id: 'c2', name: 'Delete Cloud', updated_at: 400 },
-        { id: 'c3', name: 'Resurrect Cloud', updated_at: 200 },
-      ];
-      const deletedIds = {
-        c2: 400, // exact or newer than c2's updated_at
-        c3: 500, // deleted after c3 was created
-      };
-
-      const merged = mergeLocalAndCloud(local, cloud, deletedIds);
-      expect(merged).toHaveLength(1);
-      expect(merged[0].id).toBe('c1');
-    });
-  });
-
   describe('fetchCloudData', () => {
     it('returns empty lists if client is null or user is missing', async () => {
       const res = await fetchCloudData(null, null);
@@ -92,6 +49,26 @@ describe('syncService', () => {
       expect(res.characters[0].name).toBe('Elminster');
       expect(res.homebrewSpells).toHaveLength(1);
       expect(res.homebrewSpells[0].name).toBe('Solar Ray');
+    });
+  });
+
+  describe('fetchCloudData errors', () => {
+    it('throws when supabase returns an error so callers never treat failure as empty cloud', async () => {
+      const mockClient = {
+        from: vi.fn(() => ({
+          select: vi.fn(() => ({
+            eq: vi.fn(() => Promise.resolve({ data: null, error: { message: 'network down' } })),
+          })),
+        })),
+      };
+      await expect(fetchCloudData(mockClient, 'user-123')).rejects.toBeTruthy();
+    });
+  });
+
+  describe('fingerprint', () => {
+    it('ignores updated_at so realtime echoes of our own push can be detected', () => {
+      expect(fingerprint({ id: 'a', n: 1, updated_at: 1 })).toBe(fingerprint({ id: 'a', n: 1, updated_at: 2 }));
+      expect(fingerprint({ id: 'a', n: 1 })).not.toBe(fingerprint({ id: 'a', n: 2 }));
     });
   });
 
@@ -173,34 +150,112 @@ describe('syncService', () => {
   });
 
   describe('reconcileCloudPull', () => {
-    it('authoritatively prunes local profiles that were deleted in cloud if already synced before', () => {
-      // Local has Arthur and Mordenkainen
-      const local = [
-        { id: 'arthur', name: 'Arthur', updated_at: 100 },
-        { id: 'mordenkainen', name: 'Mordenkainen', updated_at: 100 },
-      ];
-      // Cloud only has Arthur (Mordenkainen was deleted on another device)
-      const cloud = [
-        { id: 'arthur', name: 'Arthur', updated_at: 100 },
-      ];
+    const a = { id: 'a', name: 'Arthur' };
+    const m = { id: 'm', name: 'Mordenkainen' };
 
-      const reconciled = reconcileCloudPull(local, cloud, {}, true);
-      expect(reconciled.map((p) => p.id)).toEqual(['arthur']);
+    it('drops local items that were synced before but are gone from cloud (remote delete)', () => {
+      const synced = { a: fingerprint(a), m: fingerprint(m) };
+      expect(reconcileCloudPull([a, m], [a], synced).map((p) => p.id)).toEqual(['a']);
     });
 
-    it('merges new local items if first-time sync', () => {
-      const local = [
-        { id: 'local-1', name: 'Guest Character', updated_at: 100 },
-      ];
-      const cloud = [
-        { id: 'cloud-1', name: 'Existing Cloud Character', updated_at: 100 },
-      ];
+    it('keeps never-synced local items so guest characters upload', () => {
+      const guest = { id: 'g', name: 'Guest' };
+      const cloud = { id: 'c', name: 'Cloud' };
+      const ids = reconcileCloudPull([guest], [cloud], {}).map((p) => p.id);
+      expect(ids).toEqual(['c', 'g']);
+    });
 
-      // hasSyncedBefore = false
-      const reconciled = reconcileCloudPull(local, cloud, {}, false);
-      expect(reconciled).toHaveLength(2);
-      expect(reconciled.map((p) => p.id)).toContain('local-1');
-      expect(reconciled.map((p) => p.id)).toContain('cloud-1');
+    it('restores cloud item that was deleted locally while signed out (cloud is truth)', () => {
+      const synced = { a: fingerprint(a) };
+      expect(reconcileCloudPull([], [a], synced)).toEqual([a]);
+    });
+
+    it('cloud wins over local copy when cloud changed', () => {
+      const synced = { a: fingerprint(a) };
+      const cloudNew = { id: 'a', name: 'Arthur II' };
+      expect(reconcileCloudPull([a], [cloudNew], synced)).toEqual([cloudNew]);
+    });
+
+    it('keeps unpushed local edits when cloud is unchanged since last sync', () => {
+      const synced = { a: fingerprint(a) };
+      const edited = { id: 'a', name: 'Edited Offline' };
+      expect(reconcileCloudPull([edited], [a], synced)).toEqual([edited]);
+    });
+  });
+
+  describe('workspace visibility', () => {
+    it('shows Local Only and own characters, hides other accounts', () => {
+      expect(isVisibleProfile({ id: 'l' }, 'u1')).toBe(true);
+      expect(isVisibleProfile({ id: 'a', syncOwner: 'u1' }, 'u1')).toBe(true);
+      expect(isVisibleProfile({ id: 'b', syncOwner: 'u2' }, 'u1')).toBe(false);
+      expect(isVisibleProfile({ id: 'l' }, null)).toBe(true);
+      expect(isVisibleProfile({ id: 'a', syncOwner: 'u1' }, null)).toBe(false);
+    });
+
+    it('fingerprint ignores syncOwner', () => {
+      expect(fingerprint({ id: 'a', syncOwner: 'u1' })).toBe(fingerprint({ id: 'a' }));
+    });
+
+    it('splitForPull adopts local-only characters already in cloud, leaves others alone', () => {
+      const all = [
+        { id: 'own', syncOwner: 'u1' },
+        { id: 'inCloud' },
+        { id: 'guest' },
+        { id: 'other', syncOwner: 'u2' },
+      ];
+      const { mine, others } = splitForPull(all, new Set(['inCloud']), 'u1');
+      expect(mine.map((p) => p.id)).toEqual(['own', 'inCloud']);
+      expect(others.map((p) => p.id)).toEqual(['guest', 'other']);
+    });
+  });
+
+  describe('localConflictCopies', () => {
+    it('copies only Local Only characters that differ from their cloud twin', () => {
+      const same = { id: 's', name: 'Same' };
+      const diff = { id: 'd', name: 'Mine' };
+      const owned = { id: 'o', name: 'Owned', syncOwner: 'u1' };
+      const cloud = [
+        { id: 's', name: 'Same', updated_at: 5, syncOwner: 'u1' },
+        { id: 'd', name: 'Theirs', syncOwner: 'u1' },
+        { id: 'o', name: 'Other', syncOwner: 'u1' },
+      ];
+      const copies = localConflictCopies([same, diff, owned], cloud, () => 'new1');
+      expect(copies).toEqual([{ id: 'new1', name: 'Mine (Local Copy)' }]);
+    });
+  });
+
+  describe('promptedLocalIds', () => {
+    it('saves and loads prompted local IDs per user', () => {
+      expect(loadPromptedLocalIds('u1')).toEqual(new Set());
+      savePromptedLocalIds('u1', ['c1', 'c2']);
+      expect(loadPromptedLocalIds('u1')).toEqual(new Set(['c1', 'c2']));
+
+      savePromptedLocalIds('u1', ['c2', 'c3']);
+      expect(loadPromptedLocalIds('u1')).toEqual(new Set(['c1', 'c2', 'c3']));
+
+      // Isolated by user
+      expect(loadPromptedLocalIds('u2')).toEqual(new Set());
+    });
+  });
+
+  describe('changedItems', () => {
+    it('returns only new or modified items', () => {
+      const a = { id: 'a', name: 'A' };
+      const b = { id: 'b', name: 'B' };
+      const c = { id: 'c', name: 'C' };
+      const synced = { a: fingerprint(a), b: fingerprint({ id: 'b', name: 'old' }) };
+      expect(changedItems([a, b, c], synced).map((i) => i.id)).toEqual(['b', 'c']);
+    });
+  });
+
+  describe('buildSynced', () => {
+    it('records fingerprints of adopted cloud items and keeps old one when local edits won', () => {
+      const a = { id: 'a', name: 'A' };
+      const b = { id: 'b', name: 'B' };
+      const localB = { id: 'b', name: 'B local' };
+      const synced = { b: fingerprint(b), x: 'gone' };
+      const result = [a, localB];
+      expect(buildSynced(result, [a, b], synced)).toEqual({ a: fingerprint(a), b: fingerprint(b) });
     });
   });
 

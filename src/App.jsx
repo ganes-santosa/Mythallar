@@ -10,8 +10,6 @@ import {
   saveAppSettings,
   normalizeHitDice,
   recoverHitDiceOnLongRest,
-  loadDeletedIds,
-  saveDeletedId,
 } from './utils/storage';
 import { getEffectiveMaxSlots, isWizardCharacter } from './utils/spellSlots';
 import { getAbilityModifier, formatModifier, rollHitDie } from './utils/dndCalculations';
@@ -24,10 +22,24 @@ import {
   syncHomebrewToCloud,
   deleteCloudCharacter,
   deleteCloudHomebrew,
-  mergeLocalAndCloud,
   reconcileCloudPull,
+  isVisibleProfile,
+  splitForPull,
+  localConflictCopies,
   subscribeToUserChanges,
+  fingerprint,
+  buildSynced,
+  changedItems,
+  loadSynced,
+  saveSynced,
+  loadPending,
+  savePending,
+  flushPendingDeletes,
+  loadPromptedLocalIds,
+  savePromptedLocalIds,
 } from './utils/syncService';
+
+const newLocalId = () => `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 import { getStoredThemeId, setTheme, applyTheme, getActiveTheme } from './utils/themeService';
 import FilterBar from './components/Catalog/FilterBar';
 import SpellList from './components/Catalog/SpellList';
@@ -36,6 +48,8 @@ import CharacterHeader from './components/Header/CharacterHeader';
 import AuthStatus from './components/Header/AuthStatus';
 import SettingsModal from './components/Header/SettingsModal';
 import CreateCharacterModal from './components/Modal/CreateCharacterModal';
+import LocalCharactersImportModal from './components/Modal/LocalCharactersImportModal';
+import { CloudSyncContext } from './context/CloudSyncContext';
 import ShortRestModal from './components/Modal/ShortRestModal';
 import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
@@ -49,7 +63,14 @@ export default function App() {
   const [isCreateCharacterModalOpen, setIsCreateCharacterModalOpen] = useState(false);
   const [leftPaneView, setLeftPaneView] = useState('spells'); // 'spells' | 'sheet'
   const [isSwitcherHovered, setIsSwitcherHovered] = useState(false);
-  const { profiles, activeId } = profileData;
+  const [user, setUser] = useState(null);
+  const { activeId } = profileData;
+  // profileData.profiles holds every stored character (Local Only + each account's cache).
+  // `profiles` is what this session may see: Local Only plus the signed-in account's.
+  const profiles = useMemo(
+    () => profileData.profiles.filter((p) => isVisibleProfile(p, user?.id)),
+    [profileData.profiles, user]
+  );
 
   const activeCharacter = useMemo(() => {
     return profiles.find((p) => p.id === activeId) || profiles[0] || null;
@@ -166,9 +187,7 @@ export default function App() {
   };
 
   // --- Auth & Cloud Sync State ---
-  const [user, setUser] = useState(null);
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'saved' | 'error' | 'offline'
-  const debounceSyncTimer = useRef(null);
   const supabase = getSupabase();
 
   // Listen to Supabase auth state change
@@ -190,64 +209,109 @@ export default function App() {
     };
   }, [supabase]);
 
-  // Pull cloud data on user login
-  const hasSyncedBeforeRef = useRef(false);
+  // Cloud is the source of truth. `syncedRef` holds, per kind, id -> fingerprint of the
+  // last state known to match the cloud (persisted per user). Push is blocked until the
+  // first successful pull for the signed-in user (`pulledUserId`).
+  const profileDataRef = useRef(profileData);
+  profileDataRef.current = profileData;
+  const homebrewRef = useRef(homebrewSpells);
+  homebrewRef.current = homebrewSpells;
+  const syncedRef = useRef({ characters: {}, homebrew: {} });
+  const [pulledUserId, setPulledUserId] = useState(null);
+  const [importCandidates, setImportCandidates] = useState([]);
+  const [retryTick, setRetryTick] = useState(0);
 
+  const persistSynced = useCallback(
+    (kind) => {
+      if (user) saveSynced(user.id, kind, syncedRef.current[kind]);
+    },
+    [user]
+  );
+
+  // Pull cloud data on login. Errors never fall through to "empty cloud".
   useEffect(() => {
-    if (!supabase || !user) return;
+    if (!supabase || !user) {
+      setPulledUserId(null);
+      return;
+    }
 
     let cancelled = false;
     setSyncStatus('syncing');
 
-    fetchCloudData(supabase, user.id)
-      .then(({ characters: cloudChars, homebrewSpells: cloudHb }) => {
+    (async () => {
+      try {
+        await flushPendingDeletes(supabase, user.id, 'characters', deleteCloudCharacter);
+        await flushPendingDeletes(supabase, user.id, 'homebrew', deleteCloudHomebrew);
+        const { characters: cloudChars, homebrewSpells: cloudHb } = await fetchCloudData(supabase, user.id);
         if (cancelled) return;
 
-        const deletedIds = loadDeletedIds();
+        const notPending = (kind, list) => {
+          const pending = new Set(loadPending(user.id, kind));
+          return list.filter((i) => !pending.has(i.id));
+        };
 
-        // Reconcile cloud characters with local profiles
-        setProfileData((prev) => {
-          const reconciled = reconcileCloudPull(
-            prev.profiles,
-            cloudChars,
-            deletedIds,
-            hasSyncedBeforeRef.current || cloudChars.length > 0
-          );
-          const nextActiveId =
-            prev.activeId && reconciled.some((p) => p.id === prev.activeId)
-              ? prev.activeId
-              : (reconciled[0]?.id || null);
-
-          return {
-            profiles: reconciled,
-            activeId: nextActiveId,
-          };
-        });
-
-        // Reconcile homebrew spells
-        setHomebrewSpells((prev) =>
-          reconcileCloudPull(
-            prev,
-            cloudHb,
-            deletedIds,
-            hasSyncedBeforeRef.current || cloudHb.length > 0
-          )
+        // Characters: this account's cache + Local Only twins of cloud ids are reconciled
+        // against the cloud; everything else (Local Only, other accounts) is left alone.
+        const charCloud = notPending('characters', cloudChars);
+        const charSynced = loadSynced(user.id, 'characters');
+        const { mine, others } = splitForPull(
+          profileDataRef.current.profiles,
+          new Set(charCloud.map((c) => c.id)),
+          user.id
         );
+        const copies = localConflictCopies(mine, charCloud, newLocalId);
+        const reconciled = reconcileCloudPull(mine, charCloud, charSynced);
+        syncedRef.current.characters = buildSynced(reconciled, charCloud, charSynced);
+        const nextProfiles = [...others, ...copies, ...reconciled];
 
-        hasSyncedBeforeRef.current = true;
+        // Homebrew: same split, cloud wins (no conflict copies).
+        const hbCloud = notPending('homebrew', cloudHb);
+        const hbSynced = loadSynced(user.id, 'homebrew');
+        // Unowned homebrew belongs to whoever signs in first; other accounts' stays hidden.
+        const hbMine = homebrewRef.current.filter((s) => !s.syncOwner || s.syncOwner === user.id);
+        const hbOthers = homebrewRef.current.filter((s) => s.syncOwner && s.syncOwner !== user.id);
+        const hbReconciled = reconcileCloudPull(hbMine, hbCloud, hbSynced);
+        syncedRef.current.homebrew = buildSynced(hbReconciled, hbCloud, hbSynced);
+        const nextHomebrew = [
+          ...hbOthers,
+          ...hbReconciled.map((s) => (s.syncOwner ? s : { ...s, syncOwner: user.id })),
+        ];
+
+        persistSynced('characters');
+        persistSynced('homebrew');
+
+        const prev = profileDataRef.current;
+        const visible = nextProfiles.filter((p) => isVisibleProfile(p, user.id));
+        setProfileData({
+          profiles: nextProfiles,
+          activeId:
+            prev.activeId && visible.some((p) => p.id === prev.activeId)
+              ? prev.activeId
+              : visible[0]?.id || null,
+        });
+        setHomebrewSpells(nextHomebrew);
+        setPulledUserId(user.id);
+
+        // Offer Local Only characters whenever there are characters not yet prompted for this account.
+        const prompted = loadPromptedLocalIds(user.id);
+        const unprompted = nextProfiles.filter((p) => !p.syncOwner && !prompted.has(p.id));
+        if (unprompted.length > 0) {
+          setImportCandidates(unprompted.map((p) => p.id));
+        }
         setSyncStatus('saved');
         showToast('Characters synced with cloud', 'success');
-      })
-      .catch((err) => {
+      } catch (err) {
         if (cancelled) return;
-        console.error('Initial cloud sync error:', err);
+        console.error('Cloud pull error:', err);
         setSyncStatus('error');
-      });
+        setTimeout(() => !cancelled && setRetryTick((t) => t + 1), 10000);
+      }
+    })();
 
     return () => {
       cancelled = true;
     };
-  }, [user, supabase]);
+  }, [user, supabase, persistSynced, retryTick]);
 
   // Real-time synchronization across devices
   useEffect(() => {
@@ -256,11 +320,14 @@ export default function App() {
     const unsubscribe = subscribeToUserChanges(supabase, user.id, {
       onCharacterDelete: (charId) => {
         if (!charId) return;
-        saveDeletedId(charId);
+        delete syncedRef.current.characters[charId];
+        persistSynced('characters');
         setProfileData((prev) => {
           const remaining = prev.profiles.filter((p) => p.id !== charId);
           const nextActiveId =
-            prev.activeId === charId ? (remaining[0]?.id || null) : prev.activeId;
+            prev.activeId === charId
+              ? remaining.find((p) => isVisibleProfile(p, user.id))?.id || null
+              : prev.activeId;
           return {
             profiles: remaining,
             activeId: nextActiveId,
@@ -269,6 +336,10 @@ export default function App() {
       },
       onCharacterChange: (updatedChar) => {
         if (!updatedChar || !updatedChar.id) return;
+        const fp = fingerprint(updatedChar);
+        if (syncedRef.current.characters[updatedChar.id] === fp) return; // echo of our own push
+        syncedRef.current.characters[updatedChar.id] = fp;
+        persistSynced('characters');
         setProfileData((prev) => {
           const existingIdx = prev.profiles.findIndex((p) => p.id === updatedChar.id);
           let nextProfiles;
@@ -286,11 +357,16 @@ export default function App() {
       },
       onHomebrewDelete: (spellId) => {
         if (!spellId) return;
-        saveDeletedId(spellId);
+        delete syncedRef.current.homebrew[spellId];
+        persistSynced('homebrew');
         setHomebrewSpells((prev) => prev.filter((s) => s.id !== spellId));
       },
       onHomebrewChange: (updatedSpell) => {
         if (!updatedSpell || !updatedSpell.id) return;
+        const fp = fingerprint(updatedSpell);
+        if (syncedRef.current.homebrew[updatedSpell.id] === fp) return;
+        syncedRef.current.homebrew[updatedSpell.id] = fp;
+        persistSynced('homebrew');
         setHomebrewSpells((prev) => {
           const existingIdx = prev.findIndex((s) => s.id === updatedSpell.id);
           if (existingIdx >= 0) {
@@ -306,35 +382,125 @@ export default function App() {
     return () => {
       unsubscribe();
     };
-  }, [supabase, user]);
+  }, [supabase, user, persistSynced]);
 
-  // Debounced push to cloud when local profileData or homebrew changes
-  useEffect(() => {
-    if (!supabase || !user) return;
+  // Deleting while signed in: queue the cloud delete (retried until confirmed).
+  // Deleting while signed out: local only, cloud stays the source of truth.
+  const queueCloudDelete = useCallback(
+    (kind, id) => {
+      if (!user || syncedRef.current[kind][id] === undefined) return;
+      delete syncedRef.current[kind][id];
+      persistSynced(kind);
+      savePending(user.id, kind, [...new Set([...loadPending(user.id, kind), id])]);
+    },
+    [user, persistSynced]
+  );
 
-    if (debounceSyncTimer.current) {
-      clearTimeout(debounceSyncTimer.current);
+  // Pushes only items that differ from the last known cloud state, then flushes queued deletes.
+  // Never runs before the first successful pull for this user.
+  const pushToCloud = useCallback(async () => {
+    if (!supabase || !user || pulledUserId !== user.id) return true;
+    // Only items owned by this account sync. Local Only characters never upload.
+    const mine = (list) => list.filter((i) => i.syncOwner === user.id);
+    const kinds = [
+      ['characters', mine(profileDataRef.current.profiles), syncCharactersToCloud, deleteCloudCharacter],
+      ['homebrew', mine(homebrewRef.current), syncHomebrewToCloud, deleteCloudHomebrew],
+    ];
+    let ok = true;
+    for (const [kind, list, push, del] of kinds) {
+      const changed = changedItems(list, syncedRef.current[kind]);
+      if (changed.length > 0) {
+        const res = await push(supabase, user.id, changed);
+        if (res.success) {
+          for (const item of changed) syncedRef.current[kind][item.id] = fingerprint(item);
+          persistSynced(kind);
+        } else {
+          ok = false;
+        }
+      }
+      if (!(await flushPendingDeletes(supabase, user.id, kind, del))) ok = false;
     }
+    return ok;
+  }, [supabase, user, pulledUserId, persistSynced]);
+
+  // Debounced push when local data changes
+  useEffect(() => {
+    if (!supabase || !user || pulledUserId !== user.id) return;
 
     setSyncStatus('syncing');
-
-    debounceSyncTimer.current = setTimeout(async () => {
-      const [charRes, hbRes] = await Promise.all([
-        syncCharactersToCloud(supabase, user.id, profileData.profiles),
-        syncHomebrewToCloud(supabase, user.id, homebrewSpells),
-      ]);
-
-      if (charRes.success && hbRes.success) {
-        setSyncStatus('saved');
-      } else {
-        setSyncStatus('error');
-      }
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const ok = await pushToCloud();
+      if (cancelled) return;
+      setSyncStatus(ok ? 'saved' : 'error');
+      if (!ok) setTimeout(() => setRetryTick((t) => t + 1), 10000);
     }, 1500);
 
     return () => {
-      if (debounceSyncTimer.current) clearTimeout(debounceSyncTimer.current);
+      cancelled = true;
+      clearTimeout(timer);
     };
-  }, [profileData.profiles, homebrewSpells, user, supabase]);
+  }, [profileData.profiles, homebrewSpells, user, supabase, pulledUserId, pushToCloud]);
+
+  // --- Toast Notification State ---
+  const [toast, setToast] = useState(null);
+  const showToast = useCallback((message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((curr) => (curr?.message === message ? null : curr));
+    }, 3200);
+  }, []);
+
+  // --- Local Only -> Cloud ---
+  const markOwned = useCallback(
+    (ids) => {
+      if (!user || ids.length === 0) return;
+      const set = new Set(ids);
+      setProfileData((prev) => ({
+        ...prev,
+        profiles: prev.profiles.map((p) => (set.has(p.id) && !p.syncOwner ? { ...p, syncOwner: user.id } : p)),
+      }));
+    },
+    [user]
+  );
+
+  const handleSyncCharacter = useCallback(
+    (id) => {
+      markOwned([id]);
+      showToast('Syncing character to cloud', 'info');
+    },
+    [markOwned, showToast]
+  );
+
+  const dismissImportPrompt = useCallback(() => {
+    if (user && importCandidates.length > 0) {
+      savePromptedLocalIds(user.id, importCandidates);
+    }
+    setImportCandidates([]);
+  }, [user, importCandidates]);
+
+  const handleImportConfirm = useCallback(
+    (ids) => {
+      markOwned(ids);
+      dismissImportPrompt();
+      if (ids.length > 0) showToast(`Adding ${ids.length} ${ids.length === 1 ? 'character' : 'characters'} to your account`, 'info');
+    },
+    [markOwned, dismissImportPrompt, showToast]
+  );
+
+  const cloudSyncValue = useMemo(
+    () => ({
+      signedIn: !!user,
+      onSyncCharacter: handleSyncCharacter,
+      getStatus: (c) => {
+        if (!c.syncOwner) return 'local';
+        if (syncedRef.current.characters[c.id] === fingerprint(c)) return 'synced';
+        return syncStatus === 'error' ? 'error' : 'syncing';
+      },
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [user, handleSyncCharacter, syncStatus, profileData.profiles]
+  );
 
   const handleSignIn = useCallback(async () => {
     const { error } = await signInWithGoogle();
@@ -357,18 +523,14 @@ export default function App() {
   const handleManualSyncNow = useCallback(async () => {
     if (!supabase || !user) return;
     setSyncStatus('syncing');
-    const [cRes, hRes] = await Promise.all([
-      syncCharactersToCloud(supabase, user.id, profileData.profiles),
-      syncHomebrewToCloud(supabase, user.id, homebrewSpells),
-    ]);
-    if (cRes.success && hRes.success) {
-      setSyncStatus('saved');
-      showToast('Cloud sync complete', 'success');
-    } else {
-      setSyncStatus('error');
-      showToast('Cloud sync failed', 'error');
+    if (pulledUserId !== user.id) {
+      setRetryTick((t) => t + 1); // re-pull first; push follows automatically
+      return;
     }
-  }, [supabase, user, profileData.profiles, homebrewSpells]);
+    const ok = await pushToCloud();
+    setSyncStatus(ok ? 'saved' : 'error');
+    showToast(ok ? 'Cloud sync complete' : 'Cloud sync failed', ok ? 'success' : 'error');
+  }, [supabase, user, pulledUserId, pushToCloud]);
 
   // --- Spell Catalog State ---
   const [baseSpells, setBaseSpells] = useState([]);
@@ -477,15 +639,6 @@ export default function App() {
 
   const filteredSpells = useSpellFilter(allSpells, filters);
 
-  // --- Toast Notification State ---
-  const [toast, setToast] = useState(null);
-  const showToast = useCallback((message, type = 'info') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast((curr) => (curr?.message === message ? null : curr));
-    }, 3200);
-  }, []);
-
   const [leftToast, setLeftToast] = useState(null);
   const showLeftToast = useCallback((message, type = 'success') => {
     setLeftToast({ message, type });
@@ -518,7 +671,9 @@ export default function App() {
   }, []);
 
   const handleSaveNewCharacter = ({ name, className }) => {
-    const newChar = createDefaultProfile(name, className);
+    const created = createDefaultProfile(name, className);
+    // Signed in: new characters belong to the account and sync. Signed out: Local Only.
+    const newChar = user ? { ...created, syncOwner: user.id } : created;
     setProfileData((prev) => ({
       profiles: [...prev.profiles, newChar],
       activeId: newChar.id,
@@ -532,22 +687,20 @@ export default function App() {
       const deletedChar = profileData.profiles.find((p) => p.id === charId);
       const remainingProfiles = profileData.profiles.filter((p) => p.id !== charId);
       const nextActiveId =
-        profileData.activeId === charId ? (remainingProfiles[0]?.id || null) : profileData.activeId;
+        profileData.activeId === charId
+          ? remainingProfiles.find((p) => isVisibleProfile(p, user?.id))?.id || null
+          : profileData.activeId;
 
       setProfileData({
         profiles: remainingProfiles,
         activeId: nextActiveId,
       });
 
-      saveDeletedId(charId);
-
-      if (supabase && user) {
-        deleteCloudCharacter(supabase, user.id, charId);
-      }
+      queueCloudDelete('characters', charId);
 
       showToast(`Deleted ${deletedChar?.name || 'character'}`, 'info');
     },
-    [profileData, supabase, user, showToast]
+    [profileData, user, queueCloudDelete, showToast]
   );
 
   const handleExport = useCallback(() => {
@@ -574,13 +727,14 @@ export default function App() {
         });
       }
 
+      const imported = user ? { ...character, syncOwner: user.id } : character;
       setProfileData((prev) => ({
-        profiles: [...prev.profiles, character],
+        profiles: [...prev.profiles, imported],
         activeId: character.id,
       }));
       showToast(`Imported ${character.name}!`, 'success');
     },
-    [showToast]
+    [user, showToast]
   );
 
   const emptyStateFileInputRef = useRef(null);
@@ -598,7 +752,7 @@ export default function App() {
 
   // --- Homebrew Spell Action ---
   const handleSaveHomebrewSpell = (newSpell) => {
-    setHomebrewSpells((prev) => [newSpell, ...prev]);
+    setHomebrewSpells((prev) => [user ? { ...newSpell, syncOwner: user.id } : newSpell, ...prev]);
     showToast(`Created homebrew spell: ${newSpell.name}`, 'success');
   };
 
@@ -606,10 +760,7 @@ export default function App() {
     const spell = homebrewSpells.find((s) => s.id === spellId);
     setHomebrewSpells((prev) => prev.filter((s) => s.id !== spellId));
 
-    saveDeletedId(spellId);
-    if (supabase && user) {
-      deleteCloudHomebrew(supabase, user.id, spellId);
-    }
+    queueCloudDelete('homebrew', spellId);
 
     // Also remove from all character profiles if they have it added
     setProfileData((prev) => ({
@@ -1165,6 +1316,7 @@ export default function App() {
   }, [leftPaneView, activeCharacter?.id]);
 
   return (
+    <CloudSyncContext.Provider value={cloudSyncValue}>
     <div className="relative flex flex-col h-screen h-[100dvh] w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
       {/* Per-Theme Background Texture Overlay (z-0, behind opaque panels) */}
       {activeTexture === 'celestial' && (
@@ -1595,6 +1747,15 @@ export default function App() {
         skipCopying={appSettings.skipCopying}
         onToggleSkipCopying={handleToggleSkipCopying}
       />
+
+      {/* One-time offer to move Local Only characters into the account */}
+      <LocalCharactersImportModal
+        isOpen={importCandidates.length > 0 && !!user}
+        characters={profileData.profiles.filter((p) => importCandidates.includes(p.id) && !p.syncOwner)}
+        onConfirm={handleImportConfirm}
+        onKeepLocal={dismissImportPrompt}
+      />
     </div>
+    </CloudSyncContext.Provider>
   );
 }

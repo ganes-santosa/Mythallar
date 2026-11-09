@@ -106,8 +106,10 @@ export default function VitalsCard({
   const effectiveAbility = currentVitals.spellcastingAbility || defaultAbility;
   const abilityScore = abilities?.[effectiveAbility] ?? 10;
 
-  const calculatedAttack = calculateSpellAttack(abilityScore, totalLevel);
-  const calculatedDc = calculateSpellDC(abilityScore, totalLevel);
+  const effectiveAc = (Number.isFinite(currentVitals.ac) ? currentVitals.ac : 10) + (Number(currentVitals.acBonus) || 0);
+
+  const calculatedAttack = calculateSpellAttack(abilityScore, totalLevel, currentVitals.spellAttackBonus || 0);
+  const calculatedDc = calculateSpellDC(abilityScore, totalLevel, currentVitals.spellDcBonus || 0);
 
   const displayAttack = currentVitals.spellAttackOverride !== null && currentVitals.spellAttackOverride !== undefined
     ? currentVitals.spellAttackOverride
@@ -437,7 +439,7 @@ export default function VitalsCard({
         </div>
       )}
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[13fr_6fr_9fr] 2xl:grid-cols-[11fr_5fr_8fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[10fr_7fr_9fr] 2xl:grid-cols-[10fr_7fr_9fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 xl:col-span-1">
@@ -677,18 +679,31 @@ export default function VitalsCard({
 
           {isEditing ? (
             <div className="flex flex-col gap-1.5 my-auto">
-              <div className="flex items-center gap-1.5">
-                <label className="text-[9px] text-slate-400 font-semibold w-8">Score:</label>
-                <input
-                  type="number"
-                  aria-label="Armor Class"
-                  value={currentVitals.ac ?? 10}
-                  onChange={(e) => handleFieldChange('ac', Number(e.target.value))}
-                  className="w-14 px-1.5 py-0.5 rounded bg-dnd-panel/70 text-sm font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20"
-                />
+              <div className="grid grid-cols-2 gap-1.5">
+                <div>
+                  <label className="text-[8px] text-slate-400 font-semibold block mb-0.5 text-center">Base</label>
+                  <input
+                    type="number"
+                    aria-label="Armor Class"
+                    value={currentVitals.ac ?? 10}
+                    onChange={(e) => handleFieldChange('ac', Number(e.target.value))}
+                    className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5 text-center">Bonus</label>
+                  <input
+                    type="number"
+                    aria-label="AC Misc Bonus"
+                    placeholder="+0"
+                    value={currentVitals.acBonus !== undefined && currentVitals.acBonus !== 0 ? currentVitals.acBonus : ''}
+                    onChange={(e) => handleFieldChange('acBonus', e.target.value === '' ? 0 : Number(e.target.value))}
+                    className="w-full px-1 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-0.5">
-                <label className="text-[9px] text-slate-400 font-semibold">Note / Breakdown:</label>
+                <label className="text-[8px] text-slate-400 font-semibold">Note / Breakdown:</label>
                 <input
                   type="text"
                   aria-label="AC Formula Breakdown"
@@ -732,7 +747,7 @@ export default function VitalsCard({
           ) : (
             <div className="flex flex-col justify-between my-auto">
               <div className="text-xl font-black text-slate-100 leading-none my-0.5">
-                {currentVitals.ac ?? 10}
+                {effectiveAc}
               </div>
               {currentVitals.acFormula ? (
                 <div className="flex items-start justify-between gap-1 mt-1">
@@ -801,58 +816,114 @@ export default function VitalsCard({
             {/* Body */}
             <div className="flex items-center justify-around my-auto py-1">
               {/* Left: Spell Attack */}
-              <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex-1 flex flex-col items-center justify-center min-w-0">
                 {isEditing ? (
-                  <input
-                    type="number"
-                    aria-label="Spell Attack Override"
-                    placeholder={formatModifier(calculatedAttack)}
-                    value={currentVitals.spellAttackOverride ?? ''}
-                    onChange={(e) =>
-                      onUpdateVitals?.({
-                        ...currentVitals,
-                        spellAttackOverride: e.target.value === '' ? null : Number(e.target.value),
-                      })
-                    }
-                    className="w-12 px-1 py-0.5 rounded bg-dnd-panel/70 text-sm font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
-                  />
-                ) : (
-                  <div className="text-xl font-black text-slate-100 leading-none">
-                    {formatModifier(displayAttack)}
+                  <div className="w-full max-w-[100px] text-center">
+                    <div className="grid grid-cols-2 gap-1 mb-1">
+                      <div>
+                        <label className="text-[8px] text-slate-400 font-semibold block mb-0.5">Base</label>
+                        <input
+                          type="number"
+                          aria-label="Spell Attack Override"
+                          placeholder={formatModifier(calculatedAttack)}
+                          value={currentVitals.spellAttackOverride ?? ''}
+                          onChange={(e) =>
+                            onUpdateVitals?.({
+                              ...currentVitals,
+                              spellAttackOverride: e.target.value === '' ? null : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5">Bonus</label>
+                        <input
+                          type="number"
+                          aria-label="Spell Attack Misc Bonus"
+                          placeholder="+0"
+                          value={currentVitals.spellAttackBonus !== undefined && currentVitals.spellAttackBonus !== 0 ? currentVitals.spellAttackBonus : ''}
+                          onChange={(e) =>
+                            onUpdateVitals?.({
+                              ...currentVitals,
+                              spellAttackBonus: e.target.value === '' ? 0 : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-0.5 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-medium truncate">
+                      Spell Attack
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="text-xl font-black text-slate-100 leading-none">
+                      {formatModifier(displayAttack)}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-medium mt-1">
+                      Spell Attack
+                    </div>
+                  </>
                 )}
-                <div className="text-[10px] text-slate-400 font-medium mt-1">
-                  Spell Attack
-                </div>
               </div>
 
               {/* Middle Divider */}
               <div className="w-px self-stretch bg-white/5 my-0.5" />
 
               {/* Right: Spell DC */}
-              <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="flex-1 flex flex-col items-center justify-center min-w-0">
                 {isEditing ? (
-                  <input
-                    type="number"
-                    aria-label="Spell DC Override"
-                    placeholder={String(calculatedDc)}
-                    value={currentVitals.spellDcOverride ?? ''}
-                    onChange={(e) =>
-                      onUpdateVitals?.({
-                        ...currentVitals,
-                        spellDcOverride: e.target.value === '' ? null : Number(e.target.value),
-                      })
-                    }
-                    className="w-12 px-1 py-0.5 rounded bg-dnd-panel/70 text-sm font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
-                  />
-                ) : (
-                  <div className="text-xl font-black text-slate-100 leading-none">
-                    {displayDc}
+                  <div className="w-full max-w-[100px] text-center">
+                    <div className="grid grid-cols-2 gap-1 mb-1">
+                      <div>
+                        <label className="text-[8px] text-slate-400 font-semibold block mb-0.5">Base</label>
+                        <input
+                          type="number"
+                          aria-label="Spell DC Override"
+                          placeholder={String(calculatedDc)}
+                          value={currentVitals.spellDcOverride ?? ''}
+                          onChange={(e) =>
+                            onUpdateVitals?.({
+                              ...currentVitals,
+                              spellDcOverride: e.target.value === '' ? null : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5">Bonus</label>
+                        <input
+                          type="number"
+                          aria-label="Spell DC Misc Bonus"
+                          placeholder="+0"
+                          value={currentVitals.spellDcBonus !== undefined && currentVitals.spellDcBonus !== 0 ? currentVitals.spellDcBonus : ''}
+                          onChange={(e) =>
+                            onUpdateVitals?.({
+                              ...currentVitals,
+                              spellDcBonus: e.target.value === '' ? 0 : Number(e.target.value),
+                            })
+                          }
+                          className="w-full px-0.5 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-medium truncate">
+                      Spell DC
+                    </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="text-xl font-black text-slate-100 leading-none">
+                      {displayDc}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-medium mt-1">
+                      Spell DC
+                    </div>
+                  </>
                 )}
-                <div className="text-[10px] text-slate-400 font-medium mt-1">
-                  Spell DC
-                </div>
               </div>
             </div>
           </div>

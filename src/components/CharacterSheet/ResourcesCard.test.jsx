@@ -227,4 +227,335 @@ describe('ResourcesCard', () => {
     const counterPill = screen.getByText((_, el) => el?.textContent?.replace(/\s+/g, ' ').trim() === '2 / 3').closest('div');
     expect(counterPill.className).toContain('bg-dnd-panel/70');
   });
+
+  it('opens resource detail viewer on clicking a resource chip and shows description', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={() => {}}
+      />
+    );
+
+    // Initial state: viewer not open
+    expect(screen.queryByTestId('resource-viewer-card')).not.toBeInTheDocument();
+
+    // Click resource chip
+    const chip = screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]');
+    fireEvent.click(chip);
+
+    // Detail viewer should open
+    expect(screen.getByTestId('resource-viewer-card')).toBeInTheDocument();
+    expect(screen.getByTestId('resource-viewer-wrapper')).toHaveClass('animate-accordion-down');
+    expect(screen.getByText('Eldritch Adept')).toBeInTheDocument();
+    expect(screen.getByText(/Recovers @ Long Rest/i)).toBeInTheDocument();
+
+    // Close button works
+    const closeBtn = screen.getByLabelText('Close Lucky details');
+    fireEvent.click(closeBtn);
+    expect(screen.queryByTestId('resource-viewer-card')).not.toBeInTheDocument();
+  });
+
+  it('toggles detail viewer closed when clicking the same resource chip again', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={() => {}}
+      />
+    );
+
+    const chip = screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]');
+    fireEvent.click(chip);
+    const viewerCard = screen.getByTestId('resource-viewer-card');
+    expect(viewerCard).toBeInTheDocument();
+    // Airplane helix icon renders inside viewer header
+    const icon = viewerCard.querySelector('svg');
+    expect(icon).toBeInTheDocument();
+
+    fireEvent.click(chip);
+    expect(screen.queryByTestId('resource-viewer-card')).not.toBeInTheDocument();
+  });
+
+  it('allows editing a resource inside detail viewer and saves changes', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    const chip = screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]');
+    fireEvent.click(chip);
+
+    const editBtn = screen.getByLabelText('Edit Lucky');
+    fireEvent.click(editBtn);
+
+    const nameInput = screen.getByLabelText('Edit Resource Name');
+    const descInput = screen.getByLabelText('Edit Resource Description');
+    fireEvent.change(nameInput, { target: { value: 'Lucky (Feat)' } });
+    fireEvent.change(descInput, { target: { value: 'Roll an extra d20 when attacking or saving.' } });
+
+    const saveBtn = screen.getByRole('button', { name: /save changes/i });
+    fireEvent.click(saveBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'res_1',
+        name: 'Lucky (Feat)',
+        note: 'Roll an extra d20 when attacking or saving.',
+      }),
+    ]);
+  });
+
+  it('deletes a resource from inside the detail viewer using two-click confirmation', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    const chip = screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]');
+    fireEvent.click(chip);
+
+    const editBtn = screen.getByLabelText('Edit Lucky');
+    fireEvent.click(editBtn);
+
+    const deleteBtn = screen.getByRole('button', { name: 'Delete Lucky' });
+    expect(deleteBtn).toHaveAttribute('aria-label', 'Delete Lucky');
+
+    // First click arms the button
+    fireEvent.click(deleteBtn);
+    expect(deleteBtn).toHaveAttribute('aria-label', 'Click again to delete Lucky');
+    expect(handleUpdate).not.toHaveBeenCalled();
+
+    // Second click deletes the resource
+    fireEvent.click(deleteBtn);
+    expect(handleUpdate).toHaveBeenCalledWith([]);
+  });
+
+  it('includes description/notes textarea in Add Resource form', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={true}
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    fireEvent.click(openAddBtn);
+
+    const nameInput = screen.getByLabelText('Resource Name');
+    const noteInput = screen.getByLabelText('Resource Description');
+    fireEvent.change(nameInput, { target: { value: 'Bardic Inspiration' } });
+    fireEvent.change(noteInput, { target: { value: 'Add 1d6 to a roll within 10 minutes.' } });
+
+    const saveBtn = screen.getByRole('button', { name: /save resource/i });
+    fireEvent.click(saveBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith([
+      ...mockResources,
+      expect.objectContaining({
+        name: 'Bardic Inspiration',
+        note: 'Add 1d6 to a roll within 10 minutes.',
+      }),
+    ]);
+  });
+
+  it('dynamically expands description textarea in edit form matching line buckets', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={() => {}}
+      />
+    );
+
+    const chip = screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]');
+    fireEvent.click(chip);
+
+    const editBtn = screen.getByLabelText('Edit Lucky');
+    fireEvent.click(editBtn);
+
+    const descInput = screen.getByLabelText('Edit Resource Description');
+    // Lucky has 'Eldritch Adept' (1 line -> bucket 4)
+    expect(descInput).toHaveAttribute('rows', '4');
+    expect(descInput.style.minHeight).toBe('96px');
+
+    // Type 6 lines -> bucket 8 (8 * 20 + 16 = 176px)
+    fireEvent.change(descInput, { target: { value: '1\n2\n3\n4\n5\n6' } });
+    expect(descInput).toHaveAttribute('rows', '8');
+    expect(descInput.style.minHeight).toBe('176px');
+
+    // Type 10 lines -> bucket 12 (12 * 20 + 16 = 256px)
+    fireEvent.change(descInput, { target: { value: '1\n2\n3\n4\n5\n6\n7\n8\n9\n10' } });
+    expect(descInput).toHaveAttribute('rows', '12');
+    expect(descInput.style.minHeight).toBe('256px');
+  });
+
+  it('dynamically expands description textarea in add form matching line buckets', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={true}
+        onUpdateResources={() => {}}
+      />
+    );
+
+    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    fireEvent.click(openAddBtn);
+
+    const noteInput = screen.getByLabelText('Resource Description');
+    expect(noteInput).toHaveAttribute('rows', '4');
+    expect(noteInput.style.minHeight).toBe('96px');
+
+    // Type 6 lines -> bucket 8
+    fireEvent.change(noteInput, { target: { value: '1\n2\n3\n4\n5\n6' } });
+    expect(noteInput).toHaveAttribute('rows', '8');
+    expect(noteInput.style.minHeight).toBe('176px');
+  });
+
+  it('allows picking a color tag when adding a tracked resource', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={true}
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    fireEvent.click(openAddBtn);
+
+    // Open color dropdown and pick amber
+    const colorDropdownBtn = screen.getByRole('button', { name: /select color tag/i });
+    fireEvent.click(colorDropdownBtn);
+
+    const amberSwatch = screen.getByRole('button', { name: 'Select amber' });
+    fireEvent.click(amberSwatch);
+
+    const nameInput = screen.getByLabelText('Resource Name');
+    fireEvent.change(nameInput, { target: { value: 'Amber Amulet' } });
+
+    const saveBtn = screen.getByRole('button', { name: /save resource/i });
+    fireEvent.click(saveBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith([
+      ...mockResources,
+      expect.objectContaining({
+        name: 'Amber Amulet',
+        color: 'amber',
+      }),
+    ]);
+  });
+
+  it('allows editing a resource color tag and displays color in viewer and chip gradient', () => {
+    const handleUpdate = vi.fn();
+    const coloredResource = [
+      { id: 'res_col', name: 'Sorcery Points', current: 5, max: 5, resetOn: 'LR', color: 'purple', note: 'Metamagic fuel' },
+    ];
+    render(
+      <ResourcesCard
+        trackedResources={coloredResource}
+        featuresNotes=""
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    // Chip has right gradient with purple glow
+    const chip = screen.getByTestId('tracked-resource-item');
+    const gradient = chip.querySelector('[data-testid="resource-right-gradient"]');
+    expect(gradient.style.background).toContain('rgba(168, 85, 247');
+
+    // Click chip to view details
+    fireEvent.click(chip);
+    const viewerCard = screen.getByTestId('resource-viewer-card');
+    expect(viewerCard.className).toContain('bg-purple-950/40');
+    expect(viewerCard.className).toContain('text-purple-300');
+
+    // Click edit and change color to emerald
+    const editBtn = screen.getByLabelText('Edit Sorcery Points');
+    fireEvent.click(editBtn);
+
+    const colorDropdownBtn = screen.getByRole('button', { name: /select color tag/i });
+    fireEvent.click(colorDropdownBtn);
+
+    const emeraldSwatch = screen.getByRole('button', { name: 'Select emerald' });
+    fireEvent.click(emeraldSwatch);
+
+    const saveBtn = screen.getByRole('button', { name: /save changes/i });
+    fireEvent.click(saveBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'res_col',
+        color: 'emerald',
+      }),
+    ]);
+  });
+
+  it('supports no-color option and defaults chips without color to none gradient', () => {
+    const handleUpdate = vi.fn();
+    const noColorResource = [
+      { id: 'res_none', name: 'Standard Ability', current: 1, max: 1, resetOn: 'LR', color: 'none' },
+    ];
+    render(
+      <ResourcesCard
+        trackedResources={noColorResource}
+        featuresNotes=""
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    // Chip has background: none
+    const chip = screen.getByTestId('tracked-resource-item');
+    const gradient = chip.querySelector('[data-testid="resource-right-gradient"]');
+    expect(gradient.style.background).toBe('none');
+
+    // Click chip to view details
+    fireEvent.click(chip);
+    const viewerCard = screen.getByTestId('resource-viewer-card');
+    expect(viewerCard.className).toContain('bg-dnd-card');
+    expect(viewerCard.className).toContain('text-slate-200');
+  });
+
+  it('renders dropdown with right-0 alignment and displays all swatches including none and blue (sky)', () => {
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={true}
+      />
+    );
+
+    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    fireEvent.click(openAddBtn);
+
+    const colorDropdownBtn = screen.getByRole('button', { name: /select color tag/i });
+    fireEvent.click(colorDropdownBtn);
+
+    // Verify all swatches exist in dropdown
+    expect(screen.getByRole('button', { name: 'Select none' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select slate' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select emerald' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select sky' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select purple' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select amber' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Select rose' })).toBeInTheDocument();
+
+    // Verify right-0 alignment class on dropdown menu
+    const menu = screen.getByRole('button', { name: 'Select none' }).parentElement;
+    expect(menu.className).toContain('right-0');
+  });
 });

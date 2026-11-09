@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useContext } from 'react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import {
@@ -13,7 +13,13 @@ import {
   BookMarked,
   Download,
   Upload,
+  CloudUpload,
+  CloudCheck,
+  CloudAlert,
+  RefreshCw,
+  HardDrive,
 } from 'lucide-react';
+import { CloudSyncContext } from '../../context/CloudSyncContext';
 import { getTotalCharacterLevel, getCharacterClasses } from '../../utils/spellSlots';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
@@ -32,6 +38,40 @@ function CharacterDeleteButton({ name, onDelete }) {
   );
 }
 
+const STATUS_BADGES = {
+  local: { label: 'Local Only', Icon: HardDrive, cls: 'text-slate-300 bg-slate-700/50' },
+  synced: { label: 'Synced', Icon: CloudCheck, cls: 'text-emerald-300 bg-emerald-950/60' },
+  syncing: { label: 'Syncing', Icon: RefreshCw, cls: 'text-sky-300 bg-sky-950/60' },
+  error: { label: 'Sync Error', Icon: CloudAlert, cls: 'text-red-300 bg-red-950/60' },
+};
+
+function StatusBadge({ status }) {
+  const badge = STATUS_BADGES[status];
+  if (!badge) return null;
+  const { label, Icon, cls } = badge;
+  return (
+    <span className={`flex items-center space-x-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${cls}`}>
+      <Icon size={10} />
+      <span>{label}</span>
+    </span>
+  );
+}
+
+function CharacterSyncButton({ name, onSync }) {
+  const { armed, handleClick } = useTwoClickConfirm(onSync);
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to sync ${name} to Cloud` : `Sync ${name} to Cloud`}
+      onClick={handleClick}
+      className={`p-1 rounded-md transition-colors cursor-pointer ${armed ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70' : 'text-slate-400 hover:text-dnd-gold hover:bg-white/5'}`}
+      title={armed ? 'Click again to sync to Cloud' : `Sync ${name} to Cloud`}
+    >
+      <CloudUpload size={14} />
+    </button>
+  );
+}
+
 export default function CharacterManagerModal({
   isOpen,
   onClose,
@@ -43,6 +83,7 @@ export default function CharacterManagerModal({
   onExport,
   onImport,
 }) {
+  const { signedIn, getStatus, onSyncCharacter } = useContext(CloudSyncContext);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('level-desc'); // 'level-desc', 'level-asc', 'name-asc', 'name-desc'
   const fileInputRef = useRef(null);
@@ -228,6 +269,7 @@ export default function CharacterManagerModal({
                             Active
                           </span>
                         )}
+                        {signedIn && <StatusBadge status={getStatus?.(char)} />}
                       </div>
 
                       <div className="flex flex-wrap items-center gap-1.5 mt-1 text-xs text-slate-400">
@@ -246,6 +288,10 @@ export default function CharacterManagerModal({
                   {/* Actions Column */}
                   <div className="flex items-center space-x-2 self-end sm:self-center">
                     <>
+                      {signedIn && getStatus?.(char) === 'local' && (
+                        <CharacterSyncButton name={char.name} onSync={() => onSyncCharacter?.(char.id)} />
+                      )}
+
                       <button
                         type="button"
                         aria-label={`Export ${char.name}`}
