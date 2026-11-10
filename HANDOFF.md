@@ -1,19 +1,18 @@
 # HANDOFF
 
-## Current state (v2.3.5 - master)
-- **Currency Tracker & Spellbook Search**:
-  - 5e currency tracker (CP, SP, EP, GP, PP) with total wealth in GP.
-  - Uniform currency wrapping and dynamic container width detection.
-  - Spellbook section search bar matching inventory dimensions (`w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card`).
-  - Real-time search filtering across spell names, schools, notes, and entries with clear button and empty search states.
-  - Search bar styling unified without outline borders across catalog, spellbook, inventory, and notes.
-- **Settings Modal Capitalization**:
-  - Removed `uppercase tracking-wider` from `Spellbook Preferences` and `Color Palettes` in `SettingsModal.jsx`.
-  - Consistent Title Case styling across all modal and accordion headers.
-- **Verification**: 45 test files (382 tests) passing; production build clean.
+## Current state (v2.3.6 - master)
+- **Selective Cloud Sync & Homebrew Spells**:
+  - `HomebrewSpellModal`: added "Sync to Cloud" toggle when signed in (default checked), allowing local-only homebrew spell creation.
+  - `LocalCharactersImportModal`: accordion-based layout with collapsible Characters and Homebrew Spells sections, zero border styling, and independent "Select All" / "Select None" buttons.
+  - `App.jsx`: unowned local spells stay local during cloud pull without forced claiming; sign-in prompt offers selective upload for both characters and homebrew spells.
+  - Fixed `handleDeleteHomebrewSpell` dependency array in `App.jsx` and verified `flushPendingDeletes` resilience with unit tests.
+- **PWA & App Icon Background**:
+  - Replaced transparent background on `public/pwa-192x192.png` and `public/pwa-512x512.png` with opaque `#1E1E29` dark indigo.
+  - Updated `manifest.webmanifest` & `index.html` theme/background colors to `#1E1E29` to fix white background on Android, iPadOS, and Chrome.
+- **Verification**: 45 test files (388 tests) passing; production build clean.
 
 ## Next up
-- Review user feedback on spellbook, inventory search, and settings.
+- Level-up soft checklist guide (D&D 5e manual scaling tracker).
 
 ## Open questions
 - (none)

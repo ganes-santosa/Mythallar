@@ -29,7 +29,7 @@ const ALL_CLASSES = [
   'Wizard',
 ];
 
-export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
+export default function HomebrewSpellModal({ isOpen, onClose, onSave, isSignedIn = false }) {
   const [name, setName] = useState('');
   const [level, setLevel] = useState(1);
   const [school, setSchool] = useState('Evocation');
@@ -45,6 +45,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
   const [selectedClasses, setSelectedClasses] = useState(['Wizard']);
   const [entriesText, setEntriesText] = useState('');
   const [higherLevels, setHigherLevels] = useState('');
+  const [syncToCloud, setSyncToCloud] = useState(true);
   const [error, setError] = useState('');
 
   useScrollLock(isOpen);
@@ -91,6 +92,7 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
       classes: selectedClasses,
       entries: cleanEntries.length > 0 ? cleanEntries : ['No description provided.'],
       higherLevels: higherLevels.trim() || '',
+      ...(isSignedIn ? { syncToCloud } : {}),
     };
 
     onSave(newSpell);
@@ -346,6 +348,22 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave }) {
               className="w-full bg-dnd-card rounded-lg p-2.5 text-slate-200 focus:outline-none focus:ring-1 focus:ring-white/20"
             />
           </div>
+
+          {/* Cloud Sync Option */}
+          {isSignedIn && (
+            <div className="pt-2">
+              <label htmlFor="custom-spell-sync-cloud" className="flex items-center space-x-2 text-slate-300 cursor-pointer">
+                <input
+                  id="custom-spell-sync-cloud"
+                  type="checkbox"
+                  checked={syncToCloud}
+                  onChange={(e) => setSyncToCloud(e.target.checked)}
+                  className="rounded text-dnd-gold focus:ring-0"
+                />
+                <span className="text-sm font-medium">Sync to Cloud</span>
+              </label>
+            </div>
+          )}
 
           {/* Submit & Cancel Buttons */}
           <div className="pt-3 flex items-center justify-end space-x-2">

@@ -53,4 +53,52 @@ describe('HomebrewSpellModal', () => {
     fireEvent.click(cancelBtn);
     expect(handleClose).toHaveBeenCalled();
   });
+
+  it('renders Sync to Cloud toggle only when isSignedIn is true and defaults to checked', () => {
+    const handleSave = vi.fn();
+    const { rerender } = render(
+      <HomebrewSpellModal isOpen={true} onClose={vi.fn()} onSave={handleSave} isSignedIn={false} />
+    );
+
+    expect(screen.queryByLabelText(/Sync to Cloud/i)).not.toBeInTheDocument();
+
+    rerender(<HomebrewSpellModal isOpen={true} onClose={vi.fn()} onSave={handleSave} isSignedIn={true} />);
+
+    const syncToggle = screen.getByLabelText(/Sync to Cloud/i);
+    expect(syncToggle).toBeInTheDocument();
+    expect(syncToggle).toBeChecked();
+
+    fireEvent.change(screen.getByLabelText(/Spell Name/i), {
+      target: { value: 'Arcane Flare' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Save Spell/i }));
+
+    expect(handleSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Arcane Flare',
+        syncToCloud: true,
+      })
+    );
+  });
+
+  it('allows unchecking Sync to Cloud when signed in to keep spell local', () => {
+    const handleSave = vi.fn();
+    render(<HomebrewSpellModal isOpen={true} onClose={vi.fn()} onSave={handleSave} isSignedIn={true} />);
+
+    const syncToggle = screen.getByLabelText(/Sync to Cloud/i);
+    fireEvent.click(syncToggle);
+    expect(syncToggle).not.toBeChecked();
+
+    fireEvent.change(screen.getByLabelText(/Spell Name/i), {
+      target: { value: 'Local Flare' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Save Spell/i }));
+
+    expect(handleSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Local Flare',
+        syncToCloud: false,
+      })
+    );
+  });
 });

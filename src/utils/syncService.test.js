@@ -8,6 +8,9 @@ import {
   localConflictCopies,
   loadPromptedLocalIds,
   savePromptedLocalIds,
+  loadPending,
+  savePending,
+  flushPendingDeletes,
   fetchCloudData,
   syncCharactersToCloud,
   syncHomebrewToCloud,
@@ -280,6 +283,25 @@ describe('syncService', () => {
 
       unsubscribe();
       expect(removeChannelMock).toHaveBeenCalledWith(mockChannel);
+    });
+  });
+
+  describe('flushPendingDeletes', () => {
+    it('flushes confirmed deletes and preserves unconfirmed ones on failure', async () => {
+      savePending('user-flush', 'characters', ['char-1', 'char-2']);
+      const deleteFn = vi.fn(async (_client, _user, id) => {
+        return id === 'char-1' ? { success: true } : { success: false, error: 'network error' };
+      });
+
+      const allDone = await flushPendingDeletes({}, 'user-flush', 'characters', deleteFn);
+      expect(allDone).toBe(false);
+      expect(loadPending('user-flush', 'characters')).toEqual(['char-2']);
+
+      // Retry when network recovers
+      deleteFn.mockImplementation(async () => ({ success: true }));
+      const retryDone = await flushPendingDeletes({}, 'user-flush', 'characters', deleteFn);
+      expect(retryDone).toBe(true);
+      expect(loadPending('user-flush', 'characters')).toEqual([]);
     });
   });
 });

@@ -218,7 +218,7 @@ export default function App() {
   homebrewRef.current = homebrewSpells;
   const syncedRef = useRef({ characters: {}, homebrew: {} });
   const [pulledUserId, setPulledUserId] = useState(null);
-  const [importCandidates, setImportCandidates] = useState([]);
+  const [importCandidates, setImportCandidates] = useState({ characterIds: [], spellIds: [] });
   const [retryTick, setRetryTick] = useState(0);
 
   const persistSynced = useCallback(
@@ -232,6 +232,7 @@ export default function App() {
   useEffect(() => {
     if (!supabase || !user) {
       setPulledUserId(null);
+      setImportCandidates({ characterIds: [], spellIds: [] });
       return;
     }
 
@@ -265,17 +266,14 @@ export default function App() {
         const nextProfiles = [...others, ...copies, ...reconciled];
 
         // Homebrew: same split, cloud wins (no conflict copies).
+        // Unowned local homebrew stays local unless explicitly imported; other accounts' stays hidden.
         const hbCloud = notPending('homebrew', cloudHb);
         const hbSynced = loadSynced(user.id, 'homebrew');
-        // Unowned homebrew belongs to whoever signs in first; other accounts' stays hidden.
         const hbMine = homebrewRef.current.filter((s) => !s.syncOwner || s.syncOwner === user.id);
         const hbOthers = homebrewRef.current.filter((s) => s.syncOwner && s.syncOwner !== user.id);
         const hbReconciled = reconcileCloudPull(hbMine, hbCloud, hbSynced);
         syncedRef.current.homebrew = buildSynced(hbReconciled, hbCloud, hbSynced);
-        const nextHomebrew = [
-          ...hbOthers,
-          ...hbReconciled.map((s) => (s.syncOwner ? s : { ...s, syncOwner: user.id })),
-        ];
+        const nextHomebrew = [...hbOthers, ...hbReconciled];
 
         persistSynced('characters');
         persistSynced('homebrew');
@@ -292,14 +290,18 @@ export default function App() {
         setHomebrewSpells(nextHomebrew);
         setPulledUserId(user.id);
 
-        // Offer Local Only characters whenever there are characters not yet prompted for this account.
+        // Offer Local Only items whenever there are items not yet prompted for this account.
         const prompted = loadPromptedLocalIds(user.id);
-        const unprompted = nextProfiles.filter((p) => !p.syncOwner && !prompted.has(p.id));
-        if (unprompted.length > 0) {
-          setImportCandidates(unprompted.map((p) => p.id));
+        const unpromptedChars = nextProfiles.filter((p) => !p.syncOwner && !prompted.has(p.id));
+        const unpromptedSpells = nextHomebrew.filter((s) => !s.syncOwner && !prompted.has(s.id));
+        if (unpromptedChars.length > 0 || unpromptedSpells.length > 0) {
+          setImportCandidates({
+            characterIds: unpromptedChars.map((p) => p.id),
+            spellIds: unpromptedSpells.map((s) => s.id),
+          });
         }
         setSyncStatus('saved');
-        showToast('Characters synced with cloud', 'success');
+        showToast('Characters & homebrew spells synced', 'success');
       } catch (err) {
         if (cancelled) return;
         console.error('Cloud pull error:', err);
@@ -464,6 +466,17 @@ export default function App() {
     [user]
   );
 
+  const markSpellsOwned = useCallback(
+    (ids) => {
+      if (!user || ids.length === 0) return;
+      const set = new Set(ids);
+      setHomebrewSpells((prev) =>
+        prev.map((s) => (set.has(s.id) && !s.syncOwner ? { ...s, syncOwner: user.id } : s))
+      );
+    },
+    [user]
+  );
+
   const handleSyncCharacter = useCallback(
     (id) => {
       markOwned([id]);
@@ -473,19 +486,31 @@ export default function App() {
   );
 
   const dismissImportPrompt = useCallback(() => {
-    if (user && importCandidates.length > 0) {
-      savePromptedLocalIds(user.id, importCandidates);
+    if (user) {
+      const allCandidateIds = [
+        ...(importCandidates.characterIds || []),
+        ...(importCandidates.spellIds || []),
+      ];
+      if (allCandidateIds.length > 0) {
+        savePromptedLocalIds(user.id, allCandidateIds);
+      }
     }
-    setImportCandidates([]);
+    setImportCandidates({ characterIds: [], spellIds: [] });
   }, [user, importCandidates]);
 
   const handleImportConfirm = useCallback(
-    (ids) => {
-      markOwned(ids);
+    (charIds = [], spellIds = []) => {
+      const resolvedCharIds = Array.isArray(charIds) ? charIds : (charIds?.characterIds || []);
+      const resolvedSpellIds = Array.isArray(spellIds) ? spellIds : (charIds?.spellIds || []);
+      markOwned(resolvedCharIds);
+      markSpellsOwned(resolvedSpellIds);
       dismissImportPrompt();
-      if (ids.length > 0) showToast(`Adding ${ids.length} ${ids.length === 1 ? 'character' : 'characters'} to your account`, 'info');
+      const total = resolvedCharIds.length + resolvedSpellIds.length;
+      if (total > 0) {
+        showToast(`Adding ${total} ${total === 1 ? 'item' : 'items'} to your account`, 'info');
+      }
     },
-    [markOwned, dismissImportPrompt, showToast]
+    [markOwned, markSpellsOwned, dismissImportPrompt, showToast]
   );
 
   const cloudSyncValue = useMemo(
@@ -722,7 +747,9 @@ export default function App() {
       if (Array.isArray(character.homebrewSpells) && character.homebrewSpells.length > 0) {
         setHomebrewSpells((prev) => {
           const existingIds = new Set(prev.map((s) => s.id));
-          const toAdd = character.homebrewSpells.filter((s) => !existingIds.has(s.id));
+          const toAdd = character.homebrewSpells
+            .filter((s) => !existingIds.has(s.id))
+            .map((s) => (user ? { ...s, syncOwner: user.id } : s));
           return toAdd.length > 0 ? [...toAdd, ...prev] : prev;
         });
       }
@@ -752,7 +779,12 @@ export default function App() {
 
   // --- Homebrew Spell Action ---
   const handleSaveHomebrewSpell = (newSpell) => {
-    setHomebrewSpells((prev) => [user ? { ...newSpell, syncOwner: user.id } : newSpell, ...prev]);
+    const { syncToCloud, ...spellData } = newSpell;
+    const shouldSync = Boolean(user && syncToCloud !== false);
+    setHomebrewSpells((prev) => [
+      shouldSync ? { ...spellData, syncOwner: user.id } : spellData,
+      ...prev,
+    ]);
     showToast(`Created homebrew spell: ${newSpell.name}`, 'success');
   };
 
@@ -772,7 +804,7 @@ export default function App() {
     }));
 
     showToast(`Deleted homebrew spell${spell ? `: ${spell.name}` : ''}`, 'info');
-  }, [homebrewSpells, showToast]);
+  }, [homebrewSpells, queueCloudDelete, showToast]);
 
   // --- Spell Management Actions ---
   const handleAddSpell = useCallback(
@@ -1719,6 +1751,7 @@ export default function App() {
         isOpen={isHomebrewSpellModalOpen}
         onClose={() => setIsHomebrewSpellModalOpen(false)}
         onSave={handleSaveHomebrewSpell}
+        isSignedIn={Boolean(user)}
       />
 
       {/* Short Rest Modal */}
@@ -1748,10 +1781,33 @@ export default function App() {
         onToggleSkipCopying={handleToggleSkipCopying}
       />
 
-      {/* One-time offer to move Local Only characters into the account */}
+      {/* One-time offer to move Local Only items into the account */}
       <LocalCharactersImportModal
-        isOpen={importCandidates.length > 0 && !!user}
-        characters={profileData.profiles.filter((p) => importCandidates.includes(p.id) && !p.syncOwner)}
+        isOpen={
+          (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('previewImportModal')) ||
+          (Boolean(user) &&
+          ((importCandidates.characterIds?.length > 0) || (importCandidates.spellIds?.length > 0)))
+        }
+        characters={
+          (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('previewImportModal'))
+            ? profileData.profiles
+            : profileData.profiles.filter(
+                (p) => importCandidates.characterIds?.includes(p.id) && !p.syncOwner
+              )
+        }
+        spells={
+          (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('previewImportModal'))
+            ? (homebrewSpells.length > 0
+                ? homebrewSpells
+                : [
+                    { id: 'hb-preview-1', name: 'Blood Spear', level: 2, school: 'Necromancy' },
+                    { id: 'hb-preview-2', name: 'Shadow Step', level: 1, school: 'Illusion' },
+                    { id: 'hb-preview-3', name: 'Arcane Flare', level: 0, school: 'Evocation' },
+                  ])
+            : homebrewSpells.filter(
+                (s) => importCandidates.spellIds?.includes(s.id) && !s.syncOwner
+              )
+        }
         onConfirm={handleImportConfirm}
         onKeepLocal={dismissImportPrompt}
       />
