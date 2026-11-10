@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints, AlertCircle } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
+import LevelUpModal from '../Modal/LevelUpModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
+import { getPendingLevelUpTasks } from '../../utils/levelUpRules';
 import { normalizeSpeeds } from '../../utils/storage';
 import { OPTIONAL_SPEED_TYPES } from '../../utils/dndCalculations';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
-import { useScrollLock } from '../../hooks/useScrollLock';
 import { compressImageFile } from '../../utils/imageCompressor';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
@@ -59,10 +60,9 @@ function CharacterSheetHeader({
   const [nameDraft, setNameDraft] = useState(character?.name || '');
   const [showManagerModal, setShowManagerModal] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
+  const [levelUpModalMode, setLevelUpModalMode] = useState('levelup');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const headerAccordionRef = useAutoScrollOnExpand(!isCollapsed);
-  const [levelUpTarget, setLevelUpTarget] = useState('');
-  const [newMulticlassChoice, setNewMulticlassChoice] = useState('');
 
   const headerRowRef = useRef(null);
   const nameRef = useRef(null);
@@ -80,7 +80,8 @@ function CharacterSheetHeader({
     (cls) => !classes.some((c) => c.className === cls)
   );
 
-  useScrollLock(showLevelUpModal);
+  const pendingTasks = getPendingLevelUpTasks(character);
+  const pendingCount = pendingTasks.length;
 
   const sheet = character?.sheet || {};
   const identity = sheet.identity || { race: '', subclass: '', background: '', portrait: '', lore: '' };
@@ -305,35 +306,13 @@ function CharacterSheetHeader({
   };
 
   const handleOpenLevelUpModal = () => {
-    setLevelUpTarget(classes[0]?.className || 'Wizard');
-    setNewMulticlassChoice(unselectedClasses[0] || '');
+    setLevelUpModalMode('levelup');
     setShowLevelUpModal(true);
   };
 
-  const handleConfirmLevelUp = () => {
-    if (totalLevel >= 20) {
-      setShowLevelUpModal(false);
-      return;
-    }
-
-    let newClasses = [];
-    if (levelUpTarget === '__new_class__') {
-      if (!newMulticlassChoice) return;
-      newClasses = [...classes, { className: newMulticlassChoice, level: 1 }];
-    } else {
-      newClasses = classes.map((c) =>
-        c.className === levelUpTarget ? { ...c, level: c.level + 1 } : c
-      );
-    }
-
-    const newTotal = newClasses.reduce((sum, c) => sum + c.level, 0);
-    onUpdateCharacter?.({
-      ...character,
-      className: newClasses[0].className,
-      level: newTotal,
-      classes: newClasses,
-    });
-    setShowLevelUpModal(false);
+  const handleOpenGuideModal = () => {
+    setLevelUpModalMode('guide');
+    setShowLevelUpModal(true);
   };
 
   if (!character) return null;
@@ -419,15 +398,28 @@ function CharacterSheetHeader({
                         className="bg-dnd-panel/70 rounded-lg px-2.5 py-0.5 text-base sm:text-lg font-bold text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 w-44 sm:w-56 transition-colors"
                       />
                     ) : (
-                      <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
-                        {character.name}
-                      </h2>
+                      <div className={`relative inline-flex items-center min-w-0 ${pendingCount > 0 ? 'pr-4' : ''}`}>
+                        <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
+                          {character.name}
+                        </h2>
+                        {pendingCount > 0 && (
+                          <button
+                            type="button"
+                            onClick={handleOpenGuideModal}
+                            className="absolute top-0 right-0 p-0.5 text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+                            title={`${pendingCount} pending choice${pendingCount > 1 ? 's' : ''} from Level ${totalLevel}`}
+                            aria-label="Level-Up Checklist"
+                          >
+                            <AlertCircle size={12} className="hover:scale-110 transition-transform" />
+                          </button>
+                        )}
+                      </div>
                     )}
 
                     {!isEditing && (
                       <span
                         ref={levelRef}
-                        className={`character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none ${
+                        className={`character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none shrink-0 ${
                           showLevelText ? '' : 'hidden'
                         }`}
                       >
@@ -915,119 +907,15 @@ function CharacterSheetHeader({
         onImport={onImport}
       />
 
-      {/* Level Up Selection Popup Modal */}
-      {showLevelUpModal && (
-        <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in overscroll-contain">
-          <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-sm w-full shadow-2xl space-y-3.5">
-            <div className="flex items-center justify-between pb-2">
-              <div className="flex items-center space-x-2">
-                <ArrowUpCircle size={18} className="text-dnd-gold" />
-                <h3 className="text-sm sm:text-base font-bold text-dnd-ivory">
-                  Level Up!
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowLevelUpModal(false)}
-                className="p-1 rounded text-slate-400 hover:text-slate-200 transition-colors"
-                title="Cancel"
-              >
-                <X size={15} />
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <p className="text-xs text-slate-300 font-medium">
-                Choose class for Level {totalLevel + 1}:
-              </p>
-              <div className="space-y-1.5 pt-1">
-                {classes.map((c) => (
-                  <label
-                    key={c.className}
-                    className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-all text-xs ${
-                      levelUpTarget === c.className
-                        ? 'bg-dnd-panel/90 shadow-[0_0_15px_rgba(255,255,255,0.08)] ring-1 ring-white/25 text-dnd-ivory'
-                        : 'bg-dnd-panel/40 text-slate-300 hover:bg-dnd-panel/70'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="radio"
-                        name="sheetLevelUpClass"
-                        value={c.className}
-                        checked={levelUpTarget === c.className}
-                        onChange={() => setLevelUpTarget(c.className)}
-                        className="text-dnd-gold focus:ring-0"
-                      />
-                      <span className="font-semibold">{c.className}</span>
-                    </div>
-                    <span className="text-[11px] text-slate-400 font-medium">
-                      Lvl {c.level} → <span className="text-dnd-gold font-bold">Lvl {c.level + 1}</span>
-                    </span>
-                  </label>
-                ))}
-
-                {unselectedClasses.length > 0 && (
-                  <label
-                    className={`flex flex-col gap-1.5 p-2 rounded-lg cursor-pointer transition-all text-xs ${
-                      levelUpTarget === '__new_class__'
-                        ? 'bg-dnd-panel/90 shadow-[0_0_15px_rgba(255,255,255,0.08)] ring-1 ring-white/25 text-dnd-ivory'
-                        : 'bg-dnd-panel/40 text-slate-300 hover:bg-dnd-panel/70'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="radio"
-                          name="sheetLevelUpClass"
-                          value="__new_class__"
-                          checked={levelUpTarget === '__new_class__'}
-                          onChange={() => setLevelUpTarget('__new_class__')}
-                          className="text-dnd-gold focus:ring-0"
-                        />
-                        <span className="font-semibold">+ New Class (Multiclass)</span>
-                      </div>
-                      <span className="text-[11px] text-dnd-gold font-bold">Lvl 1</span>
-                    </div>
-
-                    {levelUpTarget === '__new_class__' && (
-                      <select
-                        value={newMulticlassChoice}
-                        onChange={(e) => setNewMulticlassChoice(e.target.value)}
-                        className="mt-1 w-full bg-dnd-panel rounded px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-white/20 cursor-pointer"
-                        aria-label="Select new multiclass"
-                      >
-                        {unselectedClasses.map((cls) => (
-                          <option key={cls} value={cls} className="bg-dnd-panel">
-                            {cls}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </label>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end space-x-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowLevelUpModal(false)}
-                className="px-3 py-1.5 rounded-lg bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 text-xs transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmLevelUp}
-                className="px-3 py-1.5 rounded-lg bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-semibold text-xs transition-colors shadow"
-              >
-                Level Up
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Level Up & Guide Modal */}
+      <LevelUpModal
+        isOpen={showLevelUpModal}
+        onClose={() => setShowLevelUpModal(false)}
+        character={character}
+        initialMode={levelUpModalMode}
+        onConfirmLevelUp={onUpdateCharacter}
+        onUpdateCharacter={onUpdateCharacter}
+      />
     </div>
   );
 }

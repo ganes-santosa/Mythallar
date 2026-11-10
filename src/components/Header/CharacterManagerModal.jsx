@@ -156,7 +156,7 @@ export default function CharacterManagerModal({
             </span>
             <div>
               <h3 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display">
-                Character Grimoires
+                Character Profiles
               </h3>
               <p className="text-xs text-slate-400">
                 {profiles.length} {profiles.length === 1 ? 'character' : 'characters'} saved

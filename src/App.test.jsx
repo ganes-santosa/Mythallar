@@ -68,7 +68,7 @@ describe('App End-to-End Integration', () => {
     expect(headerLogo).toHaveClass('bg-dnd-ivory');
   });
 
-  it('allows toggling left pane view between Spells Grimoire and Character Sheet', async () => {
+  it('allows toggling left pane view between Spell Library and Character Sheet', async () => {
     render(<App />);
 
     await waitFor(() => {
@@ -134,8 +134,8 @@ describe('App End-to-End Integration', () => {
     global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
     render(<App />);
 
-    expect(screen.getByText('Loading spell grimoire...')).toBeInTheDocument();
-    const spinner = screen.getByRole('img', { name: 'Loading Grimoire' });
+    expect(screen.getByText('Loading spells...')).toBeInTheDocument();
+    const spinner = screen.getByRole('img', { name: 'Loading Spells' });
     expect(spinner).toBeInTheDocument();
     expect(spinner).toHaveClass('animate-spin');
     expect(spinner).toHaveClass('bg-dnd-gold');
@@ -427,7 +427,7 @@ describe('App End-to-End Integration', () => {
     const manageBtn = screen.getByRole('button', { name: /Manage Characters/i });
     fireEvent.click(manageBtn);
 
-    expect(screen.getByRole('heading', { name: 'Character Grimoires' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Character Profiles' })).toBeInTheDocument();
 
     // Delete Mordenkainen (armed then confirm)
     const deleteBtn = screen.getByRole('button', { name: /Delete Mordenkainen/i });
@@ -437,7 +437,7 @@ describe('App End-to-End Integration', () => {
 
     // Modal closes and empty state displays
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: 'Character Grimoires' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Character Profiles' })).not.toBeInTheDocument();
       expect(screen.getByText('No Character Selected')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Create First Character/i })).toBeInTheDocument();
     });
@@ -638,6 +638,27 @@ describe('App End-to-End Integration', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('covers the entire right side of the screen with native scroll container rightPaneScrollRef', async () => {
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    const rightScroll = container.querySelector('[data-testid="right-pane-scroll"]');
+    const rightSection = rightScroll.parentElement;
+    expect(rightSection).toBeInTheDocument();
+    expect(rightSection).toHaveClass('p-0');
+    expect(rightScroll).toHaveClass('flex-1', 'min-h-0', 'overflow-y-auto', 'custom-scroll');
+
+    // Right pane scroll container covers full pane area with internal padding
+    expect(rightScroll).toHaveClass('p-3', 'sm:p-4');
+
+    // Inside the scrollable pane, the spellbook dropzone retains independent inner scrolling
+    const dropzone = screen.getByTestId('spellbook-dropzone');
+    expect(rightScroll.contains(dropzone)).toBe(true);
   });
 
   it('keeps static state on touch devices without sticky hover artifacts', async () => {

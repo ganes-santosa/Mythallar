@@ -81,6 +81,7 @@ function SpellbookView({
 
   const headerRef = useRef(null);
   const [collapsedHeight, setCollapsedHeight] = useState(48);
+  const [containerHeight, setContainerHeight] = useState(null);
 
   useEffect(() => {
     if (headerRef.current) {
@@ -88,6 +89,30 @@ function SpellbookView({
       if (h > 0) setCollapsedHeight(h);
     }
   }, [character?.spells?.length, finishAllArmed, isWizard, showFilters]);
+
+  useEffect(() => {
+    const el = spellbookAccordionRef.current;
+    if (!el || typeof window === 'undefined') return undefined;
+
+    const scrollParent = el.closest('[data-testid="right-pane-scroll"]') || el.parentElement;
+    if (!scrollParent) return undefined;
+
+    const measure = () => {
+      if (scrollParent.clientHeight > 0) {
+        const computed = window.getComputedStyle ? window.getComputedStyle(scrollParent) : null;
+        const pt = computed ? parseFloat(computed.paddingTop) || 0 : 4;
+        const pb = computed ? parseFloat(computed.paddingBottom) || 0 : 0;
+        const availableHeight = Math.max(300, scrollParent.clientHeight - pt - pb);
+        setContainerHeight((prev) => (prev === availableHeight ? prev : availableHeight));
+      }
+    };
+
+    measure();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const ro = new ResizeObserver(measure);
+    ro.observe(scrollParent);
+    return () => ro.disconnect();
+  }, []);
 
   const updateFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
 
@@ -228,7 +253,11 @@ function SpellbookView({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      style={{ height: isCollapsed ? `${collapsedHeight}px` : 'max(100%, 75vh)' }}
+      style={{
+        height: isCollapsed
+          ? `${collapsedHeight}px`
+          : (containerHeight ? `${containerHeight}px` : 'max(100%, 75vh)'),
+      }}
       className={`relative p-3 rounded-lg bg-dnd-panel shrink-0 overflow-hidden transition-[height] duration-200 ease-in-out flex flex-col ${
         isDragOver ? 'ring-1 ring-white/30 shadow-[0_0_20px_rgba(255,255,255,0.08)]' : ''
       }`}

@@ -18,7 +18,7 @@ describe('SpellList', () => {
       { id: 'misty-step', name: 'Misty Step', level: 2 },
     ];
 
-    const { getByRole, queryByText } = render(<SpellList spells={spells} />);
+    const { getByRole, getByTestId, queryByText } = render(<SpellList spells={spells} />);
 
     // Initially all levels open
     expect(queryByText('Fire Bolt')).toBeInTheDocument();
@@ -27,25 +27,34 @@ describe('SpellList', () => {
 
     // Toggle Cantrips closed
     const cantripsBtn = getByRole('button', { name: /Cantrips/i });
+    expect(cantripsBtn).toHaveAttribute('aria-expanded', 'true');
+    expect(getByTestId('level-content-0')).toHaveClass('grid-rows-[1fr]');
+
     fireEvent.click(cantripsBtn);
 
-    // Cantrip hidden, but 1st and 2nd level spells remain visible (not mutually exclusive!)
-    expect(queryByText('Fire Bolt')).not.toBeInTheDocument();
-    expect(queryByText('Shield')).toBeInTheDocument();
-    expect(queryByText('Misty Step')).toBeInTheDocument();
+    // Cantrip collapsed with animation classes, but 1st and 2nd level spells remain open
+    expect(cantripsBtn).toHaveAttribute('aria-expanded', 'false');
+    expect(getByTestId('level-content-0')).toHaveClass('grid-rows-[0fr]');
+    expect(getByTestId('level-content-1')).toHaveClass('grid-rows-[1fr]');
+    expect(getByTestId('level-content-2')).toHaveClass('grid-rows-[1fr]');
 
     // Toggle 1st Level closed
     const lvl1Btn = getByRole('button', { name: /1st Level Spells/i });
+    expect(lvl1Btn).toHaveAttribute('aria-expanded', 'true');
     fireEvent.click(lvl1Btn);
 
-    expect(queryByText('Fire Bolt')).not.toBeInTheDocument();
-    expect(queryByText('Shield')).not.toBeInTheDocument();
-    expect(queryByText('Misty Step')).toBeInTheDocument();
+    expect(cantripsBtn).toHaveAttribute('aria-expanded', 'false');
+    expect(lvl1Btn).toHaveAttribute('aria-expanded', 'false');
+    expect(getByTestId('level-content-0')).toHaveClass('grid-rows-[0fr]');
+    expect(getByTestId('level-content-1')).toHaveClass('grid-rows-[0fr]');
+    expect(getByTestId('level-content-2')).toHaveClass('grid-rows-[1fr]');
 
     // Toggle Cantrips back open
     fireEvent.click(cantripsBtn);
-    expect(queryByText('Fire Bolt')).toBeInTheDocument();
-    expect(queryByText('Shield')).not.toBeInTheDocument();
-    expect(queryByText('Misty Step')).toBeInTheDocument();
+    expect(cantripsBtn).toHaveAttribute('aria-expanded', 'true');
+    expect(lvl1Btn).toHaveAttribute('aria-expanded', 'false');
+    expect(getByTestId('level-content-0')).toHaveClass('grid-rows-[1fr]');
+    expect(getByTestId('level-content-1')).toHaveClass('grid-rows-[0fr]');
+    expect(getByTestId('level-content-2')).toHaveClass('grid-rows-[1fr]');
   });
 });

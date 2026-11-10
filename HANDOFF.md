@@ -1,18 +1,20 @@
 # HANDOFF
 
-## Current state (v2.3.6 - master)
-- **Selective Cloud Sync & Homebrew Spells**:
-  - `HomebrewSpellModal`: added "Sync to Cloud" toggle when signed in (default checked), allowing local-only homebrew spell creation.
-  - `LocalCharactersImportModal`: accordion-based layout with collapsible Characters and Homebrew Spells sections, zero border styling, and independent "Select All" / "Select None" buttons.
-  - `App.jsx`: unowned local spells stay local during cloud pull without forced claiming; sign-in prompt offers selective upload for both characters and homebrew spells.
-  - Fixed `handleDeleteHomebrewSpell` dependency array in `App.jsx` and verified `flushPendingDeletes` resilience with unit tests.
-- **PWA & App Icon Background**:
-  - Replaced transparent background on `public/pwa-192x192.png` and `public/pwa-512x512.png` with opaque `#1E1E29` dark indigo.
-  - Updated `manifest.webmanifest` & `index.html` theme/background colors to `#1E1E29` to fix white background on Android, iPadOS, and Chrome.
-- **Verification**: 45 test files (388 tests) passing; production build clean.
+## Current state (v2.3.7 - master)
+- **Level-Up Checklist & 5e Starting Rules**:
+  - Added `LevelUpModal.jsx` and `levelUpRules.js` with 5e level 1 starting choices across all classes.
+  - Anchored level-up alert badge as top-right superscript relative to character name in `CharacterHeader` and `CharacterSheetHeader`.
+- **Level Group Accordion Transitions**:
+  - Added CSS grid height opening/closing transitions to level groups in `SpellList.jsx` and `SpellbookLevelGroup.jsx` without triggering expand autoscroll.
+- **Spellbook Sizing & Terminology**:
+  - Purged all instances of "grimoire" across the codebase in favor of "spellbook" and "spells".
+  - Added dynamic container height sizing in `SpellbookView.jsx` to stop flush at right pane bottom limit while preserving independent inner card scrolling.
+- **Right Pane Scroll Layout**:
+  - Expanded native scroll container across right pane with inset scrollbar styling.
+- **Verification**: 47 test files (418 tests) passing; production build clean.
 
 ## Next up
-- Level-up soft checklist guide (D&D 5e manual scaling tracker).
+- Resolve right-pane outer padding wheel scrolling behavior and scroll rate uniformity on the right side of the scrollbar.
 
 ## Open questions
 - (none)

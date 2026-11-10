@@ -54,14 +54,19 @@ describe('SpellbookView', () => {
     expect(screen.getByText('Acid Splash')).toBeInTheDocument();
 
     // Toggling one level group only collapses that level, keeping other levels open
-    fireEvent.click(screen.getByRole('button', { name: /3rd Level Spells/i }));
-    expect(screen.queryByText('Fireball')).not.toBeInTheDocument();
-    expect(screen.getByText('Acid Splash')).toBeInTheDocument();
+    const lvl3Btn = screen.getByRole('button', { name: /3rd Level Spells/i });
+    expect(lvl3Btn).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('spellbook-level-content-3')).toHaveClass('grid-rows-[1fr]');
+
+    fireEvent.click(lvl3Btn);
+    expect(lvl3Btn).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByTestId('spellbook-level-content-3')).toHaveClass('grid-rows-[0fr]');
+    expect(screen.getByTestId('spellbook-level-content-0')).toHaveClass('grid-rows-[1fr]');
 
     // Toggling it again re-opens it while Cantrips stays open
-    fireEvent.click(screen.getByRole('button', { name: /3rd Level Spells/i }));
-    expect(screen.getByText('Fireball')).toBeInTheDocument();
-    expect(screen.getByText('Acid Splash')).toBeInTheDocument();
+    fireEvent.click(lvl3Btn);
+    expect(lvl3Btn).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByTestId('spellbook-level-content-3')).toHaveClass('grid-rows-[1fr]');
   });
 
   it('triggers onTogglePrepare when star/prepare button is clicked', () => {

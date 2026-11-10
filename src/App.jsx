@@ -1319,7 +1319,9 @@ export default function App() {
       const sbTargetH = isSbCollapsed
         ? (spellbookRoot.offsetHeight || 48)
         : Math.max(spellbookRoot.offsetHeight || 0, window.innerHeight * 0.75);
-      const next = 4 + headerTargetH + slotsH + sbTargetH > el.clientHeight + 1;
+      const computed = window.getComputedStyle ? window.getComputedStyle(el) : null;
+      const padY = computed ? (parseFloat(computed.paddingTop) || 0) + (parseFloat(computed.paddingBottom) || 0) : 24;
+      const next = padY + headerTargetH + slotsH + sbTargetH > el.clientHeight + 1;
       setHasRightScrollbar((prev) => (prev === next ? prev : next));
     };
 
@@ -1579,7 +1581,7 @@ export default function App() {
               <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
                 <div
                   role="img"
-                  aria-label="Loading Grimoire"
+                  aria-label="Loading Spells"
                   className="w-7 h-7 mb-2 animate-spin bg-dnd-gold select-none pointer-events-none"
                   style={{
                     WebkitMaskImage: "url('/mythallar_logo.png')",
@@ -1592,7 +1594,7 @@ export default function App() {
                     maskPosition: 'center',
                   }}
                 />
-                <span>Loading spell grimoire...</span>
+                <span>Loading spells...</span>
               </div>
             ) : spellError ? (
               <div className="flex items-center justify-center h-64 text-red-400 text-sm">
@@ -1613,12 +1615,16 @@ export default function App() {
         </section>
 
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
-        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10">
+        <section
+          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 ${
+            activeCharacter ? 'p-0' : 'p-3 sm:p-4'
+          }`}
+        >
           {activeCharacter ? (
             <div
               ref={rightPaneScrollRef}
               data-testid="right-pane-scroll"
-              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-1 pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
+              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
                 hasRightScrollbar ? 'mr-0' : '-mr-2.5 [--scrollbar-alpha:0%]'
               }`}
             >
@@ -1705,7 +1711,7 @@ export default function App() {
                   No Character Selected
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Begin your journey by creating your first character profile to manage spell slots and maintain your grimoire.
+                  Begin your journey by creating your first character profile to manage spell slots and maintain your spellbook.
                 </p>
               </div>
               <div className="flex items-center gap-3">

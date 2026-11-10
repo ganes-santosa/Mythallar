@@ -123,6 +123,27 @@ describe('CharacterHeader', () => {
     );
   });
 
+  it('renders Level-Up Checklist badge on character name when tasks are pending and opens modal on click', () => {
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={vi.fn()}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    const actionBadge = screen.getByRole('button', { name: 'Level-Up Checklist' });
+    expect(actionBadge).toBeInTheDocument();
+    fireEvent.click(actionBadge);
+
+    expect(screen.getByRole('heading', { name: /Level-Up Checklist/i })).toBeInTheDocument();
+    expect(screen.getByText('Hit Points & Hit Dice')).toBeInTheDocument();
+  });
+
   it('allows multiclassing into a new class via Level Up modal popup', () => {
     const handleUpdate = vi.fn();
     render(
@@ -290,7 +311,7 @@ describe('CharacterHeader', () => {
     fireEvent.click(manageBtn);
 
     // Modal is now open
-    expect(screen.getByRole('heading', { level: 3, name: /Character Grimoires/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: /Character Profiles/i })).toBeInTheDocument();
 
     // Can select other character from modal
     const switchBtn = screen.getByRole('button', { name: /Switch to Jareth/i });

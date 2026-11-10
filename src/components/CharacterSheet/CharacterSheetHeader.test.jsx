@@ -387,4 +387,20 @@ describe('CharacterSheetHeader', () => {
     const flyEl = screen.getByText('Fly:').closest('div');
     expect(flyEl.className).toContain('bg-dnd-panel/70');
   });
+
+  it('opens Level-Up Checklist modal when exclamation badge on name is clicked', () => {
+    render(
+      <CharacterSheetHeader
+        character={mockCharacter}
+        profiles={[mockCharacter]}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    const actionBadge = screen.getByRole('button', { name: 'Level-Up Checklist' });
+    expect(actionBadge).toBeInTheDocument();
+    fireEvent.click(actionBadge);
+
+    expect(screen.getByRole('heading', { name: /Level-Up Checklist/i })).toBeInTheDocument();
+  });
 });

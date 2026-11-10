@@ -1,7 +1,6 @@
 import React from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import SpellbookCard from './SpellbookCard';
-import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 
 function getLevelTitle(level) {
   if (level === 0) return 'Cantrips';
@@ -29,8 +28,6 @@ function SpellbookLevelGroup({
   expandedSpellId,
   onToggleSpell,
 }) {
-  const groupRef = useAutoScrollOnExpand(isOpen);
-
   if (!spells || spells.length === 0) return null;
 
   const preparedCount = spells.filter((s) => preparedMap[s.id] && !copyingMap[s.id]).length;
@@ -40,17 +37,22 @@ function SpellbookLevelGroup({
     : `${spells.length} cantrips`;
 
   return (
-    <div ref={groupRef} className={`transition-all duration-200 last:mb-0 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
+    <div className={`transition-all duration-200 last:mb-0 ${isOpen ? 'mb-4' : 'mb-1.5'}`}>
       {/* Group Header */}
       <button
         type="button"
         onClick={() => onToggle(level)}
-        className="flex items-center justify-between w-full py-1 px-2 mb-1 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors"
+        aria-label={isOpen ? `Collapse ${getLevelTitle(level)}` : `Expand ${getLevelTitle(level)}`}
+        aria-expanded={isOpen}
+        title={isOpen ? `Click to collapse ${getLevelTitle(level).toLowerCase()}` : `Click to expand ${getLevelTitle(level).toLowerCase()}`}
+        className="flex items-center justify-between w-full py-1 px-2 text-xs font-semibold text-slate-300 hover:text-dnd-gold-light bg-dnd-panel/60 rounded transition-colors group"
       >
         <div className="flex items-center space-x-1.5">
           <ChevronDown
-            size={14}
-            className={`transition-transform duration-200 ${isOpen ? '' : '-rotate-90'}`}
+            size={13}
+            className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
+              isOpen ? '' : '-rotate-90'
+            }`}
           />
           <span>{getLevelTitle(level)}</span>
         </div>
@@ -61,27 +63,34 @@ function SpellbookLevelGroup({
       </button>
 
       {/* Cards List */}
-      {isOpen && (
-        <div className="space-y-1 animate-in fade-in duration-200">
-          {spells.map((spell) => (
-            <SpellbookCard
-              key={spell.id}
-              spell={spell}
-              isPrepared={Boolean(preparedMap[spell.id])}
-              isCopying={Boolean(copyingMap[spell.id])}
-              note={notesMap[spell.id] || ''}
-              onTogglePrepare={onTogglePrepare}
-              onFinishCopying={onFinishCopying}
-              onCast={onCast}
-              onRemove={onRemove}
-              onSelect={onSelect}
-              onUpdateNote={onUpdateNote}
-              isExpanded={expandedSpellId === spell.id}
-              onToggleExpand={onToggleSpell}
-            />
-          ))}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+          isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+        data-testid={`spellbook-level-content-${level}`}
+      >
+        <div className="overflow-hidden -mx-1 px-1 -mb-1 pb-1">
+          <div className="space-y-1 pt-1.5">
+            {spells.map((spell) => (
+              <SpellbookCard
+                key={spell.id}
+                spell={spell}
+                isPrepared={Boolean(preparedMap[spell.id])}
+                isCopying={Boolean(copyingMap[spell.id])}
+                note={notesMap[spell.id] || ''}
+                onTogglePrepare={onTogglePrepare}
+                onFinishCopying={onFinishCopying}
+                onCast={onCast}
+                onRemove={onRemove}
+                onSelect={onSelect}
+                onUpdateNote={onUpdateNote}
+                isExpanded={expandedSpellId === spell.id}
+                onToggleExpand={onToggleSpell}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
