@@ -693,4 +693,39 @@ describe('App End-to-End Integration', () => {
     expect(grimoireLabel).toHaveClass('max-w-0', 'opacity-0');
     expect(authLabel).toHaveClass('opacity-100');
   });
+
+  it('toggles simulacrum on and renders dedicated Simulacrum Spell Slots and Simulacrum Combat Stats', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    // 1. Enter edit mode on right-pane character header
+    const editButtons = screen.getAllByLabelText('Edit Profile');
+    fireEvent.click(editButtons[1] || editButtons[0]);
+
+    // 2. Toggle Simulacrum button
+    const simToggle = screen.getByRole('button', { name: 'Toggle Simulacrum' });
+    expect(simToggle).toBeInTheDocument();
+    fireEvent.click(simToggle);
+
+    // 4. Simulacrum Spell Slots accordion is now in the right pane with opening animation
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Collapse Simulacrum Spell Slots' })).toBeInTheDocument();
+    });
+    expect(screen.getByText('Simulacrum Spell Slots')).toBeInTheDocument();
+    expect(screen.getByTestId('simulacrum-spell-slots-accordion')).toHaveClass('animate-accordion-down');
+
+    // 5. Switch to Character Sheet view
+    const charSheetBtn = screen.getByRole('button', { name: 'Character Sheet' });
+    fireEvent.click(charSheetBtn);
+
+    // 6. Simulacrum Combat Stats accordion is rendered on Character Sheet with opening animation
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Collapse Simulacrum Combat Stats' })).toBeInTheDocument();
+    });
+    expect(screen.getByText('Simulacrum Combat Stats')).toBeInTheDocument();
+    expect(screen.getByTestId('simulacrum-combat-stats-accordion')).toHaveClass('animate-accordion-down');
+  });
 });

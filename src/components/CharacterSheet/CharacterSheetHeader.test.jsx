@@ -403,4 +403,73 @@ describe('CharacterSheetHeader', () => {
 
     expect(screen.getByRole('heading', { name: /Level-Up Checklist/i })).toBeInTheDocument();
   });
+
+  it('renders Simulacrum toggle button left of Done in edit mode and toggles simulacrum state', () => {
+    const handleUpdate = vi.fn();
+    const characterWithoutSim = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        vitals: { hpMax: 50, ac: 16, spellcastingAbility: 'int' },
+      },
+    };
+
+    const { rerender } = render(
+      <CharacterSheetHeader
+        character={characterWithoutSim}
+        profiles={[characterWithoutSim]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // Enter edit mode
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
+
+    const simToggle = screen.getByRole('button', { name: 'Toggle Simulacrum' });
+    expect(simToggle).toBeInTheDocument();
+    expect(simToggle).toHaveAttribute('aria-pressed', 'false');
+
+    // Click toggle to enable Simulacrum
+    fireEvent.click(simToggle);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        simulacrum: expect.objectContaining({
+          active: true,
+          vitals: expect.objectContaining({
+            hpCurrent: 25, // Math.floor(50 / 2)
+            hpMax: 25,
+            ac: 16,
+          }),
+        }),
+      })
+    );
+
+    // Rerender with active simulacrum
+    const characterWithSim = {
+      ...characterWithoutSim,
+      simulacrum: {
+        active: true,
+        vitals: { hpCurrent: 25, hpMax: 25, ac: 16 },
+      },
+    };
+
+    rerender(
+      <CharacterSheetHeader
+        character={characterWithSim}
+        profiles={[characterWithSim]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    const activeToggle = screen.getByRole('button', { name: 'Toggle Simulacrum' });
+    expect(activeToggle).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(activeToggle);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        simulacrum: expect.objectContaining({
+          active: false,
+        }),
+      })
+    );
+  });
 });

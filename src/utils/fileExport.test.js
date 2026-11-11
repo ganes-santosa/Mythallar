@@ -79,4 +79,27 @@ describe('validateAndImportCharacterJSON', () => {
     expect(result.character.sheet.trackedResources[0].name).toBe('Lucky');
     expect(result.character.sheet.feats).toEqual(['Alert', 'Lucky']);
   });
+
+  it('preserves simulacrum data object when importing character profile', () => {
+    const jsonWithSim = JSON.stringify({
+      name: 'Simulacrum Tester',
+      className: 'Wizard',
+      level: 13,
+      simulacrum: {
+        active: true,
+        vitals: { hpCurrent: 30, hpMax: 30, ac: 15 },
+        customSlots: { 1: 5 },
+        slotsUsed: { 1: 2 },
+      },
+    });
+
+    const result = validateAndImportCharacterJSON(jsonWithSim);
+    expect(result.error).toBeUndefined();
+    expect(result.character.simulacrum).toEqual({
+      active: true,
+      vitals: { hpCurrent: 30, hpMax: 30, ac: 15 },
+      customSlots: { 1: 5 },
+      slotsUsed: { 1: 2 },
+    });
+  });
 });

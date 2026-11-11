@@ -338,4 +338,47 @@ describe('CharacterSheetView', () => {
     // Passive Perception: 10 + WIS mod (+2) = 12
     expect(screen.getByTestId('passive-perception-value').textContent).toBe('12');
   });
+
+  it('renders Simulacrum Combat Stats accordion when simulacrum is active and supports editing simulacrum vitals', () => {
+    const handleUpdate = vi.fn();
+    const charWithSim = {
+      ...mockCharacter,
+      simulacrum: {
+        active: true,
+        vitals: {
+          hpCurrent: 20,
+          hpMax: 20,
+          hpTemp: 0,
+          ac: 14,
+          acFormula: '10 + 2 DEX + 2 Shield',
+          initiativeOverride: null,
+          spellcastingAbility: 'int',
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetView
+        character={charWithSim}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // Accordion is rendered with opening animation
+    const accordionWrapper = screen.getByTestId('simulacrum-combat-stats-accordion');
+    expect(accordionWrapper).toHaveClass('animate-accordion-down');
+    expect(screen.getByRole('button', { name: 'Collapse Simulacrum Combat Stats' })).toBeInTheDocument();
+    expect(screen.getByText('Simulacrum Combat Stats')).toBeInTheDocument();
+
+    // Toggle edit mode
+    const editBtn = screen.getByRole('button', { name: 'Edit simulacrum vitals' });
+    fireEvent.click(editBtn);
+
+    const doneBtn = screen.getByRole('button', { name: 'Done editing simulacrum vitals' });
+    expect(doneBtn).toBeInTheDocument();
+
+    // Done button closes edit mode
+    fireEvent.click(doneBtn);
+    expect(screen.getByRole('button', { name: 'Edit simulacrum vitals' })).toBeInTheDocument();
+  });
 });

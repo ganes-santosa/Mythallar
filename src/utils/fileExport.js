@@ -36,6 +36,7 @@ export function validateAndImportCharacterJSON(jsonString) {
       ...(Array.isArray(data.classes) && data.classes.length > 0 ? { classes: data.classes } : {}),
       ...(Array.isArray(data.homebrewSpells) && data.homebrewSpells.length > 0 ? { homebrewSpells: data.homebrewSpells } : {}),
       ...(typeof data.sheet === 'object' && data.sheet !== null ? { sheet: data.sheet } : {}),
+      ...(typeof data.simulacrum === 'object' && data.simulacrum !== null ? { simulacrum: data.simulacrum } : {}),
     };
 
     return { character: normalized };

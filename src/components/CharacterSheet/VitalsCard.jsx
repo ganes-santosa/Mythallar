@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, ShieldHalf, Heart, Zap, Lightbulb, Sparkles, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check } from 'lucide-react';
+import { Shield, ShieldHalf, Heart, Zap, Lightbulb, Sparkles, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check, Undo2, Redo2 } from 'lucide-react';
 
 export function CrystalBallIcon({ size = 16, className = '', ...props }) {
   return (
@@ -62,6 +62,8 @@ function HitDieRollChip({ dieKey, pool, onRoll, disabled, conScore }) {
 }
 
 export default function VitalsCard({
+  characterId = null,
+  isSimulacrum = false,
   vitals,
   dexScore = 10,
   conScore = 10,
@@ -156,6 +158,68 @@ export default function VitalsCard({
     } else {
       setTempHpDraft(String(hpTemp));
     }
+  };
+
+  // ponytail: in-memory past/future undo-redo stack for table HP retcons; upgrade to character-level command history if action logging is needed
+  const [hpHistory, setHpHistory] = useState({ past: [], future: [] });
+  const isUndoRedoRef = useRef(false);
+  const prevHpRef = useRef({ hpCurrent, hpTemp });
+  const lastCharIdRef = useRef(characterId);
+
+  useEffect(() => {
+    if (lastCharIdRef.current !== characterId) {
+      lastCharIdRef.current = characterId;
+      setHpHistory({ past: [], future: [] });
+      prevHpRef.current = { hpCurrent, hpTemp };
+      isUndoRedoRef.current = false;
+      return;
+    }
+
+    const prev = prevHpRef.current;
+    if (prev.hpCurrent !== hpCurrent || prev.hpTemp !== hpTemp) {
+      if (isUndoRedoRef.current) {
+        isUndoRedoRef.current = false;
+      } else {
+        setHpHistory((curr) => ({
+          past: [...curr.past.slice(-29), { hpCurrent: prev.hpCurrent, hpTemp: prev.hpTemp }],
+          future: [],
+        }));
+      }
+      prevHpRef.current = { hpCurrent, hpTemp };
+    }
+  }, [characterId, hpCurrent, hpTemp]);
+
+  const canUndo = hpHistory.past.length > 0;
+  const canRedo = hpHistory.future.length > 0;
+  const previousSnapshot = canUndo ? hpHistory.past[hpHistory.past.length - 1] : null;
+  const nextSnapshot = canRedo ? hpHistory.future[0] : null;
+
+  const handleUndoHp = () => {
+    if (!canUndo || !previousSnapshot) return;
+    isUndoRedoRef.current = true;
+    setHpHistory((curr) => ({
+      past: curr.past.slice(0, -1),
+      future: [{ hpCurrent, hpTemp }, ...curr.future],
+    }));
+    onUpdateVitals?.({
+      ...currentVitals,
+      hpCurrent: previousSnapshot.hpCurrent,
+      hpTemp: previousSnapshot.hpTemp,
+    });
+  };
+
+  const handleRedoHp = () => {
+    if (!canRedo || !nextSnapshot) return;
+    isUndoRedoRef.current = true;
+    setHpHistory((curr) => ({
+      past: [...curr.past, { hpCurrent, hpTemp }],
+      future: curr.future.slice(1),
+    }));
+    onUpdateVitals?.({
+      ...currentVitals,
+      hpCurrent: nextSnapshot.hpCurrent,
+      hpTemp: nextSnapshot.hpTemp,
+    });
   };
 
   const isBuffed = hpMaxBuff > 0 && effectiveMax > 0;
@@ -507,6 +571,36 @@ export default function VitalsCard({
                 <span className="text-[11px] font-bold text-red-400 flex items-center gap-1">
                   <Heart size={12} className="text-red-400 fill-red-400/20" /> Hit Points
                 </span>
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    aria-label="Undo HP"
+                    title={
+                      canUndo
+                        ? `Undo HP to ${previousSnapshot.hpCurrent}${previousSnapshot.hpTemp > 0 ? ` (+${previousSnapshot.hpTemp} Temp)` : ''}`
+                        : 'Nothing to undo'
+                    }
+                    disabled={!canUndo}
+                    onClick={handleUndoHp}
+                    className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-default"
+                  >
+                    <Undo2 size={11} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Redo HP"
+                    title={
+                      canRedo
+                        ? `Redo HP to ${nextSnapshot.hpCurrent}${nextSnapshot.hpTemp > 0 ? ` (+${nextSnapshot.hpTemp} Temp)` : ''}`
+                        : 'Nothing to redo'
+                    }
+                    disabled={!canRedo}
+                    onClick={handleRedoHp}
+                    className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-default"
+                  >
+                    <Redo2 size={11} />
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center gap-1.5 my-0.5">
@@ -965,361 +1059,367 @@ export default function VitalsCard({
         </div>
 
         {/* Row 2: Compact Trackers Strip (Hit Dice, Inspiration, Death Saves) in ONE Single Card */}
-        <div className="col-span-1 sm:col-span-2 xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-subgrid sm:gap-x-2 text-xs items-stretch relative">
-          {/* Unified Card Background */}
-          <div className="absolute inset-0 bg-dnd-card/60 border border-white/5 rounded-lg pointer-events-none -z-0" />
+        {!isSimulacrum && (
+          <div className="col-span-1 sm:col-span-2 xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-subgrid sm:gap-x-2 text-xs items-stretch relative">
+            {/* Unified Card Background */}
+            <div className="absolute inset-0 bg-dnd-card/60 border border-white/5 rounded-lg pointer-events-none -z-0" />
 
-          {/* Subdivision 1: Hit Dice */}
-          <div className="relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 xl:col-span-1 border-b xl:border-b-0 border-white/5 py-1.5 pl-2 pr-1.5">
-            <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
-              Hit Dice
-            </span>
+            {/* Subdivision 1: Hit Dice */}
+            <div className="relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 xl:col-span-1 border-b xl:border-b-0 border-white/5 py-1.5 pl-2 pr-1.5">
+              <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
+                Hit Dice
+              </span>
 
-            {/* Hit Dice Pools Carousel */}
-            <div className="flex items-center min-w-0 flex-1">
-              {isHitDiceOverflowing && (
-                <button
-                  type="button"
-                  aria-label="Scroll hit dice left"
-                  onClick={() => scrollHitDice(-1)}
-                  disabled={!canScrollLeft}
-                  className="w-3.5 h-5 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:text-slate-400 flex-shrink-0 -ml-0.5 mr-0.5 transition-opacity cursor-pointer disabled:cursor-default"
-                >
-                  <ChevronLeft size={11} />
-                </button>
-              )}
-
-              <div
-                ref={hitDiceScrollRef}
-                onScroll={checkHitDiceScroll}
-                className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1"
-              >
-                {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
-                  <div
-                    key={dieKey}
-                    className="flex items-center space-x-1 bg-dnd-panel/70 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
+              {/* Hit Dice Pools Carousel */}
+              <div className="flex items-center min-w-0 flex-1">
+                {isHitDiceOverflowing && (
+                  <button
+                    type="button"
+                    aria-label="Scroll hit dice left"
+                    onClick={() => scrollHitDice(-1)}
+                    disabled={!canScrollLeft}
+                    className="w-3.5 h-5 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:text-slate-400 flex-shrink-0 -ml-0.5 mr-0.5 transition-opacity cursor-pointer disabled:cursor-default"
                   >
-                    <button
-                      type="button"
-                      aria-label={`Spend ${dieKey} Hit Die`}
-                      onClick={() => changeHitDice(dieKey, -1)}
-                      disabled={pool.current <= 0}
-                      className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                    <ChevronLeft size={11} />
+                  </button>
+                )}
+
+                <div
+                  ref={hitDiceScrollRef}
+                  onScroll={checkHitDiceScroll}
+                  className="flex items-center gap-1 sm:gap-1.5 flex-nowrap overflow-x-auto no-scrollbar py-0.5 min-w-0 flex-1"
+                >
+                  {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
+                    <div
+                      key={dieKey}
+                      className="flex items-center space-x-1 bg-dnd-panel/70 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
                     >
-                      -
-                    </button>
-                    <HitDieRollChip
-                      dieKey={dieKey}
-                      pool={pool}
-                      onRoll={() => handleRollHitDie(dieKey)}
-                      disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
-                      conScore={conScore}
-                    />
-                    <button
-                      type="button"
-                      aria-label={`Recover ${dieKey} Hit Die`}
-                      onClick={() => changeHitDice(dieKey, 1)}
-                      disabled={pool.current >= pool.max}
-                      className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
-                    >
-                      +
-                    </button>
+                      <button
+                        type="button"
+                        aria-label={`Spend ${dieKey} Hit Die`}
+                        onClick={() => changeHitDice(dieKey, -1)}
+                        disabled={pool.current <= 0}
+                        className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                      >
+                        -
+                      </button>
+                      <HitDieRollChip
+                        dieKey={dieKey}
+                        pool={pool}
+                        onRoll={() => handleRollHitDie(dieKey)}
+                        disabled={pool.current <= 0 || hpCurrent >= effectiveMax}
+                        conScore={conScore}
+                      />
+                      <button
+                        type="button"
+                        aria-label={`Recover ${dieKey} Hit Die`}
+                        onClick={() => changeHitDice(dieKey, 1)}
+                        disabled={pool.current >= pool.max}
+                        className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-card text-slate-400 hover:text-white disabled:opacity-30 text-[10px] font-bold transition-colors cursor-pointer"
+                      >
+                        +
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {isHitDiceOverflowing && (
+                  <button
+                    type="button"
+                    aria-label="Scroll hit dice right"
+                    onClick={() => scrollHitDice(1)}
+                    disabled={!canScrollRight}
+                    className="w-3.5 h-5 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:text-slate-400 flex-shrink-0 -mr-0.5 ml-0.5 transition-opacity cursor-pointer disabled:cursor-default"
+                  >
+                    <ChevronRight size={11} />
+                  </button>
+                )}
+              </div>
+              {/* Divider 1: Centered in gap between Card 1 & Card 2 on xl */}
+              <div className="hidden xl:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
+            </div>
+
+            {/* Subdivision 2: Inspiration */}
+            <div className="relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 xl:col-span-1 border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center">
+              <span className="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1 min-w-0 flex-shrink-0">
+                <Lightbulb size={11} className="text-dnd-gold flex-shrink-0" />
+                <span className="truncate">Inspiration</span>
+              </span>
+              <div className="flex items-center justify-center space-x-1 flex-shrink-0">
+                <button
+                  type="button"
+                  aria-label="Decrement inspiration"
+                  onClick={() => handleInspirationStep(-1)}
+                  className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel/70 text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                >
+                  -
+                </button>
+                <span data-testid="inspiration-value" className="w-4 text-center text-xs font-bold text-dnd-gold leading-none">
+                  {inspirationCount}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Increment inspiration"
+                  onClick={() => handleInspirationStep(1)}
+                  className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel/70 text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                >
+                  +
+                </button>
+              </div>
+              {/* Divider 2: Centered in gap between Card 2 & Card 3 on xl and sm */}
+              <div className="hidden sm:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
+            </div>
+
+            {/* Subdivision 3: Death Saves */}
+            <div className="relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 xl:col-span-1 py-1.5 pl-1 pr-2.5">
+              <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 flex-shrink-0 mb-0.5">
+                <Activity size={11} className="text-red-400 flex-shrink-0" />
+                <span>Death Saves</span>
+              </span>
+              <div className="flex items-center gap-2.5 flex-shrink-0">
+                {/* Successes */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-emerald-400 font-bold">Succ</span>
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3].map((num) => {
+                      const active = (deathSaves.successes || 0) >= num;
+                      return (
+                        <button
+                          key={`ds-succ-${num}`}
+                          type="button"
+                          aria-label={`Death Save Success ${num}`}
+                          onClick={() => toggleDeathSave('successes', num)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                            active
+                              ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
+                              : 'bg-dnd-panel/70 hover:bg-emerald-400/40'
+                          }`}
+                        />
+                      );
+                    })}
                   </div>
-                ))}
+                </div>
+
+                {/* Failures */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[9px] text-red-400 font-bold">Fail</span>
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3].map((num) => {
+                      const active = (deathSaves.failures || 0) >= num;
+                      return (
+                        <button
+                          key={`ds-fail-${num}`}
+                          type="button"
+                          aria-label={`Death Save Failure ${num}`}
+                          onClick={() => toggleDeathSave('failures', num)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                            active
+                              ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
+                              : 'bg-dnd-panel/70 hover:bg-red-400/40'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-
-              {isHitDiceOverflowing && (
-                <button
-                  type="button"
-                  aria-label="Scroll hit dice right"
-                  onClick={() => scrollHitDice(1)}
-                  disabled={!canScrollRight}
-                  className="w-3.5 h-5 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-20 disabled:hover:text-slate-400 flex-shrink-0 -mr-0.5 ml-0.5 transition-opacity cursor-pointer disabled:cursor-default"
-                >
-                  <ChevronRight size={11} />
-                </button>
-              )}
             </div>
-            {/* Divider 1: Centered in gap between Card 1 & Card 2 on xl */}
-            <div className="hidden xl:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
           </div>
+        )}
+      </div>
 
-          {/* Subdivision 2: Inspiration */}
-          <div className="relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 xl:col-span-1 border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center">
-            <span className="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1 min-w-0 flex-shrink-0">
-              <Lightbulb size={11} className="text-dnd-gold flex-shrink-0" />
-              <span className="truncate">Inspiration</span>
-            </span>
-            <div className="flex items-center justify-center space-x-1 flex-shrink-0">
-              <button
-                type="button"
-                aria-label="Decrement inspiration"
-                onClick={() => handleInspirationStep(-1)}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel/70 text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
-              >
-                -
-              </button>
-              <span data-testid="inspiration-value" className="w-4 text-center text-xs font-bold text-dnd-gold leading-none">
-                {inspirationCount}
+      {!isSimulacrum && (
+        <>
+          {/* Conditions */}
+          <div className="pt-1.5 border-t border-white/5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span className="flex items-center gap-1">
+                <Activity size={10} className="text-amber-400" /> Conditions:
               </span>
               <button
                 type="button"
-                aria-label="Increment inspiration"
-                onClick={() => handleInspirationStep(1)}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded bg-dnd-panel/70 text-slate-400 hover:text-white text-[10px] font-bold transition-colors cursor-pointer"
+                aria-label="+ Add Condition"
+                onClick={() => setIsAddingCondition(!isAddingCondition)}
+                className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
               >
-                +
+                + Add
               </button>
             </div>
-            {/* Divider 2: Centered in gap between Card 2 & Card 3 on xl and sm */}
-            <div className="hidden sm:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
-          </div>
 
-          {/* Subdivision 3: Death Saves */}
-          <div className="relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 xl:col-span-1 py-1.5 pl-1 pr-2.5">
-            <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 flex-shrink-0 mb-0.5">
-              <Activity size={11} className="text-red-400 flex-shrink-0" />
-              <span>Death Saves</span>
-            </span>
-            <div className="flex items-center gap-2.5 flex-shrink-0">
-              {/* Successes */}
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] text-emerald-400 font-bold">Succ</span>
-                <div className="flex items-center space-x-1">
-                  {[1, 2, 3].map((num) => {
-                    const active = (deathSaves.successes || 0) >= num;
-                    return (
-                      <button
-                        key={`ds-succ-${num}`}
-                        type="button"
-                        aria-label={`Death Save Success ${num}`}
-                        onClick={() => toggleDeathSave('successes', num)}
-                        className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                          active
-                            ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
-                            : 'bg-dnd-panel/70 hover:bg-emerald-400/40'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
+            {isAddingCondition && (
+              <form noValidate onSubmit={handleAddCondition} className="flex items-center space-x-1.5 pt-1 px-0.5">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="e.g. Paralyzed, Blinded, Exhausted 1"
+                  value={newCondition}
+                  onChange={(e) => setNewCondition(e.target.value)}
+                  className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
+                />
+                <button
+                  type="submit"
+                  className="px-2.5 py-1 rounded-lg bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCondition(false)}
+                  className="px-2 py-1 rounded-lg bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors"
+                >
+                  Cancel
+                </button>
+              </form>
+            )}
 
-              {/* Failures */}
-              <div className="flex items-center gap-1">
-                <span className="text-[9px] text-red-400 font-bold">Fail</span>
-                <div className="flex items-center space-x-1">
-                  {[1, 2, 3].map((num) => {
-                    const active = (deathSaves.failures || 0) >= num;
-                    return (
-                      <button
-                        key={`ds-fail-${num}`}
-                        type="button"
-                        aria-label={`Death Save Failure ${num}`}
-                        onClick={() => toggleDeathSave('failures', num)}
-                        className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
-                          active
-                            ? 'bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]'
-                            : 'bg-dnd-panel/70 hover:bg-red-400/40'
-                        }`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Conditions */}
-      <div className="pt-1.5 border-t border-white/5 space-y-1">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-          <span className="flex items-center gap-1">
-            <Activity size={10} className="text-amber-400" /> Conditions:
-          </span>
-          <button
-            type="button"
-            aria-label="+ Add Condition"
-            onClick={() => setIsAddingCondition(!isAddingCondition)}
-            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
-          >
-            + Add
-          </button>
-        </div>
-
-        {isAddingCondition && (
-          <form noValidate onSubmit={handleAddCondition} className="flex items-center space-x-1.5 pt-1 px-0.5">
-            <input
-              type="text"
-              autoFocus
-              placeholder="e.g. Paralyzed, Blinded, Exhausted 1"
-              value={newCondition}
-              onChange={(e) => setNewCondition(e.target.value)}
-              className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
-            />
-            <button
-              type="submit"
-              className="px-2.5 py-1 rounded-lg bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAddingCondition(false)}
-              className="px-2 py-1 rounded-lg bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors"
-            >
-              Cancel
-            </button>
-          </form>
-        )}
-
-        <div className="flex flex-wrap items-center gap-1 min-h-[20px]">
-          {/* Permanent Exhaustion Chip */}
-          <span
-            data-testid="exhaustion-chip"
-            className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg text-[11px] shadow-sm bg-dnd-card text-slate-300"
-          >
-            <span className="font-medium">Exhaustion</span>
-            <div className="flex items-center space-x-0.5 bg-dnd-panel/70 px-1 py-0.2 rounded">
-              <button
-                type="button"
-                aria-label="Decrease exhaustion"
-                disabled={exhaustionLevel <= 0}
-                onClick={() => handleExhaustionStep(-1)}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              >
-                -
-              </button>
+            <div className="flex flex-wrap items-center gap-1 min-h-[20px]">
+              {/* Permanent Exhaustion Chip */}
               <span
-                data-testid="exhaustion-level"
-                className="w-3.5 text-center font-bold text-dnd-gold"
+                data-testid="exhaustion-chip"
+                className="inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg text-[11px] shadow-sm bg-dnd-card text-slate-300"
               >
-                {exhaustionLevel}
+                <span className="font-medium">Exhaustion</span>
+                <div className="flex items-center space-x-0.5 bg-dnd-panel/70 px-1 py-0.2 rounded">
+                  <button
+                    type="button"
+                    aria-label="Decrease exhaustion"
+                    disabled={exhaustionLevel <= 0}
+                    onClick={() => handleExhaustionStep(-1)}
+                    className="w-3.5 h-3.5 flex items-center justify-center rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    -
+                  </button>
+                  <span
+                    data-testid="exhaustion-level"
+                    className="w-3.5 text-center font-bold text-dnd-gold"
+                  >
+                    {exhaustionLevel}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Increase exhaustion"
+                    disabled={exhaustionLevel >= 6}
+                    onClick={() => handleExhaustionStep(1)}
+                    className="w-3.5 h-3.5 flex items-center justify-center rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </span>
+
+              {activeConditions.map((cond) => (
+                <span
+                  key={cond}
+                  className="group inline-flex items-center px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
+                >
+                  <span>{cond}</span>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      aria-label={`Remove condition ${cond}`}
+                      onClick={() => handleRemoveCondition(cond)}
+                      className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100 cursor-pointer"
+                    >
+                      <X size={9} />
+                    </button>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Resistance & Immunities */}
+          <div className="pt-1.5 border-t border-white/5 space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+              <span className="flex items-center gap-1">
+                <Shield size={10} className="text-amber-400" /> Resistance & Immunities:
               </span>
               <button
                 type="button"
-                aria-label="Increase exhaustion"
-                disabled={exhaustionLevel >= 6}
-                onClick={() => handleExhaustionStep(1)}
-                className="w-3.5 h-3.5 flex items-center justify-center rounded text-slate-400 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                aria-label="+ Add Defense"
+                onClick={() => setIsAddingDefense(!isAddingDefense)}
+                className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
               >
-                +
+                + Add
               </button>
             </div>
-          </span>
 
-          {activeConditions.map((cond) => (
-            <span
-              key={cond}
-              className="group inline-flex items-center px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
-            >
-              <span>{cond}</span>
-              {isEditing && (
+            {isAddingDefense && (
+              <form noValidate onSubmit={handleAddDefense} className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-1 px-0.5">
+                <div className="inline-flex rounded-lg bg-dnd-panel/70 p-0.5 shrink-0 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setDefenseType('resistance')}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
+                      defenseType === 'resistance'
+                        ? 'bg-emerald-500/20 text-emerald-300 font-medium'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Resistance
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDefenseType('immunity')}
+                    className={`px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
+                      defenseType === 'immunity'
+                        ? 'bg-dnd-gold/20 text-dnd-gold font-medium'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    Immunity
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder={defenseType === 'resistance' ? 'e.g. Fire, Cold' : 'e.g. Poison, Charmed'}
+                  value={newDefense}
+                  onChange={(e) => setNewDefense(e.target.value)}
+                  className="flex-1 min-w-[120px] px-2 py-0.5 rounded bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
+                />
+                <button
+                  type="submit"
+                  className="px-2 py-0.5 rounded bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
+                >
+                  Add
+                </button>
                 <button
                   type="button"
-                  aria-label={`Remove condition ${cond}`}
-                  onClick={() => handleRemoveCondition(cond)}
-                  className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100 cursor-pointer"
+                  onClick={() => setIsAddingDefense(false)}
+                  className="px-1.5 py-0.5 rounded bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors cursor-pointer"
                 >
-                  <X size={9} />
+                  Cancel
                 </button>
+              </form>
+            )}
+
+            <div className="flex flex-wrap gap-1 min-h-[20px]">
+              {defenses.length === 0 && !isAddingDefense && (
+                <span className="text-[10px] text-slate-500 italic">None recorded</span>
               )}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* Resistance & Immunities */}
-      <div className="pt-1.5 border-t border-white/5 space-y-1">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-          <span className="flex items-center gap-1">
-            <Shield size={10} className="text-amber-400" /> Resistance & Immunities:
-          </span>
-          <button
-            type="button"
-            aria-label="+ Add Defense"
-            onClick={() => setIsAddingDefense(!isAddingDefense)}
-            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
-          >
-            + Add
-          </button>
-        </div>
-
-        {isAddingDefense && (
-          <form noValidate onSubmit={handleAddDefense} className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-1 px-0.5">
-            <div className="inline-flex rounded-lg bg-dnd-panel/70 p-0.5 shrink-0 text-xs">
-              <button
-                type="button"
-                onClick={() => setDefenseType('resistance')}
-                className={`px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
-                  defenseType === 'resistance'
-                    ? 'bg-emerald-500/20 text-emerald-300 font-medium'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Resistance
-              </button>
-              <button
-                type="button"
-                onClick={() => setDefenseType('immunity')}
-                className={`px-2 py-0.5 rounded text-xs transition-colors cursor-pointer ${
-                  defenseType === 'immunity'
-                    ? 'bg-dnd-gold/20 text-dnd-gold font-medium'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                Immunity
-              </button>
+              {defenses.map((def) => (
+                <span
+                  key={def}
+                  className="group inline-flex items-center px-1.5 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm border border-white/5"
+                >
+                  <span>{def}</span>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      aria-label={`Remove defense ${def}`}
+                      onClick={() => handleRemoveDefense(def)}
+                      className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100 cursor-pointer"
+                    >
+                      <X size={9} />
+                    </button>
+                  )}
+                </span>
+              ))}
             </div>
-            <input
-              type="text"
-              autoFocus
-              placeholder={defenseType === 'resistance' ? 'e.g. Fire, Cold' : 'e.g. Poison, Charmed'}
-              value={newDefense}
-              onChange={(e) => setNewDefense(e.target.value)}
-              className="flex-1 min-w-[120px] px-2 py-0.5 rounded bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
-            />
-            <button
-              type="submit"
-              className="px-2 py-0.5 rounded bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAddingDefense(false)}
-              className="px-1.5 py-0.5 rounded bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-          </form>
-        )}
-
-        <div className="flex flex-wrap gap-1 min-h-[20px]">
-          {defenses.length === 0 && !isAddingDefense && (
-            <span className="text-[10px] text-slate-500 italic">None recorded</span>
-          )}
-          {defenses.map((def) => (
-            <span
-              key={def}
-              className="group inline-flex items-center px-1.5 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm border border-white/5"
-            >
-              <span>{def}</span>
-              {isEditing && (
-                <button
-                  type="button"
-                  aria-label={`Remove defense ${def}`}
-                  onClick={() => handleRemoveDefense(def)}
-                  className="ml-1 text-slate-500 hover:text-red-400 opacity-60 group-hover:opacity-100 cursor-pointer"
-                >
-                  <X size={9} />
-                </button>
-              )}
-            </span>
-          ))}
-        </div>
-      </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

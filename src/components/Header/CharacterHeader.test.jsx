@@ -318,4 +318,78 @@ describe('CharacterHeader', () => {
     fireEvent.click(switchBtn);
     expect(handleSelect).toHaveBeenCalledWith('c2');
   });
+
+  it('renders Simulacrum toggle button in edit mode and toggles simulacrum state', () => {
+    const handleUpdate = vi.fn();
+    const characterWithoutSim = {
+      ...mockProfiles[0],
+      sheet: { vitals: { hpMax: 40, ac: 15, spellcastingAbility: 'int' } },
+    };
+
+    const { rerender } = render(
+      <CharacterHeader
+        activeCharacter={characterWithoutSim}
+        profiles={[characterWithoutSim]}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    // Enter edit mode
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
+
+    const simToggle = screen.getByRole('button', { name: 'Toggle Simulacrum' });
+    expect(simToggle).toBeInTheDocument();
+    expect(simToggle).toHaveAttribute('aria-pressed', 'false');
+
+    // Click toggle to enable Simulacrum
+    fireEvent.click(simToggle);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        simulacrum: expect.objectContaining({
+          active: true,
+          vitals: expect.objectContaining({
+            hpCurrent: 20, // Math.floor(40 / 2)
+            hpMax: 20,
+            ac: 15,
+          }),
+        }),
+      })
+    );
+
+    // When simulacrum is already active, clicking disables it
+    const characterWithSim = {
+      ...characterWithoutSim,
+      simulacrum: {
+        active: true,
+        vitals: { hpCurrent: 20, hpMax: 20, ac: 15 },
+      },
+    };
+
+    rerender(
+      <CharacterHeader
+        activeCharacter={characterWithSim}
+        profiles={[characterWithSim]}
+        onUpdateCharacter={handleUpdate}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    const activeToggle = screen.getByRole('button', { name: 'Toggle Simulacrum' });
+    expect(activeToggle).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(activeToggle);
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        simulacrum: expect.objectContaining({
+          active: false,
+        }),
+      })
+    );
+  });
 });

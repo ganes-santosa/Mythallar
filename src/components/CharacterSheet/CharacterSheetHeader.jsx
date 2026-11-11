@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints, AlertCircle } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints, AlertCircle, Snowflake } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
 import LevelUpModal from '../Modal/LevelUpModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
@@ -171,6 +171,52 @@ function CharacterSheetHeader({
   const handleCancelEdit = () => {
     setNameDraft(character?.name || '');
     setIsEditing(false);
+  };
+
+  const isSimulacrumActive = Boolean(character?.simulacrum?.active);
+
+  const handleToggleSimulacrum = () => {
+    if (!character) return;
+    const currentSim = character.simulacrum || {};
+    const nextActive = !isSimulacrumActive;
+
+    let vitals = currentSim.vitals;
+    if (!vitals) {
+      const casterVitals = character.sheet?.vitals || {};
+      const baseMax = Number.isFinite(casterVitals.hpMax) ? casterVitals.hpMax : 10;
+      const hpMaxBuff = Number.isFinite(casterVitals.hpMaxBuff) ? casterVitals.hpMaxBuff : 0;
+      const halfHp = Math.max(1, Math.floor((baseMax + hpMaxBuff) / 2));
+      vitals = {
+        hpCurrent: halfHp,
+        hpMax: halfHp,
+        hpMaxBuff: 0,
+        hpTemp: 0,
+        ac: casterVitals.ac ?? 10,
+        acBonus: casterVitals.acBonus ?? 0,
+        acFormula: casterVitals.acFormula ?? '',
+        initiativeOverride: casterVitals.initiativeOverride ?? null,
+        spellcastingAbility: casterVitals.spellcastingAbility || 'int',
+        spellAttackOverride: casterVitals.spellAttackOverride ?? null,
+        spellAttackBonus: casterVitals.spellAttackBonus ?? 0,
+        spellDcOverride: casterVitals.spellDcOverride ?? null,
+        spellDcBonus: casterVitals.spellDcBonus ?? 0,
+      };
+    }
+
+    const trimmed = nameDraft.trim();
+    const updatedName = (isEditing && trimmed && trimmed !== character.name) ? trimmed : character.name;
+
+    onUpdateCharacter?.({
+      ...character,
+      name: updatedName,
+      simulacrum: {
+        ...currentSim,
+        active: nextActive,
+        vitals,
+        customSlots: currentSim.customSlots || {},
+        slotsUsed: currentSim.slotsUsed || {},
+      },
+    });
   };
 
   const handleIdentityChange = (field, value) => {
@@ -372,6 +418,41 @@ function CharacterSheetHeader({
                     <span>Change</span>
                   </div>
                 </button>
+
+                {isEditing && (
+                  <div className="absolute bottom-2 inset-x-0 z-20 flex justify-center pointer-events-none px-2">
+                    <button
+                      type="button"
+                      aria-label="Toggle Simulacrum"
+                      aria-pressed={isSimulacrumActive}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleSimulacrum();
+                      }}
+                      className={`pointer-events-auto flex items-center gap-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium transition-all shadow-md backdrop-blur-md cursor-pointer whitespace-nowrap ${
+                        isSimulacrumActive
+                          ? 'bg-cyan-950/50 text-cyan-200 hover:bg-cyan-900/70'
+                          : 'bg-black/40 text-slate-200 hover:text-white hover:bg-black/60'
+                      }`}
+                      title={isSimulacrumActive ? 'Disable Simulacrum' : 'Enable Simulacrum'}
+                    >
+                      <Snowflake size={11} className={isSimulacrumActive ? 'text-cyan-400' : 'text-slate-400'} />
+                      <span>Simulacrum</span>
+                      <span
+                        aria-hidden="true"
+                        className={`relative inline-flex h-3 w-5 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                          isSimulacrumActive ? 'bg-cyan-500' : 'bg-slate-700'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-2 w-2 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                            isSimulacrumActive ? 'translate-x-2.5' : 'translate-x-0.5'
+                          }`}
+                        />
+                      </span>
+                    </button>
+                  </div>
+                )}
 
                 <input
                   ref={portraitInputRef}

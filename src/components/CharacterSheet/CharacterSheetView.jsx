@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Swords,
   Pyramid,
@@ -16,7 +16,9 @@ import {
   ChevronDown,
   Waypoints,
   ArrowLeftRight,
+  Snowflake,
 } from 'lucide-react';
+import useAccordionMount from '../../hooks/useAccordionMount';
 import AccordionSection from '../Common/AccordionSection';
 import CharacterSheetHeader from './CharacterSheetHeader';
 import VitalsCard from './VitalsCard';
@@ -49,6 +51,32 @@ function CharacterSheetView({
 }) {
   const [skillsFilter, setSkillsFilter] = useState('');
   const [isEditingVitals, setIsEditingVitals] = useState(false);
+  const [isEditingSimulacrumVitals, setIsEditingSimulacrumVitals] = useState(false);
+
+  const isSimulacrumActive = Boolean(character?.simulacrum?.active);
+  const { shouldRender: shouldRenderSimulacrum, isClosing: isSimulacrumClosing } = useAccordionMount(isSimulacrumActive, 200);
+
+  const simulacrumVitals = character?.simulacrum?.vitals || {
+    hpCurrent: Math.max(1, Math.floor(((character?.sheet?.vitals?.hpMax ?? 10) + (character?.sheet?.vitals?.hpMaxBuff ?? 0)) / 2)),
+    hpMax: Math.max(1, Math.floor(((character?.sheet?.vitals?.hpMax ?? 10) + (character?.sheet?.vitals?.hpMaxBuff ?? 0)) / 2)),
+    hpMaxBuff: 0,
+    hpTemp: 0,
+    ac: character?.sheet?.vitals?.ac ?? 10,
+    acBonus: character?.sheet?.vitals?.acBonus ?? 0,
+    acFormula: character?.sheet?.vitals?.acFormula ?? '',
+    initiativeOverride: character?.sheet?.vitals?.initiativeOverride ?? null,
+    spellcastingAbility: character?.sheet?.vitals?.spellcastingAbility || 'int',
+    spellAttackOverride: character?.sheet?.vitals?.spellAttackOverride ?? null,
+    spellAttackBonus: character?.sheet?.vitals?.spellAttackBonus ?? 0,
+    spellDcOverride: character?.sheet?.vitals?.spellDcOverride ?? null,
+    spellDcBonus: character?.sheet?.vitals?.spellDcBonus ?? 0,
+  };
+
+  useEffect(() => {
+    if (!character?.simulacrum?.active) {
+      setIsEditingSimulacrumVitals(false);
+    }
+  }, [character?.simulacrum?.active]);
   const [isEditingAbilities, setIsEditingAbilities] = useState(false);
   const [isEditingSkills, setIsEditingSkills] = useState(false);
   const [isEditingProficiencies, setIsEditingProficiencies] = useState(false);
@@ -106,6 +134,16 @@ function CharacterSheetView({
       sheet: {
         ...sheet,
         ...sheetUpdates,
+      },
+    });
+  };
+
+  const handleUpdateSimulacrumVitals = (simVitals) => {
+    onUpdateCharacter?.({
+      ...character,
+      simulacrum: {
+        ...(character.simulacrum || {}),
+        vitals: simVitals,
       },
     });
   };
@@ -204,6 +242,7 @@ function CharacterSheetView({
           }
         >
           <VitalsCard
+            characterId={character?.id}
             vitals={sheet.vitals}
             dexScore={effectiveAbilities.dex ?? 10}
             conScore={effectiveAbilities.con ?? 10}
@@ -215,6 +254,58 @@ function CharacterSheetView({
             onShowToast={onShowToast}
           />
         </AccordionSection>
+
+        {/* Section 2b: Simulacrum Combat Stats */}
+        {shouldRenderSimulacrum && (
+          <div
+            data-testid="simulacrum-combat-stats-accordion"
+            className={isSimulacrumClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
+          >
+            <div className="overflow-hidden">
+              <AccordionSection
+                title="Simulacrum Combat Stats"
+                icon={Snowflake}
+                defaultOpen={true}
+                actions={
+                  isEditingSimulacrumVitals ? (
+                    <button
+                      type="button"
+                      aria-label="Done editing simulacrum vitals"
+                      onClick={() => setIsEditingSimulacrumVitals(false)}
+                      className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
+                      title="Done editing simulacrum combat vitals"
+                    >
+                      <Check size={13} strokeWidth={2.5} />
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label="Edit simulacrum vitals"
+                      onClick={() => setIsEditingSimulacrumVitals(true)}
+                      className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer"
+                      title="Edit simulacrum combat vitals"
+                    >
+                      <Settings2 size={13} />
+                    </button>
+                  )
+                }
+              >
+                <VitalsCard
+                  characterId={`${character?.id}_simulacrum`}
+                  isSimulacrum={true}
+                  vitals={simulacrumVitals}
+                  dexScore={effectiveAbilities.dex ?? 10}
+                  conScore={effectiveAbilities.con ?? 10}
+                  abilities={effectiveAbilities}
+                  classes={character?.classes || [{ className: character?.className, level: character?.level }]}
+                  isEditing={isEditingSimulacrumVitals}
+                  onUpdateVitals={handleUpdateSimulacrumVitals}
+                  onShowToast={onShowToast}
+                />
+              </AccordionSection>
+            </div>
+          </div>
+        )}
 
         {/* Section 3: Features & Tracked Resources */}
         <AccordionSection

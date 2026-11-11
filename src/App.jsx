@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LibraryBig, UserRound, Sparkles, AlertCircle, CheckCircle2, Settings, Plus, Upload } from 'lucide-react';
+import { LibraryBig, UserRound, Sparkles, AlertCircle, CheckCircle2, Settings, Plus, Upload, Snowflake } from 'lucide-react';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -51,6 +51,7 @@ import CreateCharacterModal from './components/Modal/CreateCharacterModal';
 import LocalCharactersImportModal from './components/Modal/LocalCharactersImportModal';
 import { CloudSyncContext } from './context/CloudSyncContext';
 import ShortRestModal from './components/Modal/ShortRestModal';
+import useAccordionMount from './hooks/useAccordionMount';
 import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
@@ -936,10 +937,12 @@ export default function App() {
 
   // --- Spell Slot Actions ---
   const slotBaselinesRef = useRef({});
+  const simulacrumSlotBaselinesRef = useRef({});
   const prevActiveIdRef = useRef(activeCharacter?.id);
   if (prevActiveIdRef.current !== activeCharacter?.id) {
     prevActiveIdRef.current = activeCharacter?.id;
     slotBaselinesRef.current = {};
+    simulacrumSlotBaselinesRef.current = {};
   }
 
   const handleDoneEditingMax = useCallback(() => {
@@ -1100,6 +1103,214 @@ export default function App() {
       });
     },
     [activeCharacter, updateActiveCharacter]
+  );
+
+  const handleDoneEditingSimulacrumMax = useCallback(() => {
+    simulacrumSlotBaselinesRef.current = {};
+  }, []);
+
+  const handleUseSimulacrumSlot = useCallback(
+    (level, explicitUsed) => {
+      simulacrumSlotBaselinesRef.current = {};
+      const char = activeCharacterRef.current;
+      if (!char || !char.simulacrum) return;
+      const sim = char.simulacrum;
+      const currentUsed = sim.slotsUsed?.[level] || 0;
+      const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : currentUsed + 1;
+      updateActiveCharacter({
+        ...char,
+        simulacrum: {
+          ...sim,
+          slotsUsed: {
+            ...sim.slotsUsed,
+            [level]: nextUsed,
+          },
+        },
+      });
+    },
+    [updateActiveCharacter]
+  );
+
+  const handleRestoreSimulacrumSlot = useCallback(
+    (level, explicitUsed) => {
+      simulacrumSlotBaselinesRef.current = {};
+      const char = activeCharacterRef.current;
+      if (!char || !char.simulacrum) return;
+      const sim = char.simulacrum;
+      const currentUsed = sim.slotsUsed?.[level] || 0;
+      const nextUsed = typeof explicitUsed === 'number' ? explicitUsed : Math.max(0, currentUsed - 1);
+      updateActiveCharacter({
+        ...char,
+        simulacrum: {
+          ...sim,
+          slotsUsed: {
+            ...sim.slotsUsed,
+            [level]: nextUsed,
+          },
+        },
+      });
+    },
+    [updateActiveCharacter]
+  );
+
+  const handleSetSimulacrumSlotsUsed = useCallback(
+    (level, used) => {
+      simulacrumSlotBaselinesRef.current = {};
+      const char = activeCharacterRef.current;
+      if (!char || !char.simulacrum) return;
+      const sim = char.simulacrum;
+      updateActiveCharacter({
+        ...char,
+        simulacrum: {
+          ...sim,
+          slotsUsed: {
+            ...sim.slotsUsed,
+            [level]: Math.max(0, used),
+          },
+        },
+      });
+    },
+    [updateActiveCharacter]
+  );
+
+  const handleUpdateSimulacrumMaxSlot = useCallback(
+    (level, newMax) => {
+      if (!activeCharacter || !activeCharacter.simulacrum) return;
+      const sim = activeCharacter.simulacrum;
+      const effectiveSlots = getEffectiveMaxSlots(
+        activeCharacter.className,
+        activeCharacter.level,
+        sim.customSlots,
+        activeCharacter
+      );
+      const currentMax = effectiveSlots[level] || 0;
+      const currentUsed = sim.slotsUsed?.[level] || 0;
+      const safeNewMax = Math.max(0, newMax);
+
+      if (simulacrumSlotBaselinesRef.current[level] === undefined) {
+        simulacrumSlotBaselinesRef.current[level] = Math.max(0, currentMax - currentUsed);
+      }
+      const baseline = simulacrumSlotBaselinesRef.current[level];
+      const nextRemaining = Math.min(safeNewMax, baseline);
+      const nextUsed = safeNewMax - nextRemaining;
+
+      updateActiveCharacter({
+        ...activeCharacter,
+        simulacrum: {
+          ...sim,
+          customSlots: {
+            ...sim.customSlots,
+            [level]: safeNewMax,
+          },
+          slotsUsed: {
+            ...sim.slotsUsed,
+            [level]: nextUsed,
+          },
+        },
+      });
+    },
+    [activeCharacter, updateActiveCharacter]
+  );
+
+  const handleResetSimulacrumMaxSlot = useCallback(
+    (level) => {
+      if (!activeCharacter || !activeCharacter.simulacrum) return;
+      const sim = activeCharacter.simulacrum;
+      const nextCustom = { ...sim.customSlots };
+      delete nextCustom[level];
+
+      const currentMax = getEffectiveMaxSlots(
+        activeCharacter.className,
+        activeCharacter.level,
+        sim.customSlots,
+        activeCharacter
+      )[level] || 0;
+      const newMax = getEffectiveMaxSlots(
+        activeCharacter.className,
+        activeCharacter.level,
+        nextCustom,
+        activeCharacter
+      )[level] || 0;
+      const currentUsed = sim.slotsUsed?.[level] || 0;
+
+      if (simulacrumSlotBaselinesRef.current[level] === undefined) {
+        simulacrumSlotBaselinesRef.current[level] = Math.max(0, currentMax - currentUsed);
+      }
+      const baseline = simulacrumSlotBaselinesRef.current[level];
+      const nextRemaining = Math.min(newMax, baseline);
+      const nextUsed = newMax - nextRemaining;
+
+      updateActiveCharacter({
+        ...activeCharacter,
+        simulacrum: {
+          ...sim,
+          customSlots: nextCustom,
+          slotsUsed: {
+            ...sim.slotsUsed,
+            [level]: nextUsed,
+          },
+        },
+      });
+    },
+    [activeCharacter, updateActiveCharacter]
+  );
+
+  const handleUseSimulacrumPactSlot = useCallback(() => {
+    if (!activeCharacter || !activeCharacter.simulacrum) return;
+    const sim = activeCharacter.simulacrum;
+    const currentUsed = sim.pactSlotsUsed || 0;
+    updateActiveCharacter({
+      ...activeCharacter,
+      simulacrum: {
+        ...sim,
+        pactSlotsUsed: currentUsed + 1,
+      },
+    });
+  }, [activeCharacter, updateActiveCharacter]);
+
+  const handleRestoreSimulacrumPactSlot = useCallback(() => {
+    if (!activeCharacter || !activeCharacter.simulacrum) return;
+    const sim = activeCharacter.simulacrum;
+    const currentUsed = sim.pactSlotsUsed || 0;
+    updateActiveCharacter({
+      ...activeCharacter,
+      simulacrum: {
+        ...sim,
+        pactSlotsUsed: Math.max(0, currentUsed - 1),
+      },
+    });
+  }, [activeCharacter, updateActiveCharacter]);
+
+  const handleSetSimulacrumPactSlotsUsed = useCallback(
+    (used) => {
+      if (!activeCharacter || !activeCharacter.simulacrum) return;
+      const sim = activeCharacter.simulacrum;
+      updateActiveCharacter({
+        ...activeCharacter,
+        simulacrum: {
+          ...sim,
+          pactSlotsUsed: Math.max(0, used),
+        },
+      });
+    },
+    [activeCharacter, updateActiveCharacter]
+  );
+
+  const simulacrumCharacter = useMemo(() => {
+    if (!activeCharacter) return null;
+    const sim = activeCharacter.simulacrum || {};
+    return {
+      ...activeCharacter,
+      customSlots: sim.customSlots || {},
+      slotsUsed: sim.slotsUsed || {},
+      pactSlotsUsed: sim.pactSlotsUsed || 0,
+    };
+  }, [activeCharacter]);
+
+  const isSimulacrumActive = Boolean(activeCharacter?.simulacrum?.active);
+  const { shouldRender: shouldRenderSimulacrumSlots, isClosing: isSimulacrumSlotsClosing } = useAccordionMount(
+    isSimulacrumActive,
+    200
   );
 
   const handleLongRest = useCallback(() => {
@@ -1669,6 +1880,32 @@ export default function App() {
                   onResetArcaneRecoveryUsed={handleResetArcaneRecoveryUsed}
                   onUpdateCharacter={updateActiveCharacter}
                 />
+                {/* Simulacrum Spell Slots Tracker Accordion (Animates open/close with Simulacrum toggle) */}
+                {shouldRenderSimulacrumSlots && simulacrumCharacter && (
+                  <div
+                    data-testid="simulacrum-spell-slots-accordion"
+                    className={isSimulacrumSlotsClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
+                  >
+                    <div className="overflow-hidden">
+                      <SpellSlotTracker
+                        title="Simulacrum Spell Slots"
+                        icon={Snowflake}
+                        hideRestButtons={true}
+                        character={simulacrumCharacter}
+                        onUseSlot={handleUseSimulacrumSlot}
+                        onRestoreSlot={handleRestoreSimulacrumSlot}
+                        onSetSlotsUsed={handleSetSimulacrumSlotsUsed}
+                        onUsePactSlot={handleUseSimulacrumPactSlot}
+                        onRestorePactSlot={handleRestoreSimulacrumPactSlot}
+                        onSetPactSlotsUsed={handleSetSimulacrumPactSlotsUsed}
+                        onUpdateMaxSlot={handleUpdateSimulacrumMaxSlot}
+                        onResetMaxSlot={handleResetSimulacrumMaxSlot}
+                        onDoneEditingMax={handleDoneEditingSimulacrumMax}
+                        onUpdateCharacter={updateActiveCharacter}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-h-0 flex flex-col">

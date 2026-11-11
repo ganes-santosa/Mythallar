@@ -935,4 +935,157 @@ describe('VitalsCard', () => {
       expect(screen.getByTestId('hp-bar-temp')).toBeInTheDocument();
     });
   });
+
+  describe('Undo & Redo HP', () => {
+    function InteractiveVitalsHarness({ initialVitals, characterId }) {
+      const [vitals, setVitals] = React.useState(initialVitals);
+      return (
+        <VitalsCard
+          characterId={characterId}
+          vitals={vitals}
+          onUpdateVitals={setVitals}
+        />
+      );
+    }
+
+    it('renders undo and redo buttons in disabled state initially', () => {
+      render(<VitalsCard vitals={mockVitals} />);
+      const undoBtn = screen.getByRole('button', { name: 'Undo HP' });
+      const redoBtn = screen.getByRole('button', { name: 'Redo HP' });
+      expect(undoBtn).toBeInTheDocument();
+      expect(redoBtn).toBeInTheDocument();
+      expect(undoBtn).toBeDisabled();
+      expect(redoBtn).toBeDisabled();
+      expect(undoBtn).toHaveAttribute('title', 'Nothing to undo');
+      expect(redoBtn).toHaveAttribute('title', 'Nothing to redo');
+      expect(undoBtn.className).toContain('disabled:cursor-default');
+      expect(redoBtn.className).toContain('disabled:cursor-default');
+      expect(undoBtn.className).not.toContain('disabled:cursor-not-allowed');
+      expect(redoBtn.className).not.toContain('disabled:cursor-not-allowed');
+    });
+
+    it('enables undo after damage and restores previous HP on undo click', () => {
+      render(<InteractiveVitalsHarness initialVitals={{ ...mockVitals, hpCurrent: 45, hpTemp: 10 }} />);
+
+      const amtInput = screen.getByPlaceholderText('0');
+      const dmgBtn = screen.getByRole('button', { name: 'Apply Damage' });
+      const undoBtn = screen.getByRole('button', { name: 'Undo HP' });
+      const redoBtn = screen.getByRole('button', { name: 'Redo HP' });
+
+      // Apply 12 damage: 10 temp absorbed, 2 from current -> hpCurrent 43, hpTemp 0
+      fireEvent.change(amtInput, { target: { value: '12' } });
+      fireEvent.click(dmgBtn);
+
+      expect(screen.getByLabelText('Current HP')).toHaveValue(43);
+      expect(screen.getByLabelText('Temp HP')).toHaveValue(0);
+      expect(undoBtn).not.toBeDisabled();
+      expect(redoBtn).toBeDisabled();
+      expect(undoBtn).toHaveAttribute('title', 'Undo HP to 45 (+10 Temp)');
+
+      // Click Undo -> restores 45 HP and 10 Temp
+      fireEvent.click(undoBtn);
+
+      expect(screen.getByLabelText('Current HP')).toHaveValue(45);
+      expect(screen.getByLabelText('Temp HP')).toHaveValue(10);
+      expect(undoBtn).toBeDisabled();
+      expect(redoBtn).not.toBeDisabled();
+      expect(redoBtn).toHaveAttribute('title', 'Redo HP to 43');
+
+      // Click Redo -> reapplies 43 HP and 0 Temp
+      fireEvent.click(redoBtn);
+
+      expect(screen.getByLabelText('Current HP')).toHaveValue(43);
+      expect(screen.getByLabelText('Temp HP')).toHaveValue(0);
+      expect(undoBtn).not.toBeDisabled();
+      expect(redoBtn).toBeDisabled();
+    });
+
+    it('clears redo history when a new HP change is applied after undo', () => {
+      render(<InteractiveVitalsHarness initialVitals={{ ...mockVitals, hpCurrent: 40, hpTemp: 0 }} />);
+
+      const amtInput = screen.getByPlaceholderText('0');
+      const dmgBtn = screen.getByRole('button', { name: 'Apply Damage' });
+      const healBtn = screen.getByRole('button', { name: 'Apply Heal' });
+      const undoBtn = screen.getByRole('button', { name: 'Undo HP' });
+      const redoBtn = screen.getByRole('button', { name: 'Redo HP' });
+
+      // Damage 5 -> HP 35
+      fireEvent.change(amtInput, { target: { value: '5' } });
+      fireEvent.click(dmgBtn);
+      expect(screen.getByLabelText('Current HP')).toHaveValue(35);
+
+      // Undo -> HP 40
+      fireEvent.click(undoBtn);
+      expect(screen.getByLabelText('Current HP')).toHaveValue(40);
+      expect(redoBtn).not.toBeDisabled();
+
+      // Heal 2 -> HP 42 (new branch)
+      fireEvent.change(amtInput, { target: { value: '2' } });
+      fireEvent.click(healBtn);
+      expect(screen.getByLabelText('Current HP')).toHaveValue(42);
+
+      // Redo must now be disabled because history branched
+      expect(redoBtn).toBeDisabled();
+      expect(undoBtn).not.toBeDisabled();
+    });
+
+    it('resets undo and redo history when characterId changes', () => {
+      const { rerender } = render(
+        <InteractiveVitalsHarness characterId="char-1" initialVitals={{ ...mockVitals, hpCurrent: 50 }} />
+      );
+
+      const amtInput = screen.getByPlaceholderText('0');
+      const dmgBtn = screen.getByRole('button', { name: 'Apply Damage' });
+      const undoBtn = screen.getByRole('button', { name: 'Undo HP' });
+
+      fireEvent.change(amtInput, { target: { value: '10' } });
+      fireEvent.click(dmgBtn);
+      expect(undoBtn).not.toBeDisabled();
+
+      // Switch character
+      rerender(<InteractiveVitalsHarness characterId="char-2" initialVitals={{ ...mockVitals, hpCurrent: 30 }} />);
+      expect(screen.getByRole('button', { name: 'Undo HP' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Redo HP' })).toBeDisabled();
+    });
+  });
+
+  describe('Simulacrum Mode (isSimulacrum)', () => {
+    it('renders Row 1 (HP, AC, Spellcasting, Initiative) while suppressing Row 2 and Row 3', () => {
+      render(
+        <VitalsCard
+          isSimulacrum={true}
+          vitals={{
+            hpCurrent: 25,
+            hpMax: 25,
+            hpTemp: 0,
+            ac: 15,
+            acFormula: '10 + 2 DEX + 3 Mage Armor',
+            inspiration: 1,
+            conditions: ['Poisoned'],
+            defenses: ['Fire Resistance'],
+          }}
+          abilities={{ int: 16 }}
+          classes={[{ className: 'Wizard', level: 5 }]}
+          onUpdateVitals={() => {}}
+        />
+      );
+
+      // Row 1 elements must be present
+      expect(screen.getByLabelText('Current HP')).toHaveValue(25);
+      expect(screen.getByText('25')).toBeInTheDocument();
+      expect(screen.getByText('15')).toBeInTheDocument();
+      expect(screen.getByText('10 + 2 DEX + 3 Mage Armor')).toBeInTheDocument();
+      expect(screen.getByText('Spellcasting')).toBeInTheDocument();
+      expect(screen.getByText('Initiative')).toBeInTheDocument();
+
+      // Row 2 and Row 3 trackers must be suppressed
+      expect(screen.queryByText('Hit Dice')).not.toBeInTheDocument();
+      expect(screen.queryByText('Inspiration')).not.toBeInTheDocument();
+      expect(screen.queryByText('Death Saves')).not.toBeInTheDocument();
+      expect(screen.queryByText('Conditions:')).not.toBeInTheDocument();
+      expect(screen.queryByText('Poisoned')).not.toBeInTheDocument();
+      expect(screen.queryByText('Resistance & Immunities:')).not.toBeInTheDocument();
+      expect(screen.queryByText('Fire Resistance')).not.toBeInTheDocument();
+    });
+  });
 });

@@ -1,20 +1,20 @@
 # HANDOFF
 
-## Current state (v2.3.7 - master)
-- **Level-Up Checklist & 5e Starting Rules**:
-  - Added `LevelUpModal.jsx` and `levelUpRules.js` with 5e level 1 starting choices across all classes.
-  - Anchored level-up alert badge as top-right superscript relative to character name in `CharacterHeader` and `CharacterSheetHeader`.
-- **Level Group Accordion Transitions**:
-  - Added CSS grid height opening/closing transitions to level groups in `SpellList.jsx` and `SpellbookLevelGroup.jsx` without triggering expand autoscroll.
-- **Spellbook Sizing & Terminology**:
-  - Purged all instances of "grimoire" across the codebase in favor of "spellbook" and "spells".
-  - Added dynamic container height sizing in `SpellbookView.jsx` to stop flush at right pane bottom limit while preserving independent inner card scrolling.
-- **Right Pane Scroll Layout**:
-  - Expanded native scroll container across right pane with inset scrollbar styling.
-- **Verification**: 47 test files (418 tests) passing; production build clean.
+## Current state (v2.4.0 - master)
+- **Simulacrum Companion Tracker**:
+  - Simulacrum toggle switch in edit mode on both Character Sheet portrait and Right Pane header.
+  - Dedicated `Simulacrum Combat Stats` accordion on Character Sheet with half-HP baseline and independent vitals editing.
+  - Dedicated `Simulacrum Spell Slots` tracker in right pane with independent slot tracking (no rest recovery, custom max slots).
+  - Smooth opening and closing animations for both Simulacrum accordions using `useAccordionMount`.
+  - Full import/export schema round-trip support in `fileExport.js`.
+- **Combat Vitals Polish**:
+  - Added in-memory Undo and Redo HP buttons to `VitalsCard.jsx` for rapid combat HP adjustments.
+- **PWA Mobile Launcher Breathing Room**:
+  - Scaled down maskable logo in `pwa-192x192.png` and `pwa-512x512.png` (~45% total canvas, ~63% squircle width) on solid `#1E1E29` background.
+- **Verification**: 47 test files (429 tests) passing; production build clean.
 
 ## Next up
-- Resolve right-pane outer padding wheel scrolling behavior and scroll rate uniformity on the right side of the scrollbar.
+- Ready for next user instructions or feature development.
 
 ## Open questions
 - (none)

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, AlertCircle } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, AlertCircle, Snowflake } from 'lucide-react';
 import CharacterManagerModal from './CharacterManagerModal';
 import LevelUpModal from '../Modal/LevelUpModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
@@ -106,6 +106,52 @@ function CharacterHeader({
   const handleCancelEdit = () => {
     setNameDraft(activeCharacter?.name || '');
     setIsEditing(false);
+  };
+
+  const isSimulacrumActive = Boolean(activeCharacter?.simulacrum?.active);
+
+  const handleToggleSimulacrum = () => {
+    if (!activeCharacter) return;
+    const currentSim = activeCharacter.simulacrum || {};
+    const nextActive = !isSimulacrumActive;
+
+    let vitals = currentSim.vitals;
+    if (!vitals) {
+      const casterVitals = activeCharacter.sheet?.vitals || {};
+      const baseMax = Number.isFinite(casterVitals.hpMax) ? casterVitals.hpMax : 10;
+      const hpMaxBuff = Number.isFinite(casterVitals.hpMaxBuff) ? casterVitals.hpMaxBuff : 0;
+      const halfHp = Math.max(1, Math.floor((baseMax + hpMaxBuff) / 2));
+      vitals = {
+        hpCurrent: halfHp,
+        hpMax: halfHp,
+        hpMaxBuff: 0,
+        hpTemp: 0,
+        ac: casterVitals.ac ?? 10,
+        acBonus: casterVitals.acBonus ?? 0,
+        acFormula: casterVitals.acFormula ?? '',
+        initiativeOverride: casterVitals.initiativeOverride ?? null,
+        spellcastingAbility: casterVitals.spellcastingAbility || 'int',
+        spellAttackOverride: casterVitals.spellAttackOverride ?? null,
+        spellAttackBonus: casterVitals.spellAttackBonus ?? 0,
+        spellDcOverride: casterVitals.spellDcOverride ?? null,
+        spellDcBonus: casterVitals.spellDcBonus ?? 0,
+      };
+    }
+
+    const trimmed = nameDraft.trim();
+    const updatedName = (isEditing && trimmed && trimmed !== activeCharacter.name) ? trimmed : activeCharacter.name;
+
+    onUpdateCharacter({
+      ...activeCharacter,
+      name: updatedName,
+      simulacrum: {
+        ...currentSim,
+        active: nextActive,
+        vitals,
+        customSlots: currentSim.customSlots || {},
+        slotsUsed: currentSim.slotsUsed || {},
+      },
+    });
   };
 
   // ponytail: dynamically measure actual element widths to hide level label first, then button text, only when clashing
@@ -304,6 +350,33 @@ function CharacterHeader({
           <div ref={actionsRef} className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
             {isEditing ? (
               <>
+                <button
+                  type="button"
+                  aria-label="Toggle Simulacrum"
+                  aria-pressed={isSimulacrumActive}
+                  onClick={handleToggleSimulacrum}
+                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium transition-all shadow-sm cursor-pointer whitespace-nowrap ${
+                    isSimulacrumActive
+                      ? 'bg-cyan-950/80 text-cyan-200 hover:bg-cyan-900/90'
+                      : 'bg-dnd-panel/80 text-slate-300 hover:text-slate-100 hover:bg-dnd-panel'
+                  }`}
+                  title={isSimulacrumActive ? 'Disable Simulacrum' : 'Enable Simulacrum'}
+                >
+                  <Snowflake size={12} className={isSimulacrumActive ? 'text-cyan-400' : 'text-slate-400'} />
+                  <span>Simulacrum</span>
+                  <span
+                    aria-hidden="true"
+                    className={`relative inline-flex h-3.5 w-6 shrink-0 items-center rounded-full transition-colors duration-200 ease-in-out ${
+                      isSimulacrumActive ? 'bg-cyan-500' : 'bg-slate-700'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200 ease-in-out ${
+                        isSimulacrumActive ? 'translate-x-3' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </span>
+                </button>
                 <button
                   type="button"
                   aria-label="Save Profile"

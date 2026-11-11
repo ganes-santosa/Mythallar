@@ -23,6 +23,9 @@ import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import ArcaneRecoveryModal from '../Modal/ArcaneRecoveryModal';
 
 function SpellSlotTracker({
+  title = 'Spell Slots',
+  icon: Icon = Sparkles,
+  hideRestButtons = false,
   character,
   onUseSlot,
   onRestoreSlot,
@@ -96,12 +99,12 @@ function SpellSlotTracker({
               type="button"
               onClick={() => setIsCollapsed(!isCollapsed)}
               className="flex items-center space-x-1.5 text-left group focus:outline-none"
-              aria-label={isCollapsed ? 'Expand Spell Slots' : 'Collapse Spell Slots'}
-              title={isCollapsed ? 'Click to expand spell slots' : 'Click to collapse spell slots'}
+              aria-label={isCollapsed ? `Expand ${title}` : `Collapse ${title}`}
+              title={isCollapsed ? `Click to expand ${title.toLowerCase()}` : `Click to collapse ${title.toLowerCase()}`}
             >
-              <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
+              <Icon size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
               <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
-                Spell Slots
+                {title}
               </h3>
               <ChevronDown
                 size={13}
@@ -194,32 +197,36 @@ function SpellSlotTracker({
             )}
 
             {/* Short Rest Button */}
-            <button
-              type="button"
-              aria-label="Short Rest"
-              onClick={onShortRest}
-              className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
-              title="Take a Short Rest"
-            >
-              <Sun size={12} className="mr-1 text-amber-400" />
-              Short Rest
-            </button>
+            {!hideRestButtons && (
+              <button
+                type="button"
+                aria-label="Short Rest"
+                onClick={onShortRest}
+                className="flex items-center px-2 py-0.5 rounded bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100 transition-colors font-medium text-xs cursor-pointer"
+                title="Take a Short Rest"
+              >
+                <Sun size={12} className="mr-1 text-amber-400" />
+                Short Rest
+              </button>
+            )}
 
             {/* Long Rest with two-click confirmation */}
-            <button
-              type="button"
-              aria-label={longRestArmed ? 'Click again to confirm Long Rest' : 'Long Rest'}
-              onClick={handleLongRestClick}
-              className={`flex items-center px-2 py-0.5 rounded transition-colors font-medium ${
-                longRestArmed
-                  ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
-                  : 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-300'
-              }`}
-              title={longRestArmed ? 'Click again to confirm Long Rest' : 'Reset all spell slots on Long Rest'}
-            >
-              <Moon size={12} className={`mr-1 ${longRestArmed ? 'text-green-400' : 'text-blue-400'}`} />
-              Long Rest
-            </button>
+            {!hideRestButtons && (
+              <button
+                type="button"
+                aria-label={longRestArmed ? 'Click again to confirm Long Rest' : 'Long Rest'}
+                onClick={handleLongRestClick}
+                className={`flex items-center px-2 py-0.5 rounded transition-colors font-medium ${
+                  longRestArmed
+                    ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                    : 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-300'
+                }`}
+                title={longRestArmed ? 'Click again to confirm Long Rest' : 'Reset all spell slots on Long Rest'}
+              >
+                <Moon size={12} className={`mr-1 ${longRestArmed ? 'text-green-400' : 'text-blue-400'}`} />
+                Long Rest
+              </button>
+            )}
           </div>
         </div>
 
@@ -343,20 +350,22 @@ function SpellSlotTracker({
             </div>
 
             {/* Short Rest Action Button directly on Pact Magic */}
-            <button
-              type="button"
-              aria-label={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
-              onClick={handlePactRestClick}
-              className={`flex items-center px-2 py-0.5 rounded transition-colors text-xs font-medium ${
-                pactRestArmed
-                  ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
-                  : 'bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100'
-              }`}
-              title={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
-            >
-              <Sun size={12} className={`mr-1 ${pactRestArmed ? 'text-green-400' : 'text-amber-400'}`} />
-              Short Rest
-            </button>
+            {!hideRestButtons && (
+              <button
+                type="button"
+                aria-label={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
+                onClick={handlePactRestClick}
+                className={`flex items-center px-2 py-0.5 rounded transition-colors text-xs font-medium ${
+                  pactRestArmed
+                    ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                    : 'bg-dnd-card hover:bg-dnd-hover text-amber-200/80 hover:text-amber-100'
+                }`}
+                title={pactRestArmed ? 'Click again to confirm Short Rest' : 'Reset Pact Magic slots on Short Rest'}
+              >
+                <Sun size={12} className={`mr-1 ${pactRestArmed ? 'text-green-400' : 'text-amber-400'}`} />
+                Short Rest
+              </button>
+            )}
           </div>
 
           <div

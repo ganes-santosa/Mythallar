@@ -322,6 +322,36 @@ describe('SpellSlotTracker', () => {
     const badge = screen.getByText('3 / 4');
     expect(badge.className).toContain('bg-dnd-panel/70');
   });
+
+  it('supports custom title, icon, and hideRestButtons prop for Simulacrum', () => {
+    const handleUpdateMax = vi.fn();
+    render(
+      <SpellSlotTracker
+        title="Simulacrum Spell Slots"
+        hideRestButtons={true}
+        character={mockCharacter}
+        onUseSlot={vi.fn()}
+        onRestoreSlot={vi.fn()}
+        onUpdateMaxSlot={handleUpdateMax}
+      />
+    );
+
+    // Custom title is rendered
+    expect(screen.getByRole('button', { name: 'Collapse Simulacrum Spell Slots' })).toBeInTheDocument();
+    expect(screen.getByText('Simulacrum Spell Slots')).toBeInTheDocument();
+
+    // Rest buttons are suppressed
+    expect(screen.queryByRole('button', { name: 'Short Rest' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Long Rest' })).not.toBeInTheDocument();
+
+    // Edit button remains available
+    const editBtn = screen.getByRole('button', { name: /Edit maximum spell slots/i });
+    expect(editBtn).toBeInTheDocument();
+    fireEvent.click(editBtn);
+
+    const doneBtn = screen.getByRole('button', { name: /Done editing max slots/i });
+    expect(doneBtn).toBeInTheDocument();
+  });
 });
 
 
