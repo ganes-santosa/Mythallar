@@ -655,6 +655,18 @@ describe('App End-to-End Integration', () => {
     expect(authLabel).toHaveClass('opacity-100');
   });
 
+  it('exposes the branding subtitle so a narrow header can hide it', async () => {
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    const subtitle = container.querySelector('.catalog-header-subtitle');
+    expect(subtitle).not.toBeNull();
+    expect(subtitle).toHaveTextContent('DnD 5e Spellbook');
+  });
+
   it('makes the entire right pane scrollable as a unified container', async () => {
     const { container } = render(<App />);
 

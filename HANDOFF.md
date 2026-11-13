@@ -1,7 +1,12 @@
 # HANDOFF
 
-## Current state (v3.0.0 - master)
-- **Mobile UI (major)**:
+## Current state (v3.0.1 - master)
+- **Header + empty state (patch)**:
+  - Desktop pane header holds the 3-way switcher at a constant 103px from the accordion's right edge; at `@container (max-width: 580px)` the sign-in label shortens to "Sign in" and the branding subtitle hides. Below 420px the switcher drops to row 2 at the same x.
+  - Header CSS split by media query: mobile keeps the full-width switcher row; desktop keeps the narrow-pane rules.
+  - `EmptyCharacterState` (`src/components/Common/`) is the single no-character screen; mobile Spellbook and Sheet tabs match pixel-for-pixel. Desktop keeps its original two-pane empty states (left text, right framed panel).
+  - Verification: 50 test files passing; production build clean.
+- **Mobile UI (v3.0.0, major)**:
   - Vertical three-way switcher: Library / Spellbook / Sheet.
   - Filter bar hides on downward scroll (150ms ease-out, `HIDE_AFTER_PX` anchored to last upward scroll).
   - Header buttons, modal portal, and uniform margins tuned for narrow viewports.
@@ -12,7 +17,7 @@
   - `AU` renamed to `UA` app-wide; `variantEra` / `variantSource` badges with duplicate-group rules.
   - `SourceHint` popup explains each source code; UA filter switch added to the filter bar.
 - **Vitals polish**: HP card row switches to the 3-column layout at `min-[1390px]:` so Temp HP never crowds the Damage/Heal capsule.
-- **Verification**: 48 test files passing; production build clean.
+- **Verification**: 48 test files passing; production build clean (as of v3.0.0).
 
 ## Next up
 - Awaiting next feature request. Catalogue updates: `npm.cmd run update-spells`.

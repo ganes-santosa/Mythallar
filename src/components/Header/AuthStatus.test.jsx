@@ -60,6 +60,13 @@ describe('AuthStatus component', () => {
     expect(handleSignOut).toHaveBeenCalled();
   });
 
+  it('exposes long and short sign-in labels for container-based swapping', () => {
+    render(<AuthStatus user={null} syncStatus="idle" onSignIn={vi.fn()} onSignOut={vi.fn()} />);
+
+    expect(screen.getByText('Sign in with Google')).toHaveClass('auth-label-long');
+    expect(screen.getByText('Sign in')).toHaveClass('auth-label-short');
+  });
+
   it('collapses text to icon-only state when isCompact is true', () => {
     const { rerender } = render(<AuthStatus user={null} isCompact={true} onSignIn={vi.fn()} />);
     const textSpan = screen.getByText('Sign in with Google').closest('span.transition-all');

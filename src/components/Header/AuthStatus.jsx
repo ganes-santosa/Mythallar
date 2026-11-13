@@ -40,8 +40,8 @@ export default function AuthStatus({
               : 'max-w-[130px] opacity-100 ml-1.5'
           }`}
         >
-          <span className="hidden sm:inline">Sign in with Google</span>
-          <span className="sm:hidden">Sign in</span>
+          <span className="auth-label-long hidden sm:inline">Sign in with Google</span>
+          <span className="auth-label-short sm:hidden">Sign in</span>
         </span>
       </button>
     );

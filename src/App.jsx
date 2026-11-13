@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LibraryBig, UserRound, BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings, Plus, Upload, Snowflake } from 'lucide-react';
+import { LibraryBig, UserRound, BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings, Snowflake } from 'lucide-react';
+import EmptyCharacterState from './components/Common/EmptyCharacterState';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -1669,7 +1670,7 @@ export default function App() {
                   <h1 className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight font-display whitespace-nowrap">
                     Mythallar
                   </h1>
-                  <div className="flex flex-col justify-center leading-tight">
+                  <div className="catalog-header-subtitle flex flex-col justify-center leading-tight">
                     <span className="text-[10px] text-dnd-gold font-medium whitespace-nowrap tracking-tight">
                       DnD 5e Spellbook
                     </span>
@@ -1845,53 +1846,14 @@ export default function App() {
             data-testid="sheet-view-container"
             className={mobileView === 'sheet' ? 'flex-1 flex flex-col min-h-0' : 'hidden md:contents'}
           >
-            {!activeCharacter && mobileView === 'sheet' ? (
-              <div className="flex-1 flex flex-col items-center justify-center p-6 pb-20 text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center shadow-lg ring-1 ring-white/10 p-2.5">
-                  <div
-                    role="img"
-                    aria-label="Mythallar Logo"
-                    className="w-11 h-11 bg-dnd-ivory select-none pointer-events-none"
-                    style={{
-                      WebkitMaskImage: "url('/mythallar_logo.png')",
-                      WebkitMaskSize: 'contain',
-                      WebkitMaskRepeat: 'no-repeat',
-                      WebkitMaskPosition: 'center',
-                      maskImage: "url('/mythallar_logo.png')",
-                      maskSize: 'contain',
-                      maskRepeat: 'no-repeat',
-                      maskPosition: 'center',
-                    }}
-                  />
-                </div>
-                <div className="max-w-sm space-y-1.5">
-                  <h3 className="text-lg font-bold text-dnd-ivory font-display tracking-tight">
-                    No Character Selected
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Begin your journey by creating your first character profile to manage spell slots and maintain your spellbook.
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={handleOpenCreateCharacter}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-xs shadow-lg transition-all"
-                  >
-                    <Plus size={15} />
-                    <span>Create First Character</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => emptyStateFileInputRef.current?.click()}
-                    className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-card hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold text-xs border border-white/5 transition-all shadow-sm"
-                  >
-                    <Upload size={15} />
-                    <span>Import Character</span>
-                  </button>
-                </div>
-              </div>
-            ) : (
+            {!activeCharacter && mobileView === 'sheet' && (
+              <EmptyCharacterState
+                onCreate={handleOpenCreateCharacter}
+                onImport={() => emptyStateFileInputRef.current?.click()}
+                className="pb-20 md:hidden"
+              />
+            )}
+            <div className={!activeCharacter && mobileView === 'sheet' ? 'hidden md:contents' : 'contents'}>
               <CharacterSheetView
                 character={activeCharacter}
                 profiles={profiles}
@@ -1905,7 +1867,7 @@ export default function App() {
                 onShortRest={handleShortRest}
                 onShowToast={showLeftToast}
               />
-            )}
+            </div>
           </div>
 
           <div
@@ -1974,7 +1936,7 @@ export default function App() {
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
         <section
           data-testid="right-pane-section"
-          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 p-0 ${mobileView === 'spellbook' ? 'flex-1' : 'hidden md:flex'}`}
+          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 p-0 ${activeCharacter ? '' : 'md:p-4'} ${mobileView === 'spellbook' ? 'flex-1' : 'hidden md:flex'}`}
         >
           {activeCharacter ? (
             <div
@@ -2070,59 +2032,21 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 pb-24 text-center space-y-4 m-3 sm:m-4">
-              <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center shadow-lg ring-1 ring-white/10 p-2.5">
-                <div
-                  role="img"
-                  aria-label="Mythallar Logo"
-                  className="w-11 h-11 bg-dnd-ivory select-none pointer-events-none"
-                  style={{
-                    WebkitMaskImage: "url('/mythallar_logo.png')",
-                    WebkitMaskSize: 'contain',
-                    WebkitMaskRepeat: 'no-repeat',
-                    WebkitMaskPosition: 'center',
-                    maskImage: "url('/mythallar_logo.png')",
-                    maskSize: 'contain',
-                    maskRepeat: 'no-repeat',
-                    maskPosition: 'center',
-                  }}
-                />
-              </div>
-              <div className="max-w-sm space-y-1.5">
-                <h3 className="text-lg font-bold text-dnd-ivory font-display tracking-tight">
-                  No Character Selected
-                </h3>
-                <p className="text-xs text-slate-400">
-                  Begin your journey by creating your first character profile to manage spell slots and maintain your spellbook.
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleOpenCreateCharacter}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-xs shadow-lg transition-all"
-                >
-                  <Plus size={15} />
-                  <span>Create First Character</span>
-                </button>
-                <input
-                  ref={emptyStateFileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  onChange={handleEmptyStateFileChange}
-                  className="hidden"
-                  aria-label="Import Character JSON File"
-                />
-                <button
-                  type="button"
-                  onClick={() => emptyStateFileInputRef.current?.click()}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-card hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold text-xs border border-white/5 transition-all shadow-sm"
-                >
-                  <Upload size={15} />
-                  <span>Import Character</span>
-                </button>
-              </div>
-            </div>
+            // Mobile box matches the Sheet tab (pb-20, same insets); desktop keeps its panel card.
+            <EmptyCharacterState
+              onCreate={handleOpenCreateCharacter}
+              onImport={() => emptyStateFileInputRef.current?.click()}
+              className="pb-20 mx-3 mb-3 mt-0 md:m-0 md:pb-6 md:rounded-2xl md:bg-dnd-panel/60 md:border md:border-white/5"
+            >
+              <input
+                ref={emptyStateFileInputRef}
+                type="file"
+                accept=".json,application/json"
+                onChange={handleEmptyStateFileChange}
+                className="hidden"
+                aria-label="Import Character JSON File"
+              />
+            </EmptyCharacterState>
           )}
         </section>
       </main>

@@ -173,36 +173,96 @@ textarea {
   justify-self: end;
 }
 
-@container (max-width: 565px) {
-  .catalog-header-grid {
-    grid-template-columns: 1fr auto auto;
-    grid-template-rows: auto auto;
-    row-gap: 0.5rem;
+/* Mobile (below md): the header is the full-width phone layout. The 3-way
+   switcher always takes its own full-width row under branding/sign-in/settings. */
+@media (max-width: 767px) {
+  @container (max-width: 565px) {
+    .catalog-header-grid {
+      grid-template-columns: 1fr auto auto;
+      grid-template-rows: auto auto;
+      row-gap: 0.5rem;
+    }
+
+    .catalog-header-branding {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .catalog-header-auth {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+      margin-left: 0.5rem;
+    }
+
+    .catalog-header-settings {
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
+    }
+
+    .catalog-header-switcher {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-self: stretch;
+      width: 100%;
+    }
+  }
+}
+
+/* Desktop pane (md and up). */
+@media (min-width: 768px) {
+  /* Narrow pane: shorten the sign-in label and hide the branding subtitle so the
+     switcher can stay on the same row without giving up its horizontal offset.
+     The threshold matches the width the full-size header needs (branding +
+     "Sign in with Google" + switcher + settings + gaps). */
+  @container (max-width: 580px) {
+    .catalog-header-container .auth-label-long {
+      display: none;
+    }
+
+    .catalog-header-container .auth-label-short {
+      display: inline;
+    }
+
+    .catalog-header-subtitle {
+      display: none;
+    }
   }
 
-  .catalog-header-branding {
-    grid-column: 1;
-    grid-row: 1;
-  }
+  /* Narrower still: the row can no longer hold the switcher, so it drops below
+     while keeping its right-hand position (one gap before the settings column). */
+  @container (max-width: 420px) {
+    .catalog-header-grid {
+      grid-template-columns: 1fr auto auto;
+      grid-template-rows: auto auto;
+      row-gap: 0.5rem;
+    }
 
-  .catalog-header-auth {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
-    margin-left: 0.5rem;
-  }
+    .catalog-header-branding {
+      grid-column: 1;
+      grid-row: 1;
+    }
 
-  .catalog-header-settings {
-    grid-column: 3;
-    grid-row: 1;
-    justify-self: end;
-  }
+    .catalog-header-auth {
+      grid-column: 2;
+      grid-row: 1;
+      justify-self: end;
+      margin-left: 0.5rem;
+    }
 
-  .catalog-header-switcher {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-self: stretch;
-    width: 100%;
+    .catalog-header-settings {
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
+    }
+
+    .catalog-header-switcher {
+      grid-column: 1 / 3;
+      grid-row: 2;
+      justify-self: end;
+      width: auto;
+    }
   }
 }
 
