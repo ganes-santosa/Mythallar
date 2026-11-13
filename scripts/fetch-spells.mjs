@@ -168,6 +168,18 @@ async function run() {
   const allSpells = [];
   const seenIds = new Set();
 
+  // Saved spellbooks reference ids, so an existing (name, source) keeps its id forever
+  // and new spells may never take an id that already exists.
+  const prevPath = path.join(__dirname, '..', 'public', 'data', 'spells.json');
+  const prevSpells = fs.existsSync(prevPath) ? JSON.parse(fs.readFileSync(prevPath, 'utf-8')) : [];
+  // App-facing source codes differ from 5etools for some books (AU = Unearthed Arcana, "UA" at the table).
+  const SOURCE_ALIAS = { AU: 'UA' };
+  const appSource = (s) => SOURCE_ALIAS[s] || s;
+  // Books released with the 2024 rules; every other official book is 'Legacy'. New books default to '2024'.
+  const LEGACY_SOURCES = new Set(['PHB', 'XGE', 'TCE', 'EGW', 'GGR', 'SCC', 'AI', 'AAG', 'FTD', 'SatO', 'IDRotF', 'LLK', 'BMT', 'AitFR-AVT', 'UA']);
+  const prevIdByKey = new Map(prevSpells.map((s) => [`${s.name}|${appSource(s.source)}`, s.id]));
+  const reservedIds = new Set(prevSpells.map((s) => s.id));
+
   for (const [bookSource, fileName] of orderedFiles) {
     console.log(`Fetching ${bookSource} (${fileName})...`);
     try {
@@ -175,15 +187,16 @@ async function run() {
       const rawSpells = data.spell || [];
 
       for (const raw of rawSpells) {
-        const rawSource = raw.source || bookSource;
-        const isLegacy = rawSource === 'PHB' || Boolean(raw.isLegacy);
+        const rawSource = appSource(raw.source || bookSource);
+        const isLegacy = LEGACY_SOURCES.has(rawSource) || Boolean(raw.isLegacy);
         const baseSlug = (raw.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-');
         
-        let id = baseSlug;
-        if (isLegacy && seenIds.has(baseSlug)) {
-          id = `${baseSlug}-legacy`;
-        } else if (seenIds.has(id)) {
-          id = `${baseSlug}-${rawSource.toLowerCase()}`;
+        let id = prevIdByKey.get(`${raw.name}|${rawSource}`);
+        if (!id) {
+          const taken = (x) => seenIds.has(x) || reservedIds.has(x);
+          id = baseSlug;
+          if (taken(id)) id = isLegacy ? `${baseSlug}-legacy` : `${baseSlug}-${rawSource.toLowerCase()}`;
+          if (taken(id)) id = `${baseSlug}-${rawSource.toLowerCase()}`;
         }
         if (seenIds.has(id)) continue;
         seenIds.add(id);
@@ -249,10 +262,59 @@ async function run() {
     return a.isLegacy ? 1 : -1;
   });
 
+  // Always-on badges: UA and 2024-era non-XPHB books always show their identity.
+  const SOURCES_2024_NONXPHB = new Set(['WoW', 'FRHoF', 'EFA']);
+  for (const s of allSpells) {
+    if (s.source === 'UA') {
+      s.variantSource = 'UA';
+    } else if (SOURCES_2024_NONXPHB.has(s.source)) {
+      s.variantEra = '5.5e';
+      s.variantSource = s.source;
+    }
+  }
+
+  // Same-name spells get badges so the UI can tell versions apart.
+  // Lone spells get no badges. Spells already tagged above are skipped.
+  const nameCounts = new Map();
+  for (const s of allSpells) nameCounts.set(s.name, (nameCounts.get(s.name) || 0) + 1);
+  for (const s of allSpells) {
+    if (s.variantEra || s.variantSource) continue; // already tagged by always-on block
+    if (nameCounts.get(s.name) > 1) {
+      if (s.source === 'XPHB') {
+        // XPHB is the implied 5.5e default; no badge
+      } else if (s.source === 'PHB') {
+        s.variantEra = 'Legacy';
+      } else {
+        s.variantEra = s.isLegacy ? 'Legacy' : '5.5e';
+        if (!s.isLegacy) s.variantSource = s.source;
+      }
+    }
+  }
+
   const outDir = path.join(__dirname, '..', 'public', 'data');
   fs.mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, 'spells.json');
-  fs.writeFileSync(outPath, JSON.stringify(allSpells, null, 2), 'utf-8');
+
+  // Saved spellbooks reference spells by id; refuse to drop ids unless --force.
+  if (fs.existsSync(outPath)) {
+    const oldIds = JSON.parse(fs.readFileSync(outPath, 'utf-8')).map((s) => s.id);
+    const newIds = new Set(allSpells.map((s) => s.id));
+    const oldSet = new Set(oldIds);
+    const removed = oldIds.filter((id) => !newIds.has(id));
+    const added = allSpells.filter((s) => !oldSet.has(s.id));
+    console.log(`Added ${added.length}, removed ${removed.length}.`);
+    added.forEach((s) => console.log(`  + ${s.id} (${s.source})`));
+    if (removed.length && !process.argv.includes('--force')) {
+      removed.forEach((id) => console.error(`  - ${id}`));
+      console.error('Aborted: ids removed (renamed upstream or a book failed to fetch). Not written. Use --force to override.');
+      process.exit(1);
+    }
+  }
+
+  // Repo keeps this file with CRLF endings; match it so catalogue updates
+  // produce content-only diffs instead of a whole-file rewrite.
+  const json = JSON.stringify(allSpells, null, 2).replace(/\n/g, '\r\n');
+  fs.writeFileSync(outPath, json, 'utf-8');
 
   console.log(`Wrote ${allSpells.length} spells to ${outPath}`);
 }

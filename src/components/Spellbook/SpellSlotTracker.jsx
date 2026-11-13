@@ -9,12 +9,10 @@ import {
   ChevronDown,
   HelpCircle,
   Flame,
-  RotateCcw,
 } from 'lucide-react';
 import {
   getEffectiveMaxSlots,
   calculateMulticlassSpellSlots,
-  isWizardCharacter,
 } from '../../utils/spellSlots';
 import SlotLevelRow from './SlotLevelRow';
 import useClickOutside from '../../hooks/useClickOutside';

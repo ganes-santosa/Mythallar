@@ -3,6 +3,7 @@ import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAccordionMount from '../../hooks/useAccordionMount';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import SpellNoteSection from '../Common/SpellNoteSection';
+import SourceHint from '../Common/SourceHint';
 import {
   GripVertical,
   Clock,
@@ -124,12 +125,21 @@ function SpellCard({
                 {spell.name}
               </span>
 
-              {spell.isLegacy && (
+              {spell.variantEra && (
                 <span
                   className="flex items-center text-[11px] font-medium px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter"
-                  title="2014 Legacy PHB version"
+                  title={spell.variantEra === 'Legacy' ? 'Pre-2024 version' : '2024 / 5.5e version'}
                 >
-                  Legacy
+                  {spell.variantEra}
+                </span>
+              )}
+
+              {spell.variantSource && (
+                <span
+                  className="flex items-center text-[11px] font-medium px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter"
+                  title={`From ${spell.variantSource}`}
+                >
+                  {spell.variantSource}
                 </span>
               )}
 
@@ -240,7 +250,7 @@ function SpellCard({
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Source</span>
-                <span className="text-dnd-gold font-semibold">{spell.source || 'PHB'}</span>
+                <SourceHint source={spell.source} />
               </div>
             </div>
 

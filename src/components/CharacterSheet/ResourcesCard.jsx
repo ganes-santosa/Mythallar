@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Plus, X, RotateCcw, Award, GripVertical, Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, RotateCcw, Award, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import useAccordionMount from '../../hooks/useAccordionMount';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';

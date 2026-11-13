@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Cloud, CloudCheck, CloudOff, RefreshCw, LogIn, LogOut, ChevronDown, User } from 'lucide-react';
+import { Cloud, CloudOff, RefreshCw, LogIn, LogOut, ChevronDown, User } from 'lucide-react';
 
 export default function AuthStatus({
   user,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { LibraryBig, UserRound, Sparkles, AlertCircle, CheckCircle2, Settings, Plus, Upload, Snowflake } from 'lucide-react';
+import { LibraryBig, UserRound, BookOpen, Sparkles, AlertCircle, CheckCircle2, Settings, Plus, Upload, Snowflake } from 'lucide-react';
 import {
   loadCharacterProfiles,
   saveCharacterProfiles,
@@ -12,7 +12,6 @@ import {
   recoverHitDiceOnLongRest,
 } from './utils/storage';
 import { getEffectiveMaxSlots, isWizardCharacter } from './utils/spellSlots';
-import { getAbilityModifier, formatModifier, rollHitDie } from './utils/dndCalculations';
 import { exportCharacterJSON, validateAndImportCharacterJSON } from './utils/fileExport';
 import { useSpellFilter } from './hooks/useSpellFilter';
 import { getSupabase, signInWithGoogle, signOut } from './utils/supabase';
@@ -63,7 +62,12 @@ export default function App() {
   const [profileData, setProfileData] = useState(() => loadCharacterProfiles());
   const [isCreateCharacterModalOpen, setIsCreateCharacterModalOpen] = useState(false);
   const [leftPaneView, setLeftPaneView] = useState('spells'); // 'spells' | 'sheet'
+  const [mobileView, setMobileView] = useState(() => (profileData?.profiles?.length ? 'spellbook' : 'catalog')); // 'sheet' | 'spellbook' | 'catalog'
+  const [isFilterHidden, setIsFilterHidden] = useState(false); // mobile only: hide search panel on scroll down
   const [isSwitcherHovered, setIsSwitcherHovered] = useState(false);
+  const handleCatalogScrollDirection = useCallback((dir) => {
+    setIsFilterHidden(dir === 'down');
+  }, []);
   const [user, setUser] = useState(null);
   const { activeId } = profileData;
   // profileData.profiles holds every stored character (Local Only + each account's cache).
@@ -648,6 +652,7 @@ export default function App() {
     legacyMode: 'all', // 'all', 'modern', 'legacy'
     source: 'all',
     isHomebrewOnly: false,
+    hideUA: false,
     concentration: false,
     ritual: false,
     compV: false,
@@ -1571,7 +1576,7 @@ export default function App() {
           className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-[0.14]"
         >
           <img
-            src="/celestial_bg.png?t=1730134579"
+            src="/celestial_bg.webp"
             alt=""
             className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-auto min-h-full min-w-full object-cover"
             draggable="false"
@@ -1622,7 +1627,12 @@ export default function App() {
       {/* Main Dual-Pane Body */}
       <main className="relative z-10 flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
-        <section className="w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10 relative">
+        <section
+          data-testid="left-pane-section"
+          className={`w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10 relative ${
+            mobileView === 'spellbook' ? 'flex-shrink-0 pb-0 md:pb-4 md:flex-1' : 'flex-1'
+          }`}
+        >
           {/* Left Pane Toast Banner */}
           {leftToast && (
             <div className="absolute top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-white/5 pointer-events-none">
@@ -1684,8 +1694,9 @@ export default function App() {
 
               {/* 3. Symmetrical Middle-Anchored View Switcher */}
               <div className="catalog-header-switcher flex items-center">
+                {/* Desktop Switcher: Hidden on mobile (< md) */}
                 <div
-                  className="relative flex items-center h-7 select-none mr-24"
+                  className="hidden md:flex relative items-center h-7 select-none mr-24"
                   style={{ width: '60px' }}
                   onMouseEnter={() => {
                     if (typeof window !== 'undefined' && window.matchMedia?.('(hover: hover)')?.matches) {
@@ -1707,7 +1718,10 @@ export default function App() {
                   {/* Left Button (Spell Library): right edge pinned to P */}
                   <button
                     type="button"
-                    onClick={() => setLeftPaneView('spells')}
+                    onClick={() => {
+                      setLeftPaneView('spells');
+                      setMobileView('catalog');
+                    }}
                     aria-label="Spell Library"
                     title="Spell Library"
                     className={`absolute right-0 flex items-center justify-end h-7 px-2 rounded-l-lg border border-r border-white/10 text-xs font-medium transition-all duration-300 cursor-pointer shadow-md ${
@@ -1729,7 +1743,10 @@ export default function App() {
                   {/* Right Button (Character Sheet): left edge pinned to P */}
                   <button
                     type="button"
-                    onClick={() => setLeftPaneView('sheet')}
+                    onClick={() => {
+                      setLeftPaneView('sheet');
+                      setMobileView('sheet');
+                    }}
                     aria-label="Character Sheet"
                     title="Character Sheet"
                     className={`absolute left-0 flex items-center justify-start h-7 px-2 rounded-r-lg border border-l border-white/10 text-xs font-medium transition-all duration-300 cursor-pointer shadow-md ${
@@ -1749,6 +1766,64 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Mobile 3-Way Switcher: Visible on mobile (< md), hidden on desktop */}
+              <div className="flex md:hidden items-center h-7 w-full bg-dnd-card/90 rounded-lg p-0.5 border border-white/10 shadow-md">
+                <button
+                  type="button"
+                  data-testid="mobile-tab-catalog"
+                  data-active={mobileView === 'catalog'}
+                  onClick={() => {
+                    setMobileView('catalog');
+                    setLeftPaneView('spells');
+                  }}
+                  aria-label="Mobile Library"
+                  title="Spell Library"
+                  className={`flex items-center justify-center space-x-1 flex-1 h-6 px-2 rounded-md text-xs font-medium transition-all ${
+                    mobileView === 'catalog'
+                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <LibraryBig size={13} className="shrink-0" />
+                  <span>Library</span>
+                </button>
+                <button
+                  type="button"
+                  data-testid="mobile-tab-spellbook"
+                  data-active={mobileView === 'spellbook'}
+                  onClick={() => setMobileView('spellbook')}
+                  aria-label="Mobile Spellbook"
+                  title="Spellbook & Slots"
+                  className={`flex items-center justify-center space-x-1 flex-1 h-6 px-2 rounded-md text-xs font-medium transition-all ${
+                    mobileView === 'spellbook'
+                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <BookOpen size={13} className="shrink-0" />
+                  <span>Spellbook</span>
+                </button>
+                <button
+                  type="button"
+                  data-testid="mobile-tab-sheet"
+                  data-active={mobileView === 'sheet'}
+                  onClick={() => {
+                    setMobileView('sheet');
+                    setLeftPaneView('sheet');
+                  }}
+                  aria-label="Mobile Sheet"
+                  title="Character Sheet"
+                  className={`flex items-center justify-center space-x-1 flex-1 h-6 px-2 rounded-md text-xs font-medium transition-all ${
+                    mobileView === 'sheet'
+                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <UserRound size={13} className="shrink-0" />
+                  <span>Sheet</span>
+                </button>
+              </div>
             </div>
 
             {/* 4. Settings Button */}
@@ -1766,27 +1841,97 @@ export default function App() {
             </div>
           </div>
 
-          <CharacterSheetView
-            character={activeCharacter}
-            profiles={profiles}
-            isActive={leftPaneView === 'sheet'}
-            onUpdateCharacter={updateActiveCharacter}
-            onSelectProfile={handleSelectProfile}
-            onCreateProfile={handleOpenCreateCharacter}
-            onDeleteProfile={handleDeleteCharacter}
-            onExport={handleExport}
-            onImport={handleImport}
-            onShortRest={handleShortRest}
-            onShowToast={showLeftToast}
-          />
+          <div
+            data-testid="sheet-view-container"
+            className={mobileView === 'sheet' ? 'flex-1 flex flex-col min-h-0' : 'hidden md:contents'}
+          >
+            {!activeCharacter && mobileView === 'sheet' ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-6 pb-20 text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center shadow-lg ring-1 ring-white/10 p-2.5">
+                  <div
+                    role="img"
+                    aria-label="Mythallar Logo"
+                    className="w-11 h-11 bg-dnd-ivory select-none pointer-events-none"
+                    style={{
+                      WebkitMaskImage: "url('/mythallar_logo.png')",
+                      WebkitMaskSize: 'contain',
+                      WebkitMaskRepeat: 'no-repeat',
+                      WebkitMaskPosition: 'center',
+                      maskImage: "url('/mythallar_logo.png')",
+                      maskSize: 'contain',
+                      maskRepeat: 'no-repeat',
+                      maskPosition: 'center',
+                    }}
+                  />
+                </div>
+                <div className="max-w-sm space-y-1.5">
+                  <h3 className="text-lg font-bold text-dnd-ivory font-display tracking-tight">
+                    No Character Selected
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Begin your journey by creating your first character profile to manage spell slots and maintain your spellbook.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={handleOpenCreateCharacter}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-gold hover:bg-dnd-gold-light text-slate-950 font-bold text-xs shadow-lg transition-all"
+                  >
+                    <Plus size={15} />
+                    <span>Create First Character</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => emptyStateFileInputRef.current?.click()}
+                    className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-dnd-card hover:bg-slate-800 text-slate-300 hover:text-slate-100 font-semibold text-xs border border-white/5 transition-all shadow-sm"
+                  >
+                    <Upload size={15} />
+                    <span>Import Character</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <CharacterSheetView
+                character={activeCharacter}
+                profiles={profiles}
+                isActive={leftPaneView === 'sheet'}
+                onUpdateCharacter={updateActiveCharacter}
+                onSelectProfile={handleSelectProfile}
+                onCreateProfile={handleOpenCreateCharacter}
+                onDeleteProfile={handleDeleteCharacter}
+                onExport={handleExport}
+                onImport={handleImport}
+                onShortRest={handleShortRest}
+                onShowToast={showLeftToast}
+              />
+            )}
+          </div>
 
-          <div className={leftPaneView === 'spells' ? 'flex-1 flex flex-col min-h-0' : 'hidden'}>
-            <FilterBar
-              filters={filters}
-              onChange={setFilters}
-              onOpenHomebrewSpellModal={handleOpenHomebrewModal}
-              availableSources={availableSources}
-            />
+          <div
+            data-testid="catalog-view-container"
+            className={
+              leftPaneView === 'spells'
+                ? mobileView === 'catalog'
+                  ? 'flex-1 flex flex-col min-h-0'
+                  : 'hidden md:flex md:flex-1 md:flex-col md:min-h-0'
+                : 'hidden'
+            }
+          >
+            <div
+              className={`max-md:grid max-md:transition-[grid-template-rows,opacity] max-md:duration-150 max-md:ease-out ${
+                isFilterHidden ? 'max-md:grid-rows-[0fr] max-md:opacity-0' : 'max-md:grid-rows-[1fr] max-md:opacity-100'
+              }`}
+            >
+              <div className="max-md:overflow-hidden max-md:min-h-0">
+                <FilterBar
+                  filters={filters}
+                  onChange={setFilters}
+                  onOpenHomebrewSpellModal={handleOpenHomebrewModal}
+                  availableSources={availableSources}
+                />
+              </div>
+            </div>
 
             {isLoadingSpells ? (
               <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
@@ -1820,6 +1965,7 @@ export default function App() {
                 onAddToSpellbook={handleAddSpell}
                 onDeleteHomebrew={handleDeleteHomebrewSpell}
                 onUpdateNote={activeCharacter ? handleUpdateSpellNote : null}
+                onScrollDirection={handleCatalogScrollDirection}
               />
             )}
           </div>
@@ -1827,23 +1973,22 @@ export default function App() {
 
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
         <section
-          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 ${
-            activeCharacter ? 'p-0' : 'p-3 sm:p-4'
-          }`}
+          data-testid="right-pane-section"
+          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 p-0 ${mobileView === 'spellbook' ? 'flex-1' : 'hidden md:flex'}`}
         >
           {activeCharacter ? (
             <div
               ref={rightPaneScrollRef}
               data-testid="right-pane-scroll"
-              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
+              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 max-md:pt-0 max-md:pr-3 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:!mr-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
                 hasRightScrollbar ? 'mr-0' : '-mr-2.5 [--scrollbar-alpha:0%]'
               }`}
             >
               {/* Right Character Header Accordion (Animates closed when Left Pane toggles to Character Sheet) */}
               <div
-                aria-hidden={leftPaneView !== 'spells'}
+                aria-hidden={leftPaneView !== 'spells' && mobileView !== 'spellbook'}
                 className={`flex-shrink-0 grid transition-[grid-template-rows,opacity,margin] duration-300 ease-in-out ${
-                  leftPaneView === 'spells'
+                  leftPaneView === 'spells' || mobileView === 'spellbook'
                     ? 'grid-rows-[1fr] opacity-100 mb-2.5'
                     : 'grid-rows-[0fr] opacity-0 mb-0 pointer-events-none'
                 }`}
@@ -1925,7 +2070,7 @@ export default function App() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center rounded-2xl bg-dnd-panel/60 border border-white/5 space-y-4">
+            <div className="flex-1 flex flex-col items-center justify-center p-6 pb-24 text-center space-y-4 m-3 sm:m-4">
               <div className="w-16 h-16 rounded-2xl bg-dnd-card flex items-center justify-center shadow-lg ring-1 ring-white/10 p-2.5">
                 <div
                   role="img"

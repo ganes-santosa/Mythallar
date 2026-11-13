@@ -206,6 +206,20 @@ function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSourc
 
         <button
           type="button"
+          role="switch"
+          aria-checked={!filters.hideUA}
+          onClick={() => update('hideUA', !filters.hideUA)}
+          className="flex items-center gap-1.5 px-2 py-1 rounded bg-dnd-card text-slate-400 hover:text-slate-200 font-medium transition-colors"
+          title={filters.hideUA ? 'Show Unearthed Arcana spells' : 'Hide Unearthed Arcana spells'}
+        >
+          <span className={`relative inline-flex h-3.5 w-6 shrink-0 rounded-full transition-colors duration-200 ${!filters.hideUA ? 'bg-dnd-gold' : 'bg-slate-600'}`}>
+            <span className={`inline-block h-2.5 w-2.5 rounded-full bg-white shadow-sm transition-transform duration-200 self-center ${!filters.hideUA ? 'translate-x-3' : 'translate-x-0.5'}`} />
+          </span>
+          UA
+        </button>
+
+        <button
+          type="button"
           onClick={() => update('concentration', !filters.concentration)}
           className={`flex items-center px-2 py-1 rounded transition-colors ${
             filters.concentration

@@ -5,6 +5,7 @@ import useClickOutside from '../../hooks/useClickOutside';
 import useAccordionMount from '../../hooks/useAccordionMount';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import SpellNoteSection from '../Common/SpellNoteSection';
+import SourceHint from '../Common/SourceHint';
 
 // Runic, alchemical/planetary, and occult BMP glyphs verified to render in the app font stack
 export const MAGICAL_GLYPHS = [
@@ -166,12 +167,21 @@ function SpellbookCard({
                     </span>
                   ))}
 
-                  {spell.isLegacy && (
+                  {spell.variantEra && (
                 <span
                   className="flex items-center text-[11px] font-medium px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter"
-                  title="2014 Legacy PHB version"
+                  title={spell.variantEra === 'Legacy' ? 'Pre-2024 version' : '2024 / 5.5e version'}
                 >
-                  Legacy
+                  {spell.variantEra}
+                </span>
+              )}
+
+              {spell.variantSource && (
+                <span
+                  className="flex items-center text-[11px] font-medium px-1.5 py-0.2 rounded bg-dnd-panel/80 text-dnd-pewter"
+                  title={`From ${spell.variantSource}`}
+                >
+                  {spell.variantSource}
                 </span>
               )}
 
@@ -305,7 +315,7 @@ function SpellbookCard({
               </div>
               <div>
                 <span className="block font-medium text-slate-400">Source</span>
-                <span className="font-semibold text-dnd-gold">{spell.source || 'PHB'}</span>
+                <SourceHint source={spell.source} />
               </div>
             </div>
 

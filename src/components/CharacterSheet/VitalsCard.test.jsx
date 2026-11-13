@@ -340,9 +340,6 @@ describe('VitalsCard', () => {
     render(<VitalsCard vitals={mockVitals} onUpdateVitals={() => {}} />);
     expect(screen.getByText('Hit Points')).toBeInTheDocument();
     expect(screen.getByText('Initiative')).toBeInTheDocument();
-    const initMobile = screen.getByText('Init');
-    expect(initMobile).toBeInTheDocument();
-    expect(initMobile).toHaveAttribute('aria-label', 'Initiative');
     expect(screen.getByText('Spell Attack')).toBeInTheDocument();
     expect(screen.getByText('Spell DC')).toBeInTheDocument();
     expect(screen.getByText('Hit Dice')).toBeInTheDocument();

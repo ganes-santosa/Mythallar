@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mythallar - Mobile Preview</title>
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #090a0f;
+        color: #e2e8f0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        overflow: hidden;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-size: 13px;
+        color: #94a3b8;
+      }
+      .device-btn {
+        background: #1e1e2d;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+        padding: 4px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.2s;
+      }
+      .device-btn:hover, .device-btn.active {
+        background: #c59b27;
+        color: #090a0f;
+        font-weight: 600;
+      }
+      .device-container {
+        position: relative;
+        width: 390px;
+        height: 844px;
+        background: #000;
+        border-radius: 50px;
+        box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 0 10px #1e1f29, 0 0 0 12px rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        transition: width 0.3s ease, height 0.3s ease;
+      }
+      .notch {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 120px;
+        height: 24px;
+        background: #1e1f29;
+        border-bottom-left-radius: 14px;
+        border-bottom-right-radius: 14px;
+        z-index: 50;
+        pointer-events: none;
+      }
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="toolbar">
+      <span>Device Preset:</span>
+      <button class="device-btn active" onclick="setSize(390, 844, this)">iPhone 14 (390×844)</button>
+      <button class="device-btn" onclick="setSize(412, 915, this)">Pixel 7 (412×915)</button>
+      <button class="device-btn" onclick="setSize(360, 780, this)">Compact (360×780)</button>
+      <button class="device-btn" onclick="setSize(393, 852, this)">Galaxy A56 (393×852)</button>
+      <a href="/" style="color: #c59b27; margin-left: 12px; text-decoration: none;">Desktop View →</a>
+    </div>
+
+    <div class="device-container" id="device">
+      <div class="notch"></div>
+      <iframe src="/" id="app-frame"></iframe>
+    </div>
+
+    <script>
+      function setSize(w, h, btn) {
+        const d = document.getElementById('device');
+        d.style.width = w + 'px';
+        d.style.height = h + 'px';
+        document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
+    </script>
+  </body>
+</html>

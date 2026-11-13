@@ -35,6 +35,23 @@ const mockCharacter = {
 };
 
 describe('SpellbookView', () => {
+  it('ignores saved spell ids missing from the catalog (e.g. removed upstream)', () => {
+    const orphaned = { ...mockCharacter, spells: [...mockCharacter.spells, { id: 'gone-spell', prepared: true }] };
+    render(
+      <SpellbookView
+        character={orphaned}
+        catalog={mockCatalog}
+        onTogglePrepare={vi.fn()}
+        onCastSpell={vi.fn()}
+        onRemoveSpell={vi.fn()}
+        onAddSpell={vi.fn()}
+        onSelectSpell={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Fireball')).toBeInTheDocument();
+    expect(screen.queryByText(/gone-spell/i)).not.toBeInTheDocument();
+  });
+
   it('renders spells grouped into level sections', () => {
     render(
       <SpellbookView

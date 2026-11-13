@@ -1,20 +1,21 @@
 # HANDOFF
 
-## Current state (v2.4.0 - master)
-- **Simulacrum Companion Tracker**:
-  - Simulacrum toggle switch in edit mode on both Character Sheet portrait and Right Pane header.
-  - Dedicated `Simulacrum Combat Stats` accordion on Character Sheet with half-HP baseline and independent vitals editing.
-  - Dedicated `Simulacrum Spell Slots` tracker in right pane with independent slot tracking (no rest recovery, custom max slots).
-  - Smooth opening and closing animations for both Simulacrum accordions using `useAccordionMount`.
-  - Full import/export schema round-trip support in `fileExport.js`.
-- **Combat Vitals Polish**:
-  - Added in-memory Undo and Redo HP buttons to `VitalsCard.jsx` for rapid combat HP adjustments.
-- **PWA Mobile Launcher Breathing Room**:
-  - Scaled down maskable logo in `pwa-192x192.png` and `pwa-512x512.png` (~45% total canvas, ~63% squircle width) on solid `#1E1E29` background.
-- **Verification**: 47 test files (429 tests) passing; production build clean.
+## Current state (v3.0.0 - master)
+- **Mobile UI (major)**:
+  - Vertical three-way switcher: Library / Spellbook / Sheet.
+  - Filter bar hides on downward scroll (150ms ease-out, `HIDE_AFTER_PX` anchored to last upward scroll).
+  - Header buttons, modal portal, and uniform margins tuned for narrow viewports.
+  - `mobile.html` committed as a local device-preview harness (loads `/` in an iframe).
+- **Spell catalogue overhaul**:
+  - Regenerated from the 5etools mirror: 1038 spells (was 969; +69 WoW, 0 removed).
+  - Stable ids preserved; script aborts on removed ids unless `--force`. Now writes CRLF to match the repo.
+  - `AU` renamed to `UA` app-wide; `variantEra` / `variantSource` badges with duplicate-group rules.
+  - `SourceHint` popup explains each source code; UA filter switch added to the filter bar.
+- **Vitals polish**: HP card row switches to the 3-column layout at `min-[1390px]:` so Temp HP never crowds the Damage/Heal capsule.
+- **Verification**: 48 test files passing; production build clean.
 
 ## Next up
-- Ready for next user instructions or feature development.
+- Awaiting next feature request. Catalogue updates: `npm.cmd run update-spells`.
 
 ## Open questions
 - (none)

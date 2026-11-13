@@ -233,7 +233,7 @@ describe('CharacterManagerModal', () => {
 
   it('triggers onImport when a JSON file is selected via Import button', () => {
     const handleImport = vi.fn();
-    const { container } = render(
+    render(
       <CharacterManagerModal
         isOpen={true}
         onClose={vi.fn()}
@@ -247,7 +247,7 @@ describe('CharacterManagerModal', () => {
       />
     );
 
-    const fileInput = container.querySelector('input[type="file"]');
+    const fileInput = document.body.querySelector('input[type="file"]');
     expect(fileInput).toBeInTheDocument();
 
     const jsonContent = JSON.stringify({ name: 'Imported Mage', className: 'Wizard', level: 5 });

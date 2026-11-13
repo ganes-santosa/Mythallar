@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {
   ArrowUpCircle,
   X,
-  AlertCircle,
   Check,
   ListChecks,
   Info,

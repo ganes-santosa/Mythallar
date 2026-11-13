@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, X, Check, RotateCcw, AlertCircle } from 'lucide-react';
+import { Sparkles, X, Check, AlertCircle } from 'lucide-react';
 import { getMaxArcaneRecoveryLevels, getWizardLevel } from '../../utils/spellSlots';
 import { useScrollLock } from '../../hooks/useScrollLock';
 

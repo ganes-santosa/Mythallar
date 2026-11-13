@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, ShieldHalf, Heart, Zap, Lightbulb, Sparkles, Flame, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Check, Undo2, Redo2 } from 'lucide-react';
+import { Shield, ShieldHalf, Heart, Zap, Lightbulb, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Undo2, Redo2 } from 'lucide-react';
 
 export function CrystalBallIcon({ size = 16, className = '', ...props }) {
   return (
@@ -503,10 +503,10 @@ export default function VitalsCard({
         </div>
       )}
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[10fr_7fr_9fr] 2xl:grid-cols-[10fr_7fr_9fr] gap-2 text-xs">
+      <div className="grid grid-cols-1 sm:grid-cols-2 min-[1390px]:grid-cols-[10fr_7fr_9fr] gap-2 text-xs">
         {/* Hit Points Hero Card */}
         {isEditing ? (
-          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 xl:col-span-1">
+          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 min-[1390px]:col-span-1">
             <div className="flex justify-between items-center mb-1">
               <span className="text-[11px] font-bold text-red-400 flex items-center gap-1">
                 <Heart size={12} className="text-red-400 fill-red-400/20" /> Hit Points Settings
@@ -564,7 +564,7 @@ export default function VitalsCard({
             </div>
           </div>
         ) : (
-          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 xl:col-span-1">
+          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 min-[1390px]:col-span-1">
             {/* Left: HP Info */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-0.5">
@@ -751,7 +751,7 @@ export default function VitalsCard({
         )}
 
         {/* Card 2: Dedicated Armor Class Card (Full height matching Hit Points) */}
-        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 xl:col-span-1">
+        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 min-[1390px]:col-span-1">
           <div className="text-[10px] text-slate-400 flex items-center justify-between mb-0.5">
             <span className="flex items-center gap-1 font-bold text-slate-400">
               <ShieldHalf size={12} className="text-dnd-gold" /> AC
@@ -876,7 +876,7 @@ export default function VitalsCard({
         </div>
 
         {/* Card 3: Stacked Spellcasting & Initiative Group */}
-        <div className="flex flex-col gap-1.5 min-w-0 sm:col-span-1 xl:col-span-1">
+        <div className="flex flex-col gap-1.5 min-w-0 sm:col-span-1 min-[1390px]:col-span-1">
           {/* Spellcasting Card */}
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
             {/* Header */}
@@ -1026,8 +1026,7 @@ export default function VitalsCard({
           <div className="bg-dnd-card p-2 rounded-lg flex items-center justify-between shadow-sm">
             <div className="text-[10px] text-slate-400 font-bold flex items-center gap-1">
               <Zap size={11} className="text-dnd-gold" />
-              <span className="hidden sm:inline">Initiative</span>
-              <span className="sm:hidden" aria-label="Initiative">Init</span>
+              <span>Initiative</span>
             </div>
             {isEditing ? (
               <div className="flex items-center gap-1">
@@ -1060,12 +1059,12 @@ export default function VitalsCard({
 
         {/* Row 2: Compact Trackers Strip (Hit Dice, Inspiration, Death Saves) in ONE Single Card */}
         {!isSimulacrum && (
-          <div className="col-span-1 sm:col-span-2 xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-subgrid sm:gap-x-2 text-xs items-stretch relative">
+          <div className="col-span-1 sm:col-span-2 min-[1390px]:col-span-3 grid grid-cols-1 sm:grid-cols-2 min-[1390px]:grid-cols-subgrid sm:gap-x-2 text-xs items-stretch relative">
             {/* Unified Card Background */}
             <div className="absolute inset-0 bg-dnd-card/60 border border-white/5 rounded-lg pointer-events-none -z-0" />
 
             {/* Subdivision 1: Hit Dice */}
-            <div className="relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 xl:col-span-1 border-b xl:border-b-0 border-white/5 py-1.5 pl-2 pr-1.5">
+            <div className="relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 min-[1390px]:col-span-1 border-b min-[1390px]:border-b-0 border-white/5 py-1.5 pl-2 pr-1.5">
               <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
                 Hit Dice
               </span>
@@ -1136,11 +1135,11 @@ export default function VitalsCard({
                 )}
               </div>
               {/* Divider 1: Centered in gap between Card 1 & Card 2 on xl */}
-              <div className="hidden xl:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
+              <div className="hidden min-[1390px]:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
             </div>
 
             {/* Subdivision 2: Inspiration */}
-            <div className="relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 xl:col-span-1 border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center">
+            <div className="relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 min-[1390px]:col-span-1 border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center">
               <span className="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1 min-w-0 flex-shrink-0">
                 <Lightbulb size={11} className="text-dnd-gold flex-shrink-0" />
                 <span className="truncate">Inspiration</span>
@@ -1171,7 +1170,7 @@ export default function VitalsCard({
             </div>
 
             {/* Subdivision 3: Death Saves */}
-            <div className="relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 xl:col-span-1 py-1.5 pl-1 pr-2.5">
+            <div className="relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 min-[1390px]:col-span-1 py-1.5 pl-1 pr-2.5">
               <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 flex-shrink-0 mb-0.5">
                 <Activity size={11} className="text-red-400 flex-shrink-0" />
                 <span>Death Saves</span>

@@ -60,13 +60,8 @@ describe('SpellCard', () => {
     expect(setData).toHaveBeenCalledWith('text/plain', 'fireball');
   });
 
-  it('renders legacy badge with neutral container and theme accent text matching In Book chip size', () => {
-    const legacySpell = {
-      ...mockSpell,
-      id: 'fireball-legacy',
-      name: 'Fireball',
-      isLegacy: true,
-    };
+  it('renders era and source badges for spells with multiple versions', () => {
+    const legacySpell = { ...mockSpell, id: 'fireball-legacy', name: 'Fireball', isLegacy: true, variantEra: 'Legacy' };
     render(<SpellCard spell={legacySpell} onSelect={vi.fn()} isInSpellbook={false} />);
     const badge = screen.getByText('Legacy');
     expect(badge).toBeInTheDocument();
@@ -78,6 +73,12 @@ describe('SpellCard', () => {
     expect(badge).toHaveClass('px-1.5');
     expect(badge).toHaveClass('py-0.2');
     expect(badge).toHaveClass('rounded');
+  });
+
+  it('shows the source badge when spell has variantSource', () => {
+    render(<SpellCard spell={{ ...mockSpell, variantEra: '5.5e', variantSource: 'WoW' }} onSelect={vi.fn()} isInSpellbook={false} />);
+    expect(screen.getByText('WoW')).toBeInTheDocument();
+    expect(screen.getByText('5.5e')).toBeInTheDocument();
   });
 
   it('renders and invokes delete button for homebrew spells', () => {

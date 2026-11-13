@@ -278,8 +278,8 @@ function CharacterHeader({
   if (!activeCharacter) return null;
 
   return (
-    <div ref={headerAccordionRef} className="p-3 rounded-lg bg-dnd-panel transition-all">
-      <div className="flex items-center gap-2">
+    <div ref={headerAccordionRef} className="relative p-3 rounded-lg bg-dnd-panel transition-all">
+      <div className="flex items-center gap-2 max-md:min-h-[21px]">
         <button
           type="button"
           onClick={() => setIsCollapsed(!isCollapsed)}
@@ -317,7 +317,7 @@ function CharacterHeader({
               />
             ) : (
               <div className={`relative inline-flex items-center min-w-0 ${pendingCount > 0 ? 'pr-4' : ''}`}>
-                <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate min-w-0 font-display">
+                <h2 ref={nameRef} className="text-base sm:text-lg font-bold text-dnd-ivory tracking-tight truncate max-md:whitespace-normal max-md:break-words min-w-0 font-display">
                   {activeCharacter.name}
                 </h2>
                 {pendingCount > 0 && (
@@ -347,7 +347,7 @@ function CharacterHeader({
           </div>
 
           {/* Right: Edit & Level Up Actions (aligned right) */}
-          <div ref={actionsRef} className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : ''}`}>
+          <div ref={actionsRef} className={`flex shrink-0 items-center space-x-1.5 ml-auto ${isEditing ? 'character-edit-actions' : `max-md:absolute max-md:top-3 max-md:right-3 ${isCollapsed ? 'max-md:hidden' : ''}`}`}>
             {isEditing ? (
               <>
                 <button
@@ -404,7 +404,7 @@ function CharacterHeader({
                   onClick={() => setShowManagerModal(true)}
                   aria-label="Manage Characters"
                   title="Open character manager modal"
-                  className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center"
+                  className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center max-md:p-1 max-md:bg-dnd-card max-md:hover:bg-dnd-hover"
                 >
                   <Users size={13} />
                 </button>
@@ -413,22 +413,22 @@ function CharacterHeader({
                   type="button"
                   aria-label="Edit Profile"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors"
+                  className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors max-md:p-1 max-md:bg-dnd-card max-md:hover:bg-dnd-hover max-md:justify-center"
                   title="Edit character name and classes"
                 >
-                  <UserPen size={11} className="text-slate-400" />
-                  {showButtonText && <span className="character-btn-label ml-1">Edit</span>}
+                  <UserPen size={11} className="text-slate-400 max-md:!w-[13px] max-md:!h-[13px] max-md:!text-slate-400" />
+                  {showButtonText && <span className="character-btn-label ml-1 max-md:hidden">Edit</span>}
                 </button>
 
                 {totalLevel < 20 && (
                   <button
                     type="button"
                     onClick={handleOpenLevelUpModal}
-                    className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0"
+                    className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0 max-md:p-1 max-md:bg-dnd-card max-md:hover:bg-dnd-hover max-md:justify-center"
                     title="Level up this character"
                   >
-                    <ArrowUpCircle size={12} className="text-slate-400 flex-shrink-0" />
-                    {showButtonText && <span className="character-btn-label ml-1">Level Up</span>}
+                    <ArrowUpCircle size={12} className="text-slate-400 flex-shrink-0 max-md:!w-[13px] max-md:!h-[13px] max-md:!text-slate-400" />
+                    {showButtonText && <span className="character-btn-label ml-1 max-md:hidden">Level Up</span>}
                   </button>
                 )}
               </>

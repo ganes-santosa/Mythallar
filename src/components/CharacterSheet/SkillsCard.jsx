@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Search, Sparkles, RotateCcw } from 'lucide-react';
+import { Eye, Search, RotateCcw } from 'lucide-react';
 import {
   SKILLS_DEFINITION,
   calculateSkillBonus,

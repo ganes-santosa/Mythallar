@@ -17,6 +17,7 @@ export function filterSpells(spells = [], filters = {}) {
     legacyMode = 'all', // 'all', 'modern', 'legacy'
     source = 'all',
     isHomebrewOnly = false,
+    hideUA = false,
   } = filters;
   const searchLower = (search || '').trim().toLowerCase();
 
@@ -33,7 +34,12 @@ export function filterSpells(spells = [], filters = {}) {
       return false;
     }
 
-    // 2. Legacy / 2024 Version Filter
+    // 1b. Hide UA filter
+    if (hideUA && spell.source === 'UA') {
+      return false;
+    }
+
+    // 2. Legacy / 2024 Version Filter (uses isLegacy which covers all pre-2024 books)
     if (legacyMode === 'modern' && spell.isLegacy) {
       return false;
     }

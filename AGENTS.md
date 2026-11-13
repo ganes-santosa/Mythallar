@@ -35,6 +35,17 @@ Mythallar: D&D 5e spellbook SPA. React 18, Vite 6, Tailwind 3, Vitest, lucide-re
 - **Character Initialization**: Storage defaults to empty profiles (`profiles: []`, `activeId: null`). When no character exists, the right pane displays an empty state with a "Create First Character" action prompting `CreateCharacterModal` (character name + 1st-level class). Designed for future extension into a full character builder.
 - **Character Sheet Evolution**: Long-term plan expands the left pane (the spellbook view) into a full fillable character sheet. Keep left-pane state and component hierarchy flexible for this integration.
 
+## Updating the Spell Catalogue
+- Catalogue is static `public/data/spells.json`, generated from the 5etools mirror by `scripts/fetch-spells.mjs`. It never updates by itself. Homebrew spells live in localStorage (`dnd_homebrew_spells`) and are unaffected.
+- Steps:
+  1. `npm.cmd run update-spells`
+  2. Read the report: `Added N, removed M` plus new ids. Removed ids abort the write (exit 1) because saved characters reference spells by `id` (slug of name, `{ id, prepared }`). Investigate (upstream rename or failed book fetch). Re-run only if transient. Use `-- --force` only after confirming the removals are intended.
+  3. `npm.cmd test -- --run`, `npm.cmd run build`.
+  4. Show the user the added/removed summary. Do not commit unless asked. Data-only change = PATCH bump.
+- Ids are stable: the script reads the existing `spells.json` and reuses the id for each existing `name|source`. New spells never take an existing id (collisions get `-legacy` or `-<source>`). Do not change this logic; it would orphan or swap saved spells.
+- Same-name spells from different books get `variantTag` (= source) in the JSON; Catalog and Spellbook cards render it as a badge next to Legacy. XPHB and legacy PHB keep their existing treatment.
+- Extra non-5etools spells: do not scrape. Use homebrew import or a separate hand-maintained file that the script never overwrites.
+
 ## Versioning (SemVer: MAJOR.MINOR.PATCH)
 - PATCH: bug fixes, visual tweaks. MINOR: new user-facing features. MAJOR: breaking changes to saved data or exports.
 - **MANDATORY**: Whenever updating version to X.Y.Z:

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useContext } from 'react';
+import { createPortal } from 'react-dom';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import {
@@ -6,7 +7,6 @@ import {
   User,
   Plus,
   Trash2,
-  Check,
   Search,
   ArrowUpDown,
   Sparkles,
@@ -145,9 +145,10 @@ export default function CharacterManagerModal({
     onClose();
   };
 
-  return (
+  // ponytail: portal escapes ancestors with will-change/transform that trap `fixed` positioning
+  return createPortal(
     <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain">
-      <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
+      <div className="bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-xl w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col min-w-0">
         {/* Modal Header */}
         <div className="flex items-center justify-between pb-3 flex-shrink-0">
           <div className="flex items-center space-x-2.5">
@@ -187,14 +188,14 @@ export default function CharacterManagerModal({
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <div className="relative flex items-center bg-dnd-panel/70 rounded-lg px-2 py-1.5 text-xs">
+          <div className="flex items-center gap-2 max-sm:flex-wrap max-sm:[&>button]:flex-1 max-sm:[&>button]:justify-center">
+            <div className="relative flex items-center bg-dnd-panel/70 rounded-lg px-2 py-1.5 text-xs max-sm:basis-full min-w-0">
               <ArrowUpDown size={12} className="text-slate-400 mr-1.5 flex-shrink-0" />
               <select
                 aria-label="Sort Characters"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-slate-200 text-xs focus:outline-none cursor-pointer"
+                className="bg-transparent text-slate-200 text-xs focus:outline-none cursor-pointer max-sm:flex-1 min-w-0"
               >
                 <option value="level-desc" className="bg-dnd-panel">Highest Level</option>
                 <option value="level-asc" className="bg-dnd-panel">Lowest Level</option>
@@ -251,7 +252,7 @@ export default function CharacterManagerModal({
                   }`}
                 >
                   {/* Left Info Column */}
-                  <div className="flex items-start space-x-3">
+                  <div className="flex items-start space-x-3 min-w-0">
                     <div className="w-10 h-10 rounded-lg bg-dnd-card/80 flex flex-col items-center justify-center flex-shrink-0">
                       <span className="text-[10px] uppercase text-dnd-gold font-bold">Lvl</span>
                       <span className="text-sm font-bold text-slate-100 tabular-nums leading-none">
@@ -260,7 +261,7 @@ export default function CharacterManagerModal({
                     </div>
 
                     <div className="min-w-0">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center flex-wrap gap-x-2 gap-y-1">
                         <h4 className="font-bold text-sm text-slate-100 truncate font-display">
                           {char.name}
                         </h4>
@@ -338,6 +339,7 @@ export default function CharacterManagerModal({
           className="hidden"
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

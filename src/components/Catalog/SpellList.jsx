@@ -2,6 +2,9 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { ChevronDown } from 'lucide-react';
 import SpellCard from './SpellCard';
 
+// ponytail: ~24 collapsed spell cards (54px each); tune if card height changes
+const HIDE_AFTER_PX = 24 * 54;
+
 function getLevelTitle(level) {
   if (level === 0) return 'Cantrips';
   const ordinals = ['th', 'st', 'nd', 'rd'];
@@ -89,7 +92,22 @@ export default React.memo(function SpellList({
   onAddToSpellbook,
   onDeleteHomebrew,
   onUpdateNote,
+  onScrollDirection,
 }) {
+  // ponytail: reports 'up'/'down' (or 'top') after a 8px threshold; no debounce, upgrade if scroll events get heavy
+  const lastTopRef = React.useRef(0);
+  const anchorRef = React.useRef(0); // scrollTop where the last upward scroll ended; hide threshold counts from here
+  const handleScroll = useCallback((e) => {
+    if (!onScrollDirection) return;
+    const top = e.currentTarget.scrollTop;
+    const delta = top - lastTopRef.current;
+    if (top <= 4) { anchorRef.current = 0; onScrollDirection('top'); }
+    else if (delta > 8) { if (top - anchorRef.current > HIDE_AFTER_PX) onScrollDirection('down'); }
+    else if (delta < -8) { anchorRef.current = top; onScrollDirection('up'); }
+    else return;
+    lastTopRef.current = top;
+  }, [onScrollDirection]);
+
   // Group spells by level (0-9) and sort alphabetically within each level
   const groupedSpells = useMemo(() => {
     const groups = {};
@@ -134,7 +152,7 @@ export default React.memo(function SpellList({
         <span>Showing {spells.length} spells</span>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] px-1 pr-1.5 space-y-1">
+      <div onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] px-1 pr-1.5 space-y-1">
         {spells.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center text-slate-500">
             <p className="text-sm">No spells match your search or filter.</p>

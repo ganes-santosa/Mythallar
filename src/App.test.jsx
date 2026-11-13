@@ -129,6 +129,70 @@ describe('App End-to-End Integration', () => {
     expect(sheetScroll.scrollTop).toBe(500);
   });
 
+  it('renders 3-way toggle buttons on mobile and switches active mobile view', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    const mobileSheetBtn = screen.getByTestId('mobile-tab-sheet');
+    const mobileSpellbookBtn = screen.getByTestId('mobile-tab-spellbook');
+    const mobileCatalogBtn = screen.getByTestId('mobile-tab-catalog');
+
+    expect(mobileSheetBtn).toBeInTheDocument();
+    expect(mobileSpellbookBtn).toBeInTheDocument();
+    expect(mobileCatalogBtn).toBeInTheDocument();
+
+    // Default view when character exists is Spellbook or Catalog; click Sheet
+    fireEvent.click(mobileSheetBtn);
+    expect(mobileSheetBtn).toHaveAttribute('data-active', 'true');
+    expect(mobileSpellbookBtn).toHaveAttribute('data-active', 'false');
+
+    // Click Spellbook
+    fireEvent.click(mobileSpellbookBtn);
+    expect(mobileSpellbookBtn).toHaveAttribute('data-active', 'true');
+    expect(mobileSheetBtn).toHaveAttribute('data-active', 'false');
+
+    // Click Catalog
+    fireEvent.click(mobileCatalogBtn);
+    expect(mobileCatalogBtn).toHaveAttribute('data-active', 'true');
+    expect(mobileSpellbookBtn).toHaveAttribute('data-active', 'false');
+  });
+
+  it('toggles pane visibility according to active mobile view', async () => {
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Fireball')).toBeInTheDocument();
+    });
+
+    const mobileSheetBtn = screen.getByTestId('mobile-tab-sheet');
+    const mobileSpellbookBtn = screen.getByTestId('mobile-tab-spellbook');
+    const mobileCatalogBtn = screen.getByTestId('mobile-tab-catalog');
+    const rightPaneSection = screen.getByTestId('right-pane-section');
+    const catalogViewContainer = screen.getByTestId('catalog-view-container');
+    const sheetViewContainer = screen.getByTestId('sheet-view-container');
+
+    // 1. Switch to Spellbook view: right pane should be visible, sheet and catalog hidden on mobile
+    fireEvent.click(mobileSpellbookBtn);
+    expect(rightPaneSection).not.toHaveClass('hidden');
+    expect(catalogViewContainer).toHaveClass('hidden');
+    expect(sheetViewContainer).toHaveClass('hidden');
+
+    // 2. Switch to Sheet view: sheet container visible, right pane and catalog hidden on mobile
+    fireEvent.click(mobileSheetBtn);
+    expect(sheetViewContainer).not.toHaveClass('hidden');
+    expect(rightPaneSection).toHaveClass('hidden');
+    expect(catalogViewContainer).toHaveClass('hidden');
+
+    // 3. Switch to Catalog view: catalog container visible, right pane and sheet hidden on mobile
+    fireEvent.click(mobileCatalogBtn);
+    expect(catalogViewContainer).not.toHaveClass('hidden');
+    expect(rightPaneSection).toHaveClass('hidden');
+    expect(sheetViewContainer).toHaveClass('hidden');
+  });
+
   it('renders a spinning Mythallar logo during spell catalog loading', () => {
     // Keep fetch unresolved
     global.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
