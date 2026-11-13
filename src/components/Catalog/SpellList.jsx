@@ -3,7 +3,8 @@ import { ChevronDown } from 'lucide-react';
 import SpellCard from './SpellCard';
 
 // ponytail: ~24 collapsed spell cards (54px each); tune if card height changes
-const HIDE_AFTER_PX = 24 * 54;
+const HIDE_AFTER_PX = 6 * 54;
+const SHOW_AFTER_PX = 3 * 54;
 
 function getLevelTitle(level) {
   if (level === 0) return 'Cantrips';
@@ -96,14 +97,15 @@ export default React.memo(function SpellList({
 }) {
   // ponytail: reports 'up'/'down' (or 'top') after a 8px threshold; no debounce, upgrade if scroll events get heavy
   const lastTopRef = React.useRef(0);
+  const peakRef = React.useRef(0); // scrollTop of the last downward scroll; show threshold counts up from here
   const anchorRef = React.useRef(0); // scrollTop where the last upward scroll ended; hide threshold counts from here
   const handleScroll = useCallback((e) => {
     if (!onScrollDirection) return;
     const top = e.currentTarget.scrollTop;
     const delta = top - lastTopRef.current;
     if (top <= 4) { anchorRef.current = 0; onScrollDirection('top'); }
-    else if (delta > 8) { if (top - anchorRef.current > HIDE_AFTER_PX) onScrollDirection('down'); }
-    else if (delta < -8) { anchorRef.current = top; onScrollDirection('up'); }
+    else if (delta > 8) { peakRef.current = top; if (top - anchorRef.current > HIDE_AFTER_PX) onScrollDirection('down'); }
+    else if (delta < -8) { if (peakRef.current - top > SHOW_AFTER_PX) { anchorRef.current = top; onScrollDirection('up'); } }
     else return;
     lastTopRef.current = top;
   }, [onScrollDirection]);

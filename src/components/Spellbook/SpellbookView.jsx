@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
-import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText, Search } from 'lucide-react';
+import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookCheck, Brain, ScrollText, Search, StretchHorizontal, Table } from 'lucide-react';
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
@@ -67,6 +67,7 @@ function SpellbookView({
   const spellHintRef = useClickOutside(showSpellHint, () => setShowSpellHint(false));
   const [isDragOver, setIsDragOver] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCompact, setIsCompact] = useState(false);
   const spellbookAccordionRef = useAutoScrollOnExpand(!isCollapsed, { durationMs: 200, offset: 0 });
   const [showFilters, setShowFilters] = useState(false);
   const { shouldRender: showFiltersMounted, isClosing: isFiltersClosing } = useAccordionMount(showFilters, 200);
@@ -277,17 +278,30 @@ function SpellbookView({
         ref={headerRef}
         className="relative z-20 flex-shrink-0 flex flex-wrap items-center justify-between gap-2 bg-dnd-panel"
       >
-        <button
-          type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="flex items-center space-x-1.5 text-left group focus:outline-none"
-          aria-label={isCollapsed ? 'Expand Spellbook' : 'Collapse Spellbook'}
-          title={isCollapsed ? 'Click to expand spellbook' : 'Click to collapse spellbook'}
-        >
-          <BookMarked size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
-          <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Spellbook</h3>
-          <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
-        </button>
+        <div className="flex items-center space-x-2">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="flex items-center space-x-1.5 text-left group focus:outline-none"
+            aria-label={isCollapsed ? 'Expand Spellbook' : 'Collapse Spellbook'}
+            title={isCollapsed ? 'Click to expand spellbook' : 'Click to collapse spellbook'}
+          >
+            <BookMarked size={14} className="text-dnd-gold group-hover:scale-110 transition-transform" />
+            <h3 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">Spellbook</h3>
+            <ChevronDown size={13} className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${isCollapsed ? '-rotate-90' : ''}`} />
+          </button>
+
+          <button
+            type="button"
+            aria-label={isCompact ? 'Switch to list spellbook view' : 'Switch to compact spellbook view'}
+            onClick={() => setIsCompact((prev) => !prev)}
+            className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors"
+            title={isCompact ? 'Switch to list spellbook view' : 'Switch to compact spellbook view'}
+          >
+            {isCompact ? <Table size={13} /> : <StretchHorizontal size={13} />}
+          </button>
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
           {isWizard && hasCopyingSpells && (
             <button
@@ -310,7 +324,7 @@ function SpellbookView({
             aria-label="Toggle Spellbook Filters"
             onClick={() => setShowFilters((prev) => !prev)}
             className={`relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs transition-colors ${
-              isFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+              isFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-dnd-gold'
             }`}
             title="Filter spells in spellbook"
           >
@@ -325,7 +339,7 @@ function SpellbookView({
               <HelpCircle size={13} />
             </button>
             {showSpellHint && <div className="absolute right-0 top-7 z-30 w-80 max-w-[calc(100vw-2rem)] p-2.5 rounded-lg bg-dnd-card shadow-xl text-[11px] text-slate-200 ring-1 ring-white/10">
-              <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-white/5"><span className="font-semibold text-dnd-gold">How to gain spells</span><button type="button" aria-label="Close spell learning hint" onClick={() => setShowSpellHint(false)}><X size={11} /></button></div>
+              <div className="flex items-center justify-between pb-1 mb-1.5 border-b border-white/5"><span className="font-semibold text-dnd-gold">How to gain spells</span><button type="button" aria-label="Close spell learning hint" onClick={() => setShowSpellHint(false)} className="text-slate-400 hover:text-dnd-gold transition-colors"><X size={11} /></button></div>
               <div className="space-y-2">{getSpellcastingHints(character).map((item) => <div key={item.className}><div className="font-semibold text-slate-200">{item.className}</div><p className="text-slate-400">{item.hint}</p></div>)}</div>
             </div>}
           </div>
@@ -352,14 +366,14 @@ function SpellbookView({
               onKeyDown={(e) => {
                 if (e.key === 'Escape') setSearchQuery('');
               }}
-              className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+              className="w-full pl-7 pr-7 py-1 text-xs rounded-lg bg-dnd-card text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-shadow"
             />
             {searchQuery && (
               <button
                 type="button"
                 aria-label="Clear search"
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-dnd-gold transition-colors"
               >
                 <X size={12} />
               </button>
@@ -584,6 +598,7 @@ function SpellbookView({
                 copyingMap={copyingMap}
                 notesMap={notesMap}
                 maxCantrips={lvl === 0 ? cantripsInfo.total : null}
+                compact={isCompact}
                 onTogglePrepare={onTogglePrepare}
                 onFinishCopying={onFinishCopying}
                 onCast={onCastSpell}

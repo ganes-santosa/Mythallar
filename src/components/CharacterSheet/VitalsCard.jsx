@@ -16,9 +16,11 @@ export function CrystalBallIcon({ size = 16, className = '', ...props }) {
       aria-hidden="true"
       {...props}
     >
-      <path d="M6.73 17.018a8 8 0 1 1 10.54 0" />
-      <path d="M5 19a2 2 0 0 0 2 2h10a2 2 0 1 0 0 -4h-10a2 2 0 0 0 -2 2" />
-      <path d="M11 7a3 3 0 0 0 -3 3" />
+      <path d="M14.504 8.522l-1.758 -4.032a.814 .814 0 0 0 -1.492 0l-1.759 4.032c-.19 .436 -.537 .784 -.973 .973l-4.032 1.759a.814 .814 0 0 0 0 1.492l4.033 1.758c.436 .19 .784 .538 .973 .974l1.759 4.033a.814 .814 0 0 0 1.492 0l1.758 -4.033c.19 -.436 .538 -.784 .974 -.974l4.033 -1.758a.814 .814 0 0 0 0 -1.492l-4.033 -1.759a1.88 1.88 0 0 1 -.974 -.973" />
+      <path d="M3 3l2 2" />
+      <path d="M21 3l-2 2" />
+      <path d="M3 21l2 -2" />
+      <path d="M21 21l-2 -2" />
     </svg>
   );
 }
@@ -582,7 +584,7 @@ export default function VitalsCard({
                     }
                     disabled={!canUndo}
                     onClick={handleUndoHp}
-                    className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-default"
+                    className="p-1 rounded text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-default"
                   >
                     <Undo2 size={11} />
                   </button>
@@ -596,7 +598,7 @@ export default function VitalsCard({
                     }
                     disabled={!canRedo}
                     onClick={handleRedoHp}
-                    className="p-1 rounded text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-default"
+                    className="p-1 rounded text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400 disabled:cursor-default"
                   >
                     <Redo2 size={11} />
                   </button>
@@ -882,7 +884,7 @@ export default function VitalsCard({
             {/* Header */}
             <div className="text-[10px] text-slate-400 flex items-center justify-between mb-0.5">
               <span className="flex items-center gap-1 font-bold text-slate-400">
-                <CrystalBallIcon size={12} className="text-dnd-gold" /> Spellcasting
+                <CrystalBallIcon size={13} className="text-dnd-gold" /> Spellcasting
               </span>
               {isEditing ? (
                 <select

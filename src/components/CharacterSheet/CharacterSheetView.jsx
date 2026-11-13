@@ -31,6 +31,8 @@ import NotesCard from './NotesCard';
 import { getProficiencyBonus, getEffectiveAbilities } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 
+const SimulacrumIcon = (props) => <Snowflake {...props} size={15} />;
+
 function CharacterSheetView({
   character,
   profiles = [],
@@ -233,7 +235,7 @@ function CharacterSheetView({
                 type="button"
                 aria-label="Edit vitals"
                 onClick={() => setIsEditingVitals(true)}
-                className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer"
+                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
                 title="Edit combat vitals"
               >
                 <Settings2 size={13} />
@@ -264,7 +266,7 @@ function CharacterSheetView({
             <div className="overflow-hidden">
               <AccordionSection
                 title="Simulacrum Combat Stats"
-                icon={Snowflake}
+                icon={SimulacrumIcon}
                 defaultOpen={true}
                 actions={
                   isEditingSimulacrumVitals ? (
@@ -282,7 +284,7 @@ function CharacterSheetView({
                       type="button"
                       aria-label="Edit simulacrum vitals"
                       onClick={() => setIsEditingSimulacrumVitals(true)}
-                      className="p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors cursor-pointer"
+                      className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
                       title="Edit simulacrum combat vitals"
                     >
                       <Settings2 size={13} />
@@ -352,7 +354,7 @@ function CharacterSheetView({
                   type="button"
                   aria-label="Edit resources"
                   onClick={() => setIsEditingResources(true)}
-                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
                   title="Rearrange features and tracked resources"
                 >
                   <ArrowLeftRight size={13} />
@@ -401,7 +403,7 @@ function CharacterSheetView({
                 type="button"
                 aria-label="Edit abilities"
                 onClick={() => setIsEditingAbilities(true)}
-                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors"
                 title="Edit ability scores and saving throws"
               >
                 <Settings2 size={13} />
@@ -449,7 +451,7 @@ function CharacterSheetView({
                   type="button"
                   aria-label="Edit skills"
                   onClick={() => setIsEditingSkills(true)}
-                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
+                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors"
                   title="Edit skills and senses"
                 >
                   <Settings2 size={13} />
@@ -521,7 +523,7 @@ function CharacterSheetView({
                 aria-label="Toggle Items Filters"
                 onClick={() => setShowItemFilters((prev) => !prev)}
                 className={`relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs transition-colors ${
-                  isItemFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                  isItemFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-dnd-gold'
                 }`}
                 title="Filter items in inventory"
               >
@@ -582,7 +584,7 @@ function CharacterSheetView({
                 type="button"
                 aria-label="Edit proficiencies"
                 onClick={() => setIsEditingProficiencies(true)}
-                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-slate-200 transition-colors"
+                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors"
                 title="Edit proficiencies and training"
               >
                 <Settings2 size={13} />

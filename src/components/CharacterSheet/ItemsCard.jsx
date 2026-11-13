@@ -1132,7 +1132,7 @@ export default function ItemsCard({
               type="button"
               aria-label="Clear search"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-white"
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 text-slate-400 hover:text-dnd-gold transition-colors"
             >
               <X size={12} />
             </button>
@@ -1185,7 +1185,7 @@ export default function ItemsCard({
               aria-label="Toggle Items Filters"
               onClick={() => setShowFilters((prev) => !prev)}
               className={`relative flex items-center space-x-1 bg-dnd-card rounded-lg px-2 py-0.5 text-xs transition-colors ${
-                isFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                isFiltered ? 'ring-1 ring-dnd-gold/50 text-slate-100' : 'text-slate-400 hover:text-dnd-gold'
               }`}
               title="Filter items in inventory"
             >

@@ -527,7 +527,7 @@ function CharacterSheetHeader({
                           type="button"
                           aria-label="Cancel Edit Profile"
                           onClick={handleCancelEdit}
-                          className="p-1 rounded-md bg-dnd-panel/70 hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          className="p-1 rounded-md bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors shadow-sm cursor-pointer"
                           title="Cancel editing"
                         >
                           <X size={12} />
@@ -540,7 +540,7 @@ function CharacterSheetHeader({
                           onClick={() => setShowManagerModal(true)}
                           aria-label="Manage Characters"
                           title="Open character manager modal"
-                          className="p-1 rounded-md bg-dnd-panel/70 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer max-md:p-1 max-md:bg-dnd-card max-md:hover:bg-dnd-hover"
+                          className="p-1 rounded-md bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer shadow-sm max-md:bg-dnd-hover max-md:hover:bg-dnd-hover/70"
                         >
                           <Users size={13} />
                         </button>
@@ -549,22 +549,21 @@ function CharacterSheetHeader({
                           type="button"
                           aria-label="Edit Profile"
                           onClick={() => setIsEditing(true)}
-                          className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/70 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors cursor-pointer max-md:p-1 max-md:bg-dnd-card max-md:hover:bg-dnd-hover max-md:justify-center"
+                          className="p-1 rounded-md bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer shadow-sm max-md:bg-dnd-hover max-md:hover:bg-dnd-hover/70"
                           title="Edit character name and classes"
                         >
-                          <UserPen size={11} className="text-slate-400 max-md:!w-[13px] max-md:!h-[13px] max-md:!text-slate-400" />
-                          {showButtonText && <span className="character-btn-label ml-1 max-md:hidden">Edit</span>}
+                          <UserPen size={13} />
                         </button>
 
                         {totalLevel < 20 && (
                           <button
                             type="button"
                             onClick={handleOpenLevelUpModal}
-                            className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-panel/70 hover:bg-dnd-panel text-slate-300 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer max-md:p-1 max-md:bg-dnd-card max-md:hover:bg-dnd-hover max-md:justify-center"
+                            className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer shadow-sm max-md:p-1 max-md:rounded-md max-md:justify-center max-md:bg-dnd-hover max-md:hover:bg-dnd-hover/70"
                             title="Level up this character"
                           >
-                            <ArrowUpCircle size={12} className="text-slate-400 flex-shrink-0 max-md:!w-[13px] max-md:!h-[13px] max-md:!text-slate-400" />
-                            {showButtonText && <span className="character-btn-label ml-1 max-md:hidden">Level Up</span>}
+                            <ArrowUpCircle size={12} className="flex-shrink-0 transition-colors max-md:!w-[13px] max-md:!h-[13px]" />
+                            {showButtonText && <span className="character-btn-label max-md:hidden">Level Up</span>}
                           </button>
                         )}
                       </>

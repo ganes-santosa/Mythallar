@@ -132,6 +132,15 @@ describe('filterSpells', () => {
     expect(res.map(s => s.id)).toEqual(['s1']);
   });
 
+  it('hides UA spells only when hideUA is true', () => {
+    const spells = [
+      { id: 'a', name: 'A', source: 'UA' },
+      { id: 'b', name: 'B', source: 'PHB' },
+    ];
+    expect(filterSpells(spells, { hideUA: true }).map(s => s.id)).toEqual(['b']);
+    expect(filterSpells(spells, { hideUA: false }).map(s => s.id)).toEqual(['a', 'b']);
+  });
+
   it('returns all spells when filters are empty or default', () => {
     const res = filterSpells(MOCK_SPELLS, {});
     expect(res.length).toBe(4);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import SpellbookCard from './SpellbookCard';
+import SpellbookCompactCard from './SpellbookCompactCard';
 
 function getLevelTitle(level) {
   if (level === 0) return 'Cantrips';
@@ -19,6 +20,7 @@ function SpellbookLevelGroup({
   copyingMap = {},
   notesMap = {},
   maxCantrips = null,
+  compact = false,
   onTogglePrepare,
   onFinishCopying,
   onCast,
@@ -70,25 +72,39 @@ function SpellbookLevelGroup({
         data-testid={`spellbook-level-content-${level}`}
       >
         <div className="overflow-hidden -mx-1 px-1 -mb-1 pb-1">
-          <div className="space-y-1 pt-1.5">
-            {spells.map((spell) => (
-              <SpellbookCard
-                key={spell.id}
-                spell={spell}
-                isPrepared={Boolean(preparedMap[spell.id])}
-                isCopying={Boolean(copyingMap[spell.id])}
-                note={notesMap[spell.id] || ''}
-                onTogglePrepare={onTogglePrepare}
-                onFinishCopying={onFinishCopying}
-                onCast={onCast}
-                onRemove={onRemove}
-                onSelect={onSelect}
-                onUpdateNote={onUpdateNote}
-                isExpanded={expandedSpellId === spell.id}
-                onToggleExpand={onToggleSpell}
-              />
-            ))}
-          </div>
+          {compact ? (
+            <div className="grid grid-cols-2 gap-1.5 pt-1.5" data-testid={`spellbook-compact-grid-${level}`}>
+              {spells.map((spell) => (
+                <SpellbookCompactCard
+                  key={spell.id}
+                  spell={spell}
+                  isPrepared={Boolean(preparedMap[spell.id])}
+                  isCopying={Boolean(copyingMap[spell.id])}
+                  onTogglePrepare={onTogglePrepare}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-1 pt-1.5">
+              {spells.map((spell) => (
+                <SpellbookCard
+                  key={spell.id}
+                  spell={spell}
+                  isPrepared={Boolean(preparedMap[spell.id])}
+                  isCopying={Boolean(copyingMap[spell.id])}
+                  note={notesMap[spell.id] || ''}
+                  onTogglePrepare={onTogglePrepare}
+                  onFinishCopying={onFinishCopying}
+                  onCast={onCast}
+                  onRemove={onRemove}
+                  onSelect={onSelect}
+                  onUpdateNote={onUpdateNote}
+                  isExpanded={expandedSpellId === spell.id}
+                  onToggleExpand={onToggleSpell}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

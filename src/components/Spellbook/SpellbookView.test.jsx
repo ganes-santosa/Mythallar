@@ -105,6 +105,40 @@ describe('SpellbookView', () => {
     expect(handleToggle).toHaveBeenCalledWith('fireball');
   });
 
+  it('toggles between the list and a 2-column compact view from the header', () => {
+    render(<SpellbookView character={mockCharacter} catalog={mockCatalog} onTogglePrepare={vi.fn()} />);
+
+    expect(screen.getByTestId('spellbook-level-content-3')).toBeInTheDocument();
+    expect(screen.queryByTestId('spellbook-compact-grid-3')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Switch to compact spellbook view'));
+
+    expect(screen.getByTestId('spellbook-compact-grid-3')).toHaveClass('grid-cols-2');
+    expect(screen.getByTestId('spellbook-compact-grid-0')).toHaveClass('grid-cols-2');
+    expect(screen.getByLabelText('Switch to list spellbook view')).toBeInTheDocument();
+    expect(screen.getByText(/3rd Level Spells/i)).toBeInTheDocument();
+  });
+
+  it('prepares a spell by clicking its compact card', () => {
+    const handleToggle = vi.fn();
+    render(<SpellbookView character={mockCharacter} catalog={mockCatalog} onTogglePrepare={handleToggle} />);
+
+    fireEvent.click(screen.getByLabelText('Switch to compact spellbook view'));
+    fireEvent.click(screen.getByTestId('spellbook-compact-card-fireball'));
+
+    expect(handleToggle).toHaveBeenCalledWith('fireball');
+  });
+
+  it('keeps level collapse state when switching views', () => {
+    render(<SpellbookView character={mockCharacter} catalog={mockCatalog} onTogglePrepare={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /3rd Level Spells/i }));
+    fireEvent.click(screen.getByLabelText('Switch to compact spellbook view'));
+
+    expect(screen.getByRole('button', { name: /3rd Level Spells/i })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByTestId('spellbook-level-content-3')).toHaveClass('grid-rows-[0fr]');
+  });
+
   it('triggers onCastSpell when quick-cast button clicked', () => {
     const handleCast = vi.fn();
     render(

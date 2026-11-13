@@ -1,6 +1,13 @@
 # HANDOFF
 
-## Current state (v3.0.1 - master)
+## Current state (v3.1.0 - master)
+- **v3.1.0 (minor)**:
+  - Spellbook compact view toggle (`SpellbookCompactCard`) beside the Spellbook title.
+  - Uniform tool-icon colors and button containers (header buttons get `max-md:bg-dnd-hover` on mobile); Tabler `sparkles-2` (Spell Slots) and `sparkle-highlight` (Spellcasting) icons; Simulacrum snowflake 15px.
+  - Wide layout: panes `md:flex-none` + `md:w-1/2` (fixes first-load gap shift); right pane margins restored to v2.3.5 with the scroll hitbox reaching the page center; custom right-pane scrollbar CSS removed.
+  - Mobile Library filter card: 300ms show/hide, hides after 6 cards of scroll-down, shows after 3 cards of scroll-up.
+  - Search inputs use `transition-shadow` (no focus-outline flash); filter panel clipping fixed (`-mx-1 px-1`).
+  - Verification: 52 test files passing; production build clean.
 - **Header + empty state (patch)**:
   - Desktop pane header holds the 3-way switcher at a constant 103px from the accordion's right edge; at `@container (max-width: 580px)` the sign-in label shortens to "Sign in" and the branding subtitle hides. Below 420px the switcher drops to row 2 at the same x.
   - Header CSS split by media query: mobile keeps the full-width switcher row; desktop keeps the narrow-pane rules.
@@ -23,4 +30,5 @@
 - Awaiting next feature request. Catalogue updates: `npm.cmd run update-spells`.
 
 ## Open questions
-- (none)
+- Homebrew spells have no `isLegacy`, so the "2014 Legacy" filter hides them and "2024 Modern" shows them. Decide intended behavior.
+- Catalog filter Reset does not clear `source` or `hideUA`; user says it works, left as is.

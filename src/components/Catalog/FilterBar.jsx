@@ -62,12 +62,12 @@ function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSourc
             value={filters.search || ''}
             onChange={(e) => update('search', e.target.value)}
             placeholder="Search spells, text, school, book..."
-            className="w-full bg-dnd-card rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-all"
+            className="w-full bg-dnd-card rounded-lg pl-9 pr-9 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 transition-shadow"
           />
           {filters.search && (
             <button
               onClick={() => update('search', '')}
-              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-200"
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-dnd-gold transition-colors"
             >
               <X size={16} />
             </button>
@@ -106,7 +106,7 @@ function FilterBar({ filters, onChange, onOpenHomebrewSpellModal, availableSourc
           !isCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
         }`}
       >
-        <div className="overflow-hidden">
+        <div className="overflow-hidden -mx-1 px-1">
           <div className="pt-2 space-y-2">
             {/* Select Dropdowns Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">

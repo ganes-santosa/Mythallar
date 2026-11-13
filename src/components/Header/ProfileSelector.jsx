@@ -14,8 +14,8 @@ export default function ProfileSelector({ profiles, activeId, onSelectProfile, o
         </select>
         <ChevronDown size={11} className="text-slate-400 pointer-events-none absolute right-1.5" />
       </div>
-      {onOpenManager && <button type="button" onClick={onOpenManager} aria-label="Manage Characters" title="Open character manager modal" className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-white transition-colors flex items-center justify-center"><Users size={13} /></button>}
-      <button type="button" onClick={handleCreateClick} aria-label={createArmed ? 'Click again to create character' : 'New Character'} title={createArmed ? 'Click again to create character' : 'Create new character profile'} className={`p-1 rounded-md transition-colors flex items-center justify-center ${createArmed ? 'text-green-300 bg-green-950/70 ring-1 ring-green-400/70' : 'bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-white'}`}><Plus size={13} /></button>
+      {onOpenManager && <button type="button" onClick={onOpenManager} aria-label="Manage Characters" title="Open character manager modal" className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer"><Users size={13} /></button>}
+      <button type="button" onClick={handleCreateClick} aria-label={createArmed ? 'Click again to create character' : 'New Character'} title={createArmed ? 'Click again to create character' : 'Create new character profile'} className={`p-1 rounded-md transition-colors flex items-center justify-center cursor-pointer ${createArmed ? 'text-green-300 bg-green-950/70 ring-1 ring-green-400/70' : 'bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold'}`}><Plus size={13} /></button>
     </div>
   );
 }

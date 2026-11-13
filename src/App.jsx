@@ -58,6 +58,8 @@ import SpellbookView from './components/Spellbook/SpellbookView';
 import CharacterSheetView from './components/CharacterSheet/CharacterSheetView';
 import { APP_VERSION } from './version';
 
+const SimulacrumIcon = (props) => <Snowflake {...props} size={15} />;
+
 export default function App() {
   // --- Character & Profile State ---
   const [profileData, setProfileData] = useState(() => loadCharacterProfiles());
@@ -1631,7 +1633,7 @@ export default function App() {
         <section
           data-testid="left-pane-section"
           className={`w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10 relative ${
-            mobileView === 'spellbook' ? 'flex-shrink-0 pb-0 md:pb-4 md:flex-1' : 'flex-1'
+            mobileView === 'spellbook' ? 'flex-shrink-0 pb-0 md:pb-4 md:flex-none' : 'flex-1 md:flex-none'
           }`}
         >
           {/* Left Pane Toast Banner */}
@@ -1834,7 +1836,7 @@ export default function App() {
                   onClick={() => setIsSettingsOpen(true)}
                   aria-label="Open settings"
                   title="Appearance & Theme Settings"
-                  className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card hover:text-white text-slate-400 transition-colors flex items-center justify-center cursor-pointer"
+                  className="p-1.5 rounded-lg bg-dnd-card/60 hover:bg-dnd-card text-slate-400 hover:text-dnd-gold transition-colors flex items-center justify-center cursor-pointer"
                 >
                   <Settings size={15} />
                 </button>
@@ -1881,7 +1883,7 @@ export default function App() {
             }
           >
             <div
-              className={`max-md:grid max-md:transition-[grid-template-rows,opacity] max-md:duration-150 max-md:ease-out ${
+              className={`max-md:grid max-md:transition-[grid-template-rows,opacity] max-md:duration-300 max-md:ease-out ${
                 isFilterHidden ? 'max-md:grid-rows-[0fr] max-md:opacity-0' : 'max-md:grid-rows-[1fr] max-md:opacity-100'
               }`}
             >
@@ -1936,13 +1938,13 @@ export default function App() {
         {/* Right Pane: Character Spellbook & Slots (Scrollable Container) */}
         <section
           data-testid="right-pane-section"
-          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 p-0 ${activeCharacter ? '' : 'md:p-4'} ${mobileView === 'spellbook' ? 'flex-1' : 'hidden md:flex'}`}
+          className={`w-full md:w-1/2 flex flex-col min-h-0 overflow-hidden bg-dnd-panel/10 p-0 ${activeCharacter ? 'md:pr-4 md:py-4' : 'md:p-4'} ${mobileView === 'spellbook' ? 'flex-1 md:flex-none' : 'hidden md:flex'}`}
         >
           {activeCharacter ? (
             <div
               ref={rightPaneScrollRef}
               data-testid="right-pane-scroll"
-              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 max-md:pt-0 max-md:pr-3 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:!mr-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
+              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 max-md:pt-0 max-md:pr-3 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:!mr-0 md:!pl-5 md:!pt-1 md:!pr-1 md:!pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
                 hasRightScrollbar ? 'mr-0' : '-mr-2.5 [--scrollbar-alpha:0%]'
               }`}
             >
@@ -1996,7 +1998,7 @@ export default function App() {
                     <div className="overflow-hidden">
                       <SpellSlotTracker
                         title="Simulacrum Spell Slots"
-                        icon={Snowflake}
+                        icon={SimulacrumIcon}
                         hideRestButtons={true}
                         character={simulacrumCharacter}
                         onUseSlot={handleUseSimulacrumSlot}

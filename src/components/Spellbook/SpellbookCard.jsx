@@ -31,6 +31,20 @@ export function obfuscateMagicalText(text, seed = 0) {
   return out;
 }
 
+export function PreparedBookmarkStrip({ isPrepared }) {
+  return (
+    <div
+      data-testid="prepared-bookmark-strip"
+      aria-hidden="true"
+      className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-lg transition-all duration-300 z-10 ${
+        isPrepared
+          ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
+          : 'bg-white/10'
+      }`}
+    />
+  );
+}
+
 function SpellbookCard({
   spell,
   isPrepared,
@@ -83,15 +97,7 @@ function SpellbookCard({
       } ${isExpanded ? 'shadow-[0_0_18px_rgba(255,255,255,0.12)] ring-1 ring-white/30' : ''}`}
     >
       {/* Left Bookmark Subdivision Strip: turns light Ivory/White glow when prepared */}
-      <div
-        data-testid="prepared-bookmark-strip"
-        aria-hidden="true"
-        className={`absolute left-0 top-0 bottom-0 w-1.5 rounded-l-lg transition-all duration-300 z-10 ${
-          effectivePrepared
-            ? 'bg-[#EFE9E0] shadow-[0_0_8px_rgba(239,233,224,0.65)]'
-            : 'bg-white/10'
-        }`}
-      />
+      <PreparedBookmarkStrip isPrepared={effectivePrepared} />
       <div
         role="button"
         tabIndex={0}
