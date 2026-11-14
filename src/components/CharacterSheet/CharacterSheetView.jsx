@@ -174,7 +174,7 @@ function CharacterSheetView({
         onScroll={isActive ? handleSheetScroll : undefined}
         className={
           isActive
-            ? 'flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll [scrollbar-gutter:stable] p-1 pr-1.5 pb-0 [overflow-anchor:none] max-md:-mt-1 max-md:-ml-1 max-md:pl-1 max-md:pr-0 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden'
+            ? 'flex-1 min-h-0 overflow-y-auto space-y-2.5 custom-scroll [scrollbar-gutter:stable] pt-1 pb-0 pl-4 sm:pl-5 pr-1.5 [overflow-anchor:none] max-md:-mt-1 max-md:pl-4 max-md:pr-0 max-md:pb-6 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden'
             : 'custom-scroll [scrollbar-gutter:stable] px-1 pr-1.5 overflow-hidden [overflow-anchor:none]'
         }
       >

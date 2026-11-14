@@ -150,11 +150,11 @@ export default React.memo(function SpellList({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex justify-between items-center py-1 text-xs text-slate-400 font-medium">
+      <div className="flex justify-between items-center py-1 text-xs text-slate-400 font-medium pl-4 sm:pl-5">
         <span>Showing {spells.length} spells</span>
       </div>
 
-      <div onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] px-1 pr-1.5 space-y-1">
+      <div onScroll={handleScroll} className="flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] pl-4 sm:pl-5 pr-1.5 pb-0 max-md:pb-6 space-y-1">
         {spells.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-48 text-center text-slate-500">
             <p className="text-sm">No spells match your search or filter.</p>

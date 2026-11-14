@@ -1,6 +1,11 @@
 # HANDOFF
 
-## Current state (v3.1.0 - master)
+## Current state (v3.1.1 - master)
+- **v3.1.1 (patch)**:
+  - Mobile browser vertical reactivity: fixed address bar viewport cutoff where Notes was clipped by replacing cascading `100vh` with `h-full h-[100dvh]` across root, `index.css` (`html, body, #root`), and adding `interactive-widget=resizes-content` to `index.html`.
+  - Left scroll hitbox extension: left pane scroll hitbox now extends to screen edge (`x = 0`) across both Spell Library and Character Sheet views.
+  - Uniform left margin alignment: Mythallar logo branding, search bar & filter card, "Showing spells" text, and spell cards below all align with uniform padding/margin (`pl-4 sm:pl-5`, 16px mobile, 20px desktop).
+  - Verification: 52 test files passing (460/460 tests); production build clean.
 - **v3.1.0 (minor)**:
   - Spellbook compact view toggle (`SpellbookCompactCard`) beside the Spellbook title.
   - Uniform tool-icon colors and button containers (header buttons get `max-md:bg-dnd-hover` on mobile); Tabler `sparkles-2` (Spell Slots) and `sparkle-highlight` (Spellcasting) icons; Simulacrum snowflake 15px.

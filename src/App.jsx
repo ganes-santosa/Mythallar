@@ -1570,7 +1570,7 @@ export default function App() {
 
   return (
     <CloudSyncContext.Provider value={cloudSyncValue}>
-    <div className="relative flex flex-col h-screen h-[100dvh] w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
+    <div className="relative flex flex-col h-full h-[100dvh] w-full max-w-full overflow-x-hidden bg-dnd-bg text-slate-200">
       {/* Per-Theme Background Texture Overlay (z-0, behind opaque panels) */}
       {activeTexture === 'celestial' && (
         <div
@@ -1632,7 +1632,7 @@ export default function App() {
         {/* Left Pane: Spell Catalog with Integrated Branding Header */}
         <section
           data-testid="left-pane-section"
-          className={`w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 overflow-hidden bg-dnd-panel/10 relative ${
+          className={`w-full md:w-1/2 flex flex-col min-h-0 p-3 sm:p-4 pl-0 sm:pl-0 overflow-hidden bg-dnd-panel/10 relative ${
             mobileView === 'spellbook' ? 'flex-shrink-0 pb-0 md:pb-4 md:flex-none' : 'flex-1 md:flex-none'
           }`}
         >
@@ -1647,7 +1647,7 @@ export default function App() {
           )}
 
           {/* Integrated Header */}
-          <div className="catalog-header-container pb-2 mb-2 flex-shrink-0">
+          <div className="catalog-header-container pl-4 sm:pl-5 pb-2 mb-2 flex-shrink-0">
             <div className="catalog-header-grid">
               {/* 1. Branding */}
               <div className="catalog-header-branding flex items-center space-x-2 shrink-0">
@@ -1883,7 +1883,7 @@ export default function App() {
             }
           >
             <div
-              className={`max-md:grid max-md:transition-[grid-template-rows,opacity] max-md:duration-300 max-md:ease-out ${
+              className={`pl-4 sm:pl-5 max-md:grid max-md:transition-[grid-template-rows,opacity] max-md:duration-300 max-md:ease-out ${
                 isFilterHidden ? 'max-md:grid-rows-[0fr] max-md:opacity-0' : 'max-md:grid-rows-[1fr] max-md:opacity-100'
               }`}
             >
@@ -1944,7 +1944,7 @@ export default function App() {
             <div
               ref={rightPaneScrollRef}
               data-testid="right-pane-scroll"
-              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 max-md:pt-0 max-md:pr-3 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:!mr-0 md:!pl-5 md:!pt-1 md:!pr-1 md:!pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
+              className={`flex-1 min-h-0 overflow-y-auto custom-scroll [scrollbar-gutter:stable] p-3 sm:p-4 pr-1 sm:pr-1 pb-0 max-md:pt-0 max-md:pr-3 max-md:pb-6 max-md:[scrollbar-gutter:auto] max-md:[scrollbar-width:none] max-md:[&::-webkit-scrollbar]:hidden max-md:!mr-0 md:!pl-5 md:!pt-1 md:!pr-1 md:!pb-0 flex flex-col transition-[margin-right] duration-300 ease-in-out ${
                 hasRightScrollbar ? 'mr-0' : '-mr-2.5 [--scrollbar-alpha:0%]'
               }`}
             >
