@@ -49,6 +49,7 @@ function SpellbookCard({
   spell,
   isPrepared,
   isCopying = false,
+  isUnderlevel = false,
   note = '',
   onTogglePrepare,
   onFinishCopying,
@@ -65,7 +66,8 @@ function SpellbookCard({
   const isExpanded = controlledExpanded ?? localExpanded;
   const { shouldRender, isClosing } = useAccordionMount(isExpanded, 200);
   const cardRef = useAutoScrollOnExpand(shouldRender);
-  const effectivePrepared = isPrepared && !isCopying;
+  const effectivePrepared = isPrepared && !isCopying && !isUnderlevel;
+  const isGreyedOut = isCopying || isUnderlevel;
   const { armed: removeArmed, handleClick: handleRemoveClick } = useTwoClickConfirm(() => onRemove?.(spell.id));
   const { armed: finishArmed, handleClick: handleFinishClick } = useTwoClickConfirm(() => onFinishCopying?.(spell.id));
 
@@ -115,7 +117,7 @@ function SpellbookCard({
             <div className="flex items-center space-x-1.5 flex-wrap">
               <span
                 className={`font-semibold text-sm transition-colors truncate ${
-                  isCopying
+                  isGreyedOut
                     ? 'text-slate-500 group-hover:text-slate-400'
                     : 'text-slate-100 group-hover:text-white'
                 }`}
@@ -201,17 +203,17 @@ function SpellbookCard({
               )}
             </div>
 
-            <div className={`flex items-center space-x-2 text-[11px] leading-4 mt-0.5 ${isCopying ? 'text-slate-500' : 'text-slate-400'}`}>
+            <div className={`flex items-center space-x-2 text-[11px] leading-4 mt-0.5 ${isGreyedOut ? 'text-slate-500' : 'text-slate-400'}`}>
               <span>{isCopying ? '???' : spell.time}</span>
               <span>•</span>
               <span>{isCopying ? '???' : spell.range}</span>
               {!isCopying && spell.concentration && (
-                <span className="text-amber-400 font-medium" title="Concentration">
+                <span className={isUnderlevel ? 'text-slate-500' : 'text-amber-400 font-medium'} title="Concentration">
                   [C]
                 </span>
               )}
               {!isCopying && spell.ritual && (
-                <span className="text-blue-400 font-medium" title="Ritual">
+                <span className={isUnderlevel ? 'text-slate-500' : 'text-blue-400 font-medium'} title="Ritual">
                   [R]
                 </span>
               )}
@@ -220,43 +222,44 @@ function SpellbookCard({
         </div>
 
         <div className="flex items-center space-x-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-          {/* Prepare or Finish Copying Button (Level 1+ spells) */}
-          {spell.level > 0 && (
-            isCopying ? (
-              <button
-                type="button"
-                aria-label={finishArmed ? `Click again to finish copying ${spell.name}` : `Finish copying ${spell.name}`}
-                onClick={handleFinishClick}
-                className={`flex items-center px-2 py-1 rounded text-xs font-semibold transition-colors ${
-                  finishArmed
-                    ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
-                    : 'bg-dnd-panel hover:bg-white/10 text-slate-300 hover:text-white'
-                }`}
-                title={finishArmed ? `Click again to confirm ${spell.name} is copied` : 'Finish copying spell into spellbook'}
-              >
-                <Feather size={12} className="mr-1" />
-                Finish Copying
-              </button>
-            ) : (
-              <button
-                type="button"
-                aria-label={`Toggle Prepared for ${spell.name}`}
-                onClick={() => onTogglePrepare(spell.id)}
-                className={`flex items-center px-2 py-1 rounded text-xs font-semibold transition-colors ${
-                  isPrepared
-                    ? 'bg-white/10 text-white shadow-[0_0_8px_rgba(255,255,255,0.12)] ring-1 ring-white/20'
-                    : 'bg-dnd-panel/60 text-slate-400 hover:text-slate-100'
-                }`}
-                title={isPrepared ? 'Click to unprepare spell' : 'Click to prepare spell'}
-              >
-                <BookCheck size={12} className="mr-1" />
-                {isPrepared ? 'Prepared' : 'Prepare'}
-              </button>
-            )
+          {/* Finish Copying Button */}
+          {spell.level > 0 && isCopying && (
+            <button
+              type="button"
+              aria-label={finishArmed ? `Click again to finish copying ${spell.name}` : `Finish copying ${spell.name}`}
+              onClick={handleFinishClick}
+              className={`flex items-center px-2 py-1 rounded text-xs font-semibold transition-colors ${
+                finishArmed
+                  ? 'text-green-400 bg-green-950/70 ring-1 ring-green-400/70'
+                  : 'bg-dnd-panel hover:bg-white/10 text-slate-300 hover:text-white'
+              }`}
+              title={finishArmed ? `Click again to confirm ${spell.name} is copied` : 'Finish copying spell into spellbook'}
+            >
+              <Feather size={12} className="mr-1" />
+              Finish Copying
+            </button>
           )}
 
-          {/* Quick Cast Button */}
-          {!isCopying && (
+          {/* Prepare Button: only when ready and not underlevel */}
+          {spell.level > 0 && !isCopying && !isUnderlevel && (
+            <button
+              type="button"
+              aria-label={`Toggle Prepared for ${spell.name}`}
+              onClick={() => onTogglePrepare(spell.id)}
+              className={`flex items-center px-2 py-1 rounded text-xs font-semibold transition-colors ${
+                isPrepared
+                  ? 'bg-white/10 text-white shadow-[0_0_8px_rgba(255,255,255,0.12)] ring-1 ring-white/20'
+                  : 'bg-dnd-panel/60 text-slate-400 hover:text-slate-100'
+              }`}
+              title={isPrepared ? 'Click to unprepare spell' : 'Click to prepare spell'}
+            >
+              <BookCheck size={12} className="mr-1" />
+              {isPrepared ? 'Prepared' : 'Prepare'}
+            </button>
+          )}
+
+          {/* Quick Cast Button: only when ready and character has slot level */}
+          {!isCopying && !isUnderlevel && (
             <button
               type="button"
               aria-label={`Quick-Cast ${spell.name}`}

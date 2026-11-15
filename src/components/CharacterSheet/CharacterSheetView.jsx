@@ -15,7 +15,6 @@ import {
   Blend,
   ChevronDown,
   Waypoints,
-  ArrowLeftRight,
   Snowflake,
 } from 'lucide-react';
 import useAccordionMount from '../../hooks/useAccordionMount';
@@ -339,7 +338,7 @@ function CharacterSheetView({
               {isEditingResources ? (
                 <button
                   type="button"
-                  aria-label="Done editing resources"
+                  aria-label="Done editing features and resources"
                   onClick={() => {
                     setIsEditingResources(false);
                     setIsAddingResource(false);
@@ -352,12 +351,12 @@ function CharacterSheetView({
               ) : (
                 <button
                   type="button"
-                  aria-label="Edit resources"
+                  aria-label="Edit features and resources"
                   onClick={() => setIsEditingResources(true)}
                   className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
-                  title="Rearrange features and tracked resources"
+                  title="Edit features and resources"
                 >
-                  <ArrowLeftRight size={13} />
+                  <Settings2 size={13} />
                 </button>
               )}
             </div>

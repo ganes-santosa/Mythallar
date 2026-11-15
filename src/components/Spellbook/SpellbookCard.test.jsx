@@ -20,4 +20,22 @@ describe('PreparedBookmarkStrip', () => {
     render(<SpellbookCard spell={spell} isPrepared onTogglePrepare={vi.fn()} onCast={vi.fn()} onRemove={vi.fn()} />);
     expect(screen.getByTestId('prepared-bookmark-strip')).toHaveClass('bg-[#EFE9E0]');
   });
+
+  it('greys out spell and removes Cast and Prepare buttons when isUnderlevel is true', () => {
+    render(
+      <SpellbookCard
+        spell={spell}
+        isPrepared={false}
+        isUnderlevel={true}
+        onTogglePrepare={vi.fn()}
+        onCast={vi.fn()}
+        onRemove={vi.fn()}
+      />
+    );
+
+    const title = screen.getByText('Fireball');
+    expect(title).toHaveClass('text-slate-500');
+    expect(screen.queryByLabelText(/Quick-Cast Fireball/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Toggle Prepared for Fireball/i)).not.toBeInTheDocument();
+  });
 });

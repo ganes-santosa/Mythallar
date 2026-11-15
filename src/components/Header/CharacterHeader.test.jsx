@@ -392,4 +392,21 @@ describe('CharacterHeader', () => {
       })
     );
   });
+
+  it('keeps 21px height on Level Up button container in both full and icon-only states', () => {
+    render(
+      <CharacterHeader
+        activeCharacter={mockProfiles[0]}
+        profiles={mockProfiles}
+        onUpdateCharacter={vi.fn()}
+        onSelectProfile={vi.fn()}
+        onCreateProfile={vi.fn()}
+        onExport={vi.fn()}
+        onImport={vi.fn()}
+      />
+    );
+
+    const levelUpBtn = screen.getByRole('button', { name: /Level Up/i });
+    expect(levelUpBtn).toHaveClass('h-[21px]');
+  });
 });

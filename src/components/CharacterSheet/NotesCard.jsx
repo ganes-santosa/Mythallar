@@ -42,11 +42,7 @@ export function normalizeNotes(rawNotes) {
       return !isClutter;
     });
 
-    const targetList = cleaned.length > 0 ? cleaned : rawNotes;
-    if (targetList.length === 0) {
-      return [{ id: 'note_default', title: 'General', content: '', updatedAt: now, pinned: false }];
-    }
-    return targetList.map((n, i) => ({
+    return cleaned.map((n, i) => ({
       id: n?.id || `note_${i}_${Date.now()}`,
       title: typeof n?.title === 'string' ? n.title : '',
       content: typeof n?.content === 'string' ? n.content : '',
@@ -58,7 +54,7 @@ export function normalizeNotes(rawNotes) {
   if (typeof rawNotes === 'string' && rawNotes.trim().length > 0) {
     return [{ id: 'note_default', title: 'General', content: rawNotes, updatedAt: now, pinned: false }];
   }
-  return [{ id: 'note_default', title: 'General', content: '', updatedAt: now, pinned: false }];
+  return [];
 }
 
 function NoteDeleteButton({ title, onDelete }) {
@@ -90,7 +86,7 @@ export default function NotesCard({
   onUpdateNotes,
 }) {
   const normalizedNotes = normalizeNotes(notes);
-  const [activeNoteId, setActiveNoteId] = useState(() => normalizedNotes[0]?.id || 'note_default');
+  const [activeNoteId, setActiveNoteId] = useState(() => normalizedNotes[0]?.id || null);
   const [pendingNote, setPendingNote] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'editor'
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,7 +105,7 @@ export default function NotesCard({
 
   const activeNote = (pendingNote && pendingNote.id === activeNoteId)
     ? pendingNote
-    : normalizedNotes.find((n) => n.id === activeNoteId) || normalizedNotes[0];
+    : normalizedNotes.find((n) => n.id === activeNoteId) || normalizedNotes[0] || null;
 
   const editorRef = useRef(null);
   const cardRef = useRef(null);
@@ -266,15 +262,15 @@ export default function NotesCard({
     if (pendingNote) {
       // Discard un-entered pending note
       setPendingNote(null);
-      setActiveNoteId(normalizedNotes[0]?.id || 'note_default');
+      setActiveNoteId(normalizedNotes[0]?.id || null);
     } else if (activeNote) {
       // If user cleared out an existing note completely (no title AND no content), prune it on exit
       const hasContent = !isNoteContentEmpty(activeNote.content);
       const hasTitle = activeNote.title.trim().length > 0;
-      if (!hasContent && !hasTitle && normalizedNotes.length > 1) {
+      if (!hasContent && !hasTitle) {
         const remaining = normalizedNotes.filter((n) => n.id !== activeNote.id);
         onUpdateNotes?.(remaining);
-        setActiveNoteId(remaining[0]?.id || 'note_default');
+        setActiveNoteId(remaining[0]?.id || null);
       }
     }
     setViewMode('list');
@@ -376,17 +372,17 @@ export default function NotesCard({
   };
 
   const handleDeleteActive = () => {
+    if (!activeNote) return;
     if (pendingNote && pendingNote.id === activeNote.id) {
       setPendingNote(null);
-      setActiveNoteId(normalizedNotes[0]?.id || 'note_default');
+      setActiveNoteId(normalizedNotes[0]?.id || null);
+      setViewMode('list');
       return;
     }
     const remaining = normalizedNotes.filter((n) => n.id !== activeNote.id);
-    const nextNotes = remaining.length > 0
-      ? remaining
-      : [{ id: `note_${Date.now()}`, title: 'General', content: '', updatedAt: new Date().toISOString(), pinned: false }];
-    setActiveNoteId(nextNotes[0].id);
-    onUpdateNotes?.(nextNotes);
+    setActiveNoteId(remaining[0]?.id || null);
+    setViewMode('list');
+    onUpdateNotes?.(remaining);
   };
 
   const handleSelectSortBy = (nextMode) => {
@@ -527,7 +523,11 @@ export default function NotesCard({
 
           {/* Notes Grid / Stack */}
           <div ref={listScrollRef} className="space-y-1.5 max-h-[420px] overflow-y-auto custom-scroll -m-0.5 p-0.5">
-            {filteredAndSortedNotes.length === 0 ? (
+            {normalizedNotes.length === 0 ? (
+              <div className="py-8 text-center text-xs text-slate-500 bg-dnd-panel/60 rounded-lg shadow-sm">
+                No Notes
+              </div>
+            ) : filteredAndSortedNotes.length === 0 ? (
               <div className="py-8 text-center text-xs text-slate-500 bg-dnd-panel/60 rounded-lg shadow-sm">
                 No notes match &ldquo;{searchQuery}&rdquo;
               </div>
@@ -592,7 +592,7 @@ export default function NotesCard({
           viewMode === 'editor' ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
         }`}
       >
-        <div className="overflow-hidden space-y-2.5">
+        <div className="overflow-hidden space-y-2.5 p-1 -m-1">
           {/* 1. Header Toolbar */}
           <div className="flex items-center justify-between gap-2 text-xs pb-0.5">
             <button
@@ -606,7 +606,7 @@ export default function NotesCard({
               <span>All Notes ({normalizedNotes.length})</span>
             </button>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 p-0.5 -m-0.5">
               <button
                 type="button"
                 onClick={(e) => handleTogglePin(activeNote?.id, e)}

@@ -5,6 +5,7 @@ import { getAbilityModifier, formatModifier, rollHitDie, getEffectiveAbilities }
 import { normalizeHitDice } from '../../utils/storage';
 import { getMaxArcaneRecoveryLevels, getWizardLevel } from '../../utils/spellSlots';
 import { SlotPipStar } from './ArcaneRecoveryModal';
+import ToastBanner from '../Common/ToastBanner';
 
 export default function ShortRestModal({
   isOpen,
@@ -84,7 +85,7 @@ export default function ShortRestModal({
   const hasAnyExpendedSlots = eligibleRecoveryLevels.some((lvl) => (currentSlotsUsed[lvl] || 0) > 0);
 
   const triggerToast = (msg) => {
-    setToast({ message: msg });
+    setToast({ message: msg, type: 'success' });
     onShowToast?.(msg, 'success');
     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     toastTimeoutRef.current = setTimeout(() => {
@@ -206,10 +207,11 @@ export default function ShortRestModal({
       <div className="relative bg-dnd-card rounded-2xl p-4 sm:p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] flex flex-col">
         {/* Floating Toast Popup for Hit Die Rolls */}
         {toast && (
-          <div className="absolute top-3 right-11 z-50 flex items-center space-x-2 px-3.5 py-2 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-panel border border-white/10 pointer-events-none">
-            <CheckCircle2 size={16} className="text-emerald-400" />
-            <span className="text-slate-100">{toast.message}</span>
-          </div>
+          <ToastBanner
+            toast={toast}
+            onDismiss={() => setToast(null)}
+            className="absolute top-3 right-11 z-50 animate-in fade-in slide-in-from-top-2 !bg-dnd-panel"
+          />
         )}
 
         {/* Modal Header */}

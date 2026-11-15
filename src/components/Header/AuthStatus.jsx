@@ -55,7 +55,7 @@ export default function AuthStatus({
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label={user.email}
-        className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-card/70 hover:bg-dnd-card transition-all text-xs font-normal text-slate-200 border border-white/5 cursor-pointer"
+        className="flex items-center px-1.5 py-0.5 rounded-md bg-dnd-card/70 hover:bg-dnd-card transition-all text-xs font-normal text-slate-200 border border-white/5 cursor-pointer min-w-0"
       >
         {syncStatus === 'syncing' ? (
           <RefreshCw size={12} className="text-dnd-gold animate-spin flex-shrink-0" />

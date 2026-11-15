@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Minus, RotateCcw } from 'lucide-react';
+import NumericDraftInput from '../Common/NumericDraftInput';
 
 function getLevelLabel(level) {
   const ordinals = ['th', 'st', 'nd', 'rd'];
@@ -77,18 +78,11 @@ function SlotLevelRow({
               >
                 <Plus size={9} strokeWidth={2.5} />
               </button>
-              <input
-                type="number"
-                min="0"
-                max="20"
+              <NumericDraftInput
+                min={0}
+                max={20}
                 value={safeMax}
-                onChange={(e) => {
-                  const val = parseInt(e.target.value, 10);
-                  onUpdateMaxSlot?.(level, isNaN(val) ? 0 : Math.max(0, val));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.target.blur();
-                }}
+                onCommit={(value) => onUpdateMaxSlot?.(level, value)}
                 aria-label={`Max ${getLevelLabel(level)} slots`}
                 className="w-6 h-4 bg-dnd-panel/70 rounded px-0.5 text-center text-xs text-dnd-gold font-bold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none select-none"
               />

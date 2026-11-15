@@ -558,4 +558,36 @@ describe('ResourcesCard', () => {
     const menu = screen.getByRole('button', { name: 'Select none' }).parentElement;
     expect(menu.className).toContain('right-0');
   });
+
+  it('displays "Drag items to reorder" hint only when isEditing is true with resources', () => {
+    const { rerender } = render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={false}
+      />
+    );
+
+    expect(screen.queryByText(/Drag items to reorder/i)).not.toBeInTheDocument();
+
+    rerender(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        isEditing={true}
+      />
+    );
+
+    expect(screen.getByText(/Drag items to reorder/i)).toBeInTheDocument();
+
+    rerender(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        isEditing={true}
+      />
+    );
+
+    expect(screen.queryByText(/Drag items to reorder/i)).not.toBeInTheDocument();
+  });
 });

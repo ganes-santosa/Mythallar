@@ -26,11 +26,43 @@ describe('VitalsCard', () => {
     expect(screen.getByText('Exhausted 1')).toBeInTheDocument();
   });
 
+  it('allows clearing combat numeric drafts and commits their defaults on blur', () => {
+    const handleUpdate = vi.fn();
+    render(<VitalsCard vitals={mockVitals} isEditing={true} onUpdateVitals={handleUpdate} />);
+
+    for (const [label, field, fallback] of [
+      ['Base Max HP', 'hpMax', 0],
+      ['Max HP Buff', 'hpMaxBuff', 0],
+      ['Armor Class', 'ac', 0],
+      ['AC Misc Bonus', 'acBonus', 0],
+      ['Spell Attack Override', 'spellAttackOverride', null],
+      ['Spell DC Override', 'spellDcOverride', null],
+      ['Initiative Override', 'initiativeOverride', null],
+    ]) {
+      const input = screen.getByLabelText(label);
+      fireEvent.change(input, { target: { value: '' } });
+      expect(input.value).toBe('');
+      fireEvent.blur(input);
+      expect(handleUpdate).toHaveBeenLastCalledWith(expect.objectContaining({ [field]: fallback }));
+    }
+  });
+
+  it('normalizes leading zeroes in combat numeric drafts', () => {
+    const handleUpdate = vi.fn();
+    render(<VitalsCard vitals={mockVitals} isEditing={true} onUpdateVitals={handleUpdate} />);
+    const input = screen.getByLabelText('Base Max HP');
+    fireEvent.change(input, { target: { value: '0075' } });
+    expect(input.value).toBe('75');
+    fireEvent.blur(input);
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ hpMax: 75 }));
+  });
+
   it('triggers update callback when HP changes', () => {
     const handleUpdate = vi.fn();
     render(<VitalsCard vitals={mockVitals} isEditing={true} onUpdateVitals={handleUpdate} />);
     const hpInput = screen.getByLabelText('Current HP');
     fireEvent.change(hpInput, { target: { value: '40' } });
+    fireEvent.blur(hpInput);
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ hpCurrent: 40 }));
   });
 
@@ -559,6 +591,7 @@ describe('VitalsCard', () => {
     // Override inputs
     const attackInput = screen.getByLabelText('Spell Attack Override');
     fireEvent.change(attackInput, { target: { value: '9' } });
+    fireEvent.blur(attackInput);
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
         spellAttackOverride: 9,
@@ -567,6 +600,7 @@ describe('VitalsCard', () => {
 
     const dcInput = screen.getByLabelText('Spell DC Override');
     fireEvent.change(dcInput, { target: { value: '17' } });
+    fireEvent.blur(dcInput);
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
         spellDcOverride: 17,
@@ -598,6 +632,7 @@ describe('VitalsCard', () => {
     const bonusInput = screen.getByLabelText('AC Misc Bonus');
     expect(bonusInput).toHaveValue(2);
     fireEvent.change(bonusInput, { target: { value: '3' } });
+    fireEvent.blur(bonusInput);
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
         acBonus: 3,
@@ -636,6 +671,7 @@ describe('VitalsCard', () => {
     const attackBonusInput = screen.getByLabelText('Spell Attack Misc Bonus');
     expect(attackBonusInput).toHaveValue(1);
     fireEvent.change(attackBonusInput, { target: { value: '2' } });
+    fireEvent.blur(attackBonusInput);
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
         spellAttackBonus: 2,
@@ -645,6 +681,7 @@ describe('VitalsCard', () => {
     const dcBonusInput = screen.getByLabelText('Spell DC Misc Bonus');
     expect(dcBonusInput).toHaveValue(2);
     fireEvent.change(dcBonusInput, { target: { value: '3' } });
+    fireEvent.blur(dcBonusInput);
     expect(onUpdateVitals).toHaveBeenCalledWith(
       expect.objectContaining({
         spellDcBonus: 3,
@@ -1083,6 +1120,36 @@ describe('VitalsCard', () => {
       expect(screen.queryByText('Poisoned')).not.toBeInTheDocument();
       expect(screen.queryByText('Resistance & Immunities:')).not.toBeInTheDocument();
       expect(screen.queryByText('Fire Resistance')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Responsive Layout', () => {
+    it('uses 1300px breakpoint and 27fr 12fr 17fr columns for 3-column tablet/desktop layout', () => {
+      const { container } = render(<VitalsCard vitals={mockVitals} onUpdateVitals={() => {}} />);
+      const combatGrid = container.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2');
+      expect(combatGrid).not.toBeNull();
+      expect(combatGrid.className).toContain('min-[1300px]:grid-cols-[27fr_12fr_17fr]');
+      expect(combatGrid.className).not.toContain('min-[1390px]');
+      expect(combatGrid.getAttribute('data-hp-crowded')).toBeNull();
+    });
+
+    it('falls back to 2-column layout when 4-digit HP values cause collision and restores on normal HP', () => {
+      const highDigitVitals = {
+        ...mockVitals,
+        hpCurrent: 2333,
+        hpMax: 3230,
+      };
+      const { container, rerender } = render(<VitalsCard vitals={highDigitVitals} onUpdateVitals={() => {}} />);
+      let combatGrid = container.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2');
+      expect(combatGrid).not.toBeNull();
+      expect(combatGrid.getAttribute('data-hp-crowded')).toBe('true');
+      expect(combatGrid.className).not.toContain('min-[1300px]:grid-cols-[27fr_12fr_17fr]');
+
+      // Rerender with normal 2-digit vitals
+      rerender(<VitalsCard vitals={mockVitals} onUpdateVitals={() => {}} />);
+      combatGrid = container.querySelector('.grid.grid-cols-1.sm\\:grid-cols-2');
+      expect(combatGrid.getAttribute('data-hp-crowded')).toBeNull();
+      expect(combatGrid.className).toContain('min-[1300px]:grid-cols-[27fr_12fr_17fr]');
     });
   });
 });

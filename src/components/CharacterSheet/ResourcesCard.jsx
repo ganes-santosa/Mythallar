@@ -788,7 +788,13 @@ export default function ResourcesCard({
 
       {/* Steppers Grid */}
       {trackedResources && trackedResources.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-2 text-xs">
+        <div className="space-y-1">
+          {isEditing && (
+            <div className="text-[10px] text-slate-500 italic pb-0.5 select-none">
+              Drag items to reorder
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-2 text-xs">
           {trackedResources.map((res) => {
             const isDraggingThis = draggedResId === res.id;
             const isOverThis = dragOverResId === res.id;
@@ -888,6 +894,7 @@ export default function ResourcesCard({
               </div>
             );
           })}
+        </div>
         </div>
       )}
 

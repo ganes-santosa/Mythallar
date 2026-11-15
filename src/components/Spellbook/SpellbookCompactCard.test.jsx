@@ -35,6 +35,17 @@ describe('SpellbookCompactCard', () => {
     expect(onTogglePrepare).not.toHaveBeenCalled();
   });
 
+  it('greys out and ignores an underlevel spell', () => {
+    const onTogglePrepare = vi.fn();
+    render(<SpellbookCompactCard {...base} isUnderlevel onTogglePrepare={onTogglePrepare} />);
+    const card = screen.getByTestId('spellbook-compact-card-fireball');
+    expect(card).toHaveTextContent('Fireball');
+    expect(card.querySelector('span')).toHaveClass('text-slate-500');
+    expect(card).toBeDisabled();
+    fireEvent.click(card);
+    expect(onTogglePrepare).not.toHaveBeenCalled();
+  });
+
   it('ignores cantrips', () => {
     const onTogglePrepare = vi.fn();
     render(<SpellbookCompactCard spell={{ id: 'acid-splash', name: 'Acid Splash', level: 0 }} isPrepared={false} onTogglePrepare={onTogglePrepare} />);

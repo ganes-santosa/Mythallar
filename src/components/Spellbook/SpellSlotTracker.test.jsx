@@ -252,7 +252,11 @@ describe('SpellSlotTracker', () => {
     // Manual input in SlotLevelRow
     const maxInput = screen.getByRole('spinbutton', { name: /^Max 1st Level slots$/i });
     expect(maxInput).toBeInTheDocument();
-    fireEvent.change(maxInput, { target: { value: '6' } });
+    fireEvent.change(maxInput, { target: { value: '' } });
+    expect(maxInput.value).toBe('');
+    fireEvent.change(maxInput, { target: { value: '06' } });
+    expect(maxInput.value).toBe('6');
+    fireEvent.blur(maxInput);
     expect(handleUpdateMax).toHaveBeenCalledWith(1, 6);
 
     // Done button exits edit mode

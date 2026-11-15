@@ -45,7 +45,7 @@ describe('storage', () => {
     expect(char.sheet.vitals.hpMaxBuff).toBe(0);
     expect(char.sheet.proficiencies.languages).toEqual(['Common']);
     expect(char.sheet.identity.race).toBe('');
-    expect(char.sheet.notes).toBe('');
+    expect(char.sheet.notes).toEqual([]);
   });
 
   it('populates default sheet data when loading legacy profiles lacking sheet property', () => {

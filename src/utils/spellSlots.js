@@ -455,3 +455,28 @@ export function getEffectiveMaxSlots(className, level, customSlots = {}, charact
 
   return result;
 }
+
+/**
+ * Returns the maximum castable spell slot level (1-9) for a character based on
+ * shared spell slots, pact slots, and custom overrides. Returns 0 if character has no slots.
+ */
+export function getMaxCastableSlotLevel(character) {
+  if (!character) return 0;
+  const shared = getEffectiveMaxSlots(
+    character.className,
+    character.level,
+    character.customSlots,
+    character
+  );
+  const multi = calculateMulticlassSpellSlots(character);
+  const pact = multi.pactSlots || {};
+
+  let maxLevel = 0;
+  for (const [lvl, max] of Object.entries(shared)) {
+    if (Number(max) > 0) maxLevel = Math.max(maxLevel, Number(lvl));
+  }
+  for (const [lvl, max] of Object.entries(pact)) {
+    if (Number(max) > 0) maxLevel = Math.max(maxLevel, Number(lvl));
+  }
+  return maxLevel;
+}

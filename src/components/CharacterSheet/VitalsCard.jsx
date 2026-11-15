@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
+import NumericDraftInput from '../Common/NumericDraftInput';
+import ToastBanner from '../Common/ToastBanner';
 import { Shield, ShieldHalf, Heart, Zap, Lightbulb, X, Plus, Activity, Edit3, Dices, ChevronLeft, ChevronRight, CheckCircle2, Undo2, Redo2 } from 'lucide-react';
 
 export function CrystalBallIcon({ size = 16, className = '', ...props }) {
@@ -127,6 +129,45 @@ export default function VitalsCard({
   const [tempHpDraft, setTempHpDraft] = useState(String(hpTemp));
   const isCancelingCurrentHp = useRef(false);
   const isCancelingTempHp = useRef(false);
+
+  const combatGridRef = useRef(null);
+  const [isHpCrowded, setIsHpCrowded] = useState(
+    () => String(hpCurrent).length >= 4 || String(effectiveMax).length >= 4
+  );
+
+  useEffect(() => {
+    const checkCollision = () => {
+      const isHighDigit =
+        String(hpCurrent).length >= 4 ||
+        String(effectiveMax).length >= 4 ||
+        String(currentHpDraft).length >= 4;
+
+      if (!isHighDigit) {
+        setIsHpCrowded(false);
+        return;
+      }
+
+      // If 4+ digits, check if the 3-column allocation has enough breathing room (>= 285px).
+      // On tablets (grid width 514px - 582px), hp3ColWidth is 240px - 273px, so it triggers 2-col fallback.
+      // On large desktop viewports, it fits without crowding.
+      const gridEl = combatGridRef.current;
+      if (!gridEl || gridEl.clientWidth === 0) {
+        setIsHpCrowded(true);
+        return;
+      }
+
+      const hp3ColWidth = (gridEl.clientWidth - 16) * (27 / 56);
+      setIsHpCrowded(hp3ColWidth < 285);
+    };
+
+    checkCollision();
+
+    if (typeof ResizeObserver !== 'undefined' && combatGridRef.current) {
+      const ro = new ResizeObserver(checkCollision);
+      ro.observe(combatGridRef.current);
+      return () => ro.disconnect();
+    }
+  }, [hpCurrent, effectiveMax, hpTemp, currentHpDraft]);
 
   useEffect(() => {
     setCurrentHpDraft(String(hpCurrent));
@@ -499,16 +540,21 @@ export default function VitalsCard({
   return (
     <div className="space-y-2.5 relative">
       {!onShowToast && internalToast && (
-        <div className="absolute top-2 right-2 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-white/5 pointer-events-none">
-          <CheckCircle2 size={16} className="text-emerald-400" />
-          <span className="text-slate-100">{internalToast.message}</span>
-        </div>
+        <ToastBanner
+          toast={internalToast}
+          onDismiss={() => setInternalToast(null)}
+          className="absolute top-2 right-2 z-50 animate-in fade-in slide-in-from-top-2"
+        />
       )}
       {/* Row 1: Primary Health, AC, Conditions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 min-[1390px]:grid-cols-[10fr_7fr_9fr] gap-2 text-xs">
+      <div
+        ref={combatGridRef}
+        data-hp-crowded={isHpCrowded ? 'true' : undefined}
+        className={`grid grid-cols-1 sm:grid-cols-2 ${!isHpCrowded ? 'min-[1300px]:grid-cols-[27fr_12fr_17fr]' : ''} gap-2 text-xs`}
+      >
         {/* Hit Points Hero Card */}
         {isEditing ? (
-          <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 min-[1390px]:col-span-1">
+          <div className={`bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm sm:col-span-2 ${!isHpCrowded ? 'min-[1300px]:col-span-1' : ''}`}>
             <div className="flex justify-between items-center mb-1">
               <span className="text-[11px] font-bold text-red-400 flex items-center gap-1">
                 <Heart size={12} className="text-red-400 fill-red-400/20" /> Hit Points Settings
@@ -520,42 +566,41 @@ export default function VitalsCard({
             <div className="grid grid-cols-4 gap-1.5 my-1">
               <div>
                 <label className="text-[8px] text-slate-400 font-semibold block mb-0.5">Current</label>
-                <input
-                  type="number"
+                <NumericDraftInput
                   aria-label="Current HP"
                   value={hpCurrent}
-                  onChange={(e) => handleFieldChange('hpCurrent', Number(e.target.value))}
+                  min={0}
+                  onCommit={(value) => handleFieldChange('hpCurrent', value)}
                   className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
               <div>
                 <label className="text-[8px] text-slate-400 font-semibold block mb-0.5">Base Max</label>
-                <input
-                  type="number"
+                <NumericDraftInput
                   aria-label="Base Max HP"
                   value={baseMax}
-                  onChange={(e) => handleFieldChange('hpMax', Number(e.target.value))}
+                  min={0}
+                  onCommit={(value) => handleFieldChange('hpMax', value)}
                   className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center border border-white/10 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
               <div>
                 <label className="text-[8px] text-amber-400 font-semibold block mb-0.5">Max HP Buff</label>
-                <input
-                  type="number"
+                <NumericDraftInput
                   aria-label="Max HP Buff"
                   placeholder="+0"
-                  value={hpMaxBuff || ''}
-                  onChange={(e) => handleFieldChange('hpMaxBuff', e.target.value === '' ? 0 : Number(e.target.value))}
+                  value={hpMaxBuff}
+                  onCommit={(value) => handleFieldChange('hpMaxBuff', value)}
                   className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-amber-400 text-center border border-amber-500/30 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
               <div>
                 <label className="text-[8px] text-blue-400 font-semibold block mb-0.5">Temp HP</label>
-                <input
-                  type="number"
+                <NumericDraftInput
                   aria-label="Temp HP"
                   value={hpTemp}
-                  onChange={(e) => handleFieldChange('hpTemp', Number(e.target.value))}
+                  min={0}
+                  onCommit={(value) => handleFieldChange('hpTemp', value)}
                   className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-blue-300 text-center border border-blue-500/30 focus:border-dnd-gold/60 outline-none"
                 />
               </div>
@@ -566,7 +611,7 @@ export default function VitalsCard({
             </div>
           </div>
         ) : (
-          <div className="bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 min-[1390px]:col-span-1">
+          <div className={`bg-dnd-card hover:border-white/10 transition-colors p-2 rounded-lg flex items-stretch justify-between gap-2 shadow-sm min-w-0 sm:col-span-2 ${!isHpCrowded ? 'min-[1300px]:col-span-1' : ''}`}>
             {/* Left: HP Info */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div className="flex justify-between items-center mb-0.5">
@@ -753,7 +798,7 @@ export default function VitalsCard({
         )}
 
         {/* Card 2: Dedicated Armor Class Card (Full height matching Hit Points) */}
-        <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 min-[1390px]:col-span-1">
+        <div className={`bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm min-w-0 sm:col-span-1 ${!isHpCrowded ? 'min-[1300px]:col-span-1' : ''}`}>
           <div className="text-[10px] text-slate-400 flex items-center justify-between mb-0.5">
             <span className="flex items-center gap-1 font-bold text-slate-400">
               <ShieldHalf size={12} className="text-dnd-gold" /> AC
@@ -778,22 +823,20 @@ export default function VitalsCard({
               <div className="grid grid-cols-2 gap-1.5">
                 <div>
                   <label className="text-[8px] text-slate-400 font-semibold block mb-0.5 text-center">Base</label>
-                  <input
-                    type="number"
+                  <NumericDraftInput
                     aria-label="Armor Class"
                     value={currentVitals.ac ?? 10}
-                    onChange={(e) => handleFieldChange('ac', Number(e.target.value))}
+                    onCommit={(value) => handleFieldChange('ac', value)}
                     className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 <div>
                   <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5 text-center">Bonus</label>
-                  <input
-                    type="number"
+                  <NumericDraftInput
                     aria-label="AC Misc Bonus"
                     placeholder="+0"
-                    value={currentVitals.acBonus !== undefined && currentVitals.acBonus !== 0 ? currentVitals.acBonus : ''}
-                    onChange={(e) => handleFieldChange('acBonus', e.target.value === '' ? 0 : Number(e.target.value))}
+                    value={currentVitals.acBonus ?? 0}
+                    onCommit={(value) => handleFieldChange('acBonus', value)}
                     className="w-full px-1 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
@@ -878,7 +921,7 @@ export default function VitalsCard({
         </div>
 
         {/* Card 3: Stacked Spellcasting & Initiative Group */}
-        <div className="flex flex-col gap-1.5 min-w-0 sm:col-span-1 min-[1390px]:col-span-1">
+        <div className={`flex flex-col gap-1.5 min-w-0 sm:col-span-1 ${!isHpCrowded ? 'min-[1300px]:col-span-1' : ''}`}>
           {/* Spellcasting Card */}
           <div className="bg-dnd-card p-2 rounded-lg flex flex-col justify-between shadow-sm flex-1 min-w-0">
             {/* Header */}
@@ -918,33 +961,22 @@ export default function VitalsCard({
                     <div className="grid grid-cols-2 gap-1 mb-1">
                       <div>
                         <label className="text-[8px] text-slate-400 font-semibold block mb-0.5">Base</label>
-                        <input
-                          type="number"
+                        <NumericDraftInput
                           aria-label="Spell Attack Override"
                           placeholder={formatModifier(calculatedAttack)}
                           value={currentVitals.spellAttackOverride ?? ''}
-                          onChange={(e) =>
-                            onUpdateVitals?.({
-                              ...currentVitals,
-                              spellAttackOverride: e.target.value === '' ? null : Number(e.target.value),
-                            })
-                          }
+                          emptyValue={null}
+                          onCommit={(value) => handleFieldChange('spellAttackOverride', value)}
                           className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                       <div>
                         <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5">Bonus</label>
-                        <input
-                          type="number"
+                        <NumericDraftInput
                           aria-label="Spell Attack Misc Bonus"
                           placeholder="+0"
-                          value={currentVitals.spellAttackBonus !== undefined && currentVitals.spellAttackBonus !== 0 ? currentVitals.spellAttackBonus : ''}
-                          onChange={(e) =>
-                            onUpdateVitals?.({
-                              ...currentVitals,
-                              spellAttackBonus: e.target.value === '' ? 0 : Number(e.target.value),
-                            })
-                          }
+                          value={currentVitals.spellAttackBonus ?? 0}
+                          onCommit={(value) => handleFieldChange('spellAttackBonus', value)}
                           className="w-full px-0.5 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
@@ -975,33 +1007,22 @@ export default function VitalsCard({
                     <div className="grid grid-cols-2 gap-1 mb-1">
                       <div>
                         <label className="text-[8px] text-slate-400 font-semibold block mb-0.5">Base</label>
-                        <input
-                          type="number"
+                        <NumericDraftInput
                           aria-label="Spell DC Override"
                           placeholder={String(calculatedDc)}
                           value={currentVitals.spellDcOverride ?? ''}
-                          onChange={(e) =>
-                            onUpdateVitals?.({
-                              ...currentVitals,
-                              spellDcOverride: e.target.value === '' ? null : Number(e.target.value),
-                            })
-                          }
+                          emptyValue={null}
+                          onCommit={(value) => handleFieldChange('spellDcOverride', value)}
                           className="w-full px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
                       <div>
                         <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5">Bonus</label>
-                        <input
-                          type="number"
+                        <NumericDraftInput
                           aria-label="Spell DC Misc Bonus"
                           placeholder="+0"
-                          value={currentVitals.spellDcBonus !== undefined && currentVitals.spellDcBonus !== 0 ? currentVitals.spellDcBonus : ''}
-                          onChange={(e) =>
-                            onUpdateVitals?.({
-                              ...currentVitals,
-                              spellDcBonus: e.target.value === '' ? 0 : Number(e.target.value),
-                            })
-                          }
+                          value={currentVitals.spellDcBonus ?? 0}
+                          onCommit={(value) => handleFieldChange('spellDcBonus', value)}
                           className="w-full px-0.5 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
@@ -1035,17 +1056,12 @@ export default function VitalsCard({
                 <span className="text-xs font-bold text-slate-100 pr-1">
                   {formatModifier(initMod)}
                 </span>
-                <input
-                  type="number"
+                <NumericDraftInput
                   aria-label="Initiative Override"
                   placeholder="Over"
                   value={currentVitals.initiativeOverride ?? ''}
-                  onChange={(e) =>
-                    handleFieldChange(
-                      'initiativeOverride',
-                      e.target.value === '' ? null : Number(e.target.value)
-                    )
-                  }
+                  emptyValue={null}
+                  onCommit={(value) => handleFieldChange('initiativeOverride', value)}
                   className="w-11 px-1 py-0.5 rounded bg-dnd-panel/70 text-[10px] text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
                 />
               </div>
@@ -1061,12 +1077,12 @@ export default function VitalsCard({
 
         {/* Row 2: Compact Trackers Strip (Hit Dice, Inspiration, Death Saves) in ONE Single Card */}
         {!isSimulacrum && (
-          <div className="col-span-1 sm:col-span-2 min-[1390px]:col-span-3 grid grid-cols-1 sm:grid-cols-2 min-[1390px]:grid-cols-subgrid sm:gap-x-2 text-xs items-stretch relative">
+          <div className={`col-span-1 sm:col-span-2 ${!isHpCrowded ? 'min-[1300px]:col-span-3 min-[1300px]:grid-cols-subgrid' : ''} grid grid-cols-1 sm:grid-cols-2 sm:gap-x-2 text-xs items-stretch relative`}>
             {/* Unified Card Background */}
             <div className="absolute inset-0 bg-dnd-card/60 border border-white/5 rounded-lg pointer-events-none -z-0" />
 
             {/* Subdivision 1: Hit Dice */}
-            <div className="relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 min-[1390px]:col-span-1 border-b min-[1390px]:border-b-0 border-white/5 py-1.5 pl-2 pr-1.5">
+            <div className={`relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 ${!isHpCrowded ? 'min-[1300px]:col-span-1 min-[1300px]:border-b-0' : ''} border-b border-white/5 py-1.5 pl-2 pr-1.5`}>
               <span className="text-[10px] font-bold text-slate-400 flex-shrink-0">
                 Hit Dice
               </span>
@@ -1137,11 +1153,11 @@ export default function VitalsCard({
                 )}
               </div>
               {/* Divider 1: Centered in gap between Card 1 & Card 2 on xl */}
-              <div className="hidden min-[1390px]:block absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none" />
+              <div className={`${!isHpCrowded ? 'hidden min-[1300px]:block' : 'hidden'} absolute right-[-5px] top-1.5 bottom-1.5 w-[1px] bg-white/5 pointer-events-none`} />
             </div>
 
             {/* Subdivision 2: Inspiration */}
-            <div className="relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 min-[1390px]:col-span-1 border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center">
+            <div className={`relative z-10 flex flex-col 2xl:flex-row items-center justify-center gap-x-1.5 gap-y-0.5 min-w-0 sm:col-span-1 ${!isHpCrowded ? 'min-[1300px]:col-span-1' : ''} border-b sm:border-b-0 border-white/5 py-1.5 px-2 text-center`}>
               <span className="text-[10px] font-bold text-slate-400 flex items-center justify-center gap-1 min-w-0 flex-shrink-0">
                 <Lightbulb size={11} className="text-dnd-gold flex-shrink-0" />
                 <span className="truncate">Inspiration</span>
@@ -1172,7 +1188,7 @@ export default function VitalsCard({
             </div>
 
             {/* Subdivision 3: Death Saves */}
-            <div className="relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 min-[1390px]:col-span-1 py-1.5 pl-1 pr-2.5">
+            <div className={`relative z-10 flex flex-col items-center justify-center min-w-0 sm:col-span-1 ${!isHpCrowded ? 'min-[1300px]:col-span-1' : ''} py-1.5 pl-1 pr-2.5`}>
               <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1 flex-shrink-0 mb-0.5">
                 <Activity size={11} className="text-red-400 flex-shrink-0" />
                 <span>Death Saves</span>

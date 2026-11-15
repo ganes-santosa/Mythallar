@@ -56,6 +56,7 @@ import MythallarLogo from './components/Common/MythallarLogo';
 import SpellSlotTracker from './components/Spellbook/SpellSlotTracker';
 import SpellbookView from './components/Spellbook/SpellbookView';
 import CharacterSheetView from './components/CharacterSheet/CharacterSheetView';
+import ToastBanner from './components/Common/ToastBanner';
 import { APP_VERSION } from './version';
 
 const SimulacrumIcon = (props) => <Snowflake {...props} size={15} />;
@@ -1619,12 +1620,11 @@ export default function App() {
       )}
       {/* Toast Banner */}
       {toast && (
-        <div className="fixed top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card">
-          {toast.type === 'success' && <CheckCircle2 size={16} className="text-emerald-400" />}
-          {toast.type === 'error' && <AlertCircle size={16} className="text-red-400" />}
-          {toast.type === 'info' && <Sparkles size={16} className="text-dnd-gold" />}
-          <span className="text-slate-100">{toast.message}</span>
-        </div>
+        <ToastBanner
+          toast={toast}
+          onDismiss={() => setToast(null)}
+          className="fixed top-3 right-4 z-50 animate-in fade-in slide-in-from-top-2"
+        />
       )}
 
       {/* Main Dual-Pane Body */}
@@ -1638,19 +1638,18 @@ export default function App() {
         >
           {/* Left Pane Toast Banner */}
           {leftToast && (
-            <div className="absolute top-3 right-4 z-50 flex items-center space-x-2 px-4 py-2.5 rounded-lg shadow-2xl text-xs font-semibold animate-in fade-in slide-in-from-top-2 bg-dnd-card border border-white/5 pointer-events-none">
-              {leftToast.type === 'success' && <CheckCircle2 size={16} className="text-emerald-400" />}
-              {leftToast.type === 'error' && <AlertCircle size={16} className="text-red-400" />}
-              {leftToast.type === 'info' && <Sparkles size={16} className="text-dnd-gold" />}
-              <span className="text-slate-100">{leftToast.message}</span>
-            </div>
+            <ToastBanner
+              toast={leftToast}
+              onDismiss={() => setLeftToast(null)}
+              className="absolute top-3 right-4 z-50 animate-in fade-in slide-in-from-top-2"
+            />
           )}
 
           {/* Integrated Header */}
           <div className="catalog-header-container pl-4 sm:pl-5 pb-2 mb-2 flex-shrink-0">
             <div className="catalog-header-grid">
               {/* 1. Branding */}
-              <div className="catalog-header-branding flex items-center space-x-2 shrink-0">
+              <div className="catalog-header-branding flex items-center space-x-2 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-dnd-card/70 flex items-center justify-center p-1 shrink-0">
                   <div
                     role="img"

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BookOpen, Check, HelpCircle, Pencil, RotateCcw, X } from 'lucide-react';
-import { getEffectiveMaxPreparedInfo, getEffectiveMaxKnownInfo } from '../../utils/spellSlots';
+import { getEffectiveMaxPreparedInfo, getEffectiveMaxKnownInfo, getMaxCastableSlotLevel } from '../../utils/spellSlots';
 import useClickOutside from '../../hooks/useClickOutside';
 
 function SpellLimitBadge({ label, count, info, customKey, character, onUpdateCharacter }) {
@@ -107,12 +107,13 @@ function SpellLimitBadge({ label, count, info, customKey, character, onUpdateCha
 export default function PreparedSpellSummary({ character, catalog, onUpdateCharacter }) {
   const preparedInfo = getEffectiveMaxPreparedInfo(character);
   const knownInfo = getEffectiveMaxKnownInfo(character);
+  const maxSlotLevel = getMaxCastableSlotLevel(character);
 
   const isLeveledActive = (spell) => {
     if (spell.copying) return false;
     const item = catalog?.[spell.id];
     if (!item) return false;
-    return typeof item.level === 'number' && item.level > 0;
+    return typeof item.level === 'number' && item.level > 0 && item.level <= maxSlotLevel;
   };
 
   const preparedCount = (character?.spells || []).filter((s) => s.prepared && isLeveledActive(s)).length;

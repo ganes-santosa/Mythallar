@@ -285,6 +285,40 @@ describe('App End-to-End Integration', () => {
     });
   });
 
+  it('allows dismissing toast notification by swiping horizontally', async () => {
+    render(<App />);
+    await waitFor(() => {
+      expect(screen.getByText('Magic Missile')).toBeInTheDocument();
+    });
+
+    const restBtn = screen.getByRole('button', { name: /Long Rest/i });
+    fireEvent.click(restBtn);
+    const confirmBtn = screen.getByLabelText(/Confirm Long Rest/i);
+    fireEvent.click(confirmBtn);
+
+    const toast = await screen.findByText(/Long Rest completed/i);
+    expect(toast).toBeInTheDocument();
+
+    const banner = screen.getByRole('status');
+    await act(async () => {
+      const downEvt = new Event('pointerdown', { bubbles: true });
+      Object.assign(downEvt, { clientX: 100, pointerId: 1 });
+      banner.dispatchEvent(downEvt);
+
+      const moveEvt = new Event('pointermove', { bubbles: true });
+      Object.assign(moveEvt, { clientX: 180, pointerId: 1 });
+      banner.dispatchEvent(moveEvt);
+
+      const upEvt = new Event('pointerup', { bubbles: true });
+      Object.assign(upEvt, { clientX: 180, pointerId: 1 });
+      banner.dispatchEvent(upEvt);
+    });
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Long Rest completed/i)).not.toBeInTheDocument();
+    });
+  });
+
   it('makes newly added max slots empty, and eats empty slots from the right when reducing max slots', async () => {
     render(<App />);
 

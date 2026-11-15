@@ -1,5 +1,39 @@
 import React, { useState } from 'react';
 import { Eye, Search, RotateCcw } from 'lucide-react';
+import useNumericDraft from '../../hooks/useNumericDraft';
+
+function PassiveScoreInput({ label, value, onCommit }) {
+  const { draft, handleChange, handleBlur } = useNumericDraft(value, onCommit, { normalize: true });
+  return (
+    <input
+      type="number"
+      aria-label={label}
+      value={draft}
+      onChange={(e) => handleChange(e.target.value)}
+      onBlur={handleBlur}
+      className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+    />
+  );
+}
+
+function DarkvisionInput({ value, isEditing, onCommit }) {
+  const { draft, handleChange, handleBlur } = useNumericDraft(value, onCommit, { normalize: true });
+  return (
+    <input
+      type="number"
+      readOnly={!isEditing}
+      aria-label="Darkvision distance"
+      value={isEditing ? draft : value}
+      onChange={isEditing ? (e) => handleChange(e.target.value) : undefined}
+      onBlur={isEditing ? handleBlur : undefined}
+      className={`w-12 px-1 py-0.2 rounded text-xs font-bold text-center text-purple-300 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+        isEditing
+          ? 'bg-dnd-panel focus:outline-none focus:ring-1 focus:ring-white/25 focus:border-white/30 focus:shadow-[0_0_8px_rgba(255,255,255,0.08)]'
+          : 'bg-transparent cursor-default select-none focus:outline-none'
+      }`}
+    />
+  );
+}
 import {
   SKILLS_DEFINITION,
   calculateSkillBonus,
@@ -111,11 +145,18 @@ export default function SkillsCard({
     });
   };
 
-  const handleSensesChange = (field, value) => {
+  const handlePassiveCommit = (field, value, draft) => {
     if (!isEditing) return;
+    if (draft === '') {
+      handleResetPassive(field);
+      return;
+    }
     onUpdateSenses?.({
       ...currentSenses,
-      [field]: value,
+      overrides: {
+        ...(currentSenses.overrides || {}),
+        [field]: value,
+      },
     });
   };
 
@@ -151,12 +192,10 @@ export default function SkillsCard({
           <div className="text-[10px] text-slate-400">Passive Perception</div>
           {isEditing ? (
             <div className="flex items-center space-x-1">
-              <input
-                type="number"
-                aria-label="Passive Perception score"
+              <PassiveScoreInput
+                label="Passive Perception score"
                 value={passivePerception}
-                onChange={(e) => handlePassiveChange('perception', e.target.value)}
-                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                onCommit={(value, draft) => handlePassiveCommit('perception', value, draft)}
               />
               {isPerceptionOverridden && (
                 <button
@@ -181,12 +220,10 @@ export default function SkillsCard({
           <div className="text-[10px] text-slate-400">Passive Investigation</div>
           {isEditing ? (
             <div className="flex items-center space-x-1">
-              <input
-                type="number"
-                aria-label="Passive Investigation score"
+              <PassiveScoreInput
+                label="Passive Investigation score"
                 value={passiveInvestigation}
-                onChange={(e) => handlePassiveChange('investigation', e.target.value)}
-                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                onCommit={(value, draft) => handlePassiveCommit('investigation', value, draft)}
               />
               {isInvestigationOverridden && (
                 <button
@@ -211,12 +248,10 @@ export default function SkillsCard({
           <div className="text-[10px] text-slate-400">Passive Insight</div>
           {isEditing ? (
             <div className="flex items-center space-x-1">
-              <input
-                type="number"
-                aria-label="Passive Insight score"
+              <PassiveScoreInput
+                label="Passive Insight score"
                 value={passiveInsight}
-                onChange={(e) => handlePassiveChange('insight', e.target.value)}
-                className="w-10 px-1 py-0.2 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                onCommit={(value, draft) => handlePassiveCommit('insight', value, draft)}
               />
               {isInsightOverridden && (
                 <button
@@ -241,17 +276,12 @@ export default function SkillsCard({
           <div className="text-[10px] text-slate-400 flex items-center gap-1">
             <Eye size={11} className="text-purple-400" /> Darkvision (ft)
           </div>
-          <input
-            type="number"
-            readOnly={!isEditing}
-            aria-label="Darkvision distance"
+          <DarkvisionInput
             value={currentSenses.darkvision ?? 0}
-            onChange={isEditing ? (e) => handleSensesChange('darkvision', Number(e.target.value)) : undefined}
-            className={`w-12 px-1 py-0.2 rounded text-xs font-bold text-center text-purple-300 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-              isEditing
-                ? 'bg-dnd-panel focus:outline-none focus:ring-1 focus:ring-white/25 focus:border-white/30 focus:shadow-[0_0_8px_rgba(255,255,255,0.08)]'
-                : 'bg-transparent cursor-default select-none focus:outline-none'
-            }`}
+            isEditing={isEditing}
+            onCommit={(value) => {
+              if (isEditing) onUpdateSenses?.({ ...currentSenses, darkvision: value });
+            }}
           />
         </div>
       </div>

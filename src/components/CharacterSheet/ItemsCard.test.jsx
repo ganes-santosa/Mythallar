@@ -225,8 +225,9 @@ describe('ItemsCard', () => {
     fireEvent.change(input, { target: { value: '' } });
     expect(input).toHaveValue(null);
 
-    // Type new value
-    fireEvent.change(input, { target: { value: '5' } });
+    // Type new value without leading zeroes
+    fireEvent.change(input, { target: { value: '05' } });
+    expect(input.value).toBe('5');
     expect(handleUpdateMax).toHaveBeenCalledWith(5);
 
     // Blurring when empty falls back safely
@@ -564,6 +565,20 @@ describe('ItemsCard', () => {
           gp: 45,
         })
       );
+    });
+
+    it('removes leading zeroes while typing and allows an empty currency draft', () => {
+      render(<CurrencyTracker currency={{ cp: 0, gp: 10 }} onUpdateCurrency={() => {}} />);
+
+      const gpInput = screen.getByLabelText('Gold Pieces (GP)');
+      const cpInput = screen.getByLabelText('Copper Pieces (CP)');
+
+      fireEvent.change(gpInput, { target: { value: '0340' } });
+      expect(gpInput.value).toBe('340');
+      fireEvent.change(cpInput, { target: { value: '0023' } });
+      expect(cpInput.value).toBe('23');
+      fireEvent.change(gpInput, { target: { value: '' } });
+      expect(gpInput).toHaveValue(null);
     });
 
     it('matches currency search queries accurately with isCurrencySearchMatch', () => {

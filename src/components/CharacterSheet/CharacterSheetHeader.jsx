@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints, AlertCircle, Snowflake } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
+import NumericDraftInput from '../Common/NumericDraftInput';
 import LevelUpModal from '../Modal/LevelUpModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import { getPendingLevelUpTasks } from '../../utils/levelUpRules';
@@ -68,7 +69,7 @@ function CharacterSheetHeader({
   const nameRef = useRef(null);
   const levelRef = useRef(null);
   const actionsRef = useRef(null);
-  const [showLevelText, setShowLevelText] = useState(true);
+  const [levelMode, setLevelMode] = useState('full'); // 'full' | 'short' | 'none'
   const [showButtonText, setShowButtonText] = useState(true);
 
   const classes = getCharacterClasses(character);
@@ -246,13 +247,16 @@ function CharacterSheetHeader({
     e.target.value = '';
   };
 
+  // ponytail: prioritize character name: drop button text first, then shorten/hide level label, so character name avoids culling
   useEffect(() => {
     if (isCollapsed) return;
     const row = headerRowRef.current;
     if (!row) return;
 
-    let naturalLevelWidth = 95;
-    let naturalBtnLabelsWidth = 75;
+    let naturalLevelFullWidth = 100;
+    let naturalLevelShortWidth = 40;
+    let naturalBtnTextWidth = 65;
+    const actionsIconOnlyWidth = 75;
 
     const checkFit = () => {
       const rowWidth = row.clientWidth;
@@ -260,36 +264,49 @@ function CharacterSheetHeader({
 
       const nameWidth = nameRef.current?.scrollWidth || 0;
       const currentLevelWidth = levelRef.current?.offsetWidth || 0;
-      if (currentLevelWidth > 0) naturalLevelWidth = currentLevelWidth;
+      if (currentLevelWidth > 60) naturalLevelFullWidth = currentLevelWidth;
+      else if (currentLevelWidth > 0) naturalLevelShortWidth = currentLevelWidth;
 
       const actionsWidth = actionsRef.current?.offsetWidth || 0;
-      const actionsMinIconWidth = 82;
-      const actionsFullWidth = showButtonText ? actionsWidth : actionsWidth + naturalBtnLabelsWidth;
+      const actionsFullWidth = showButtonText ? actionsWidth : actionsIconOnlyWidth + naturalBtnTextWidth;
+      const actionsMinIconWidth = showButtonText ? Math.max(actionsIconOnlyWidth, actionsWidth - naturalBtnTextWidth) : actionsWidth;
 
-      const gapBudget = 16;
+      const gapBudget = 24;
 
-      const fullWidthNeeded = nameWidth + naturalLevelWidth + actionsFullWidth + gapBudget;
+      // Stage 1: Ample space -> show Character Name, full "Character Level X", and "Level Up" button text
+      const fullWidthNeeded = nameWidth + naturalLevelFullWidth + actionsFullWidth + gapBudget;
       if (rowWidth >= fullWidthNeeded) {
-        setShowLevelText(true);
+        setLevelMode('full');
         setShowButtonText(true);
         return;
       }
 
-      const withoutLevelNeeded = nameWidth + actionsFullWidth + 8;
-      if (rowWidth >= withoutLevelNeeded) {
-        setShowLevelText(false);
-        setShowButtonText(true);
-        return;
-      }
-
-      const minIconNeeded = nameWidth + actionsMinIconWidth + 8;
-      if (rowWidth >= minIconNeeded) {
-        setShowLevelText(false);
+      // Stage 2: Squeeze begins -> Drop button text first to preserve character name and full level
+      const withoutBtnTextNeeded = nameWidth + naturalLevelFullWidth + actionsMinIconWidth + gapBudget;
+      if (rowWidth >= withoutBtnTextNeeded) {
+        setLevelMode('full');
         setShowButtonText(false);
         return;
       }
 
-      setShowLevelText(false);
+      // Stage 3: Squeeze continues -> Shorten level badge from "Character Level X" to "Lvl X"
+      const withShortLevelNeeded = nameWidth + naturalLevelShortWidth + actionsMinIconWidth + 16;
+      if (rowWidth >= withShortLevelNeeded) {
+        setLevelMode('short');
+        setShowButtonText(false);
+        return;
+      }
+
+      // Stage 4: Squeeze continues -> Hide level badge completely (class pills below show class & level)
+      const minIconNeeded = nameWidth + actionsMinIconWidth + 12;
+      if (rowWidth >= minIconNeeded) {
+        setLevelMode('none');
+        setShowButtonText(false);
+        return;
+      }
+
+      // Stage 5: Extreme squeeze -> All optional text hidden, icons only; name truncates
+      setLevelMode('none');
       setShowButtonText(false);
     };
 
@@ -298,7 +315,7 @@ function CharacterSheetHeader({
     const observer = new ResizeObserver(checkFit);
     observer.observe(row);
     return () => observer.disconnect();
-  }, [character?.name, totalLevel, isCollapsed, isEditing, showButtonText]);
+  }, [character?.name, totalLevel, isCollapsed, isEditing, showButtonText, levelMode]);
 
   const handleClassChange = (index, newClassName) => {
     const newClasses = classes.map((c, i) => (i === index ? { ...c, className: newClassName } : c));
@@ -501,10 +518,10 @@ function CharacterSheetHeader({
                       <span
                         ref={levelRef}
                         className={`character-level-label text-xs text-slate-400 font-normal whitespace-nowrap select-none shrink-0 ${
-                          showLevelText ? '' : 'hidden'
+                          levelMode === 'none' ? 'hidden' : ''
                         }`}
                       >
-                        Character Level <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
+                        {levelMode === 'full' ? 'Character Level' : 'Lvl'} <span className="text-dnd-gold ml-0.5 font-normal">{totalLevel}</span>
                       </span>
                     )}
                   </div>
@@ -559,11 +576,16 @@ function CharacterSheetHeader({
                           <button
                             type="button"
                             onClick={handleOpenLevelUpModal}
-                            className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs font-normal transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer shadow-sm max-md:p-1 max-md:rounded-md max-md:justify-center max-md:bg-dnd-hover max-md:hover:bg-dnd-hover/70"
+                            aria-label="Level Up"
+                            className={`flex items-center transition-colors whitespace-nowrap flex-shrink-0 cursor-pointer shadow-sm max-md:p-1 max-md:rounded-md max-md:justify-center max-md:bg-dnd-hover max-md:hover:bg-dnd-hover/70 ${
+                              showButtonText
+                                ? 'h-[21px] px-2 py-0.5 rounded-md bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold text-xs font-normal'
+                                : 'h-[21px] w-[21px] p-1 rounded-md bg-dnd-panel/80 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold justify-center'
+                            }`}
                             title="Level up this character"
                           >
-                            <ArrowUpCircle size={12} className="flex-shrink-0 transition-colors max-md:!w-[13px] max-md:!h-[13px]" />
-                            {showButtonText && <span className="character-btn-label max-md:hidden">Level Up</span>}
+                            <ArrowUpCircle size={13} className="flex-shrink-0 transition-colors" />
+                            {showButtonText && <span className="character-btn-label ml-1 max-md:hidden">Level Up</span>}
                           </button>
                         )}
                       </>
@@ -699,11 +721,11 @@ function CharacterSheetHeader({
                       </span>
                       {isEditing ? (
                         <div className="flex items-center gap-1">
-                          <input
-                            type="number"
+                          <NumericDraftInput
                             aria-label="Walking Speed"
                             value={speeds.walk ?? 30}
-                            onChange={(e) => handleUpdateSpeed('walk', Number(e.target.value))}
+                            min={0}
+                            onCommit={(value) => handleUpdateSpeed('walk', value)}
                             className="w-12 px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
                           />
                           <span className="text-[10px] text-slate-400 font-bold">ft</span>
@@ -747,11 +769,11 @@ function CharacterSheetHeader({
                               <span className="text-slate-400">{label}:</span>
                               {isEditing ? (
                                 <div className="flex items-center gap-1 flex-shrink-0">
-                                  <input
-                                    type="number"
+                                  <NumericDraftInput
                                     aria-label={`${label} Speed`}
                                     value={val}
-                                    onChange={(e) => handleUpdateSpeed(key, Number(e.target.value))}
+                                    min={0}
+                                    onCommit={(value) => handleUpdateSpeed(key, value)}
                                     className="w-9 px-1 py-0.5 rounded bg-dnd-panel/70 text-[10px] font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
                                   />
                                   <span className="font-bold text-slate-100 text-[9px]">ft</span>

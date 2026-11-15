@@ -165,18 +165,18 @@ describe('CharacterSheetView', () => {
     expect(screen.getByLabelText('Edit vitals')).toBeInTheDocument();
 
     // Features & Resources edit toggle
-    const editResourcesBtn = screen.getByLabelText('Edit resources');
+    const editResourcesBtn = screen.getByLabelText('Edit features and resources');
     expect(editResourcesBtn).toBeInTheDocument();
-    expect(editResourcesBtn).toHaveAttribute('title', 'Rearrange features and tracked resources');
+    expect(editResourcesBtn).toHaveAttribute('title', 'Edit features and resources');
     expect(editResourcesBtn.querySelector('svg')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
     fireEvent.click(editResourcesBtn);
 
-    const doneResourcesBtn = screen.getByLabelText('Done editing resources');
+    const doneResourcesBtn = screen.getByLabelText('Done editing features and resources');
     expect(doneResourcesBtn).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
     fireEvent.click(doneResourcesBtn);
-    expect(screen.getByLabelText('Edit resources')).toBeInTheDocument();
+    expect(screen.getByLabelText('Edit features and resources')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
   });
 
@@ -268,10 +268,17 @@ describe('CharacterSheetView', () => {
 
   it('updates character notes on change', () => {
     const handleUpdate = vi.fn();
-    render(<CharacterSheetView character={mockCharacter} onUpdateCharacter={handleUpdate} />);
+    const charWithNote = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        notes: [{ id: 'n1', title: 'Adventure Log', content: 'Met the wizard', updatedAt: '2026-11-04T10:00:00.000Z', pinned: false }],
+      },
+    };
+    render(<CharacterSheetView character={charWithNote} onUpdateCharacter={handleUpdate} />);
 
     // Open note from initial list view
-    fireEvent.click(screen.getByText('General'));
+    fireEvent.click(screen.getByText('Adventure Log'));
 
     const notesTextarea = screen.getByLabelText('Note Content');
     notesTextarea.innerHTML = 'Discovered hidden tomb in the ruins.';

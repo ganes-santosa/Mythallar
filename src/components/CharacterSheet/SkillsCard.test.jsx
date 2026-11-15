@@ -95,6 +95,7 @@ describe('SkillsCard', () => {
     const dvInput = screen.getByLabelText('Darkvision distance');
     expect(dvInput).not.toHaveAttribute('readonly');
     fireEvent.change(dvInput, { target: { value: '120' } });
+    fireEvent.blur(dvInput);
     expect(handleUpdateSenses).toHaveBeenCalledWith(
       expect.objectContaining({ darkvision: 120 })
     );
@@ -117,6 +118,7 @@ describe('SkillsCard', () => {
     // Edit passive perception
     const perceptionInput = screen.getByLabelText('Passive Perception score');
     fireEvent.change(perceptionInput, { target: { value: '18' } });
+    fireEvent.blur(perceptionInput);
     expect(handleUpdateSenses).toHaveBeenCalledWith(
       expect.objectContaining({
         overrides: expect.objectContaining({ perception: 18 }),
@@ -234,5 +236,62 @@ describe('SkillsCard', () => {
     expect(handleUpdateSkillBonuses).toHaveBeenCalledWith({
       arcana: 2,
     });
+  });
+
+  it('allows clearing darkvision and passive score drafts before committing', () => {
+    const handleUpdateSenses = vi.fn();
+    render(
+      <SkillsCard
+        abilities={mockAbilities}
+        skills={mockSkills}
+        level={5}
+        senses={mockSenses}
+        isEditing={true}
+        onUpdateSenses={handleUpdateSenses}
+      />
+    );
+
+    const darkvision = screen.getByLabelText('Darkvision distance');
+    fireEvent.change(darkvision, { target: { value: '' } });
+    expect(darkvision.value).toBe('');
+    fireEvent.change(darkvision, { target: { value: '120' } });
+    expect(darkvision.value).toBe('120');
+    fireEvent.blur(darkvision);
+    expect(handleUpdateSenses).toHaveBeenLastCalledWith(expect.objectContaining({ darkvision: 120 }));
+
+    for (const [label, field] of [
+      ['Passive Perception score', 'perception'],
+      ['Passive Investigation score', 'investigation'],
+      ['Passive Insight score', 'insight'],
+    ]) {
+      const input = screen.getByLabelText(label);
+      fireEvent.change(input, { target: { value: '' } });
+      expect(input.value).toBe('');
+      fireEvent.change(input, { target: { value: '16' } });
+      expect(input.value).toBe('16');
+      fireEvent.blur(input);
+      expect(handleUpdateSenses).toHaveBeenLastCalledWith(
+        expect.objectContaining({ overrides: expect.objectContaining({ [field]: 16 }) })
+      );
+    }
+  });
+
+  it('restores a calculated passive score when its empty draft loses focus', () => {
+    const handleUpdateSenses = vi.fn();
+    render(
+      <SkillsCard
+        abilities={mockAbilities}
+        skills={mockSkills}
+        level={5}
+        senses={{ ...mockSenses, overrides: { perception: 20 } }}
+        isEditing={true}
+        onUpdateSenses={handleUpdateSenses}
+      />
+    );
+
+    const input = screen.getByLabelText('Passive Perception score');
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.blur(input);
+    expect(handleUpdateSenses).toHaveBeenCalledWith(expect.objectContaining({ overrides: {} }));
   });
 });

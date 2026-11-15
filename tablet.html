@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mythallar - Tablet Preview</title>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: #090a0f;
+        color: #e2e8f0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 16px;
+        font-size: 12px;
+        color: #94a3b8;
+      }
+      .presets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+      button {
+        background: #1e1e2d;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #e2e8f0;
+        padding: 6px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: background 0.2s, color 0.2s;
+      }
+      button:hover, button.active { background: #c59b27; color: #090a0f; font-weight: 600; }
+      button:focus-visible, a:focus-visible { outline: 2px solid #e8c968; outline-offset: 3px; }
+      a { color: #c59b27; text-decoration: none; padding: 6px 2px; }
+      .links { display: flex; gap: 12px; }
+      .stage {
+        flex: 1;
+        min-height: 0;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        padding: 12px 20px 20px;
+      }
+      .device-shell {
+        padding: 12px;
+        background: #202127;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+      }
+      .device {
+        position: relative;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #090a0f;
+        transform-origin: top left;
+      }
+      iframe { display: block; border: 0; background: #090a0f; }
+      .status {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px 20px;
+        padding: 0 12px 10px;
+        color: #94a3b8;
+        font-size: 11px;
+      }
+      #device-name { color: #e2e8f0; }
+      @media (max-width: 600px) {
+        .toolbar { gap: 6px; padding: 8px; }
+        .presets { gap: 5px; }
+        button { padding: 5px 7px; font-size: 11px; }
+        .stage { padding: 8px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="toolbar">
+      <div class="presets" aria-label="Tablet presets">
+        <button type="button" data-name="Galaxy Tab S10 FE (Browser)" data-width="823" data-height="1141" data-landscape-width="1316" data-landscape-height="648" class="active">Tab S10 FE (Browser)</button>
+        <button type="button" data-name="Galaxy Tab S10 FE (Installed PWA)" data-width="823" data-height="1237" data-landscape-width="1316" data-landscape-height="744">Tab S10 FE (App / PWA)</button>
+        <button type="button" data-name="iPad 10.9-inch" data-width="820" data-height="1180">iPad 10.9&Prime;</button>
+        <button type="button" data-name="iPad Pro 11-inch" data-width="834" data-height="1194">iPad Pro 11&Prime;</button>
+      </div>
+      <button type="button" id="rotate" aria-label="Rotate tablet" title="Switch portrait / landscape">Rotate</button>
+      <nav class="links" aria-label="Preview links">
+        <a href="/mobile.html">Phone Preview</a>
+        <a href="/">Full App &rarr;</a>
+      </nav>
+    </header>
+
+    <main class="stage" id="stage">
+      <div class="device-shell" id="device-shell">
+        <div class="device" id="device">
+          <iframe src="/" id="app-frame" title="Mythallar tablet app preview"></iframe>
+        </div>
+      </div>
+    </main>
+
+    <footer class="status">
+      <span id="device-name">Galaxy Tab S10 FE (Browser)</span>
+      <span id="orientation-label">Portrait</span>
+      <span id="viewport-label">823 &times; 1141 CSS px</span>
+      <span id="scale-label">100% scale</span>
+    </footer>
+
+    <script>
+      const stage = document.getElementById('stage');
+      const shell = document.getElementById('device-shell');
+      const device = document.getElementById('device');
+      const frame = document.getElementById('app-frame');
+      const presets = [...document.querySelectorAll('[data-width][data-height]')];
+      let selected = presets[0];
+      let isLandscape = false;
+
+      function fitTablet() {
+        const width = Number(selected.dataset.width);
+        const height = Number(selected.dataset.height);
+        const viewportWidth = isLandscape ? Number(selected.dataset.landscapeWidth || height) : width;
+        const viewportHeight = isLandscape ? Number(selected.dataset.landscapeHeight || width) : height;
+        const style = getComputedStyle(stage);
+        const availableWidth = stage.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        const availableHeight = stage.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+        const scale = Math.max(0.05, Math.min(1, availableWidth / (viewportWidth + 26), availableHeight / (viewportHeight + 26)));
+
+        device.style.width = viewportWidth + 'px';
+        device.style.height = viewportHeight + 'px';
+        device.style.transform = `scale(${scale})`;
+        frame.style.width = viewportWidth + 'px';
+        frame.style.height = viewportHeight + 'px';
+        shell.style.width = (viewportWidth * scale + 26) + 'px';
+        shell.style.height = (viewportHeight * scale + 26) + 'px';
+
+        document.getElementById('device-name').textContent = selected.dataset.name;
+        document.getElementById('orientation-label').textContent = isLandscape ? 'Landscape' : 'Portrait';
+        document.getElementById('viewport-label').textContent = `${viewportWidth} × ${viewportHeight} CSS px`;
+        document.getElementById('scale-label').textContent = `${Math.round(scale * 100)}% scale`;
+      }
+
+      presets.forEach((button) => {
+        button.setAttribute('aria-pressed', String(button === selected));
+        button.addEventListener('click', () => {
+          selected = button;
+          presets.forEach((preset) => {
+            const active = preset === selected;
+            preset.classList.toggle('active', active);
+            preset.setAttribute('aria-pressed', String(active));
+          });
+          fitTablet();
+        });
+      });
+
+      document.getElementById('rotate').addEventListener('click', () => {
+        isLandscape = !isLandscape;
+        fitTablet();
+      });
+
+      new ResizeObserver(fitTablet).observe(stage);
+      frame.addEventListener('load', () => {
+        // Layout checks can compare this with the displayed CSS viewport above.
+        frame.dataset.viewportWidth = frame.contentWindow.innerWidth;
+      });
+      fitTablet();
+    </script>
+  </body>
+</html>

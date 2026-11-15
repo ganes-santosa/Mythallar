@@ -1,9 +1,16 @@
 import React from 'react';
 import { PreparedBookmarkStrip } from './SpellbookCard';
 
-function SpellbookCompactCard({ spell, isPrepared, isCopying = false, onTogglePrepare }) {
-  const interactive = spell.level > 0 && !isCopying;
-  const effectivePrepared = isPrepared && !isCopying;
+function SpellbookCompactCard({
+  spell,
+  isPrepared,
+  isCopying = false,
+  isUnderlevel = false,
+  onTogglePrepare,
+}) {
+  const isInactive = isCopying || isUnderlevel;
+  const interactive = spell.level > 0 && !isInactive;
+  const effectivePrepared = isPrepared && !isInactive;
 
   return (
     <button
@@ -15,6 +22,8 @@ function SpellbookCompactCard({ spell, isPrepared, isCopying = false, onTogglePr
       title={
         isCopying
           ? `${spell.name} is being copied`
+          : isUnderlevel
+          ? `${spell.name} (Requires higher level spell slots)`
           : spell.level === 0
           ? `${spell.name} is always available`
           : effectivePrepared
@@ -32,7 +41,7 @@ function SpellbookCompactCard({ spell, isPrepared, isCopying = false, onTogglePr
       <PreparedBookmarkStrip isPrepared={effectivePrepared} />
       <span
         className={`min-w-0 truncate text-xs font-semibold ${
-          isCopying ? 'text-slate-500' : 'text-slate-100'
+          isInactive ? 'text-slate-500' : 'text-slate-100'
         }`}
       >
         {spell.name}

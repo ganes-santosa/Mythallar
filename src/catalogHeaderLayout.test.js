@@ -46,8 +46,10 @@ describe('catalog header on mobile (below md)', () => {
     expect(decls).toMatch(/width:\s*100%/);
   });
 
-  it('never hides the branding subtitle', () => {
-    expect(mobile).not.toMatch(/\.catalog-header-subtitle/);
+  it('hides the branding subtitle on narrow containers to prevent row 1 clashing', () => {
+    const narrow = block(mobile, '@container (max-width: 565px)');
+    expect(narrow).not.toBeNull();
+    expect(narrow).toMatch(/\.catalog-header-subtitle\s*\{\s*display:\s*none/);
   });
 });
 

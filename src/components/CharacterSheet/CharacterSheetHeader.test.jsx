@@ -287,7 +287,11 @@ describe('CharacterSheetHeader', () => {
 
     // Walking speed input
     const walkInput = screen.getByLabelText('Walking Speed');
-    fireEvent.change(walkInput, { target: { value: '35' } });
+    fireEvent.change(walkInput, { target: { value: '' } });
+    expect(walkInput.value).toBe('');
+    fireEvent.change(walkInput, { target: { value: '035' } });
+    expect(walkInput.value).toBe('35');
+    fireEvent.blur(walkInput);
 
     expect(handleUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -471,5 +475,18 @@ describe('CharacterSheetHeader', () => {
         }),
       })
     );
+  });
+
+  it('keeps 21px height on Level Up button container in both full and icon-only states', () => {
+    render(
+      <CharacterSheetHeader
+        character={mockCharacter}
+        profiles={[mockCharacter]}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    const levelUpBtn = screen.getByRole('button', { name: /Level Up/i });
+    expect(levelUpBtn).toHaveClass('h-[21px]');
   });
 });

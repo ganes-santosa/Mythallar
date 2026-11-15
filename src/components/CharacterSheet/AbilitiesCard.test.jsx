@@ -90,6 +90,7 @@ describe('AbilitiesCard', () => {
     );
     expect(strInput).not.toHaveAttribute('readonly');
     fireEvent.change(strInput, { target: { value: '18' } });
+    fireEvent.blur(strInput);
     expect(handleUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         str: 18,
@@ -183,5 +184,42 @@ describe('AbilitiesCard', () => {
         scoreBonuses: expect.objectContaining({ str: 2 }),
       })
     );
+  });
+
+  it('allows clearing an ability score before typing a replacement', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <AbilitiesCard
+        abilities={mockAbilities}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+
+    const input = screen.getByLabelText('STR Score');
+    fireEvent.change(input, { target: { value: '' } });
+    expect(input.value).toBe('');
+    fireEvent.change(input, { target: { value: '14' } });
+    expect(input.value).toBe('14');
+    fireEvent.blur(input);
+    expect(handleUpdate).toHaveBeenLastCalledWith(expect.objectContaining({ str: 14 }));
+  });
+
+  it('commits zero when an empty ability score loses focus', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <AbilitiesCard
+        abilities={mockAbilities}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={handleUpdate}
+      />
+    );
+
+    const input = screen.getByLabelText('STR Score');
+    fireEvent.change(input, { target: { value: '' } });
+    fireEvent.blur(input);
+    expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ str: 0 }));
   });
 });

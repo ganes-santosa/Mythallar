@@ -1,10 +1,32 @@
 import React from 'react';
+import useNumericDraft from '../../hooks/useNumericDraft';
 import {
   getAbilityModifier,
   formatModifier,
   calculateSave,
   getProficiencyBonus,
 } from '../../utils/dndCalculations';
+
+function AbilityScoreInput({ label, value, effectiveScore, isEditing, onCommit }) {
+  const { draft, handleChange, handleBlur } = useNumericDraft(value, onCommit, { normalize: true });
+
+  return (
+    <input
+      type="number"
+      readOnly={!isEditing}
+      tabIndex={isEditing ? 0 : -1}
+      aria-label={`${label} Score`}
+      value={isEditing ? draft : effectiveScore}
+      onChange={isEditing ? (e) => handleChange(e.target.value) : undefined}
+      onBlur={isEditing ? handleBlur : undefined}
+      className={`w-10 min-w-0 text-center text-xl font-black text-slate-100 rounded-md transition-colors leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none focus:outline-none ${
+        isEditing
+          ? 'bg-dnd-panel focus:ring-1 focus:ring-white/20 pointer-events-auto'
+          : 'bg-transparent cursor-default select-none pointer-events-none focus:ring-0'
+      }`}
+    />
+  );
+}
 
 const ABILITIES = [
   { key: 'str', label: 'STR' },
@@ -134,18 +156,12 @@ export default function AbilitiesCard({ abilities, level, isEditing = false, onU
               </div>
 
               <div className="my-0.5 flex flex-wrap items-center justify-center gap-1">
-                <input
-                  type="number"
-                  readOnly={!isEditing}
-                  tabIndex={isEditing ? 0 : -1}
-                  aria-label={`${label} Score`}
-                  value={isEditing ? rawScore : effectiveScore}
-                  onChange={isEditing ? (e) => handleScoreChange(key, e.target.value) : undefined}
-                  className={`w-10 min-w-0 text-center text-xl font-black text-slate-100 rounded-md transition-colors leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none outline-none focus:outline-none ${
-                    isEditing
-                      ? 'bg-dnd-panel focus:ring-1 focus:ring-white/20 pointer-events-auto'
-                      : 'bg-transparent cursor-default select-none pointer-events-none focus:ring-0'
-                  }`}
+                <AbilityScoreInput
+                  label={label}
+                  value={rawScore}
+                  effectiveScore={effectiveScore}
+                  isEditing={isEditing}
+                  onCommit={(value) => handleScoreChange(key, value)}
                 />
                 {isEditing && (
                   <input

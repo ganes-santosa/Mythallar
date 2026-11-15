@@ -11,10 +11,10 @@ describe('normalizeNotes', () => {
     expect(res[0].content).toBe('Legacy session log');
   });
 
-  it('provides default note when empty or invalid', () => {
-    expect(normalizeNotes('')).toHaveLength(1);
-    expect(normalizeNotes([])).toHaveLength(1);
-    expect(normalizeNotes(null)).toHaveLength(1);
+  it('returns empty array when notes are empty or null', () => {
+    expect(normalizeNotes('')).toEqual([]);
+    expect(normalizeNotes([])).toEqual([]);
+    expect(normalizeNotes(null)).toEqual([]);
   });
 
   it('prunes empty clutter notes that have no content or custom title', () => {
@@ -147,6 +147,27 @@ describe('NotesCard', () => {
     fireEvent.click(armedBtn);
 
     expect(handleUpdate).toHaveBeenCalledWith([mockNotes[1]]);
+  });
+
+  it('renders No Notes plain text empty state when character has no notes', () => {
+    render(<NotesCard notes={[]} onUpdateNotes={() => {}} />);
+    expect(screen.getByText('No Notes')).toBeInTheDocument();
+  });
+
+  it('deletes the only note to empty array and returns to list view displaying No Notes', () => {
+    const handleUpdate = vi.fn();
+    const { rerender } = render(<NotesCard notes={[mockNotes[0]]} onUpdateNotes={handleUpdate} />);
+
+    fireEvent.click(screen.getByText('Quests'));
+    const deleteBtn = screen.getByRole('button', { name: 'Delete note Quests' });
+    fireEvent.click(deleteBtn);
+    const armedBtn = screen.getByRole('button', { name: 'Click again to delete Quests' });
+    fireEvent.click(armedBtn);
+
+    expect(handleUpdate).toHaveBeenCalledWith([]);
+
+    rerender(<NotesCard notes={[]} onUpdateNotes={handleUpdate} />);
+    expect(screen.getByText('No Notes')).toBeInTheDocument();
   });
 
   it('navigates between list view and note editor view', () => {

@@ -20,6 +20,7 @@ function SpellbookLevelGroup({
   copyingMap = {},
   notesMap = {},
   maxCantrips = null,
+  maxSlotLevel = 9,
   compact = false,
   onTogglePrepare,
   onFinishCopying,
@@ -32,7 +33,8 @@ function SpellbookLevelGroup({
 }) {
   if (!spells || spells.length === 0) return null;
 
-  const preparedCount = spells.filter((s) => preparedMap[s.id] && !copyingMap[s.id]).length;
+  const isUnderlevel = level > 0 && typeof maxSlotLevel === 'number' && level > maxSlotLevel;
+  const preparedCount = spells.filter((s) => preparedMap[s.id] && !copyingMap[s.id] && !isUnderlevel).length;
   const isCantripOver = level === 0 && typeof maxCantrips === 'number' && spells.length > maxCantrips;
   const cantripText = typeof maxCantrips === 'number'
     ? `${spells.length} / ${maxCantrips} cantrips`
@@ -80,6 +82,7 @@ function SpellbookLevelGroup({
                   spell={spell}
                   isPrepared={Boolean(preparedMap[spell.id])}
                   isCopying={Boolean(copyingMap[spell.id])}
+                  isUnderlevel={isUnderlevel}
                   onTogglePrepare={onTogglePrepare}
                 />
               ))}
@@ -92,6 +95,7 @@ function SpellbookLevelGroup({
                   spell={spell}
                   isPrepared={Boolean(preparedMap[spell.id])}
                   isCopying={Boolean(copyingMap[spell.id])}
+                  isUnderlevel={isUnderlevel}
                   note={notesMap[spell.id] || ''}
                   onTogglePrepare={onTogglePrepare}
                   onFinishCopying={onFinishCopying}

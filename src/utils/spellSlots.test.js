@@ -8,6 +8,7 @@ import {
   getEffectiveMaxCantripsInfo,
   getTotalCharacterLevel,
   getMaxArcaneRecoveryLevels,
+  getMaxCastableSlotLevel,
 } from './spellSlots';
 
 describe('calculateDefaultSlots', () => {
@@ -221,5 +222,27 @@ describe('Multiclass Spell Slots Calculation', () => {
       ],
     };
     expect(getMaxArcaneRecoveryLevels(multiclass)).toBe(2);
+  });
+
+  it('determines the maximum castable spell slot level for a character', () => {
+    expect(getMaxCastableSlotLevel(null)).toBe(0);
+
+    // Level 1 Wizard has 1st-level slots
+    expect(getMaxCastableSlotLevel({ className: 'Wizard', level: 1 })).toBe(1);
+
+    // Level 5 Wizard has 3rd-level slots
+    expect(getMaxCastableSlotLevel({ className: 'Wizard', level: 5 })).toBe(3);
+
+    // Level 1 Warlock has 1st-level pact slot
+    expect(getMaxCastableSlotLevel({ className: 'Warlock', level: 1 })).toBe(1);
+
+    // Level 3 Warlock has 2nd-level pact slot
+    expect(getMaxCastableSlotLevel({ className: 'Warlock', level: 3 })).toBe(2);
+
+    // Non-caster Fighter has no spell slots
+    expect(getMaxCastableSlotLevel({ className: 'Fighter', level: 5 })).toBe(0);
+
+    // Custom slot overrides
+    expect(getMaxCastableSlotLevel({ className: 'Wizard', level: 1, customSlots: { 5: 1 } })).toBe(5);
   });
 });

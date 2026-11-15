@@ -3,7 +3,7 @@ import { BookMarked, Download, ChevronDown, Feather, HelpCircle, X, Blend, BookC
 import SpellbookLevelGroup from './SpellbookLevelGroup';
 import PreparedSpellSummary from './PreparedSpellSummary';
 import { getSpellcastingHints } from './spellcastingHints';
-import { isWizardCharacter, getEffectiveMaxCantripsInfo } from '../../utils/spellSlots';
+import { isWizardCharacter, getEffectiveMaxCantripsInfo, getMaxCastableSlotLevel } from '../../utils/spellSlots';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
@@ -159,6 +159,8 @@ function SpellbookView({
   const handleToggleLevel = useCallback((lvl) => {
     setCollapsedLevels((prev) => ({ ...prev, [lvl]: !prev[lvl] }));
   }, []);
+
+  const maxSlotLevel = useMemo(() => getMaxCastableSlotLevel(character), [character]);
 
   // Group spells by level
   const { preparedMap, copyingMap, notesMap, hasCopyingSpells, visibleSpellCount, spellsByLevel } = useMemo(() => {
@@ -598,6 +600,7 @@ function SpellbookView({
                 copyingMap={copyingMap}
                 notesMap={notesMap}
                 maxCantrips={lvl === 0 ? cantripsInfo.total : null}
+                maxSlotLevel={maxSlotLevel}
                 compact={isCompact}
                 onTogglePrepare={onTogglePrepare}
                 onFinishCopying={onFinishCopying}

@@ -304,6 +304,46 @@ describe('SpellbookView', () => {
     expect(handleFinishCopying).toHaveBeenCalledWith('fireball');
   });
 
+  it('greys out spells and removes Cast button when character has not reached required slot level', () => {
+    // Level 1 Wizard only has 1st-level slots, so Fireball (level 3) is underlevel
+    const lowLevelWizard = {
+      id: 'char_low',
+      name: 'Novice Mage',
+      className: 'Wizard',
+      level: 1,
+      spells: [{ id: 'fireball', prepared: false, copying: false }],
+    };
+
+    const { rerender } = render(
+      <SpellbookView
+        character={lowLevelWizard}
+        catalog={mockCatalog}
+      />
+    );
+
+    // Fireball is greyed out and has no Cast or Prepare button
+    expect(screen.getByText('Fireball')).toHaveClass('text-slate-500');
+    expect(screen.queryByLabelText(/Quick-Cast Fireball/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Toggle Prepared for Fireball/i)).not.toBeInTheDocument();
+
+    // When wizard reaches Level 5 (gets 3rd-level slots), Cast and Prepare buttons appear
+    const highLevelWizard = {
+      ...lowLevelWizard,
+      level: 5,
+    };
+
+    rerender(
+      <SpellbookView
+        character={highLevelWizard}
+        catalog={mockCatalog}
+      />
+    );
+
+    expect(screen.getByText('Fireball')).toHaveClass('text-slate-100');
+    expect(screen.getByLabelText(/Quick-Cast Fireball/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Toggle Prepared for Fireball/i)).toBeInTheDocument();
+  });
+
   it('bypasses copying state when skipCopying is true', () => {
     const wizardCopyingChar = {
       ...mockCharacter,

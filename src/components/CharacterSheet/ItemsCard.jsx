@@ -16,6 +16,7 @@ import {
   Coins,
 } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
+import { normalizeIntegerDraft } from '../../hooks/useNumericDraft';
 import useClickOutside from '../../hooks/useClickOutside';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import useAccordionMount from '../../hooks/useAccordionMount';
@@ -307,7 +308,7 @@ export function MaxAttunementInput({ value, onChange }) {
       value={draft}
       onFocus={(e) => e.target.select()}
       onChange={(e) => {
-        const next = e.target.value;
+        const next = normalizeIntegerDraft(e.target.value);
         setDraft(next);
         if (next !== '') {
           const parsed = parseInt(next, 10);
@@ -581,7 +582,7 @@ function ItemForm({
             type="number"
             min="1"
             value={quantity}
-            onChange={(e) => setQuantity(e.target.value)}
+            onChange={(e) => setQuantity(normalizeIntegerDraft(e.target.value))}
             className="w-full px-1.5 py-1 rounded bg-dnd-panel text-slate-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-white/20 h-[26px] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           />
         </div>
@@ -794,7 +795,8 @@ export function CurrencyTracker({ currency = {}, onUpdateCurrency }) {
   }, [tempValues, safeCurrency, cardWidth]);
 
   const handleChange = (key, val) => {
-    setTempValues((prev) => ({ ...prev, [key]: val }));
+    const normalized = val.replace(/^0+(?=\d)/, '');
+    setTempValues((prev) => ({ ...prev, [key]: normalized }));
   };
 
   const handleBlur = (key) => {
