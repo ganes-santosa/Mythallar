@@ -98,7 +98,8 @@ describe('CharacterSheetView', () => {
     // Abilities Card
     expect(screen.getByText('Save +11')).toBeInTheDocument();
 
-    // Resources Card
+    // Resources Card (Character Features accordion)
+    expect(screen.getByText('Character Features')).toBeInTheDocument();
     expect(screen.getByText('The Timekeeper')).toBeInTheDocument();
 
     // Items Card

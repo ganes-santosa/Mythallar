@@ -313,9 +313,9 @@ function CharacterSheetView({
           </div>
         )}
 
-        {/* Section 3: Features & Tracked Resources */}
+        {/* Section 3: Character Features */}
         <AccordionSection
-          title="Features & Tracked Resources"
+          title="Character Features"
           icon={Flame}
           defaultOpen={true}
           actions={
