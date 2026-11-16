@@ -296,14 +296,20 @@ function ResourceEditForm({
 
 function ResourceDetailViewer({
   viewingResource,
+  viewingFeat,
+  linkedFeat,
+  fallbackNote = '',
   isEditing = false,
   editFormProps,
   isClosing = false,
   onClose,
   onStartEdit,
+  onStartFeatEdit,
   onDelete,
+  onDeleteFeat,
 }) {
-  if (!viewingResource) return null;
+  const activeItem = viewingResource || viewingFeat;
+  if (!activeItem) return null;
 
   if (isEditing && editFormProps) {
     return (
@@ -318,20 +324,32 @@ function ResourceDetailViewer({
     );
   }
 
-  const noteText = viewingResource.note || viewingResource.description || '';
+  const isFeat = Boolean(viewingFeat && !viewingResource);
+  const effectiveFeat = viewingFeat || linkedFeat;
+  const statBadge = effectiveFeat ? formatFeatStatBadge(effectiveFeat.statModifiers) : null;
+
+  const noteText =
+    activeItem.note ||
+    activeItem.description ||
+    effectiveFeat?.note ||
+    effectiveFeat?.description ||
+    fallbackNote ||
+    '';
+
   const lineCount = estimateLinesFromText(noteText);
   const bucket = getLineBucket(lineCount);
   // Base card header + paddings is ~64px; notes area is bucket * 19.5px
   const totalViewerHeight = Math.round(64 + bucket * 19.5);
 
-  const viewerColorCfg = getColorConfig(viewingResource.color || 'none');
+  const viewerColorCfg = getColorConfig(activeItem.color || 'none');
 
-  const resetLabel =
-    viewingResource.resetOn === 'LR'
+  const resetLabel = viewingResource
+    ? viewingResource.resetOn === 'LR'
       ? 'Long Rest'
       : viewingResource.resetOn === 'SR'
       ? 'Short Rest'
-      : viewingResource.resetOn || 'Manual';
+      : viewingResource.resetOn || 'Manual'
+    : '';
 
   return (
     <div
@@ -340,45 +358,76 @@ function ResourceDetailViewer({
     >
       <div className="overflow-hidden p-0.5 pb-2">
         <div
-          data-testid="resource-viewer-card"
+          data-testid={isFeat ? 'feat-viewer-card' : 'resource-viewer-card'}
           style={{ height: `${totalViewerHeight}px` }}
           className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
         >
           <div className="flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center space-x-2 min-w-0">
-              <AirplaneHelix45degIcon size={14} className="shrink-0 text-dnd-gold opacity-90" />
+              {effectiveFeat ? (
+                <Award size={14} className="shrink-0 text-dnd-gold opacity-90" />
+              ) : (
+                <AirplaneHelix45degIcon size={14} className="shrink-0 text-dnd-gold opacity-90" />
+              )}
               <span className="font-bold text-sm text-slate-100 truncate">
-                {viewingResource.name}
+                {activeItem.name}
               </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-200">
-                {viewingResource.current ?? 0} / {viewingResource.max ?? 0}
-              </span>
-              <span className="text-[11px] text-slate-400 font-medium truncate">
-                Recovers @ {resetLabel}
-              </span>
+              {statBadge && (
+                <span
+                  data-testid="feat-viewer-stat-badge"
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
+                >
+                  {statBadge}
+                </span>
+              )}
+              {viewingResource && (
+                <>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-200">
+                    {viewingResource.current ?? 0} / {viewingResource.max ?? 0}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium truncate">
+                    Recovers @ {resetLabel}
+                  </span>
+                </>
+              )}
             </div>
 
             <div className="flex items-center space-x-1.5 shrink-0">
               <button
                 type="button"
-                aria-label={`Edit ${viewingResource.name}`}
-                title={`Edit ${viewingResource.name}`}
-                onClick={(e) => onStartEdit(viewingResource, e)}
+                aria-label={`Edit ${activeItem.name}`}
+                title={`Edit ${activeItem.name}`}
+                onClick={(e) => {
+                  if (isFeat) {
+                    onStartFeatEdit?.(activeItem, e);
+                  } else {
+                    onStartEdit?.(activeItem, e);
+                  }
+                }}
                 className="p-1 rounded text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer"
               >
                 <Pencil size={12} />
               </button>
 
-              {onDelete && (
-                <ResourceViewerDeleteButton
-                  resourceName={viewingResource.name}
-                  onDelete={() => onDelete(viewingResource.id)}
-                />
+              {isFeat ? (
+                onDeleteFeat && (
+                  <ResourceViewerDeleteButton
+                    resourceName={activeItem.name}
+                    onDelete={() => onDeleteFeat(activeItem.id)}
+                  />
+                )
+              ) : (
+                onDelete && (
+                  <ResourceViewerDeleteButton
+                    resourceName={activeItem.name}
+                    onDelete={() => onDelete(activeItem.id)}
+                  />
+                )
               )}
 
               <button
                 type="button"
-                aria-label={`Close ${viewingResource.name} details`}
+                aria-label={`Close ${activeItem.name} details`}
                 title="Close details"
                 onClick={onClose}
                 className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
@@ -862,30 +911,28 @@ export default function ResourcesCard({
   const textareaRef = useRef(null);
 
   const viewingResource = (trackedResources || []).find((r) => r.id === viewingResourceId);
-  const isViewingMatch = Boolean(viewingResource);
+  const viewingFeat = normalizedFeats.find((f) => f.id === viewingFeatId);
+
+  const isViewingMatch = Boolean(viewingResource || viewingFeat);
   const { shouldRender: shouldRenderViewer, isClosing: isViewerClosing } = useAccordionMount(
     isViewingMatch,
     200
   );
 
-  const cachedResourceRef = useRef(viewingResource);
-  if (isViewingMatch && viewingResource) {
-    cachedResourceRef.current = viewingResource;
+  const cachedActiveRef = useRef(null);
+  if (viewingResource) {
+    cachedActiveRef.current = { type: 'resource', data: viewingResource };
+  } else if (viewingFeat) {
+    cachedActiveRef.current = { type: 'feat', data: viewingFeat };
   }
-  const resourceToDisplay = isViewingMatch ? viewingResource : cachedResourceRef.current;
 
-  const viewingFeat = normalizedFeats.find((f) => f.id === viewingFeatId);
-  const isViewingFeatMatch = Boolean(viewingFeat);
-  const { shouldRender: shouldRenderFeatViewer, isClosing: isFeatViewerClosing } = useAccordionMount(
-    isViewingFeatMatch,
-    200
-  );
+  const activeViewerItem = isViewingMatch
+    ? viewingResource
+      ? { type: 'resource', data: viewingResource }
+      : { type: 'feat', data: viewingFeat }
+    : cachedActiveRef.current;
 
-  const cachedFeatRef = useRef(viewingFeat);
-  if (isViewingFeatMatch && viewingFeat) {
-    cachedFeatRef.current = viewingFeat;
-  }
-  const featToDisplay = isViewingFeatMatch ? viewingFeat : cachedFeatRef.current;
+  const resourceToDisplay = activeViewerItem?.type === 'resource' ? activeViewerItem.data : null;
 
   const addBucket = getLineBucket(newResourceNote);
 
@@ -1082,11 +1129,21 @@ export default function ResourcesCard({
   };
 
   const handleToggleFeatView = (featId) => {
-    setViewingResourceId(null);
-    setEditingResourceId(null);
-    setViewingFeatId((prev) => (prev === featId ? null : featId));
-    setEditingFeatId(null);
-    setFeatNameError(false);
+    const feat = normalizedFeats.find((f) => f.id === featId);
+    const linked = findLinkedResource(feat);
+    if (linked) {
+      setViewingFeatId(null);
+      setEditingFeatId(null);
+      setViewingResourceId((prev) => (prev === linked.id ? null : linked.id));
+      setEditingResourceId(null);
+      setEditNameError(false);
+    } else {
+      setViewingResourceId(null);
+      setEditingResourceId(null);
+      setViewingFeatId((prev) => (prev === featId ? null : featId));
+      setEditingFeatId(null);
+      setFeatNameError(false);
+    }
   };
 
   const handleStartFeatEdit = (feat, e) => {
@@ -1098,7 +1155,7 @@ export default function ResourcesCard({
     const statCfg = getFeatStatChoiceConfig(catalogueMatch || feat);
     setIsAddingFeat(false);
     setEditingFeatId(feat.id);
-    setViewingFeatId(feat.id);
+    setViewingFeatId(null);
     setViewingResourceId(null);
     setEditingResourceId(null);
     setFeatName(feat.name || '');
@@ -1170,8 +1227,15 @@ export default function ResourcesCard({
       setViewingResourceId(null);
       setEditingResourceId(null);
     }
+    const target = (trackedResources || []).find((r) => r.id === id);
     const filtered = (trackedResources || []).filter((r) => r.id !== id);
     onUpdateResources?.(filtered);
+    if (target?.linkedFeatId && onUpdateFeats) {
+      const updatedFeats = normalizedFeats.filter((f) => f.id !== target.linkedFeatId);
+      if (updatedFeats.length !== normalizedFeats.length) {
+        onUpdateFeats(updatedFeats);
+      }
+    }
   };
 
   const handleToggleView = (id) => {
@@ -1514,19 +1578,30 @@ export default function ResourcesCard({
         </form>
       )}
 
-      {/* Resource Detail Viewer */}
-      {shouldRenderViewer && resourceToDisplay && (
+      {/* Unified Detail Viewer */}
+      {shouldRenderViewer && activeViewerItem && (
         <ResourceDetailViewer
-          viewingResource={resourceToDisplay}
-          isEditing={editingResourceId === resourceToDisplay.id}
+          viewingResource={activeViewerItem.type === 'resource' ? activeViewerItem.data : null}
+          viewingFeat={activeViewerItem.type === 'feat' ? activeViewerItem.data : null}
+          linkedFeat={activeViewerItem.type === 'resource' ? findLinkedFeat(activeViewerItem.data) : null}
+          fallbackNote={
+            featsCatalogue.find(
+              (c) => c.name.toLowerCase() === activeViewerItem.data.name?.toLowerCase()
+            )?.description || ''
+          }
+          isEditing={editingResourceId === activeViewerItem.data.id}
           editFormProps={editFormProps}
           isClosing={isViewerClosing}
           onClose={() => {
             setViewingResourceId(null);
+            setViewingFeatId(null);
             setEditingResourceId(null);
+            if (editingFeatId) resetFeatForm();
           }}
           onStartEdit={handleStartEdit}
+          onStartFeatEdit={handleStartFeatEdit}
           onDelete={handleDeleteResource}
+          onDeleteFeat={handleDeleteFeat}
         />
       )}
 
@@ -1648,32 +1723,10 @@ export default function ResourcesCard({
         </div>
       )}
 
-      {/* Freeform Notes Box */}
-      <div className="space-y-1">
-        <label htmlFor="features-notes" className="text-[10px] text-slate-400">
-          Features & Freeform Notes:
-        </label>
-        <textarea
-          ref={textareaRef}
-          id="features-notes"
-          aria-label="Features & Notes"
-          placeholder="Type or paste features, special items, math notes (e.g. Blackstones: 49 + 162 + 28), death ward status, etc..."
-          value={featuresNotes || ''}
-          onChange={(e) => {
-            onUpdateNotes?.(e.target.value);
-            adjustHeight();
-          }}
-          onInput={adjustHeight}
-          rows={2}
-          style={{ fieldSizing: 'content' }}
-          className="w-full p-2.5 rounded-lg bg-dnd-card text-xs text-slate-200 leading-relaxed placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 custom-scroll resize-none min-h-[59px] max-h-[215px] overflow-y-auto shadow-sm"
-        />
-      </div>
-
       {/* Feats Subdivision */}
-      <div className="pt-1.5 border-t border-white/5 space-y-1.5">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 font-semibold text-slate-300">
             <Award size={10} className="text-amber-400" /> Feats:
           </span>
           <button
@@ -1701,51 +1754,28 @@ export default function ResourcesCard({
           </button>
         </div>
 
-        {/* Add New Feat Form */}
-        {isAddingFeat && !editingFeatId && (
+        {/* Add / Edit Feat Form */}
+        {(isAddingFeat || editingFeatId) && (
           <FeatForm
             {...featFormProps}
-            formRef={addFeatFormRef}
+            formRef={editingFeatId ? editFeatFormRef : addFeatFormRef}
           />
         )}
 
-        {/* Inline Feat Detail Viewer (or In-Place Edit Form) right above Feats */}
-        {shouldRenderFeatViewer && featToDisplay && (
-          <FeatDetailViewer
-            viewingFeat={featToDisplay}
-            linkedResource={findLinkedResource(featToDisplay)}
-            fallbackNote={
-              featsCatalogue.find(
-                (c) => c.name.toLowerCase() === featToDisplay.name.toLowerCase()
-              )?.description || ''
-            }
-            isEditing={editingFeatId === featToDisplay.id}
-            editFormProps={{
-              ...featFormProps,
-              formRef: editFeatFormRef,
-            }}
-            isClosing={isFeatViewerClosing}
-            onClose={() => {
-              setViewingFeatId(null);
-              if (editingFeatId) resetFeatForm();
-            }}
-            onStartEdit={handleStartFeatEdit}
-            onDelete={handleDeleteFeat}
-          />
-        )}
-
-        {normalizedFeats.length === 0 && !isAddingFeat && (
+        {normalizedFeats.length === 0 && !isAddingFeat && !editingFeatId && (
           <div className="min-h-[20px] flex items-center">
             <span className="text-[11px] text-slate-500 italic">No feats recorded.</span>
           </div>
         )}
 
         {normalizedFeats.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-1.5">
+          <div data-testid="feats-chips-container" className="flex flex-wrap gap-1.5">
             {normalizedFeats.map((feat) => {
-              const isViewing = viewingFeatId === feat.id;
-              const colorCfg = getColorConfig(feat.color || 'none');
               const linkedRes = findLinkedResource(feat);
+              const isViewing =
+                (linkedRes && viewingResourceId === linkedRes.id) ||
+                viewingFeatId === feat.id;
+              const colorCfg = getColorConfig(feat.color || 'none');
               const statBadge = formatFeatStatBadge(feat.statModifiers);
 
               return (
@@ -1763,9 +1793,9 @@ export default function ResourcesCard({
                       handleToggleFeatView(feat.id);
                     }
                   }}
-                  className={`group relative flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
+                  className={`group relative inline-flex items-center gap-1.5 py-1 px-2.5 rounded-md text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
                     isViewing
-                      ? 'bg-dnd-card ring-2 ring-white/80 shadow-[0_0_12px_rgba(255,255,255,0.18)] brightness-110'
+                      ? 'ring-1 ring-dnd-gold bg-dnd-card/90 shadow-md text-white'
                       : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
                   }`}
                 >
@@ -1775,55 +1805,68 @@ export default function ResourcesCard({
                     style={{
                       background: colorCfg.id === 'none' ? 'none' : colorCfg.glow,
                     }}
-                    className="absolute inset-0 pointer-events-none rounded-lg"
+                    className="absolute inset-0 pointer-events-none rounded-md"
                   />
 
-                  <div className="relative z-10 flex items-center space-x-1 min-w-0">
-                    <span
-                      className={`font-semibold truncate ${
-                        isViewing ? 'text-white' : 'text-slate-200'
-                      }`}
-                    >
-                      {feat.name}
-                    </span>
-                    {linkedRes && (
-                      <Link2
-                        size={10}
-                        data-testid="feat-linked-icon"
-                        title={`Linked with Tracked Resource: ${linkedRes.name}`}
-                        className="shrink-0 text-slate-400/70"
-                      />
-                    )}
-                  </div>
-
-                  <div className="relative z-10 flex items-center space-x-1.5 shrink-0 ml-2">
-                    {statBadge && (
-                      <span
-                        data-testid="feat-stat-badge"
-                        title={`Modifies Ability Score (${statBadge})`}
-                        className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold"
-                      >
-                        {statBadge}
-                      </span>
-                    )}
-                    {linkedRes && (
-                      <span
-                        title={`Linked Tracked Resource (${linkedRes.current ?? 0}/${linkedRes.max ?? 0})`}
-                        className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-dnd-gold"
-                      >
-                        {linkedRes.current ?? 0}/{linkedRes.max ?? 0}
-                      </span>
-                    )}
-                    <FeatChipDeleteButton
-                      featName={feat.name}
-                      onDelete={() => handleDeleteFeat(feat.id)}
+                  <span
+                    className={`relative z-10 font-medium truncate max-w-[140px] sm:max-w-[180px] ${
+                      isViewing ? 'text-white' : 'text-slate-200'
+                    }`}
+                  >
+                    {feat.name}
+                  </span>
+                  {linkedRes && (
+                    <Link2
+                      size={10}
+                      data-testid="feat-linked-icon"
+                      title={`Linked with Tracked Resource: ${linkedRes.name}`}
+                      className="relative z-10 shrink-0 text-slate-400/70"
                     />
-                  </div>
+                  )}
+                  {statBadge && (
+                    <span
+                      data-testid="feat-stat-badge"
+                      title={`Modifies Ability Score (${statBadge})`}
+                      className="relative z-10 text-[9px] font-bold px-1 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
+                    >
+                      {statBadge}
+                    </span>
+                  )}
+                  {isEditing && (
+                    <span className="relative z-10 shrink-0">
+                      <FeatChipDeleteButton
+                        featName={feat.name}
+                        onDelete={() => handleDeleteFeat(feat.id)}
+                      />
+                    </span>
+                  )}
                 </div>
               );
             })}
           </div>
         )}
+      </div>
+
+      {/* Freeform Notes Box */}
+      <div className="space-y-1">
+        <label htmlFor="features-notes" className="text-[10px] text-slate-400 font-medium">
+          Features & Freeform Notes
+        </label>
+        <textarea
+          ref={textareaRef}
+          id="features-notes"
+          aria-label="Features & Notes"
+          placeholder="Type or paste features, special items, math notes (e.g. Blackstones: 49 + 162 + 28), death ward status, etc..."
+          value={featuresNotes || ''}
+          onChange={(e) => {
+            onUpdateNotes?.(e.target.value);
+            adjustHeight();
+          }}
+          onInput={adjustHeight}
+          rows={2}
+          style={{ fieldSizing: 'content' }}
+          className="w-full p-2.5 rounded-lg bg-dnd-card text-xs text-slate-200 leading-relaxed placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20 custom-scroll resize-none min-h-[59px] max-h-[215px] overflow-y-auto shadow-sm"
+        />
       </div>
     </div>
   );

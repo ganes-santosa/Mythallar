@@ -927,4 +927,74 @@ describe('ResourcesCard', () => {
 
     expect(screen.queryByText(/Drag items to reorder/i)).not.toBeInTheDocument();
   });
+
+  it('unifies tracked resources and feats in single top viewer: clicking active feat chip opens unified viewer with resource counters and feat details', () => {
+    const handleUpdateResources = vi.fn();
+    const handleUpdateFeats = vi.fn();
+    const luckyResource = { id: 'res_lucky', name: 'Lucky', current: 2, max: 3, resetOn: 'LR', linkedFeatId: 'feat_lucky' };
+    const luckyFeat = { id: 'feat_lucky', name: 'Lucky', note: 'Luck points for rerolls.' };
+    const alertFeat = { id: 'feat_alert', name: 'Alert', note: '+5 bonus to initiative.' };
+
+    render(
+      <ResourcesCard
+        trackedResources={[luckyResource]}
+        featuresNotes=""
+        feats={[luckyFeat, alertFeat]}
+        onUpdateResources={handleUpdateResources}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    // 1. Click active feat chip (Lucky)
+    fireEvent.click(screen.getByTestId('feat-chip-feat_lucky'));
+
+    // Should open the top viewer showing both Lucky counters (2 / 3) and description
+    const viewerCard = screen.getByTestId('resource-viewer-card');
+    expect(viewerCard).toBeInTheDocument();
+    expect(screen.getByText('2 / 3')).toBeInTheDocument();
+    expect(screen.getByText('Luck points for rerolls.')).toBeInTheDocument();
+
+    // 2. Click the Lucky tracked resource card -> toggles off or stays open (clicking same item toggles)
+    fireEvent.click(screen.getByTestId('tracked-resource-item'));
+    expect(screen.queryByTestId('resource-viewer-card')).not.toBeInTheDocument();
+
+    // 3. Click the Lucky tracked resource card again -> opens viewer
+    fireEvent.click(screen.getByTestId('tracked-resource-item'));
+    expect(screen.getByTestId('resource-viewer-card')).toBeInTheDocument();
+
+    // 4. Click passive feat chip (Alert) -> switches viewer to Alert
+    fireEvent.click(screen.getByTestId('feat-chip-feat_alert'));
+    expect(screen.getByText('+5 bonus to initiative.')).toBeInTheDocument();
+    // Alert is passive, so no 2 / 3 counter
+    expect(screen.queryByText('2 / 3')).not.toBeInTheDocument();
+
+    // Verify there is only one viewer wrapper in the DOM
+    expect(screen.getAllByTestId('resource-viewer-wrapper')).toHaveLength(1);
+  });
+
+  it('renders Feats section before Freeform Notes and displays feats in flex-wrap tag chips container', () => {
+    const { container } = render(
+      <ResourcesCard
+        trackedResources={[{ id: 'res_1', name: 'Ki', current: 2, max: 4 }]}
+        featuresNotes="Some freeform character notes"
+        feats={[
+          { id: 'feat_alert', name: 'Alert' },
+          { id: 'feat_mobile', name: 'Mobile' },
+        ]}
+      />
+    );
+
+    const featsHeading = screen.getByText(/^Feats/i);
+    const notesTextarea = screen.getByLabelText(/Features/i);
+
+    // Feats must appear BEFORE Freeform Notes in DOM tree
+    expect(featsHeading.compareDocumentPosition(notesTextarea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // Feats container must use flex-wrap layout
+    const chipsContainer = screen.getByTestId('feats-chips-container');
+    expect(chipsContainer).toBeInTheDocument();
+    expect(chipsContainer.className).toContain('flex');
+    expect(chipsContainer.className).toContain('flex-wrap');
+    expect(chipsContainer.className).not.toContain('grid');
+  });
 });
