@@ -37,7 +37,7 @@ const ABILITIES = [
   { key: 'cha', label: 'CHA' },
 ];
 
-export default function AbilitiesCard({ abilities, level, isEditing = false, onUpdateAbilities }) {
+export default function AbilitiesCard({ abilities, featBonuses = {}, level, isEditing = false, onUpdateAbilities }) {
   const currentAbilities = abilities || {
     str: 10,
     dex: 10,
@@ -108,7 +108,8 @@ export default function AbilitiesCard({ abilities, level, isEditing = false, onU
         {ABILITIES.map(({ key, label }) => {
           const rawScore = currentAbilities[key] ?? 10;
           const scoreMisc = scoreBonuses[key] || 0;
-          const effectiveScore = rawScore + scoreMisc;
+          const featBonus = featBonuses[key] || 0;
+          const effectiveScore = rawScore + scoreMisc + featBonus;
           const mod = getAbilityModifier(effectiveScore);
           const isProf = saveProficiencies.includes(key);
           const saveMiscBonus = saveBonuses[key] || 0;
@@ -148,11 +149,20 @@ export default function AbilitiesCard({ abilities, level, isEditing = false, onU
               />
 
               <div
-                className={`text-[10px] font-bold tracking-wider ${
+                className={`text-[10px] font-bold tracking-wider flex items-center justify-center gap-1 ${
                   isProf ? 'text-dnd-gold-light' : 'text-slate-400'
                 }`}
               >
-                {label}
+                <span>{label}</span>
+                {isEditing && featBonus !== 0 && (
+                  <span
+                    data-testid={`ability-feat-badge-${key}`}
+                    title={`Base ${rawScore}${scoreMisc ? ` + ${scoreMisc} Misc` : ''} + ${featBonus} Feat = ${effectiveScore}`}
+                    className="text-[9px] font-bold px-1 py-0 rounded bg-dnd-gold/15 text-dnd-gold leading-tight"
+                  >
+                    {featBonus > 0 ? `+${featBonus}` : featBonus} Feat
+                  </span>
+                )}
               </div>
 
               <div className="my-0.5 flex flex-wrap items-center justify-center gap-1">

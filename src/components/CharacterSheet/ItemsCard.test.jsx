@@ -822,5 +822,24 @@ describe('ItemsCard', () => {
         }),
       ]);
     });
+
+    it('does not submit form or exit editing state when pressing Enter in Item Name', () => {
+      const handleUpdate = vi.fn();
+      render(<ItemsCard items={[]} onUpdateItems={handleUpdate} />);
+
+      // Open Add Form
+      fireEvent.click(screen.getByRole('button', { name: /Add Item/i }));
+      const form = screen.getByTestId('item-add-form');
+      expect(form).toBeInTheDocument();
+
+      const nameInput = screen.getByLabelText('Item Name');
+      fireEvent.change(nameInput, { target: { value: 'Lucky Charm' } });
+      fireEvent.keyDown(nameInput, { key: 'Enter' });
+
+      // Form remains open and handleUpdate is not called
+      expect(handleUpdate).not.toHaveBeenCalled();
+      expect(screen.getByTestId('item-add-form')).toBeInTheDocument();
+      expect(nameInput.value).toBe('Lucky Charm');
+    });
   });
 });

@@ -21,18 +21,37 @@ export function getAbilityModifier(score) {
 }
 
 /**
- * Returns effective abilities with scoreBonuses applied.
+ * Aggregates ability score bonuses from a character's feats array.
  */
-export function getEffectiveAbilities(abilities = {}) {
+export function getFeatAbilityBonuses(feats = []) {
+  const bonuses = { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 };
+  if (!Array.isArray(feats)) return bonuses;
+  for (const feat of feats) {
+    if (feat && typeof feat === 'object' && feat.statModifiers) {
+      for (const [k, v] of Object.entries(feat.statModifiers)) {
+        if (k in bonuses && typeof v === 'number' && !isNaN(v)) {
+          bonuses[k] += v;
+        }
+      }
+    }
+  }
+  return bonuses;
+}
+
+/**
+ * Returns effective abilities with scoreBonuses and optional feat bonuses applied.
+ */
+export function getEffectiveAbilities(abilities = {}, feats = []) {
   const scoreBonuses = abilities.scoreBonuses || {};
+  const featBonuses = getFeatAbilityBonuses(feats);
   return {
     ...abilities,
-    str: (Number(abilities.str) || 10) + (Number(scoreBonuses.str) || 0),
-    dex: (Number(abilities.dex) || 10) + (Number(scoreBonuses.dex) || 0),
-    con: (Number(abilities.con) || 10) + (Number(scoreBonuses.con) || 0),
-    int: (Number(abilities.int) || 10) + (Number(scoreBonuses.int) || 0),
-    wis: (Number(abilities.wis) || 10) + (Number(scoreBonuses.wis) || 0),
-    cha: (Number(abilities.cha) || 10) + (Number(scoreBonuses.cha) || 0),
+    str: (Number(abilities.str) || 10) + (Number(scoreBonuses.str) || 0) + (featBonuses.str || 0),
+    dex: (Number(abilities.dex) || 10) + (Number(scoreBonuses.dex) || 0) + (featBonuses.dex || 0),
+    con: (Number(abilities.con) || 10) + (Number(scoreBonuses.con) || 0) + (featBonuses.con || 0),
+    int: (Number(abilities.int) || 10) + (Number(scoreBonuses.int) || 0) + (featBonuses.int || 0),
+    wis: (Number(abilities.wis) || 10) + (Number(scoreBonuses.wis) || 0) + (featBonuses.wis || 0),
+    cha: (Number(abilities.cha) || 10) + (Number(scoreBonuses.cha) || 0) + (featBonuses.cha || 0),
   };
 }
 

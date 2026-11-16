@@ -222,4 +222,40 @@ describe('AbilitiesCard', () => {
     fireEvent.blur(input);
     expect(handleUpdate).toHaveBeenCalledWith(expect.objectContaining({ str: 0 }));
   });
+
+  it('includes featBonuses in effective score, hides feat badge in normal state, and shows it in editing state', () => {
+    const { rerender } = render(
+      <AbilitiesCard
+        abilities={{
+          ...mockAbilities,
+          int: 17,
+        }}
+        featBonuses={{ int: 1 }}
+        level={10}
+        isEditing={false}
+        onUpdateAbilities={() => {}}
+      />
+    );
+
+    // 17 base + 1 feat = 18 effective (+4 mod), badge hidden in normal state
+    const intInput = screen.getByLabelText('INT Score');
+    expect(intInput.value).toBe('18');
+    expect(screen.queryByTestId('ability-feat-badge-int')).toBeNull();
+
+    // Shown in editing state alongside base score 17
+    rerender(
+      <AbilitiesCard
+        abilities={{
+          ...mockAbilities,
+          int: 17,
+        }}
+        featBonuses={{ int: 1 }}
+        level={10}
+        isEditing={true}
+        onUpdateAbilities={() => {}}
+      />
+    );
+    expect(screen.getByLabelText('INT Score').value).toBe('17');
+    expect(screen.getByTestId('ability-feat-badge-int')).toHaveTextContent('+1 Feat');
+  });
 });

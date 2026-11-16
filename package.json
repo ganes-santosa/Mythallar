@@ -1,7 +1,7 @@
 {
   "name": "pepundi-spellbook",
   "private": true,
-  "version": "3.1.3",
+  "version": "3.1.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "update-spells": "node scripts/fetch-spells.mjs",
-    "update-items": "node scripts/fetch-items.mjs"
+    "update-items": "node scripts/fetch-items.mjs",
+    "update-feats": "node scripts/fetch-feats.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

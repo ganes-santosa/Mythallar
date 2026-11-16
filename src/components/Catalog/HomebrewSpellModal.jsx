@@ -119,7 +119,17 @@ export default function HomebrewSpellModal({ isOpen, onClose, onSave, isSignedIn
         </div>
 
         {/* Scrollable Form */}
-        <form noValidate onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+        <form
+          noValidate
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+              e.preventDefault();
+              e.target.blur();
+            }
+          }}
+          className="flex-1 overflow-y-auto p-5 space-y-4 text-xs"
+        >
           {error && (
             <div className="p-2 rounded bg-red-500/20 text-red-300">
               {error}

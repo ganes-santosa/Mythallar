@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
 import ResourcesCard from './ResourcesCard';
+import { resetFeatsCatalogueCache } from '../../utils/featsCatalogue';
 
 describe('ResourcesCard', () => {
   const mockResources = [
@@ -166,7 +167,7 @@ describe('ResourcesCard', () => {
     expect(cards[0]).toHaveAttribute('draggable', 'false');
   });
 
-  it('renders Feats subdivision and allows adding and removing feats when isEditing is true', () => {
+  it('renders Feats subdivision, normalizes legacy string feats, and allows adding and two-click deleting feats', () => {
     const handleUpdateFeats = vi.fn();
     render(
       <ResourcesCard
@@ -191,16 +192,325 @@ describe('ResourcesCard', () => {
 
     const input = screen.getByPlaceholderText(/War Caster, Alert/i);
     fireEvent.change(input, { target: { value: 'Fey Touched' } });
+    fireEvent.change(screen.getByLabelText('Feat Description'), {
+      target: { value: 'Learn Misty Step.' },
+    });
 
-    const submitBtn = screen.getByRole('button', { name: /^Add$/i });
+    const submitBtn = screen.getByRole('button', { name: /^Save Feat$/i });
     fireEvent.click(submitBtn);
 
-    expect(handleUpdateFeats).toHaveBeenCalledWith(['War Caster', 'Alert', 'Fey Touched']);
+    expect(handleUpdateFeats).toHaveBeenCalledWith([
+      expect.objectContaining({ name: 'War Caster' }),
+      expect.objectContaining({ name: 'Alert' }),
+      expect.objectContaining({ name: 'Fey Touched', note: 'Learn Misty Step.' }),
+    ]);
 
-    // Remove feat
-    const removeBtn = screen.getByLabelText('Remove feat Alert');
+    // Two-click delete feat from chip
+    const removeBtn = screen.getByLabelText('Delete Alert');
     fireEvent.click(removeBtn);
-    expect(handleUpdateFeats).toHaveBeenCalledWith(['War Caster']);
+    expect(removeBtn).toHaveAttribute('aria-label', 'Click again to delete Alert');
+    fireEvent.click(removeBtn);
+    expect(handleUpdateFeats).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: 'War Caster' }),
+    ]);
+  });
+
+  it('opens feat viewer pane above Feats when clicking a feat chip and closes resource viewer if open', () => {
+    const handleUpdateFeats = vi.fn();
+    const handleUpdateResources = vi.fn();
+    const sampleFeats = [
+      { id: 'feat_wc', name: 'War Caster', note: 'Advantage on Concentration saves.', color: 'sky' },
+    ];
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        feats={sampleFeats}
+        onUpdateResources={handleUpdateResources}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    // Open Tracked Resource viewer first
+    fireEvent.click(screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]'));
+    expect(screen.getByTestId('resource-viewer-card')).toBeInTheDocument();
+
+    // Click War Caster feat chip -> opens feat viewer and closes resource viewer
+    fireEvent.click(screen.getByTestId('feat-chip-feat_wc'));
+    expect(screen.getByTestId('feat-viewer-card')).toBeInTheDocument();
+    expect(screen.getByText('Advantage on Concentration saves.')).toBeInTheDocument();
+
+    // Delete feat from inside feat viewer via two-click confirm
+    const viewer = screen.getByTestId('feat-viewer-card');
+    const delBtn = viewer.querySelector('button[aria-label="Delete War Caster"]');
+    fireEvent.click(delBtn);
+    expect(delBtn).toHaveAttribute('aria-label', 'Click again to delete War Caster');
+    fireEvent.click(delBtn);
+    expect(handleUpdateFeats).toHaveBeenCalledWith([]);
+  });
+
+  it('renders delete icon button next to X in FeatForm editing mode with two-click confirm and cancels via X', () => {
+    const handleUpdateFeats = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        feats={[{ id: 'feat_wc', name: 'War Caster', note: 'Advantage on saves.' }]}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    // Open viewer
+    fireEvent.click(screen.getByTestId('feat-chip-feat_wc'));
+    // Click edit button
+    fireEvent.click(screen.getByLabelText('Edit War Caster'));
+
+    const editForm = screen.getByTestId('feat-edit-form');
+    expect(editForm).toBeInTheDocument();
+
+    // Verify Cancel button in footer is removed
+    expect(screen.queryByText('Cancel')).toBeNull();
+
+    // Delete icon button is present in the header next to X
+    const delBtn = editForm.querySelector('button[aria-label="Delete War Caster"]');
+    expect(delBtn).toBeInTheDocument();
+
+    // Close button (X) is present and cancels edit mode
+    const closeBtn = editForm.querySelector('button[aria-label="Close"]');
+    expect(closeBtn).toBeInTheDocument();
+
+    // First click arms delete button
+    fireEvent.click(delBtn);
+    expect(delBtn).toHaveAttribute('aria-label', 'Click again to delete War Caster');
+    expect(handleUpdateFeats).not.toHaveBeenCalled();
+
+    // Second click triggers delete
+    fireEvent.click(delBtn);
+    expect(handleUpdateFeats).toHaveBeenCalledWith([]);
+  });
+
+  it('autofills feat from catalogue suggestion and creates linked tracked resource when Track Resource is checked', async () => {
+    resetFeatsCatalogueCache();
+    const handleUpdateFeats = vi.fn();
+    const handleUpdateResources = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          name: 'Fey Touched',
+          source: 'TCE',
+          typeLine: 'Feat • +1 INT/WIS/CHA',
+          trackedResource: { max: 1, resetOn: 'LR' },
+          description: 'Feat • +1 INT/WIS/CHA\n\nLearn Misty Step and one 1st-level spell.',
+        },
+      ],
+    });
+
+    render(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        feats={[]}
+        onUpdateResources={handleUpdateResources}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^\+ Add$/i }));
+
+    // Wait for catalogue load
+    const nameInput = screen.getByLabelText('Feat Name');
+    fireEvent.focus(nameInput);
+    fireEvent.change(nameInput, { target: { value: 'Fey' } });
+
+    const option = await screen.findByText('Fey Touched');
+    expect(option).toBeInTheDocument();
+
+    fireEvent.mouseDown(option);
+
+    expect(nameInput).toHaveValue('Fey Touched');
+    expect(screen.getByLabelText('Feat Description')).toHaveValue(
+      'Feat • +1 INT/WIS/CHA\n\nLearn Misty Step and one 1st-level spell.'
+    );
+    expect(screen.getByLabelText('Track Resource')).toBeChecked();
+    expect(screen.getByLabelText('Tracked Resource Max')).toHaveValue(1);
+
+    const saveBtn = screen.getByRole('button', { name: /^Save Feat$/i });
+    fireEvent.click(saveBtn);
+
+    expect(handleUpdateFeats).toHaveBeenCalledWith([
+      expect.objectContaining({
+        name: 'Fey Touched',
+        note: 'Feat • +1 INT/WIS/CHA\n\nLearn Misty Step and one 1st-level spell.',
+        statModifiers: { int: 1 },
+      }),
+    ]);
+    expect(handleUpdateResources).toHaveBeenCalledWith([
+      expect.objectContaining({
+        name: 'Fey Touched',
+        max: 1,
+        current: 1,
+        resetOn: 'LR',
+      }),
+    ]);
+  });
+
+  it('defaults feat stat boost to the first allowed ability on autofill, renders +1 STAT badge on feat chip and viewer, and lets user change or disable it', async () => {
+    resetFeatsCatalogueCache();
+    const handleUpdateFeats = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          name: 'Fey Touched',
+          source: 'XPHB',
+          typeLine: 'General Feat (Prerequisite: Level 4+) • +1 INT/WIS/CHA',
+          description: 'General Feat (Prerequisite: Level 4+) • +1 INT/WIS/CHA\n\nLearn Misty Step.',
+        },
+      ],
+    });
+
+    const { rerender } = render(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        feats={[]}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^\+ Add$/i }));
+    const nameInput = screen.getByLabelText('Feat Name');
+    fireEvent.focus(nameInput);
+    fireEvent.change(nameInput, { target: { value: 'Fey' } });
+
+    const option = await screen.findByText('Fey Touched');
+    fireEvent.mouseDown(option);
+
+    // Defaults to first allowed ability (+1 INT)
+    const statSelect = screen.getByLabelText('ASI');
+    expect(statSelect).toHaveValue('int:1');
+
+    // Switch to +1 WIS
+    fireEvent.change(statSelect, { target: { value: 'wis:1' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Save Feat$/i }));
+
+    expect(handleUpdateFeats).toHaveBeenCalledWith([
+      expect.objectContaining({
+        name: 'Fey Touched',
+        statModifiers: { wis: 1 },
+      }),
+    ]);
+
+    // Render saved feat with statModifiers and verify +1 WIS chip badge appears on card and viewer
+    const savedFeat = handleUpdateFeats.mock.calls[0][0][0];
+    rerender(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        feats={[savedFeat]}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    const featChip = screen.getByTestId(`feat-chip-${savedFeat.id}`);
+    expect(featChip).toHaveTextContent('+1 WIS');
+    expect(screen.getByTestId('feat-stat-badge')).toHaveTextContent('+1 WIS');
+
+    // Open viewer and check badge there too
+    fireEvent.click(featChip);
+    const viewerCard = screen.getByTestId('feat-viewer-card');
+    expect(viewerCard).toHaveTextContent('+1 WIS');
+  });
+
+  it('does not autofill, submit form, or exit editing state when pressing Enter in Feat Name', async () => {
+    resetFeatsCatalogueCache();
+    const handleUpdateFeats = vi.fn();
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => [
+        {
+          name: 'Lucky',
+          source: 'XPHB',
+          typeLine: 'General Feat',
+          description: 'You have luck points.',
+        },
+      ],
+    });
+
+    render(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        feats={[]}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^\+ Add$/i }));
+    const form = screen.getByTestId('feat-add-form');
+    expect(form).toBeInTheDocument();
+
+    const nameInput = screen.getByLabelText('Feat Name');
+    fireEvent.focus(nameInput);
+    fireEvent.change(nameInput, { target: { value: 'Lucky' } });
+
+    // Press Enter in input
+    fireEvent.keyDown(nameInput, { key: 'Enter' });
+
+    // Form remains open, no submission, no autofill of description
+    expect(handleUpdateFeats).not.toHaveBeenCalled();
+    expect(screen.getByTestId('feat-add-form')).toBeInTheDocument();
+    expect(nameInput.value).toBe('Lucky');
+    expect(screen.getByLabelText('Feat Description').value).toBe('');
+  });
+
+  it('also deletes linked tracked resource when deleting a linked feat, displays subtle linked icons on both cards, and requires two clicks on tracked resource delete button in editing mode', () => {
+    const handleUpdateFeats = vi.fn();
+    const handleUpdateResources = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={[
+          { id: 'res_lucky', linkedFeatId: 'feat_lucky', name: 'Lucky', current: 3, max: 3, resetOn: 'LR' },
+          { id: 'res_arcane', name: 'Arcane Recovery', current: 1, max: 1, resetOn: 'SR' },
+        ]}
+        featuresNotes=""
+        feats={[
+          { id: 'feat_lucky', name: 'Lucky', note: 'You have 3 luck points.' },
+          { id: 'feat_alert', name: 'Alert', note: '+5 initiative.' },
+        ]}
+        isEditing={true}
+        onUpdateResources={handleUpdateResources}
+        onUpdateFeats={handleUpdateFeats}
+      />
+    );
+
+    // Subtle linked icon appears on both the linked Tracked Resource card and the linked Feat chip (1 each)
+    expect(screen.getAllByTestId('resource-linked-icon')).toHaveLength(1);
+    expect(screen.getAllByTestId('feat-linked-icon')).toHaveLength(1);
+
+    // Tracked Resource delete button in editing mode uses Trash2 and two-click confirm
+    const resDelBtn = screen.getByLabelText('Delete Arcane Recovery');
+    fireEvent.click(resDelBtn);
+    expect(handleUpdateResources).not.toHaveBeenCalled();
+    expect(resDelBtn).toHaveAttribute('aria-label', 'Click again to delete Arcane Recovery');
+    fireEvent.click(resDelBtn);
+    expect(handleUpdateResources).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'res_lucky' }),
+    ]);
+
+    // Deleting the linked feat deletes both the feat and the linked tracked resource
+    const featChip = screen.getByTestId('feat-chip-feat_lucky');
+    const delBtn = featChip.querySelector('button[aria-label="Delete Lucky"]');
+    fireEvent.click(delBtn);
+    fireEvent.click(delBtn);
+
+    expect(handleUpdateFeats).toHaveBeenCalledWith([
+      expect.objectContaining({ id: 'feat_alert' }),
+    ]);
+    expect(handleUpdateResources).toHaveBeenLastCalledWith([
+      expect.objectContaining({ id: 'res_arcane' }),
+    ]);
   });
 
   it('renders freeform notes with 2 rows initially and auto-adjusts height style when content changes', () => {
@@ -414,17 +724,18 @@ describe('ResourcesCard', () => {
     const descInput = screen.getByLabelText('Edit Resource Description');
     // Lucky has 'Eldritch Adept' (1 line -> bucket 4)
     expect(descInput).toHaveAttribute('rows', '4');
-    expect(descInput.style.minHeight).toBe('96px');
+    expect(descInput.style.minHeight).toBe('90px');
+    expect(descInput.className).toContain('leading-relaxed');
 
-    // Type 6 lines -> bucket 8 (8 * 20 + 16 = 176px)
+    // Type 6 lines -> bucket 8 (8 * 19.5 + 12 = 168px)
     fireEvent.change(descInput, { target: { value: '1\n2\n3\n4\n5\n6' } });
     expect(descInput).toHaveAttribute('rows', '8');
-    expect(descInput.style.minHeight).toBe('176px');
+    expect(descInput.style.minHeight).toBe('168px');
 
-    // Type 10 lines -> bucket 12 (12 * 20 + 16 = 256px)
+    // Type 10 lines -> bucket 12 (12 * 19.5 + 12 = 246px)
     fireEvent.change(descInput, { target: { value: '1\n2\n3\n4\n5\n6\n7\n8\n9\n10' } });
     expect(descInput).toHaveAttribute('rows', '12');
-    expect(descInput.style.minHeight).toBe('256px');
+    expect(descInput.style.minHeight).toBe('246px');
   });
 
   it('dynamically expands description textarea in add form matching line buckets', () => {
@@ -442,12 +753,12 @@ describe('ResourcesCard', () => {
 
     const noteInput = screen.getByLabelText('Resource Description');
     expect(noteInput).toHaveAttribute('rows', '4');
-    expect(noteInput.style.minHeight).toBe('96px');
+    expect(noteInput.style.minHeight).toBe('90px');
 
     // Type 6 lines -> bucket 8
     fireEvent.change(noteInput, { target: { value: '1\n2\n3\n4\n5\n6' } });
     expect(noteInput).toHaveAttribute('rows', '8');
-    expect(noteInput.style.minHeight).toBe('176px');
+    expect(noteInput.style.minHeight).toBe('168px');
   });
 
   it('allows picking a color tag when adding a tracked resource', () => {

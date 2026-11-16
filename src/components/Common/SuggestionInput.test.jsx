@@ -110,7 +110,7 @@ describe('SuggestionInput', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 
-  it('supports keyboard navigation via ArrowDown and Enter after typing', () => {
+  it('does not select suggestion on Enter, closes dropdown, and blurs input', () => {
     const handleSelect = vi.fn();
     render(
       <SuggestionInput
@@ -125,11 +125,12 @@ describe('SuggestionInput', () => {
 
     const input = screen.getByLabelText('Item Name');
     fireEvent.change(input, { target: { value: 'Bag' } });
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
 
     fireEvent.keyDown(input, { key: 'ArrowDown' });
-    fireEvent.keyDown(input, { key: 'ArrowDown' }); // selects Bag of Holding
     fireEvent.keyDown(input, { key: 'Enter' });
 
-    expect(handleSelect).toHaveBeenCalledWith(sampleSuggestions[1]);
+    expect(handleSelect).not.toHaveBeenCalled();
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
 });

@@ -31,6 +31,23 @@ export default function SuggestionInput({
   const hasSuggestions = isOpen && suggestions && suggestions.length > 0;
 
   const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setIsOpen(false);
+      setHighlightedIndex(-1);
+      e.currentTarget.blur();
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      if (isOpen) {
+        e.preventDefault();
+        setIsOpen(false);
+        setHighlightedIndex(-1);
+      }
+      return;
+    }
+
     if (!hasSuggestions) return;
 
     if (e.key === 'ArrowDown') {
@@ -39,17 +56,6 @@ export default function SuggestionInput({
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev <= 0 ? suggestions.length - 1 : prev - 1));
-    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
-      e.preventDefault();
-      const chosen = suggestions[highlightedIndex];
-      if (chosen) {
-        onSelectSuggestion?.(chosen);
-        setIsOpen(false);
-        setHighlightedIndex(-1);
-      }
-    } else if (e.key === 'Escape') {
-      setIsOpen(false);
-      setHighlightedIndex(-1);
     }
   };
 
@@ -117,6 +123,11 @@ export default function SuggestionInput({
                 {item.requiresAttunement && (
                   <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300">
                     Attune
+                  </span>
+                )}
+                {item.trackedResource && (
+                  <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-dnd-gold/15 text-dnd-gold">
+                    {item.trackedResource.max} / {item.trackedResource.resetOn}
                   </span>
                 )}
               </li>

@@ -27,7 +27,7 @@ import ProficienciesCard from './ProficienciesCard';
 import ResourcesCard from './ResourcesCard';
 import ItemsCard, { MaxAttunementInput } from './ItemsCard';
 import NotesCard from './NotesCard';
-import { getProficiencyBonus, getEffectiveAbilities } from '../../utils/dndCalculations';
+import { getProficiencyBonus, getEffectiveAbilities, getFeatAbilityBonuses } from '../../utils/dndCalculations';
 import { createDefaultSheet } from '../../utils/storage';
 
 const SimulacrumIcon = (props) => <Snowflake {...props} size={15} />;
@@ -97,6 +97,7 @@ function CharacterSheetView({
   const savedScrollTopRef = React.useRef(0);
   const headerHeightRef = React.useRef(120);
   const isRestoringScrollRef = React.useRef(false);
+  const latestSheetRef = React.useRef(null);
 
   React.useLayoutEffect(() => {
     if (isActive && sheetScrollRef.current) {
@@ -121,21 +122,25 @@ function CharacterSheetView({
   }
 
   const sheet = character.sheet || createDefaultSheet(character.className);
+  latestSheetRef.current = sheet;
   const safeLevel = Number(character.level) || 1;
   const profBonus = getProficiencyBonus(safeLevel);
-  const effectiveAbilities = getEffectiveAbilities(sheet.abilities || {});
+  const featBonuses = getFeatAbilityBonuses(sheet.feats || []);
+  const effectiveAbilities = getEffectiveAbilities(sheet.abilities || {}, sheet.feats || []);
 
   const safeItems = Array.isArray(sheet.items) ? sheet.items : [];
   const attunedCount = safeItems.filter((i) => i.requiresAttunement && i.attuned).length;
   const maxAttunement = sheet.maxAttunement ?? 3;
 
   const updateSheet = (sheetUpdates) => {
+    const nextSheet = {
+      ...latestSheetRef.current,
+      ...sheetUpdates,
+    };
+    latestSheetRef.current = nextSheet;
     onUpdateCharacter?.({
       ...character,
-      sheet: {
-        ...sheet,
-        ...sheetUpdates,
-      },
+      sheet: nextSheet,
     });
   };
 
@@ -412,6 +417,7 @@ function CharacterSheetView({
         >
           <AbilitiesCard
             abilities={sheet.abilities}
+            featBonuses={featBonuses}
             level={safeLevel}
             isEditing={isEditingAbilities}
             onUpdateAbilities={(abilities) => updateSheet({ abilities })}

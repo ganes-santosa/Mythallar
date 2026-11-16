@@ -1,20 +1,20 @@
 # HANDOFF
 
-## Current state (v3.1.3 - master)
+## Current state (v3.1.4 - master)
+- **v3.1.4 (patch)**:
+  - 5e Feats catalogue (`public/data/feats.json`, 257 feats from 5etools) generated via `scripts/fetch-feats.mjs` with `npm run update-feats`.
+  - Feats autocomplete in `ResourcesCard.jsx` via `SuggestionInput` (only applies on explicit click; Enter dismisses & blurs).
+  - Feat ASI derivation: non-destructive `getFeatAbilityBonuses` & `getEffectiveAbilities` with default-on matching first allowed stat, `+1 STAT` badges on chips/viewer, and edit-mode-only `+1 Feat` on `AbilitiesCard`.
+  - Stepped textarea bucket transitions (`4, 8, 12, 16`) with zero scrollbar flash and zero vertical text jump.
+  - Form Enter guards across `ItemsCard`, `ResourcesCard`, and `HomebrewSpellModal` preventing accidental submission on text inputs.
+  - Feat edit mode UX: moved delete icon button (`Trash2`) next to X in header; removed redundant Cancel button.
+  - Full suite green: 57 test files, 512 tests passed. Build clean.
 - **v3.1.3 (patch)**:
-  - 5e Items Catalogue & Autofill: `scripts/fetch-items.mjs` generates `public/data/items.json` (3,067 items including magic variants) with formatted 5e `typeLine` headers prepended to descriptions.
-  - Typeahead `SuggestionInput`: `src/components/Common/SuggestionInput.jsx` opens strictly while typing and dismisses on blur/outside click; integrated into `ItemsCard` Add/Edit Item forms (autofills category, color, attunement, and description while remaining fully editable).
-  - Viewer Pane Two-Click Delete & Trash Icons: added `useTwoClickConfirm` delete buttons (`Trash2`) to `ItemDetailViewer`, `ItemForm` (edit mode), and `ResourceDetailViewer`; replaced `X` on item chips with `Trash2`.
-  - Spell Search Match: removed description text from `useSpellFilter` search matching so queries match name and tags cleanly.
-  - Verification: 56 test files passing (500/500 tests); production build clean.
-- **v3.1.2 (patch)**:
-  - Numeric input UX (`NumericDraftInput` / `useNumericDraft`), swipeable `ToastBanner`, and Notes empty state / toolbar clipping fix.
-- **v3.1.1 (patch)**:
-  - Mobile browser `100dvh` viewport fix, left scroll hitbox extension, and uniform left margin alignment.
+  - 5e Items Catalogue & Autofill (`public/data/items.json`, 3,067 items) via `scripts/fetch-items.mjs`.
 
 ## Next up
-- 5e Feats catalogue (`public/data/feats.json`) + `SuggestionInput` autofill + inline Feat Detail Viewer + optional linked Tracked Resource flow in `ResourcesCard.jsx`.
 - Subclasses / other catalogue integrations from 5etools mirror dataset.
+- Character builder and left-pane full fillable character sheet expansion.
 
 ## Open questions
 - Homebrew spells have no `isLegacy`, so the "2014 Legacy" filter hides them and "2024 Modern" shows them. Decide intended behavior.

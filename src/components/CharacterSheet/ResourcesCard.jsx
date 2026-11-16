@@ -1,10 +1,47 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, RotateCcw, Award, GripVertical, Pencil, Trash2 } from 'lucide-react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { X, RotateCcw, Award, GripVertical, Pencil, Trash2, Link2 } from 'lucide-react';
 import useAccordionMount from '../../hooks/useAccordionMount';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import useClickOutside from '../../hooks/useClickOutside';
-import { getLineBucket, getColorConfig, ColorDropdown, RESOURCE_COLORS } from './ItemsCard';
+import SuggestionInput from '../Common/SuggestionInput';
+import {
+  loadFeatsCatalogue,
+  matchFeatSuggestions,
+  getFeatStatChoiceConfig,
+  statChoiceToModifiers,
+  modifiersToStatChoice,
+  formatFeatStatBadge,
+} from '../../utils/featsCatalogue';
+import { estimateLinesFromText, getLineBucket, getColorConfig, ColorDropdown, RESOURCE_COLORS, SteppedTextarea } from './ItemsCard';
+
+export function normalizeFeats(rawFeats) {
+  if (!Array.isArray(rawFeats)) return [];
+  return rawFeats
+    .map((f, idx) => {
+      if (typeof f === 'string') {
+        const trimmed = f.trim();
+        if (!trimmed) return null;
+        return {
+          id: `feat_legacy_${idx}_${trimmed.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`,
+          name: trimmed,
+          note: '',
+          color: 'none',
+        };
+      }
+      if (f && typeof f === 'object' && f.name) {
+        return {
+          id: f.id || `feat_${idx}`,
+          name: f.name,
+          note: f.note ?? f.description ?? '',
+          color: f.color || 'none',
+          ...(f.statModifiers ? { statModifiers: f.statModifiers } : {}),
+        };
+      }
+      return null;
+    })
+    .filter(Boolean);
+}
 
 export function RearrangeIcon({ size = 13, className = '', ...props }) {
   return (
@@ -124,6 +161,12 @@ function ResourceEditForm({
       ref={formRef}
       noValidate
       onSubmit={onSave}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+          e.preventDefault();
+          e.target.blur();
+        }
+      }}
       data-testid="resource-edit-form"
       className="p-3 rounded-lg bg-dnd-card space-y-2.5 text-xs shadow-sm ring-1 ring-dnd-gold/30"
     >
@@ -216,18 +259,13 @@ function ResourceEditForm({
         <label htmlFor={resource ? `edit-res-note-${resource.id}` : 'edit-res-note'} className="block text-[10px] text-slate-400 mb-0.5">
           Description / Notes
         </label>
-        <textarea
+        <SteppedTextarea
           id={resource ? `edit-res-note-${resource.id}` : 'edit-res-note'}
           aria-label="Edit Resource Description"
-          rows={editBucket}
+          bucket={editBucket}
           placeholder="Resource rules, description, or notes..."
           value={editNote}
           onChange={(e) => setEditNote(e.target.value)}
-          style={{
-            minHeight: `${editBucket * 20 + 16}px`,
-            maxHeight: `${Math.max(editBucket, 16) * 20 + 16}px`,
-          }}
-          className="w-full px-2 py-1.5 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 transition-[min-height,height] duration-300 ease-in-out resize-y"
         />
       </div>
 
@@ -281,7 +319,8 @@ function ResourceDetailViewer({
   }
 
   const noteText = viewingResource.note || viewingResource.description || '';
-  const bucket = getLineBucket(noteText);
+  const lineCount = estimateLinesFromText(noteText);
+  const bucket = getLineBucket(lineCount);
   // Base card header + paddings is ~64px; notes area is bucket * 19.5px
   const totalViewerHeight = Math.round(64 + bucket * 19.5);
 
@@ -351,7 +390,384 @@ function ResourceDetailViewer({
 
           <div
             data-testid="resource-viewer-notes"
-            className="flex-1 min-h-0 pt-2 mt-2 border-t border-white/5 text-slate-300 text-xs overflow-y-auto pr-1"
+            className={`flex-1 min-h-0 pt-2 mt-2 border-t border-white/5 text-slate-300 text-xs pr-1 ${
+              lineCount > 16 ? 'overflow-y-auto custom-scroll' : 'overflow-y-hidden'
+            }`}
+          >
+            {noteText ? (
+              <p className="whitespace-pre-wrap leading-relaxed text-slate-300">
+                {noteText}
+              </p>
+            ) : (
+              <p className="text-slate-500 italic text-[11px] leading-relaxed">
+                No description or notes recorded.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
+function ResourceChipDeleteButton({ resourceName, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(onDelete);
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${resourceName}` : `Delete ${resourceName}`}
+      title={armed ? `Click again to delete ${resourceName}` : `Delete ${resourceName}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      className={`ml-0.5 p-0.5 rounded transition-all cursor-pointer ${
+        armed
+          ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'text-slate-500 hover:text-red-400'
+      }`}
+    >
+      <Trash2 size={11} />
+    </button>
+  );
+}
+
+// ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
+function FeatChipDeleteButton({ featName, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(onDelete);
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${featName}` : `Delete ${featName}`}
+      title={armed ? `Click again to delete ${featName}` : `Delete ${featName}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      className={`ml-1.5 p-0.5 rounded transition-all cursor-pointer ${
+        armed
+          ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'text-slate-600 hover:text-red-400'
+      }`}
+    >
+      <Trash2 size={11} />
+    </button>
+  );
+}
+
+function FeatForm({
+  formRef,
+  editingFeatId,
+  name,
+  setName,
+  nameError,
+  setNameError,
+  color,
+  setColor,
+  isColorMenuOpen,
+  setIsColorMenuOpen,
+  colorDropdownRef,
+  note,
+  setNote,
+  statChoice = 'none',
+  setStatChoice,
+  statOptions = [],
+  trackResource,
+  setTrackResource,
+  resourceMax,
+  setResourceMax,
+  resourceReset,
+  setResourceReset,
+  suggestions = [],
+  onSelectSuggestion,
+  onSubmit,
+  onCancel,
+  onDelete,
+}) {
+  const editBucket = getLineBucket(note);
+
+  return (
+    <form
+      ref={formRef}
+      noValidate
+      data-testid={editingFeatId ? 'feat-edit-form' : 'feat-add-form'}
+      onSubmit={onSubmit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+          e.preventDefault();
+          e.target.blur();
+        }
+      }}
+      className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30 animate-fadeIn"
+    >
+      <div className="flex items-center justify-between">
+        <span className="font-bold text-dnd-gold text-[11px]">
+          {editingFeatId ? 'Edit Feat' : 'Add New Feat'}
+        </span>
+        <div className="flex items-center space-x-1.5 shrink-0">
+          {editingFeatId && onDelete && (
+            <ResourceViewerDeleteButton resourceName={name} onDelete={onDelete} />
+          )}
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={onCancel}
+            className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-0.5">
+            <label
+              htmlFor={editingFeatId ? `feat-name-${editingFeatId}` : 'feat-name'}
+              className="block text-[10px] text-slate-400"
+            >
+              Feat Name
+            </label>
+            {nameError && (
+              <span className="text-[9px] text-red-400 font-semibold">Name required</span>
+            )}
+          </div>
+          <SuggestionInput
+            id={editingFeatId ? `feat-name-${editingFeatId}` : 'feat-name'}
+            aria-label="Feat Name"
+            placeholder="e.g. War Caster, Alert, Fey Touched"
+            value={name}
+            suggestions={suggestions}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError(false);
+            }}
+            onSelectSuggestion={onSelectSuggestion}
+            className={`w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 focus:outline-none text-xs ${
+              nameError ? 'ring-1 ring-red-500/70' : 'focus:ring-1 focus:ring-white/20'
+            }`}
+          />
+        </div>
+
+        <div className="w-24 shrink-0">
+          <label
+            htmlFor={editingFeatId ? `feat-asi-${editingFeatId}` : 'feat-asi'}
+            className="block text-[10px] text-slate-400 mb-0.5"
+          >
+            ASI
+          </label>
+          <select
+            id={editingFeatId ? `feat-asi-${editingFeatId}` : 'feat-asi'}
+            aria-label="ASI"
+            value={statChoice}
+            onChange={(e) => setStatChoice?.(e.target.value)}
+            className="w-full px-1.5 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 h-[26px]"
+          >
+            {statOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <ColorDropdown
+          colors={RESOURCE_COLORS}
+          color={color}
+          setColor={setColor}
+          isOpen={isColorMenuOpen}
+          setIsOpen={setIsColorMenuOpen}
+          dropdownRef={colorDropdownRef}
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor={editingFeatId ? `feat-note-${editingFeatId}` : 'feat-note'}
+          className="block text-[10px] text-slate-400 mb-0.5"
+        >
+          Description / Notes
+        </label>
+        <SteppedTextarea
+          id={editingFeatId ? `feat-note-${editingFeatId}` : 'feat-note'}
+          aria-label="Feat Description"
+          bucket={editBucket}
+          placeholder="Feat benefits, prerequisites, or notes..."
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center space-x-2 text-slate-300 text-xs cursor-pointer select-none">
+            <input
+              type="checkbox"
+              aria-label="Track Resource"
+              checked={trackResource}
+              onChange={(e) => setTrackResource(e.target.checked)}
+              className="rounded bg-dnd-panel text-dnd-gold focus:ring-0"
+            />
+            <span>Track Resource</span>
+          </label>
+
+          {trackResource && (
+            <div className="flex items-center space-x-1.5 pl-1">
+              <label className="flex items-center space-x-1 text-[10px] text-slate-400">
+                <span>Max</span>
+                <input
+                  type="number"
+                  min="1"
+                  aria-label="Tracked Resource Max"
+                  value={resourceMax}
+                  onChange={(e) => setResourceMax(e.target.value)}
+                  className="w-12 px-1.5 py-0.5 rounded bg-dnd-panel text-slate-200 text-xs text-center focus:outline-none focus:ring-1 focus:ring-white/20"
+                />
+              </label>
+              <select
+                aria-label="Tracked Resource Reset"
+                value={resourceReset}
+                onChange={(e) => setResourceReset(e.target.value)}
+                className="px-1.5 py-0.5 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+              >
+                <option value="LR">Long Rest</option>
+                <option value="SR">Short Rest</option>
+                <option value="Dawn">Dawn</option>
+                <option value="Manual">Manual</option>
+              </select>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center space-x-2 ml-auto">
+          <button
+            type="submit"
+            className="px-3 py-1 rounded bg-dnd-gold text-slate-950 font-bold hover:bg-dnd-gold-light text-xs"
+          >
+            {editingFeatId ? 'Update Feat' : 'Save Feat'}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function FeatDetailViewer({
+  viewingFeat,
+  linkedResource,
+  fallbackNote = '',
+  isEditing = false,
+  editFormProps,
+  isClosing = false,
+  onClose,
+  onStartEdit,
+  onDelete,
+}) {
+  if (!viewingFeat) return null;
+
+  if (isEditing && editFormProps) {
+    return (
+      <div
+        data-testid="feat-viewer-wrapper"
+        className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
+      >
+        <div className="overflow-hidden p-0.5 pb-2">
+          <FeatForm {...editFormProps} />
+        </div>
+      </div>
+    );
+  }
+
+  const noteText = viewingFeat.note || viewingFeat.description || fallbackNote || '';
+  const lineCount = estimateLinesFromText(noteText);
+  const bucket = getLineBucket(lineCount);
+  const totalViewerHeight = Math.round(64 + bucket * 19.5);
+  const viewerColorCfg = getColorConfig(viewingFeat.color || 'none');
+  const statBadge = formatFeatStatBadge(viewingFeat.statModifiers);
+
+  const resetLabel = linkedResource
+    ? linkedResource.resetOn === 'LR'
+      ? 'Long Rest'
+      : linkedResource.resetOn === 'SR'
+      ? 'Short Rest'
+      : linkedResource.resetOn || 'Manual'
+    : '';
+
+  return (
+    <div
+      data-testid="feat-viewer-wrapper"
+      className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
+    >
+      <div className="overflow-hidden p-0.5 pb-2">
+        <div
+          data-testid="feat-viewer-card"
+          style={{ height: `${totalViewerHeight}px` }}
+          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
+        >
+          <div className="flex items-center justify-between gap-2 shrink-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <Award size={14} className="shrink-0 text-dnd-gold opacity-90" />
+              <span className="font-bold text-sm text-slate-100 truncate">
+                {viewingFeat.name}
+              </span>
+              {statBadge && (
+                <span
+                  data-testid="feat-viewer-stat-badge"
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
+                >
+                  {statBadge}
+                </span>
+              )}
+              {linkedResource && (
+                <>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/10 text-slate-200">
+                    {linkedResource.current ?? 0} / {linkedResource.max ?? 0}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-medium truncate">
+                    Recovers @ {resetLabel}
+                  </span>
+                </>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-1.5 shrink-0">
+              <button
+                type="button"
+                aria-label={`Edit ${viewingFeat.name}`}
+                title={`Edit ${viewingFeat.name}`}
+                onClick={(e) => onStartEdit(viewingFeat, e)}
+                className="p-1 rounded text-slate-400 hover:text-dnd-gold hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <Pencil size={12} />
+              </button>
+
+              {onDelete && (
+                <ResourceViewerDeleteButton
+                  resourceName={viewingFeat.name}
+                  onDelete={() => onDelete(viewingFeat.id)}
+                />
+              )}
+
+              <button
+                type="button"
+                aria-label={`Close ${viewingFeat.name} details`}
+                title="Close details"
+                onClick={onClose}
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+              >
+                <X size={13} />
+              </button>
+            </div>
+          </div>
+
+          <div
+            data-testid="feat-viewer-notes"
+            className={`flex-1 min-h-0 pt-2 mt-2 border-t border-white/5 text-slate-300 text-xs pr-1 ${
+              lineCount > 16 ? 'overflow-y-auto custom-scroll' : 'overflow-y-hidden'
+            }`}
           >
             {noteText ? (
               <p className="whitespace-pre-wrap leading-relaxed text-slate-300">
@@ -408,7 +824,40 @@ export default function ResourcesCard({
   const [dragOverResId, setDragOverResId] = useState(null);
 
   const [isAddingFeat, setIsAddingFeat] = useState(false);
-  const [newFeat, setNewFeat] = useState('');
+  const [featName, setFeatName] = useState('');
+  const [featNote, setFeatNote] = useState('');
+  const [featColor, setFeatColor] = useState('none');
+  const [featStatChoice, setFeatStatChoice] = useState('none');
+  const [featStatOptions, setFeatStatOptions] = useState(() => getFeatStatChoiceConfig('').options);
+  const [isFeatColorMenuOpen, setIsFeatColorMenuOpen] = useState(false);
+  const featColorDropdownRef = useClickOutside(isFeatColorMenuOpen, () => setIsFeatColorMenuOpen(false));
+  const [featNameError, setFeatNameError] = useState(false);
+  const [featTrackResource, setFeatTrackResource] = useState(false);
+  const [featResourceMax, setFeatResourceMax] = useState('1');
+  const [featResourceReset, setFeatResourceReset] = useState('LR');
+
+  const [viewingFeatId, setViewingFeatId] = useState(null);
+  const [editingFeatId, setEditingFeatId] = useState(null);
+  const [featsCatalogue, setFeatsCatalogue] = useState([]);
+
+  const normalizedFeats = useMemo(() => normalizeFeats(feats), [feats]);
+
+  useEffect(() => {
+    if (isAddingFeat || editingFeatId || viewingFeatId) {
+      let active = true;
+      loadFeatsCatalogue().then((data) => {
+        if (active) setFeatsCatalogue(data);
+      });
+      return () => {
+        active = false;
+      };
+    }
+  }, [isAddingFeat, editingFeatId, viewingFeatId]);
+
+  const featSuggestions = useMemo(
+    () => matchFeatSuggestions(featName, featsCatalogue, 8),
+    [featName, featsCatalogue]
+  );
 
   const textareaRef = useRef(null);
 
@@ -425,10 +874,25 @@ export default function ResourcesCard({
   }
   const resourceToDisplay = isViewingMatch ? viewingResource : cachedResourceRef.current;
 
+  const viewingFeat = normalizedFeats.find((f) => f.id === viewingFeatId);
+  const isViewingFeatMatch = Boolean(viewingFeat);
+  const { shouldRender: shouldRenderFeatViewer, isClosing: isFeatViewerClosing } = useAccordionMount(
+    isViewingFeatMatch,
+    200
+  );
+
+  const cachedFeatRef = useRef(viewingFeat);
+  if (isViewingFeatMatch && viewingFeat) {
+    cachedFeatRef.current = viewingFeat;
+  }
+  const featToDisplay = isViewingFeatMatch ? viewingFeat : cachedFeatRef.current;
+
   const addBucket = getLineBucket(newResourceNote);
 
   const addFormRef = useAutoScrollOnExpand(Boolean(isAdding && !editingResourceId));
   const editFormRef = useAutoScrollOnExpand(Boolean(editingResourceId));
+  const addFeatFormRef = useAutoScrollOnExpand(Boolean(isAddingFeat && !editingFeatId));
+  const editFeatFormRef = useAutoScrollOnExpand(Boolean(editingFeatId));
 
   const adjustHeight = () => {
     const el = textareaRef.current;
@@ -443,19 +907,216 @@ export default function ResourcesCard({
     adjustHeight();
   }, [featuresNotes]);
 
-  const handleAddFeat = (e) => {
-    e.preventDefault();
-    const trimmed = newFeat.trim();
-    if (!trimmed) return;
-    if (!feats.includes(trimmed)) {
-      onUpdateFeats?.([...feats, trimmed]);
-    }
-    setNewFeat('');
-    setIsAddingFeat(false);
+  const findLinkedResource = (feat) => {
+    if (!feat) return null;
+    return (trackedResources || []).find(
+      (r) =>
+        r.linkedFeatId === feat.id ||
+        (!r.linkedFeatId && r.name?.toLowerCase() === feat.name?.toLowerCase())
+    );
   };
 
-  const handleRemoveFeat = (featToRemove) => {
-    onUpdateFeats?.(feats.filter((f) => f !== featToRemove));
+  const findLinkedFeat = (res) => {
+    if (!res) return null;
+    return normalizedFeats.find(
+      (f) =>
+        res.linkedFeatId === f.id ||
+        (!res.linkedFeatId && res.name?.toLowerCase() === f.name?.toLowerCase())
+    );
+  };
+
+  const resetFeatForm = () => {
+    setFeatName('');
+    setFeatNote('');
+    setFeatColor('none');
+    setFeatStatChoice('none');
+    setFeatStatOptions(getFeatStatChoiceConfig('').options);
+    setIsFeatColorMenuOpen(false);
+    setFeatNameError(false);
+    setFeatTrackResource(false);
+    setFeatResourceMax('1');
+    setFeatResourceReset('LR');
+    setIsAddingFeat(false);
+    setEditingFeatId(null);
+  };
+
+  const handleSelectFeatSuggestion = (suggestion) => {
+    if (!suggestion) return;
+    setFeatName(suggestion.name);
+    setFeatNameError(false);
+    if (suggestion.description !== undefined) {
+      setFeatNote(suggestion.description);
+    }
+    const statCfg = getFeatStatChoiceConfig(suggestion);
+    setFeatStatOptions(statCfg.options);
+    setFeatStatChoice(statCfg.defaultChoice);
+
+    if (suggestion.trackedResource) {
+      setFeatTrackResource(true);
+      setFeatResourceMax(String(suggestion.trackedResource.max || 1));
+      setFeatResourceReset(suggestion.trackedResource.resetOn || 'LR');
+    } else {
+      setFeatTrackResource(false);
+    }
+  };
+
+  const handleSaveFeat = (e) => {
+    e.preventDefault();
+    const trimmed = featName.trim();
+    if (!trimmed) {
+      setFeatNameError(true);
+      return;
+    }
+
+    const statMods = statChoiceToModifiers(featStatChoice);
+
+    if (editingFeatId) {
+      const updatedFeats = normalizedFeats.map((f) => {
+        if (f.id !== editingFeatId) return f;
+        const nextFeat = {
+          ...f,
+          name: trimmed,
+          note: featNote.trim(),
+          color: featColor || 'none',
+        };
+        if (statMods) {
+          nextFeat.statModifiers = statMods;
+        } else {
+          delete nextFeat.statModifiers;
+        }
+        return nextFeat;
+      });
+      onUpdateFeats?.(updatedFeats);
+
+      const targetFeat = normalizedFeats.find((f) => f.id === editingFeatId);
+      const existingLinked = findLinkedResource(targetFeat);
+
+      if (featTrackResource) {
+        const maxVal = Math.max(1, Number(featResourceMax) || 1);
+        if (existingLinked) {
+          const updatedResources = (trackedResources || []).map((r) =>
+            r.id === existingLinked.id
+              ? {
+                  ...r,
+                  linkedFeatId: editingFeatId,
+                  name: trimmed,
+                  max: maxVal,
+                  current: Math.min(r.current ?? maxVal, maxVal),
+                  resetOn: featResourceReset,
+                  note: featNote.trim(),
+                  color: featColor || 'none',
+                }
+              : r
+          );
+          onUpdateResources?.(updatedResources);
+        } else {
+          const newRes = {
+            id: `res_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+            linkedFeatId: editingFeatId,
+            name: trimmed,
+            max: maxVal,
+            current: maxVal,
+            resetOn: featResourceReset,
+            note: featNote.trim(),
+            color: featColor || 'none',
+          };
+          onUpdateResources?.([...(trackedResources || []), newRes]);
+        }
+      } else if (existingLinked) {
+        const filteredResources = (trackedResources || []).filter((r) => r.id !== existingLinked.id);
+        onUpdateResources?.(filteredResources);
+      }
+
+      setEditingFeatId(null);
+      setIsFeatColorMenuOpen(false);
+      return;
+    }
+
+    const newFeatObj = {
+      id: `feat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: trimmed,
+      note: featNote.trim(),
+      color: featColor || 'none',
+      ...(statMods ? { statModifiers: statMods } : {}),
+    };
+
+    onUpdateFeats?.([...normalizedFeats, newFeatObj]);
+
+    if (featTrackResource) {
+      const maxVal = Math.max(1, Number(featResourceMax) || 1);
+      const newRes = {
+        id: `res_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        linkedFeatId: newFeatObj.id,
+        name: trimmed,
+        max: maxVal,
+        current: maxVal,
+        resetOn: featResourceReset,
+        note: featNote.trim(),
+        color: featColor || 'none',
+      };
+      onUpdateResources?.([...(trackedResources || []), newRes]);
+    }
+
+    resetFeatForm();
+  };
+
+  const handleDeleteFeat = (featId) => {
+    const targetFeat = normalizedFeats.find((f) => f.id === featId);
+    if (viewingFeatId === featId) {
+      setViewingFeatId(null);
+      setEditingFeatId(null);
+    }
+    const filteredFeats = normalizedFeats.filter((f) => f.id !== featId);
+    onUpdateFeats?.(filteredFeats);
+
+    if (targetFeat) {
+      const linked = (trackedResources || []).find((r) => r.linkedFeatId === targetFeat.id);
+      if (linked) {
+        if (viewingResourceId === linked.id) {
+          setViewingResourceId(null);
+          setEditingResourceId(null);
+        }
+        onUpdateResources?.((trackedResources || []).filter((r) => r.id !== linked.id));
+      }
+    }
+  };
+
+  const handleToggleFeatView = (featId) => {
+    setViewingResourceId(null);
+    setEditingResourceId(null);
+    setViewingFeatId((prev) => (prev === featId ? null : featId));
+    setEditingFeatId(null);
+    setFeatNameError(false);
+  };
+
+  const handleStartFeatEdit = (feat, e) => {
+    e?.stopPropagation?.();
+    const linked = findLinkedResource(feat);
+    const catalogueMatch = featsCatalogue.find(
+      (c) => c.name.toLowerCase() === feat.name.toLowerCase()
+    );
+    const statCfg = getFeatStatChoiceConfig(catalogueMatch || feat);
+    setIsAddingFeat(false);
+    setEditingFeatId(feat.id);
+    setViewingFeatId(feat.id);
+    setViewingResourceId(null);
+    setEditingResourceId(null);
+    setFeatName(feat.name || '');
+    setFeatNote(feat.note || feat.description || catalogueMatch?.description || '');
+    setFeatColor(feat.color || 'none');
+    setFeatStatOptions(statCfg.options);
+    setFeatStatChoice(modifiersToStatChoice(feat.statModifiers));
+    setIsFeatColorMenuOpen(false);
+    setFeatNameError(false);
+    if (linked) {
+      setFeatTrackResource(true);
+      setFeatResourceMax(String(linked.max ?? 1));
+      setFeatResourceReset(linked.resetOn || 'LR');
+    } else {
+      setFeatTrackResource(false);
+      setFeatResourceMax('1');
+      setFeatResourceReset('LR');
+    }
   };
 
   const handleStep = (id, delta) => {
@@ -515,6 +1176,8 @@ export default function ResourcesCard({
 
   const handleToggleView = (id) => {
     if (draggedResId) return;
+    setViewingFeatId(null);
+    setEditingFeatId(null);
     setViewingResourceId((prev) => (prev === id ? null : id));
     setEditingResourceId(null);
     setEditNameError(false);
@@ -546,6 +1209,7 @@ export default function ResourcesCard({
     }
 
     const maxVal = Math.max(1, Number(editMax) || 1);
+    const targetRes = (trackedResources || []).find((r) => r.id === editingResourceId);
     const updated = (trackedResources || []).map((res) => {
       if (res.id !== editingResourceId) return res;
       return {
@@ -560,8 +1224,55 @@ export default function ResourcesCard({
     });
 
     onUpdateResources?.(updated);
+
+    if (targetRes?.linkedFeatId) {
+      const hasLinkedFeat = normalizedFeats.some((f) => f.id === targetRes.linkedFeatId);
+      if (hasLinkedFeat) {
+        const updatedFeats = normalizedFeats.map((f) =>
+          f.id === targetRes.linkedFeatId
+            ? {
+                ...f,
+                name: editName.trim(),
+                note: editNote.trim(),
+                color: editColor || 'none',
+              }
+            : f
+        );
+        onUpdateFeats?.(updatedFeats);
+      }
+    }
+
     setEditingResourceId(null);
     setIsEditColorMenuOpen(false);
+  };
+
+  const featFormProps = {
+    editingFeatId,
+    name: featName,
+    setName: setFeatName,
+    nameError: featNameError,
+    setNameError: setFeatNameError,
+    color: featColor,
+    setColor: setFeatColor,
+    isColorMenuOpen: isFeatColorMenuOpen,
+    setIsColorMenuOpen: setIsFeatColorMenuOpen,
+    colorDropdownRef: featColorDropdownRef,
+    note: featNote,
+    setNote: setFeatNote,
+    statChoice: featStatChoice,
+    setStatChoice: setFeatStatChoice,
+    statOptions: featStatOptions,
+    trackResource: featTrackResource,
+    setTrackResource: setFeatTrackResource,
+    resourceMax: featResourceMax,
+    setResourceMax: setFeatResourceMax,
+    resourceReset: featResourceReset,
+    setResourceReset: setFeatResourceReset,
+    suggestions: featSuggestions,
+    onSelectSuggestion: handleSelectFeatSuggestion,
+    onSubmit: handleSaveFeat,
+    onCancel: resetFeatForm,
+    onDelete: editingFeatId ? () => handleDeleteFeat(editingFeatId) : undefined,
   };
 
   const editFormProps = resourceToDisplay
@@ -673,6 +1384,12 @@ export default function ResourcesCard({
           ref={addFormRef}
           noValidate
           onSubmit={handleSaveResource}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+              e.preventDefault();
+              e.target.blur();
+            }
+          }}
           className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30"
         >
           <div className="flex items-center justify-between">
@@ -764,18 +1481,13 @@ export default function ResourcesCard({
             <label htmlFor="res-note" className="block text-[10px] text-slate-400 mb-0.5">
               Description / Notes
             </label>
-            <textarea
+            <SteppedTextarea
               id="res-note"
               aria-label="Resource Description"
-              rows={addBucket}
+              bucket={addBucket}
               placeholder="e.g. Spend a luck point to roll an additional d20..."
               value={newResourceNote}
               onChange={(e) => setNewResourceNote(e.target.value)}
-              style={{
-                minHeight: `${addBucket * 20 + 16}px`,
-                maxHeight: `${Math.max(addBucket, 16) * 20 + 16}px`,
-              }}
-              className="w-full px-2 py-1.5 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 transition-[min-height,height] duration-300 ease-in-out resize-y"
             />
           </div>
           <div className="flex items-center justify-end space-x-2 pt-1">
@@ -832,6 +1544,7 @@ export default function ResourcesCard({
             const isOverThis = dragOverResId === res.id;
             const isViewing = viewingResourceId === res.id;
             const colorCfg = getColorConfig(res.color || 'none');
+            const linkedFeat = findLinkedFeat(res);
 
             return (
               <div
@@ -880,7 +1593,17 @@ export default function ResourcesCard({
                     </div>
                   )}
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-semibold text-slate-200 truncate">{res.name}</div>
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-[11px] font-semibold text-slate-200 truncate">{res.name}</span>
+                      {linkedFeat && (
+                        <Link2
+                          size={10}
+                          data-testid="resource-linked-icon"
+                          title={`Linked with Feat: ${linkedFeat.name}`}
+                          className="shrink-0 text-slate-400/70"
+                        />
+                      )}
+                    </div>
                     <div className="text-[10px] text-slate-400 truncate">
                       {res.resetOn ? `Recovers @ ${res.resetOn}` : ''}
                     </div>
@@ -912,15 +1635,10 @@ export default function ResourcesCard({
                     +
                   </button>
                   {isEditing && (
-                    <button
-                      type="button"
-                      aria-label={`Delete ${res.name}`}
-                      title="Remove resource"
-                      onClick={() => handleDeleteResource(res.id)}
-                      className="text-slate-500 hover:text-red-400 pl-1 ml-0.5 transition-opacity"
-                    >
-                      <X size={10} />
-                    </button>
+                    <ResourceChipDeleteButton
+                      resourceName={res.name}
+                      onDelete={() => handleDeleteResource(res.id)}
+                    />
                   )}
                 </div>
               </div>
@@ -952,73 +1670,160 @@ export default function ResourcesCard({
         />
       </div>
 
-      {/* Feats Subdivision (matching Conditions and Resistance & Immunities) */}
-      <div className="pt-1.5 border-t border-white/5 space-y-1">
+      {/* Feats Subdivision */}
+      <div className="pt-1.5 border-t border-white/5 space-y-1.5">
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
           <span className="flex items-center gap-1">
             <Award size={10} className="text-amber-400" /> Feats:
           </span>
           <button
             type="button"
-            onClick={() => setIsAddingFeat(!isAddingFeat)}
+            onClick={() => {
+              if (isAddingFeat && !editingFeatId) {
+                resetFeatForm();
+              } else {
+                setEditingFeatId(null);
+                setFeatName('');
+                setFeatNote('');
+                setFeatColor('none');
+                setFeatStatChoice('none');
+                setFeatStatOptions(getFeatStatChoiceConfig('').options);
+                setFeatNameError(false);
+                setFeatTrackResource(false);
+                setFeatResourceMax('1');
+                setFeatResourceReset('LR');
+                setIsAddingFeat(true);
+              }
+            }}
             className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
           >
             + Add
           </button>
         </div>
 
-        {isAddingFeat && (
-          <form noValidate onSubmit={handleAddFeat} className="flex items-center space-x-1.5 pt-1 px-0.5">
-            <input
-              type="text"
-              autoFocus
-              placeholder="e.g. War Caster, Alert, Fey Touched"
-              value={newFeat}
-              onChange={(e) => setNewFeat(e.target.value)}
-              className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
-            />
-            <button
-              type="submit"
-              className="px-2.5 py-1 rounded-lg bg-dnd-gold text-slate-950 font-bold text-xs hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsAddingFeat(false);
-                setNewFeat('');
-              }}
-              className="px-2 py-1 rounded-lg bg-dnd-card text-slate-400 text-xs hover:text-white transition-colors cursor-pointer"
-            >
-              Cancel
-            </button>
-          </form>
+        {/* Add New Feat Form */}
+        {isAddingFeat && !editingFeatId && (
+          <FeatForm
+            {...featFormProps}
+            formRef={addFeatFormRef}
+          />
         )}
 
-        <div className="flex flex-wrap items-center gap-1 min-h-[20px]">
-          {(!feats || feats.length === 0) && !isAddingFeat && (
+        {/* Inline Feat Detail Viewer (or In-Place Edit Form) right above Feats */}
+        {shouldRenderFeatViewer && featToDisplay && (
+          <FeatDetailViewer
+            viewingFeat={featToDisplay}
+            linkedResource={findLinkedResource(featToDisplay)}
+            fallbackNote={
+              featsCatalogue.find(
+                (c) => c.name.toLowerCase() === featToDisplay.name.toLowerCase()
+              )?.description || ''
+            }
+            isEditing={editingFeatId === featToDisplay.id}
+            editFormProps={{
+              ...featFormProps,
+              formRef: editFeatFormRef,
+            }}
+            isClosing={isFeatViewerClosing}
+            onClose={() => {
+              setViewingFeatId(null);
+              if (editingFeatId) resetFeatForm();
+            }}
+            onStartEdit={handleStartFeatEdit}
+            onDelete={handleDeleteFeat}
+          />
+        )}
+
+        {normalizedFeats.length === 0 && !isAddingFeat && (
+          <div className="min-h-[20px] flex items-center">
             <span className="text-[11px] text-slate-500 italic">No feats recorded.</span>
-          )}
-          {(feats || []).map((feat) => (
-            <span
-              key={feat}
-              className="group inline-flex items-center px-2 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
-            >
-              <span>{feat}</span>
-              {isEditing && (
-                <button
-                  type="button"
-                  aria-label={`Remove feat ${feat}`}
-                  onClick={() => handleRemoveFeat(feat)}
-                  className="ml-1 text-slate-500 hover:text-red-400 opacity-60 hover:opacity-100 cursor-pointer"
+          </div>
+        )}
+
+        {normalizedFeats.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-1.5">
+            {normalizedFeats.map((feat) => {
+              const isViewing = viewingFeatId === feat.id;
+              const colorCfg = getColorConfig(feat.color || 'none');
+              const linkedRes = findLinkedResource(feat);
+              const statBadge = formatFeatStatBadge(feat.statModifiers);
+
+              return (
+                <div
+                  key={feat.id}
+                  data-testid={`feat-chip-${feat.id}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${feat.name} details`}
+                  aria-expanded={isViewing}
+                  onClick={() => handleToggleFeatView(feat.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleToggleFeatView(feat.id);
+                    }
+                  }}
+                  className={`group relative flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
+                    isViewing
+                      ? 'bg-dnd-card ring-2 ring-white/80 shadow-[0_0_12px_rgba(255,255,255,0.18)] brightness-110'
+                      : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
+                  }`}
                 >
-                  <X size={9} />
-                </button>
-              )}
-            </span>
-          ))}
-        </div>
+                  <div
+                    aria-hidden="true"
+                    data-testid="feat-right-gradient"
+                    style={{
+                      background: colorCfg.id === 'none' ? 'none' : colorCfg.glow,
+                    }}
+                    className="absolute inset-0 pointer-events-none rounded-lg"
+                  />
+
+                  <div className="relative z-10 flex items-center space-x-1 min-w-0">
+                    <span
+                      className={`font-semibold truncate ${
+                        isViewing ? 'text-white' : 'text-slate-200'
+                      }`}
+                    >
+                      {feat.name}
+                    </span>
+                    {linkedRes && (
+                      <Link2
+                        size={10}
+                        data-testid="feat-linked-icon"
+                        title={`Linked with Tracked Resource: ${linkedRes.name}`}
+                        className="shrink-0 text-slate-400/70"
+                      />
+                    )}
+                  </div>
+
+                  <div className="relative z-10 flex items-center space-x-1.5 shrink-0 ml-2">
+                    {statBadge && (
+                      <span
+                        data-testid="feat-stat-badge"
+                        title={`Modifies Ability Score (${statBadge})`}
+                        className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold"
+                      >
+                        {statBadge}
+                      </span>
+                    )}
+                    {linkedRes && (
+                      <span
+                        title={`Linked Tracked Resource (${linkedRes.current ?? 0}/${linkedRes.max ?? 0})`}
+                        className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-white/10 text-dnd-gold"
+                      >
+                        {linkedRes.current ?? 0}/{linkedRes.max ?? 0}
+                      </span>
+                    )}
+                    <FeatChipDeleteButton
+                      featName={feat.name}
+                      onDelete={() => handleDeleteFeat(feat.id)}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

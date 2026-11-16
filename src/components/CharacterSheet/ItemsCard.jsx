@@ -261,6 +261,50 @@ export function getLineBucket(input) {
   return 16;
 }
 
+export function SteppedTextarea({ bucket, value, onChange, onScroll, className = '', style = {}, ...props }) {
+  const textareaRef = useRef(null);
+  const lineCount = estimateLinesFromText(value);
+  const canScroll = lineCount > 16;
+
+  // Lock internal scrollTop to 0 while <= 16 lines so browser caret auto-scroll
+  // never shifts existing lines up before the CSS height transition catches up.
+  React.useLayoutEffect(() => {
+    if (!canScroll && textareaRef.current && textareaRef.current.scrollTop !== 0) {
+      textareaRef.current.scrollTop = 0;
+    }
+  }, [value, bucket, canScroll]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      rows={bucket}
+      value={value}
+      onChange={(e) => {
+        if (estimateLinesFromText(e.target.value) <= 16 && e.target.scrollTop !== 0) {
+          e.target.scrollTop = 0;
+        }
+        onChange?.(e);
+      }}
+      onScroll={(e) => {
+        if (!canScroll && e.currentTarget.scrollTop !== 0) {
+          e.currentTarget.scrollTop = 0;
+        }
+        onScroll?.(e);
+      }}
+      style={{
+        height: `${bucket * 19.5 + 12}px`,
+        minHeight: `${bucket * 19.5 + 12}px`,
+        maxHeight: `${Math.max(bucket, 16) * 19.5 + 12}px`,
+        ...style,
+      }}
+      className={`w-full px-2 py-1.5 rounded bg-dnd-panel text-slate-200 text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-white/20 transition-[height,min-height] duration-300 ease-in-out resize-y ${
+        canScroll ? 'overflow-y-auto custom-scroll' : 'overflow-y-hidden'
+      } ${className}`}
+      {...props}
+    />
+  );
+}
+
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
 function ItemChipDeleteButton({ item, onDelete }) {
   const { armed, handleClick } = useTwoClickConfirm(() => {
@@ -452,7 +496,8 @@ function ItemDetailViewer({
   const isViewerAttuned = Boolean(viewingItem.attuned && viewingItem.requiresAttunement);
 
   const noteText = viewingItem.note || viewingItem.description || '';
-  const bucket = getLineBucket(noteText);
+  const lineCount = estimateLinesFromText(noteText);
+  const bucket = getLineBucket(lineCount);
   // Base card header + paddings + border is ~64px; notes area is bucket * 19.5px
   const totalViewerHeight = Math.round(64 + bucket * 19.5);
 
@@ -537,7 +582,9 @@ function ItemDetailViewer({
 
           <div
             data-testid="item-viewer-notes"
-            className="flex-1 min-h-0 pt-2 mt-2 border-t border-white/5 text-slate-300 text-xs overflow-y-auto pr-1"
+            className={`flex-1 min-h-0 pt-2 mt-2 border-t border-white/5 text-slate-300 text-xs pr-1 ${
+              lineCount > 16 ? 'overflow-y-auto custom-scroll' : 'overflow-y-hidden'
+            }`}
           >
             {viewingItem.note || viewingItem.description ? (
               <p className="whitespace-pre-wrap leading-relaxed text-slate-300">
@@ -589,6 +636,12 @@ function ItemForm({
       noValidate
       data-testid={editingItemId ? 'item-edit-form' : 'item-add-form'}
       onSubmit={onSubmit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && e.target.tagName !== 'TEXTAREA' && e.target.type !== 'submit') {
+          e.preventDefault();
+          e.target.blur();
+        }
+      }}
       className="p-2.5 rounded-lg bg-dnd-card space-y-2 text-xs shadow-sm ring-1 ring-dnd-gold/30 animate-fadeIn"
     >
       <div className="flex items-center justify-between">
@@ -687,18 +740,13 @@ function ItemForm({
         <label htmlFor={editingItemId ? `itm-note-${editingItemId}` : 'itm-note'} className="block text-[10px] text-slate-400 mb-0.5">
           Description / Notes
         </label>
-        <textarea
+        <SteppedTextarea
           id={editingItemId ? `itm-note-${editingItemId}` : 'itm-note'}
           aria-label="Item Description"
-          rows={editBucket}
+          bucket={editBucket}
           placeholder="Effects, charges, properties, or details..."
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          style={{
-            minHeight: `${editBucket * 20 + 16}px`,
-            maxHeight: `${Math.max(editBucket, 16) * 20 + 16}px`,
-          }}
-          className="w-full px-2 py-1.5 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20 transition-[min-height,height] duration-300 ease-in-out resize-y"
         />
       </div>
 
