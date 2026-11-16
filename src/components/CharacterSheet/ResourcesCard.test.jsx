@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import React from 'react';
 import ResourcesCard from './ResourcesCard';
 import { resetFeatsCatalogueCache } from '../../utils/featsCatalogue';
@@ -996,5 +996,41 @@ describe('ResourcesCard', () => {
     expect(chipsContainer.className).toContain('flex');
     expect(chipsContainer.className).toContain('flex-wrap');
     expect(chipsContainer.className).not.toContain('grid');
+  });
+
+  it('structures Character Features into Top Viewer -> Feats -> Tracked Resources -> Notes order with subdivision headers', () => {
+    const luckyResource = { id: 'res_lucky', name: 'Lucky', current: 3, max: 3, resetOn: 'LR', linkedFeatId: 'feat_lucky' };
+    const alertFeat = { id: 'feat_alert', name: 'Alert', note: '+5 initiative' };
+
+    render(
+      <ResourcesCard
+        trackedResources={[luckyResource]}
+        featuresNotes="Some freeform notes"
+        feats={[alertFeat]}
+      />
+    );
+
+    // Open top viewer by clicking feat chip
+    fireEvent.click(screen.getByTestId('feat-chip-feat_alert'));
+    const topViewer = screen.getByTestId('resource-viewer-wrapper');
+    const featsSection = screen.getByTestId('feats-subdivision');
+    const resourcesSection = screen.getByTestId('tracked-resources-subdivision');
+    const notesSection = screen.getByTestId('notes-subdivision');
+
+    // 1. All subdivisions present
+    expect(topViewer).toBeInTheDocument();
+    expect(featsSection).toBeInTheDocument();
+    expect(resourcesSection).toBeInTheDocument();
+    expect(notesSection).toBeInTheDocument();
+
+    // 2. Strict DOM ordering: Viewer -> Feats -> Tracked Resources -> Notes
+    expect(topViewer.compareDocumentPosition(featsSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(featsSection.compareDocumentPosition(resourcesSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(resourcesSection.compareDocumentPosition(notesSection) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    // 3. Clear subdivision headers
+    expect(within(featsSection).getByText(/^Feats/i)).toBeInTheDocument();
+    expect(within(resourcesSection).getByText(/^Tracked Resources/i)).toBeInTheDocument();
+    expect(within(notesSection).getByText(/^Features & Freeform Notes/i)).toBeInTheDocument();
   });
 });

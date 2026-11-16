@@ -295,6 +295,7 @@ function ResourceEditForm({
 }
 
 function ResourceDetailViewer({
+  viewerRef,
   viewingResource,
   viewingFeat,
   linkedFeat,
@@ -314,6 +315,7 @@ function ResourceDetailViewer({
   if (isEditing && editFormProps) {
     return (
       <div
+        ref={viewerRef}
         data-testid="resource-viewer-wrapper"
         className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
       >
@@ -353,6 +355,7 @@ function ResourceDetailViewer({
 
   return (
     <div
+      ref={viewerRef}
       data-testid="resource-viewer-wrapper"
       className={isClosing ? 'animate-accordion-up' : 'animate-accordion-down'}
     >
@@ -940,6 +943,7 @@ export default function ResourcesCard({
   const editFormRef = useAutoScrollOnExpand(Boolean(editingResourceId));
   const addFeatFormRef = useAutoScrollOnExpand(Boolean(isAddingFeat && !editingFeatId));
   const editFeatFormRef = useAutoScrollOnExpand(Boolean(editingFeatId));
+  const viewerRef = useAutoScrollOnExpand(Boolean(shouldRenderViewer && activeViewerItem));
 
   const adjustHeight = () => {
     const el = textareaRef.current;
@@ -1414,36 +1418,192 @@ export default function ResourcesCard({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Header action bar (fallback when not mounted in AccordionSection) */}
-      {!hideHeaderActions && (
-        <div className="flex items-center justify-end pb-1 border-b border-white/5 text-xs">
-          <div className="flex items-center space-x-2">
-            {trackedResources && trackedResources.length > 0 && (
-              <button
-                type="button"
-                onClick={handleResetAll}
-                aria-label="Reset all resources"
-                title="Reset all resources to max"
-                className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center space-x-1"
-              >
-                <RotateCcw size={11} />
-                <span>Reset</span>
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setIsAdding(!isAdding)}
-              className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-medium"
-            >
-              + Add Tracked Resource
-            </button>
-          </div>
-        </div>
+    <div className="space-y-2.5">
+      {/* 1. Unified Detail Viewer */}
+      {shouldRenderViewer && activeViewerItem && (
+        <ResourceDetailViewer
+          viewerRef={viewerRef}
+          viewingResource={activeViewerItem.type === 'resource' ? activeViewerItem.data : null}
+          viewingFeat={activeViewerItem.type === 'feat' ? activeViewerItem.data : null}
+          linkedFeat={activeViewerItem.type === 'resource' ? findLinkedFeat(activeViewerItem.data) : null}
+          fallbackNote={
+            featsCatalogue.find(
+              (c) => c.name.toLowerCase() === activeViewerItem.data.name?.toLowerCase()
+            )?.description || ''
+          }
+          isEditing={editingResourceId === activeViewerItem.data.id}
+          editFormProps={editFormProps}
+          isClosing={isViewerClosing}
+          onClose={() => {
+            setViewingResourceId(null);
+            setViewingFeatId(null);
+            setEditingResourceId(null);
+            if (editingFeatId) resetFeatForm();
+          }}
+          onStartEdit={handleStartEdit}
+          onStartFeatEdit={handleStartFeatEdit}
+          onDelete={handleDeleteResource}
+          onDeleteFeat={handleDeleteFeat}
+        />
       )}
 
-      {/* Add resource inline drawer */}
-      {isAdding && (
+      {/* 2. Feats Subdivision */}
+      <div data-testid="feats-subdivision" className="space-y-1.5">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+          <span className="flex items-center gap-1 font-semibold text-slate-300">
+            <Award size={10} className="text-amber-400" /> Feats:
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              if (isAddingFeat && !editingFeatId) {
+                resetFeatForm();
+              } else {
+                setEditingFeatId(null);
+                setFeatName('');
+                setFeatNote('');
+                setFeatColor('none');
+                setFeatStatChoice('none');
+                setFeatStatOptions(getFeatStatChoiceConfig('').options);
+                setFeatNameError(false);
+                setFeatTrackResource(false);
+                setFeatResourceMax('1');
+                setFeatResourceReset('LR');
+                setIsAddingFeat(true);
+              }
+            }}
+            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
+          >
+            + Add
+          </button>
+        </div>
+
+        {/* Add / Edit Feat Form */}
+        {(isAddingFeat || editingFeatId) && (
+          <FeatForm
+            {...featFormProps}
+            formRef={editingFeatId ? editFeatFormRef : addFeatFormRef}
+          />
+        )}
+
+        {normalizedFeats.length === 0 && !isAddingFeat && !editingFeatId && (
+          <div className="min-h-[20px] flex items-center">
+            <span className="text-[11px] text-slate-500 italic">No feats recorded.</span>
+          </div>
+        )}
+
+        {normalizedFeats.length > 0 && (
+          <div data-testid="feats-chips-container" className="flex flex-wrap gap-1.5">
+            {normalizedFeats.map((feat) => {
+              const linkedRes = findLinkedResource(feat);
+              const isViewing =
+                (linkedRes && viewingResourceId === linkedRes.id) ||
+                viewingFeatId === feat.id;
+              const colorCfg = getColorConfig(feat.color || 'none');
+              const statBadge = formatFeatStatBadge(feat.statModifiers);
+
+              return (
+                <div
+                  key={feat.id}
+                  data-testid={`feat-chip-${feat.id}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${feat.name} details`}
+                  aria-expanded={isViewing}
+                  onClick={() => handleToggleFeatView(feat.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleToggleFeatView(feat.id);
+                    }
+                  }}
+                  className={`group relative inline-flex items-center gap-1.5 py-1 px-2.5 rounded-md text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
+                    isViewing
+                      ? 'ring-1 ring-dnd-gold bg-dnd-card/90 shadow-md text-white'
+                      : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
+                  }`}
+                >
+                  <div
+                    aria-hidden="true"
+                    data-testid="feat-right-gradient"
+                    style={{
+                      background: colorCfg.id === 'none' ? 'none' : colorCfg.glow,
+                    }}
+                    className="absolute inset-0 pointer-events-none rounded-md"
+                  />
+
+                  <span
+                    className={`relative z-10 font-medium truncate max-w-[140px] sm:max-w-[180px] ${
+                      isViewing ? 'text-white' : 'text-slate-200'
+                    }`}
+                  >
+                    {feat.name}
+                  </span>
+                  {linkedRes && (
+                    <Link2
+                      size={10}
+                      data-testid="feat-linked-icon"
+                      title={`Linked with Tracked Resource: ${linkedRes.name}`}
+                      className="relative z-10 shrink-0 text-slate-400/70"
+                    />
+                  )}
+                  {statBadge && (
+                    <span
+                      data-testid="feat-stat-badge"
+                      title={`Modifies Ability Score (${statBadge})`}
+                      className="relative z-10 text-[9px] font-bold px-1 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
+                    >
+                      {statBadge}
+                    </span>
+                  )}
+                  {isEditing && (
+                    <span className="relative z-10 shrink-0">
+                      <FeatChipDeleteButton
+                        featName={feat.name}
+                        onDelete={() => handleDeleteFeat(feat.id)}
+                      />
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* 3. Tracked Resources Subdivision */}
+      <div data-testid="tracked-resources-subdivision" className="space-y-1.5">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+          <span className="flex items-center gap-1 font-semibold text-slate-300">
+            <AirplaneHelix45degIcon size={11} className="text-dnd-gold" /> Tracked Resources:
+          </span>
+          {!hideHeaderActions && (
+            <div className="flex items-center space-x-2">
+              {trackedResources && trackedResources.length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleResetAll}
+                  aria-label="Reset all resources"
+                  title="Reset all resources to max"
+                  className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center space-x-1"
+                >
+                  <RotateCcw size={11} />
+                  <span>Reset</span>
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsAdding(!isAdding)}
+                className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-medium cursor-pointer"
+              >
+                + Add Tracked Resource
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Add resource inline drawer */}
+        {isAdding && (
         <form
           ref={addFormRef}
           noValidate
@@ -1578,33 +1738,6 @@ export default function ResourcesCard({
         </form>
       )}
 
-      {/* Unified Detail Viewer */}
-      {shouldRenderViewer && activeViewerItem && (
-        <ResourceDetailViewer
-          viewingResource={activeViewerItem.type === 'resource' ? activeViewerItem.data : null}
-          viewingFeat={activeViewerItem.type === 'feat' ? activeViewerItem.data : null}
-          linkedFeat={activeViewerItem.type === 'resource' ? findLinkedFeat(activeViewerItem.data) : null}
-          fallbackNote={
-            featsCatalogue.find(
-              (c) => c.name.toLowerCase() === activeViewerItem.data.name?.toLowerCase()
-            )?.description || ''
-          }
-          isEditing={editingResourceId === activeViewerItem.data.id}
-          editFormProps={editFormProps}
-          isClosing={isViewerClosing}
-          onClose={() => {
-            setViewingResourceId(null);
-            setViewingFeatId(null);
-            setEditingResourceId(null);
-            if (editingFeatId) resetFeatForm();
-          }}
-          onStartEdit={handleStartEdit}
-          onStartFeatEdit={handleStartFeatEdit}
-          onDelete={handleDeleteResource}
-          onDeleteFeat={handleDeleteFeat}
-        />
-      )}
-
       {/* Steppers Grid */}
       {trackedResources && trackedResources.length > 0 && (
         <div className="space-y-1">
@@ -1723,132 +1856,15 @@ export default function ResourcesCard({
         </div>
       )}
 
-      {/* Feats Subdivision */}
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-          <span className="flex items-center gap-1 font-semibold text-slate-300">
-            <Award size={10} className="text-amber-400" /> Feats:
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              if (isAddingFeat && !editingFeatId) {
-                resetFeatForm();
-              } else {
-                setEditingFeatId(null);
-                setFeatName('');
-                setFeatNote('');
-                setFeatColor('none');
-                setFeatStatChoice('none');
-                setFeatStatOptions(getFeatStatChoiceConfig('').options);
-                setFeatNameError(false);
-                setFeatTrackResource(false);
-                setFeatResourceMax('1');
-                setFeatResourceReset('LR');
-                setIsAddingFeat(true);
-              }
-            }}
-            className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
-          >
-            + Add
-          </button>
-        </div>
-
-        {/* Add / Edit Feat Form */}
-        {(isAddingFeat || editingFeatId) && (
-          <FeatForm
-            {...featFormProps}
-            formRef={editingFeatId ? editFeatFormRef : addFeatFormRef}
-          />
-        )}
-
-        {normalizedFeats.length === 0 && !isAddingFeat && !editingFeatId && (
+        {(!trackedResources || trackedResources.length === 0) && !isAdding && (
           <div className="min-h-[20px] flex items-center">
-            <span className="text-[11px] text-slate-500 italic">No feats recorded.</span>
-          </div>
-        )}
-
-        {normalizedFeats.length > 0 && (
-          <div data-testid="feats-chips-container" className="flex flex-wrap gap-1.5">
-            {normalizedFeats.map((feat) => {
-              const linkedRes = findLinkedResource(feat);
-              const isViewing =
-                (linkedRes && viewingResourceId === linkedRes.id) ||
-                viewingFeatId === feat.id;
-              const colorCfg = getColorConfig(feat.color || 'none');
-              const statBadge = formatFeatStatBadge(feat.statModifiers);
-
-              return (
-                <div
-                  key={feat.id}
-                  data-testid={`feat-chip-${feat.id}`}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`View ${feat.name} details`}
-                  aria-expanded={isViewing}
-                  onClick={() => handleToggleFeatView(feat.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleToggleFeatView(feat.id);
-                    }
-                  }}
-                  className={`group relative inline-flex items-center gap-1.5 py-1 px-2.5 rounded-md text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
-                    isViewing
-                      ? 'ring-1 ring-dnd-gold bg-dnd-card/90 shadow-md text-white'
-                      : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
-                  }`}
-                >
-                  <div
-                    aria-hidden="true"
-                    data-testid="feat-right-gradient"
-                    style={{
-                      background: colorCfg.id === 'none' ? 'none' : colorCfg.glow,
-                    }}
-                    className="absolute inset-0 pointer-events-none rounded-md"
-                  />
-
-                  <span
-                    className={`relative z-10 font-medium truncate max-w-[140px] sm:max-w-[180px] ${
-                      isViewing ? 'text-white' : 'text-slate-200'
-                    }`}
-                  >
-                    {feat.name}
-                  </span>
-                  {linkedRes && (
-                    <Link2
-                      size={10}
-                      data-testid="feat-linked-icon"
-                      title={`Linked with Tracked Resource: ${linkedRes.name}`}
-                      className="relative z-10 shrink-0 text-slate-400/70"
-                    />
-                  )}
-                  {statBadge && (
-                    <span
-                      data-testid="feat-stat-badge"
-                      title={`Modifies Ability Score (${statBadge})`}
-                      className="relative z-10 text-[9px] font-bold px-1 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
-                    >
-                      {statBadge}
-                    </span>
-                  )}
-                  {isEditing && (
-                    <span className="relative z-10 shrink-0">
-                      <FeatChipDeleteButton
-                        featName={feat.name}
-                        onDelete={() => handleDeleteFeat(feat.id)}
-                      />
-                    </span>
-                  )}
-                </div>
-              );
-            })}
+            <span className="text-[11px] text-slate-500 italic">No tracked resources.</span>
           </div>
         )}
       </div>
 
-      {/* Freeform Notes Box */}
-      <div className="space-y-1">
+      {/* 4. Freeform Notes Subdivision */}
+      <div data-testid="notes-subdivision" className="space-y-1">
         <label htmlFor="features-notes" className="text-[10px] text-slate-400 font-medium">
           Features & Freeform Notes
         </label>
