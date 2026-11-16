@@ -122,6 +122,21 @@ describe('filterSpells', () => {
     expect(legacy.map(s => s.id)).toEqual(['fireball-legacy']);
   });
 
+  it('shows homebrew spells in both modern and legacy edition filters', () => {
+    const spells = [
+      { id: 'fireball', name: 'Fireball', source: 'XPHB', isLegacy: false },
+      { id: 'fireball-legacy', name: 'Fireball', source: 'PHB', isLegacy: true },
+      { id: 'hb-1', name: 'Blood Spear', source: 'Homebrew' },
+      { id: 'custom-1', name: 'Custom Bolt', source: 'Custom' },
+    ];
+
+    const modern = filterSpells(spells, { legacyMode: 'modern' });
+    expect(modern.map(s => s.id)).toEqual(['fireball', 'hb-1', 'custom-1']);
+
+    const legacy = filterSpells(spells, { legacyMode: 'legacy' });
+    expect(legacy.map(s => s.id)).toEqual(['fireball-legacy', 'hb-1', 'custom-1']);
+  });
+
   it('filters by source material', () => {
     const spells = [
       { id: 's1', name: 'Spell 1', source: 'TCoE' },

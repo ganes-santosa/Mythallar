@@ -14,12 +14,15 @@ import {
   Circle,
   Search,
   Coins,
+  Trash2,
 } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import { normalizeIntegerDraft } from '../../hooks/useNumericDraft';
 import useClickOutside from '../../hooks/useClickOutside';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
 import useAccordionMount from '../../hooks/useAccordionMount';
+import SuggestionInput from '../Common/SuggestionInput';
+import { loadItemsCatalogue, matchItemSuggestions } from '../../utils/itemsCatalogue';
 
 export function OctahedronIcon({ size = 16, className = '', ...props }) {
   return (
@@ -259,7 +262,7 @@ export function getLineBucket(input) {
 }
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
-function ItemDeleteButton({ item, onDelete }) {
+function ItemChipDeleteButton({ item, onDelete }) {
   const { armed, handleClick } = useTwoClickConfirm(() => {
     onDelete?.(item.id);
   });
@@ -279,7 +282,7 @@ function ItemDeleteButton({ item, onDelete }) {
           : 'text-slate-600 hover:text-red-400'
       }`}
     >
-      <X size={10} />
+      <Trash2 size={11} />
     </button>
   );
 }
@@ -329,6 +332,53 @@ export function MaxAttunementInput({ value, onChange }) {
   );
 }
 
+function ItemViewerDeleteButton({ itemName, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(onDelete);
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${itemName}` : `Delete ${itemName}`}
+      title={armed ? `Click again to delete ${itemName}` : `Delete ${itemName}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      className={`p-1 rounded transition-colors cursor-pointer ${
+        armed
+          ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'text-slate-400 hover:text-red-400 hover:bg-white/5'
+      }`}
+    >
+      <Trash2 size={12} />
+    </button>
+  );
+}
+
+function ItemFormDeleteButton({ itemName, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(onDelete);
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${itemName}` : `Delete ${itemName}`}
+      title={armed ? `Click again to delete ${itemName}` : `Delete ${itemName}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      className={`px-2 py-1 rounded text-xs transition-all cursor-pointer ${
+        armed
+          ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'text-slate-400 hover:text-red-400 bg-dnd-panel/70'
+      }`}
+    >
+      <Trash2 size={12} className="inline mr-1" />
+      <span>Delete</span>
+    </button>
+  );
+}
+
 function CategoryDetailViewer({
   viewingItem,
   groupCategory,
@@ -337,6 +387,7 @@ function CategoryDetailViewer({
   onClose,
   onStartEdit,
   onToggleAttune,
+  onDelete,
 }) {
   const isMatch =
     Boolean(viewingItem) &&
@@ -365,6 +416,7 @@ function CategoryDetailViewer({
       onClose={onClose}
       onStartEdit={onStartEdit}
       onToggleAttune={onToggleAttune}
+      onDelete={onDelete}
     />
   );
 }
@@ -377,6 +429,7 @@ function ItemDetailViewer({
   onClose,
   onStartEdit,
   onToggleAttune,
+  onDelete,
 }) {
   if (!viewingItem) return null;
 
@@ -463,6 +516,13 @@ function ItemDetailViewer({
                 <Pencil size={12} />
               </button>
 
+              {onDelete && (
+                <ItemViewerDeleteButton
+                  itemName={viewingItem.name}
+                  onDelete={() => onDelete(viewingItem.id)}
+                />
+              )}
+
               <button
                 type="button"
                 aria-label={`Close ${viewingItem.name} details`}
@@ -517,8 +577,11 @@ function ItemForm({
   editBucket,
   requiresAttunement,
   setRequiresAttunement,
+  suggestions = [],
+  onSelectSuggestion,
   onSubmit,
   onCancel,
+  onDelete,
 }) {
   return (
     <form
@@ -553,16 +616,17 @@ function ItemForm({
               <span className="text-[9px] text-red-400 font-semibold">Name required</span>
             )}
           </div>
-          <input
+          <SuggestionInput
             id={editingItemId ? `itm-name-${editingItemId}` : 'itm-name'}
             aria-label="Item Name"
-            type="text"
             placeholder="e.g. Ring of Spell Storing"
             value={name}
             onChange={(e) => {
               setName(e.target.value);
               if (nameError) setNameError(false);
             }}
+            suggestions={suggestions}
+            onSelectSuggestion={onSelectSuggestion}
             className={`w-full px-2 py-1 rounded bg-dnd-panel text-slate-200 text-xs focus:outline-none transition-colors ${
               nameError
                 ? 'border border-red-500/60 ring-1 ring-red-500/40'
@@ -651,6 +715,9 @@ function ItemForm({
         </label>
 
         <div className="flex items-center space-x-2">
+          {editingItemId && onDelete && (
+            <ItemFormDeleteButton itemName={name} onDelete={onDelete} />
+          )}
           <button
             type="button"
             onClick={onCancel}
@@ -942,6 +1009,39 @@ export default function ItemsCard({
   const [quantity, setQuantity] = useState(1);
   const [note, setNote] = useState('');
   const [nameError, setNameError] = useState(false);
+  const [catalogueItems, setCatalogueItems] = useState([]);
+
+  // Load items catalogue on mount or when opening add/edit form
+  useEffect(() => {
+    if (isAdding || editingItemId) {
+      loadItemsCatalogue().then((list) => {
+        if (Array.isArray(list) && list.length > 0) {
+          setCatalogueItems(list);
+        }
+      });
+    }
+  }, [isAdding, editingItemId]);
+
+  const nameSuggestions = useMemo(() => {
+    return matchItemSuggestions(name, catalogueItems, 8);
+  }, [name, catalogueItems]);
+
+  const handleSelectSuggestion = (suggested) => {
+    if (!suggested) return;
+    setName(suggested.name || name);
+    if (suggested.category) {
+      setCategory(suggested.category);
+    }
+    if (suggested.color && suggested.color !== 'none') {
+      setColor(suggested.color);
+    }
+    if (typeof suggested.requiresAttunement === 'boolean') {
+      setRequiresAttunement(suggested.requiresAttunement);
+    }
+    if (suggested.description && !note.trim()) {
+      setNote(suggested.description);
+    }
+  };
 
   const colorDropdownRef = useClickOutside(isColorMenuOpen, () => setIsColorMenuOpen(false));
 
@@ -1240,6 +1340,8 @@ export default function ItemsCard({
           editBucket={editBucket}
           requiresAttunement={requiresAttunement}
           setRequiresAttunement={setRequiresAttunement}
+          suggestions={nameSuggestions}
+          onSelectSuggestion={handleSelectSuggestion}
           onSubmit={handleSaveItem}
           onCancel={handleCancel}
         />
@@ -1413,8 +1515,11 @@ export default function ItemsCard({
                   editBucket,
                   requiresAttunement,
                   setRequiresAttunement,
+                  suggestions: nameSuggestions,
+                  onSelectSuggestion: handleSelectSuggestion,
                   onSubmit: handleSaveItem,
                   onCancel: handleCancel,
+                  onDelete: () => handleDeleteItem(editingItemId),
                 }}
                 onClose={() => {
                   setViewingItemId(null);
@@ -1422,6 +1527,7 @@ export default function ItemsCard({
                 }}
                 onStartEdit={handleStartEdit}
                 onToggleAttune={toggleAttune}
+                onDelete={handleDeleteItem}
               />
 
               {/* Grid of Items */}
@@ -1509,7 +1615,7 @@ export default function ItemsCard({
                             />
                           </span>
                         )}
-                        <ItemDeleteButton item={item} onDelete={handleDeleteItem} />
+                        <ItemChipDeleteButton item={item} onDelete={handleDeleteItem} />
                       </div>
                     </div>
                   );

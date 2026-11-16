@@ -8,6 +8,7 @@ import ItemsCard, {
   isCurrencySearchMatch,
   doesCurrencyFitSingleLine,
 } from './ItemsCard';
+import { resetItemsCatalogueCache } from '../../utils/itemsCatalogue';
 
 describe('ItemsCard', () => {
   const mockItems = [
@@ -256,12 +257,71 @@ describe('ItemsCard', () => {
     // Click item chip to expand
     fireEvent.click(screen.getByTestId('item-chip-itm_desc'));
 
-    // Shows expanded details: description, category, edit pencil, and attune button (without duplicate invisible delete button in viewer)
+    // Shows expanded details: description, category, edit pencil, delete button, and attune button
     expect(screen.getByText('Deals radiant damage, emits bright sunlight.')).toBeInTheDocument();
     expect(screen.getAllByText('Magic Item').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('button', { name: 'Edit Sunblade' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Attune Sunblade' })).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: 'Delete Sunblade' })).toHaveLength(1);
+    const viewer = screen.getByTestId('item-viewer-card');
+    expect(viewer.querySelector('button[aria-label="Delete Sunblade"]')).toBeInTheDocument();
+  });
+
+  it('deletes an item directly from the viewer pane using two-click confirmation', () => {
+    const handleUpdate = vi.fn();
+    const customItems = [
+      {
+        id: 'itm_del_view',
+        name: 'Sunblade',
+        category: 'magic',
+        quantity: 1,
+        note: 'Deals radiant damage.',
+      },
+    ];
+    render(<ItemsCard items={customItems} maxAttunement={3} onUpdateItems={handleUpdate} />);
+
+    fireEvent.click(screen.getByTestId('item-chip-itm_del_view'));
+    const viewer = screen.getByTestId('item-viewer-card');
+    const deleteBtn = viewer.querySelector('button[aria-label="Delete Sunblade"]');
+    expect(deleteBtn).toBeInTheDocument();
+
+    // First click arms
+    fireEvent.click(deleteBtn);
+    expect(deleteBtn).toHaveAttribute('aria-label', 'Click again to delete Sunblade');
+    expect(handleUpdate).not.toHaveBeenCalled();
+
+    // Second click deletes
+    fireEvent.click(deleteBtn);
+    expect(handleUpdate).toHaveBeenCalledWith([]);
+  });
+
+  it('deletes an item from inside the edit form using two-click confirmation', () => {
+    const handleUpdate = vi.fn();
+    const customItems = [
+      {
+        id: 'itm_del_edit',
+        name: 'Sunblade',
+        category: 'magic',
+        quantity: 1,
+        note: 'Deals radiant damage.',
+      },
+    ];
+    render(<ItemsCard items={customItems} maxAttunement={3} onUpdateItems={handleUpdate} />);
+
+    fireEvent.click(screen.getByTestId('item-chip-itm_del_edit'));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Sunblade' }));
+
+    const editForm = screen.getByTestId('item-edit-form');
+    const deleteBtn = editForm.querySelector('button[aria-label="Delete Sunblade"]');
+    expect(deleteBtn).toBeInTheDocument();
+
+    // First click arms
+    fireEvent.click(deleteBtn);
+    expect(deleteBtn).toHaveAttribute('aria-label', 'Click again to delete Sunblade');
+    expect(handleUpdate).not.toHaveBeenCalled();
+
+    // Second click deletes
+    fireEvent.click(deleteBtn);
+    expect(handleUpdate).toHaveBeenCalledWith([]);
   });
 
   it('allows editing an item via the edit pencil button in expanded card directly in its category section', () => {
@@ -700,6 +760,67 @@ describe('ItemsCard', () => {
 
       const gpInput = screen.getByLabelText('Gold Pieces (GP)');
       expect(gpInput.className).toContain('text-[9px]'); // 9 digits
+    });
+
+    it('autofills item fields when a suggestion from catalogue is selected', async () => {
+      resetItemsCatalogueCache();
+      const fakeCatalogue = [
+        {
+          name: 'Enduring Spellbook',
+          source: 'XDMG',
+          category: 'magic',
+          rarity: 'common',
+          color: 'slate',
+          typeLine: 'Wondrous Item, Common',
+          requiresAttunement: false,
+          description: "Wondrous Item, Common\n\nThis spellbook, along with anything written on its pages, can't be damaged by fire or water.",
+        },
+      ];
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => fakeCatalogue,
+      });
+
+      const handleUpdate = vi.fn();
+      render(<ItemsCard items={[]} onUpdateItems={handleUpdate} />);
+
+      // Open Add Form
+      const openAddBtn = screen.getByRole('button', { name: /Add Item/i });
+      fireEvent.click(openAddBtn);
+
+      const nameInput = screen.getByLabelText('Item Name');
+      fireEvent.focus(nameInput);
+      fireEvent.change(nameInput, { target: { value: 'Enduring' } });
+
+      // Wait for suggestion to appear in listbox
+      const option = await screen.findByText('Enduring Spellbook');
+      expect(option).toBeInTheDocument();
+
+      // Click the suggestion
+      fireEvent.mouseDown(option);
+
+      // Verify autofilled fields
+      expect(nameInput.value).toBe('Enduring Spellbook');
+      expect(screen.getByLabelText('Category').value).toBe('magic');
+      expect(screen.getByLabelText('Requires Attunement').checked).toBe(false);
+      expect(screen.getByLabelText('Item Description').value).toMatch(/^Wondrous Item, Common/);
+      expect(screen.getByLabelText('Item Description').value).toContain("can't be damaged by fire or water");
+
+      // Verify custom override still works: user can still edit after autofill
+      fireEvent.change(screen.getByLabelText('Quantity'), { target: { value: '2' } });
+
+      // Save item
+      fireEvent.click(screen.getByRole('button', { name: 'Save Item' }));
+
+      expect(handleUpdate).toHaveBeenCalledWith([
+        expect.objectContaining({
+          name: 'Enduring Spellbook',
+          category: 'magic',
+          quantity: 2,
+          note: expect.stringContaining("can't be damaged by fire or water"),
+        }),
+      ]);
     });
   });
 });

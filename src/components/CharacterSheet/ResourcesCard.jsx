@@ -72,6 +72,29 @@ function ResourceDeleteButton({ resourceName, onDelete }) {
   );
 }
 
+function ResourceViewerDeleteButton({ resourceName, onDelete }) {
+  const { armed, handleClick } = useTwoClickConfirm(onDelete);
+
+  return (
+    <button
+      type="button"
+      aria-label={armed ? `Click again to delete ${resourceName}` : `Delete ${resourceName}`}
+      title={armed ? `Click again to delete ${resourceName}` : `Delete ${resourceName}`}
+      onClick={(e) => {
+        e.stopPropagation();
+        handleClick();
+      }}
+      className={`p-1 rounded transition-colors cursor-pointer ${
+        armed
+          ? 'text-red-500 bg-red-950/70 ring-1 ring-red-500/60'
+          : 'text-slate-400 hover:text-red-400 hover:bg-white/5'
+      }`}
+    >
+      <Trash2 size={12} />
+    </button>
+  );
+}
+
 function ResourceEditForm({
   formRef,
   resource,
@@ -240,6 +263,7 @@ function ResourceDetailViewer({
   isClosing = false,
   onClose,
   onStartEdit,
+  onDelete,
 }) {
   if (!viewingResource) return null;
 
@@ -305,6 +329,13 @@ function ResourceDetailViewer({
               >
                 <Pencil size={12} />
               </button>
+
+              {onDelete && (
+                <ResourceViewerDeleteButton
+                  resourceName={viewingResource.name}
+                  onDelete={() => onDelete(viewingResource.id)}
+                />
+              )}
 
               <button
                 type="button"
@@ -783,6 +814,7 @@ export default function ResourcesCard({
             setEditingResourceId(null);
           }}
           onStartEdit={handleStartEdit}
+          onDelete={handleDeleteResource}
         />
       )}
 

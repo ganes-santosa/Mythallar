@@ -40,11 +40,15 @@ export function filterSpells(spells = [], filters = {}) {
     }
 
     // 2. Legacy / 2024 Version Filter (uses isLegacy which covers all pre-2024 books)
-    if (legacyMode === 'modern' && spell.isLegacy) {
-      return false;
-    }
-    if (legacyMode === 'legacy' && !spell.isLegacy) {
-      return false;
+    // Homebrew/Custom spells have no edition and must appear under both filters.
+    const isHomebrewSpell = spell.source === 'Homebrew' || spell.source === 'Custom';
+    if (!isHomebrewSpell) {
+      if (legacyMode === 'modern' && spell.isLegacy) {
+        return false;
+      }
+      if (legacyMode === 'legacy' && !spell.isLegacy) {
+        return false;
+      }
     }
 
     // 3. Text Search (matches name, entries, school, source)

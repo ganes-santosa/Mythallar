@@ -310,7 +310,33 @@ describe('ResourcesCard', () => {
     ]);
   });
 
-  it('deletes a resource from inside the detail viewer using two-click confirmation', () => {
+  it('deletes a resource directly from the detail viewer using two-click confirmation', () => {
+    const handleUpdate = vi.fn();
+    render(
+      <ResourcesCard
+        trackedResources={mockResources}
+        featuresNotes=""
+        onUpdateResources={handleUpdate}
+      />
+    );
+
+    const chip = screen.getByText('Lucky').closest('[data-testid="tracked-resource-item"]');
+    fireEvent.click(chip);
+
+    const deleteBtn = screen.getByRole('button', { name: 'Delete Lucky' });
+    expect(deleteBtn).toHaveAttribute('aria-label', 'Delete Lucky');
+
+    // First click arms the button
+    fireEvent.click(deleteBtn);
+    expect(deleteBtn).toHaveAttribute('aria-label', 'Click again to delete Lucky');
+    expect(handleUpdate).not.toHaveBeenCalled();
+
+    // Second click deletes the resource
+    fireEvent.click(deleteBtn);
+    expect(handleUpdate).toHaveBeenCalledWith([]);
+  });
+
+  it('deletes a resource from inside the edit form using two-click confirmation', () => {
     const handleUpdate = vi.fn();
     render(
       <ResourcesCard
