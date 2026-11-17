@@ -135,9 +135,9 @@ describe('CharacterBuilderModal', () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
-    expect(screen.getByText(/D&D 5th Edition \(2024\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/D&D 5\.5e Revised \(2024\)/i)).toBeInTheDocument();
     expect(screen.getByText(/Recommended/i)).toBeInTheDocument();
-    expect(screen.getByText(/D&D 5th Edition \(2014\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/D&D 5e Legacy \(2014\)/i)).toBeInTheDocument();
   });
 
   it('navigates through steps and creates a Level 1 character on completion', async () => {
@@ -199,7 +199,7 @@ describe('CharacterBuilderModal', () => {
 
     // Select 2014 ruleset
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByText(/D&D 5th Edition \(2014\)/i));
+    fireEvent.click(screen.getByText(/D&D 5e Legacy \(2014\)/i));
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
     // Step 2 in 2014 is Identity
@@ -419,11 +419,11 @@ describe('CharacterBuilderModal', () => {
     scrollContainer.scrollTo = vi.fn();
 
     // Click 2014 card
-    fireEvent.click(screen.getByText(/D&D 5th Edition \(2014\)/i));
+    fireEvent.click(screen.getByText(/D&D 5e Legacy \(2014\)/i));
     expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
 
     // Click 2024 card
-    fireEvent.click(screen.getByText(/D&D 5th Edition \(2024\)/i));
+    fireEvent.click(screen.getByText(/D&D 5\.5e Revised \(2024\)/i));
     expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
   });
 });

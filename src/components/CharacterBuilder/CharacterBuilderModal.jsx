@@ -527,7 +527,7 @@ export default function CharacterBuilderModal({
               >
                 <div className="flex items-center justify-between">
                   <div className="text-sm font-semibold text-slate-100">
-                    D&amp;D 5th Edition (2024)
+                    D&amp;D 5.5e Revised (2024)
                   </div>
                   <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-dnd-gold/20 text-dnd-gold font-bold">
                     Recommended
@@ -552,7 +552,7 @@ export default function CharacterBuilderModal({
                 }`}
               >
                 <div className="text-sm font-semibold text-slate-100">
-                  D&amp;D 5th Edition (2014)
+                  D&amp;D 5e Legacy (2014)
                 </div>
                 <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
                   The original fifth edition ruleset, featuring classic race, class, and background mechanics.
