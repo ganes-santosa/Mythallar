@@ -205,12 +205,19 @@ describe('ImageCropModal', () => {
     const framingBox = screen.getByTestId('crop-framing-box');
     expect(framingBox.style.height).toBe('280px');
 
+    const img = screen.getByAltText(/Portrait Crop Preview/i);
+    const initialImgWidth = img.style.width;
+    const initialImgHeight = img.style.height;
+
     // Drag bottom handle upwards by 20px -> height should reduce by 40px (symmetrical from center) -> 240px
     fireEvent.pointerDown(bottomHandle, { clientY: 200, pointerId: 1 });
     fireEvent.pointerMove(bottomHandle, { clientY: 180, pointerId: 1 });
     fireEvent.pointerUp(bottomHandle, { pointerId: 1 });
 
     expect(framingBox.style.height).toBe('240px');
+    // Image scale does NOT change when dragging handles
+    expect(img.style.width).toBe(initialImgWidth);
+    expect(img.style.height).toBe(initialImgHeight);
 
     // Drag bottom handle far up -> clamps at minimum 210px (1:1 square)
     fireEvent.pointerDown(bottomHandle, { clientY: 180, pointerId: 1 });
@@ -218,6 +225,8 @@ describe('ImageCropModal', () => {
     fireEvent.pointerUp(bottomHandle, { pointerId: 1 });
 
     expect(framingBox.style.height).toBe('210px');
+    expect(img.style.width).toBe(initialImgWidth);
+    expect(img.style.height).toBe(initialImgHeight);
 
     // Drag top handle far up -> clamps at maximum 280px (3:4 portrait)
     fireEvent.pointerDown(topHandle, { clientY: 100, pointerId: 1 });

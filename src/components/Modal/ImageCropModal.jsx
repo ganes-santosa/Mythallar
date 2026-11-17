@@ -40,10 +40,14 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     }
   };
 
-  // Base sizing so 1.0x zoom exactly covers the crop frame
+  // Base sizing so 1.0x zoom exactly covers the maximum possible crop frame (210x280)
+  // ponytail: keeping baseWidth and baseHeight constant against max bounds prevents the image
+  // from zooming in/out while the user drags crop boundary handles.
   const nw = naturalSize.width || 384;
   const nh = naturalSize.height || 512;
-  const coverScale = Math.max(cropBoxW / nw, cropBoxH / nh);
+  const maxCropW = 210;
+  const maxCropH = 280;
+  const coverScale = Math.max(maxCropW / nw, maxCropH / nh);
   const baseWidth = Math.round(nw * coverScale);
   const baseHeight = Math.round(nh * coverScale);
 
@@ -73,12 +77,10 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     setCropMode(mode);
     if (mode === '3:4') {
       setCropH(280);
-      setPan({ x: 0, y: 0 });
-      setZoom(1);
+      setPan((prevPan) => clampPan(prevPan, zoom, baseWidth, baseHeight, cropBoxW, 280));
     } else if (mode === '1:1') {
       setCropH(210);
-      setPan({ x: 0, y: 0 });
-      setZoom(1);
+      setPan((prevPan) => clampPan(prevPan, zoom, baseWidth, baseHeight, cropBoxW, 210));
     }
   };
 
@@ -143,11 +145,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     const sign = resizeRef.current.edge === 'bottom' ? 1 : -1;
     const nextH = Math.min(280, Math.max(210, Math.round(resizeRef.current.startH + deltaY * 2 * sign)));
     setCropH(nextH);
-
-    const nextCoverScale = Math.max(cropBoxW / nw, nextH / nh);
-    const nextBaseW = Math.round(nw * nextCoverScale);
-    const nextBaseH = Math.round(nh * nextCoverScale);
-    setPan((prevPan) => clampPan(prevPan, zoom, nextBaseW, nextBaseH, cropBoxW, nextH));
+    setPan((prevPan) => clampPan(prevPan, zoom, baseWidth, baseHeight, cropBoxW, nextH));
   };
 
   const handleEdgePointerUp = (e) => {
@@ -168,6 +166,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
       const expand = (edge === 'bottom' && e.key === 'ArrowDown') || (edge === 'top' && e.key === 'ArrowUp');
       const nextH = Math.min(280, Math.max(210, cropH + (expand ? step : -step)));
       setCropH(nextH);
+      setPan((prevPan) => clampPan(prevPan, zoom, baseWidth, baseHeight, cropBoxW, nextH));
     }
   };
 
