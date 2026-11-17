@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import CharacterSheetHeader from './CharacterSheetHeader';
 
 const mockCharacter = {
@@ -489,5 +489,48 @@ describe('CharacterSheetHeader', () => {
 
     const levelUpBtn = screen.getByRole('button', { name: /Level Up/i });
     expect(levelUpBtn).toHaveClass('h-[21px]');
+  });
+
+  it('opens ImageCropModal upon portrait file upload and updates identity portrait on apply', async () => {
+    // Mock canvas methods
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+      drawImage: vi.fn(),
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      getImageData: vi.fn(),
+      putImageData: vi.fn(),
+    });
+    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/webp;base64,mockSheetCroppedAvatar');
+
+    const handleUpdate = vi.fn();
+    render(
+      <CharacterSheetHeader
+        character={mockCharacter}
+        profiles={[mockCharacter]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    const fileInput = screen.getByLabelText('Portrait file input');
+    const fakeFile = new File(['fake-bytes'], 'avatar.jpg', { type: 'image/jpeg' });
+    fireEvent.change(fileInput, { target: { files: [fakeFile] } });
+
+    // Expect ImageCropModal to open
+    expect(await screen.findByRole('heading', { name: /Crop Character Portrait/i })).toBeInTheDocument();
+
+    // Click Apply Crop
+    fireEvent.click(screen.getByRole('button', { name: /Apply Crop/i }));
+
+    await waitFor(() => {
+      expect(handleUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sheet: expect.objectContaining({
+            identity: expect.objectContaining({
+              portrait: expect.stringContaining('data:image/'),
+            }),
+          }),
+        })
+      );
+    });
   });
 });

@@ -9,7 +9,7 @@ import { normalizeSpeeds } from '../../utils/storage';
 import { OPTIONAL_SPEED_TYPES } from '../../utils/dndCalculations';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useAutoScrollOnExpand from '../../hooks/useAutoScrollOnExpand';
-import { compressImageFile } from '../../utils/imageCompressor';
+import ImageCropModal from '../Modal/ImageCropModal';
 
 // ponytail: extracted so useTwoClickConfirm hook works per-row inside .map()
 function ClassDeleteButton({ className, onRemove }) {
@@ -233,18 +233,25 @@ function CharacterSheetHeader({
     });
   };
 
-  const handlePortraitUpload = async (e) => {
+  const [cropModalState, setCropModalState] = useState({ isOpen: false, imageSrc: '' });
+
+  const handlePortraitUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    try {
-      const compressedDataUrl = await compressImageFile(file, 256, 0.85);
-      if (compressedDataUrl) {
-        handleIdentityChange('portrait', compressedDataUrl);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const src = ev.target?.result;
+      if (src && typeof src === 'string') {
+        setCropModalState({ isOpen: true, imageSrc: src });
       }
-    } catch (err) {
-      console.error('Failed to compress avatar image', err);
-    }
+    };
+    reader.readAsDataURL(file);
     e.target.value = '';
+  };
+
+  const handleApplyCrop = (croppedUrl) => {
+    handleIdentityChange('portrait', croppedUrl);
+    setCropModalState({ isOpen: false, imageSrc: '' });
   };
 
   // ponytail: prioritize character name: drop button text first, then shorten/hide level label, so character name avoids culling
@@ -1017,6 +1024,14 @@ function CharacterSheetHeader({
         initialMode={levelUpModalMode}
         onConfirmLevelUp={onUpdateCharacter}
         onUpdateCharacter={onUpdateCharacter}
+      />
+
+      {/* Image Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalState.isOpen}
+        imageSrc={cropModalState.imageSrc}
+        onClose={() => setCropModalState({ isOpen: false, imageSrc: '' })}
+        onApplyCrop={handleApplyCrop}
       />
     </div>
   );
