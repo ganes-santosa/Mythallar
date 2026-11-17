@@ -36,6 +36,7 @@ describe('CharacterSheetHeader', () => {
     const img = screen.getByRole('img', { name: 'Aethelgard' });
     expect(img).toBeInTheDocument();
     expect(img).toHaveAttribute('src', 'data:image/webp;base64,mockWebpData');
+    expect(img.parentElement.className).toContain('max-h-36');
 
     // Right-side info
     expect(screen.getByRole('heading', { level: 2, name: 'Aethelgard' })).toBeInTheDocument();
