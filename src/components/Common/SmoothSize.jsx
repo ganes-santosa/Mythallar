@@ -30,22 +30,28 @@ export default function SmoothSize({
     const container = containerRef.current;
     if (!container) return;
 
+    // Temporarily clear inline height so we measure true natural target height
+    const prevInlineHeight = container.style.height;
+    container.style.height = '';
     const currentHeight = container.offsetHeight;
+    container.style.height = prevInlineHeight;
+
     if (typeof currentHeight !== 'number' || currentHeight === 0) {
       if (serializedKey !== undefined) prevKeyRef.current = serializedKey;
       return;
     }
 
-    // On initial mount, store initial key and height
     if (prevKeyRef.current === null) {
       prevKeyRef.current = serializedKey;
       prevHeightRef.current = currentHeight;
       return;
     }
 
-    // If key hasn't changed, just update height tracking
+    // If key hasn't changed, do not interrupt ongoing animation
     if (serializedKey !== undefined && prevKeyRef.current === serializedKey) {
-      prevHeightRef.current = currentHeight;
+      if (!isAnimatingRef.current) {
+        prevHeightRef.current = currentHeight;
+      }
       return;
     }
 
@@ -53,11 +59,15 @@ export default function SmoothSize({
       ? container.getBoundingClientRect().height
       : prevHeightRef.current ?? currentHeight;
 
+    isAnimatingRef.current = false;
     prevKeyRef.current = serializedKey;
     prevHeightRef.current = currentHeight;
 
     // If height difference is negligible, skip animation
     if (Math.abs(prevHeight - currentHeight) < 2) {
+      container.style.height = '';
+      container.style.overflow = '';
+      container.style.transition = '';
       return;
     }
 
@@ -96,6 +106,8 @@ export default function SmoothSize({
     return () => {
       container.removeEventListener('transitionend', handleTransitionEnd);
       clearTimeout(timer);
+      // Only clean up inline styles if key changed to a different method
+      cleanup();
     };
   }, [serializedKey, duration]);
 

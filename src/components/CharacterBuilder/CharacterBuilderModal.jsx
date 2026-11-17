@@ -216,13 +216,19 @@ export default function CharacterBuilderModal({
     }
   }, [selectedSpecies, selectedSubraceId]);
 
-  // Handle 2024 Background ASI defaults (+2 to first, +1 to second)
+  // Reset 2024 Background ASI choices to 0/unfilled when background or ruleset changes
+  const prevBgIdRef = useRef(selectedBackgroundId);
+  const prevRulesetRef = useRef(ruleset);
   useEffect(() => {
-    if (ruleset === '2024' && selectedBackground?.eligibleAbilities?.length >= 2) {
-      const [ab1, ab2] = selectedBackground.eligibleAbilities;
-      setBgBonusChoice({ [ab1]: 2, [ab2]: 1 });
+    if (
+      (prevBgIdRef.current && prevBgIdRef.current !== selectedBackgroundId) ||
+      (prevRulesetRef.current && prevRulesetRef.current !== ruleset)
+    ) {
+      setBgBonusChoice({});
     }
-  }, [ruleset, selectedBackground]);
+    prevBgIdRef.current = selectedBackgroundId;
+    prevRulesetRef.current = ruleset;
+  }, [ruleset, selectedBackgroundId]);
 
   // Roll pool generator
   useEffect(() => {
@@ -1335,11 +1341,7 @@ export default function CharacterBuilderModal({
             })()}
 
             {/* D&D Beyond-Style Unified Ability Score Grid */}
-            <SmoothSize
-              watchKey={abilityMethod}
-              duration={250}
-              className="grid grid-cols-2 sm:grid-cols-3 gap-3"
-            >
+            <div className="grid items-start grid-cols-2 sm:grid-cols-3 gap-3">
               {ABILITY_KEYS.map((k) => {
                 const rawBase = baseScores[k];
                 const isAssigned = rawBase !== null && rawBase !== undefined && rawBase !== '';
@@ -1349,8 +1351,10 @@ export default function CharacterBuilderModal({
                 const mod = isAssigned ? abilityCalculation.modifiers[k] : null;
 
                 return (
-                  <div
+                  <SmoothSize
                     key={k}
+                    watchKey={abilityMethod}
+                    duration={250}
                     className="p-3 rounded-xl bg-dnd-panel/70 shadow-sm flex flex-col items-center text-center space-y-2.5"
                   >
                     {/* Top: Ability Label */}
@@ -1544,10 +1548,10 @@ export default function CharacterBuilderModal({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </SmoothSize>
                 );
               })}
-            </SmoothSize>
+            </div>
           </div>
         );
 

@@ -330,12 +330,15 @@ describe('CharacterBuilderModal', () => {
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
 
     // Soldier background has eligible abilities: ['str', 'dex', 'con']
-    // Defaults to +2 to STR, +1 to DEX -> 0 points remaining
-    expect(screen.getByText(/0 of 3 points remaining/i)).toBeInTheDocument();
+    // Defaults to 0/unfilled -> 3 points remaining
+    expect(screen.getByText(/3 of 3 points remaining/i)).toBeInTheDocument();
 
-    // Decrease STR from +2 to +1
-    const decreaseStr = screen.getByRole('button', { name: /Decrease STR/i });
-    fireEvent.click(decreaseStr);
+    // Increase STR to +1 and then +2
+    const increaseStr = screen.getByRole('button', { name: /Increase STR/i });
+    fireEvent.click(increaseStr);
+    expect(screen.getByText(/2 of 3 points remaining/i)).toBeInTheDocument();
+
+    fireEvent.click(increaseStr);
     expect(screen.getByText(/1 of 3 points remaining/i)).toBeInTheDocument();
 
     // Increase CON by 1
@@ -344,6 +347,12 @@ describe('CharacterBuilderModal', () => {
     expect(screen.getByText(/0 of 3 points remaining/i)).toBeInTheDocument();
     // At 0 points remaining, increase buttons should be disabled
     expect(increaseCon).toBeDisabled();
+    expect(increaseStr).toBeDisabled();
+
+    // Decrease STR from +2 to +1
+    const decreaseStr = screen.getByRole('button', { name: /Decrease STR/i });
+    fireEvent.click(decreaseStr);
+    expect(screen.getByText(/1 of 3 points remaining/i)).toBeInTheDocument();
   });
 
   it('allows assigning and swapping Standard Array values via tactile chips with unified Total display', async () => {
