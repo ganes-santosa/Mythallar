@@ -116,6 +116,53 @@ describe('ImageCropModal', () => {
     });
   });
 
+  it('dynamically adapts canvas dimensions when applying crop in 3:4, 1:1, and custom height', async () => {
+    let lastCanvas = null;
+    const origCreateElement = document.createElement.bind(document);
+    vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
+      const el = origCreateElement(tagName);
+      if (tagName === 'canvas') {
+        lastCanvas = el;
+      }
+      return el;
+    });
+
+    const handleApply = vi.fn();
+    render(
+      <ImageCropModal
+        isOpen={true}
+        imageSrc={sampleImage}
+        onClose={vi.fn()}
+        onApplyCrop={handleApply}
+      />
+    );
+
+    // 1. Default 3:4 portrait mode -> 384x512
+    fireEvent.click(screen.getByRole('button', { name: /Apply Crop/i }));
+    await waitFor(() => expect(handleApply).toHaveBeenCalledTimes(1));
+    expect(lastCanvas.width).toBe(384);
+    expect(lastCanvas.height).toBe(512);
+
+    // 2. 1:1 square mode -> 384x384
+    fireEvent.click(screen.getByRole('button', { name: /1:1 Square/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Apply Crop/i }));
+    await waitFor(() => expect(handleApply).toHaveBeenCalledTimes(2));
+    expect(lastCanvas.width).toBe(384);
+    expect(lastCanvas.height).toBe(384);
+
+    // 3. Custom mode with arrow key adjustment to 240px -> 384x439
+    fireEvent.click(screen.getByRole('button', { name: /^Custom$/i }));
+    const bottomHandle = screen.getByLabelText(/Adjust bottom crop boundary/i);
+    // cropH was 210 after 1:1 square, expand with ArrowDown to 240
+    fireEvent.keyDown(bottomHandle, { key: 'ArrowDown' }); // 220
+    fireEvent.keyDown(bottomHandle, { key: 'ArrowDown' }); // 230
+    fireEvent.keyDown(bottomHandle, { key: 'ArrowDown' }); // 240
+    fireEvent.click(screen.getByRole('button', { name: /Apply Crop/i }));
+    await waitFor(() => expect(handleApply).toHaveBeenCalledTimes(3));
+    expect(lastCanvas.width).toBe(384);
+    expect(lastCanvas.height).toBe(Math.round(384 * (240 / 210)));
+  });
+
   it('renders image without transition-transform lag class and caps minimum zoom at 1.0x to cover crop frame', () => {
     render(
       <ImageCropModal
