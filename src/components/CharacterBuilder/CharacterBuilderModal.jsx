@@ -581,18 +581,18 @@ export default function CharacterBuilderModal({
                   </div>
                 )}
 
-                {/* Level 1 Capabilities Accordion */}
+                {/* Starting Features Accordion */}
                 {selectedClass.level1Features?.length > 0 && (
                   <div className="pt-2 border-t border-white/5 space-y-2">
                     <button
                       type="button"
                       onClick={() => setShowClassFeatures(!showClassFeatures)}
                       className="flex items-center space-x-1.5 text-left group focus:outline-none cursor-pointer"
-                      aria-label={showClassFeatures ? 'Collapse Level 1 Capabilities' : 'Expand Level 1 Capabilities'}
+                      aria-label={showClassFeatures ? 'Collapse Starting Features' : 'Expand Starting Features'}
                     >
                       <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
                       <span className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
-                        Level 1 Capabilities ({selectedClass.level1Features.length})
+                        Starting Features
                       </span>
                       <ChevronDown
                         size={13}

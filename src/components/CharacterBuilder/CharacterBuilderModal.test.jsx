@@ -289,13 +289,13 @@ describe('CharacterBuilderModal', () => {
     expect(screen.getByRole('button', { name: /Create Character/i })).toBeInTheDocument();
   });
 
-  it('renders expandable Level 1 Capabilities accordion inside the class section', async () => {
+  it('renders expandable Starting Features accordion inside the class section', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
 
-    // Find Level 1 Capabilities accordion toggle
-    const toggleAccordion = screen.getByRole('button', { name: /Expand Level 1 Capabilities/i });
+    // Find Starting Features accordion toggle
+    const toggleAccordion = screen.getByRole('button', { name: /Expand Starting Features/i });
     expect(toggleAccordion).toBeInTheDocument();
 
     // Features like Second Wind should exist for Fighter
@@ -304,7 +304,7 @@ describe('CharacterBuilderModal', () => {
 
     // Click to toggle
     fireEvent.click(toggleAccordion);
-    expect(screen.getByRole('button', { name: /Collapse Level 1 Capabilities/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Collapse Starting Features/i })).toBeInTheDocument();
   });
 
   it('displays skill proficiencies in Title Case with visual checkboxes', async () => {
