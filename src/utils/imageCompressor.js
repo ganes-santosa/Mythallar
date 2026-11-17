@@ -6,10 +6,7 @@ export async function compressImageFile(file, maxDim = 256, quality = 0.85) {
   if (!file) return '';
 
   return new Promise((resolve) => {
-    const reader = new FileReader();
-    reader.onerror = () => resolve('');
-    reader.onload = (e) => {
-      const src = e.target?.result;
+    const processSrc = (src) => {
       if (!src || typeof src !== 'string') {
         resolve('');
         return;
@@ -74,6 +71,17 @@ export async function compressImageFile(file, maxDim = 256, quality = 0.85) {
         // Fallback safety timeout for headless test runners
         setTimeout(() => done(src), 50);
       }
+    };
+
+    if (typeof file === 'string') {
+      processSrc(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => resolve('');
+    reader.onload = (e) => {
+      processSrc(e.target?.result);
     };
 
     reader.readAsDataURL(file);
