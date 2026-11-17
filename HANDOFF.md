@@ -2,13 +2,13 @@
 
 ## Current state (v3.2.0 - master)
 - **v3.2.0 (minor)**:
-  - Character Builder modal (`CharacterBuilderModal.jsx`) for guided Level 1 character creation supporting 2024 (XPHB) and 2014 (PHB) rulesets.
+  - Character Builder modal (`CharacterBuilderModal.jsx`) for guided Level 1 character creation supporting 2024 (XPHB) and 2014 (PHB) rulesets. Long-form scroll layout with stable modal height, scroll-spy section tracking, and persistent pinned navigation buttons.
   - Creation entry prompt (`CreateCharacterModal.jsx`): "Character Builder" (Recommended) vs "Manual Setup" (blank sheet).
   - 5e catalogues generated from 5etools mirror:
     - Species (`species.json`, 164 entries across 82 unique races + 93 subraces/lineages, instant search bar).
     - Classes (`classes.json`, 26 class entries across 2024 & 2014, including Artificer, with all official subclasses).
     - Backgrounds (`backgrounds.json`, 26 entries with 2024 ASI + Origin Feats and 2014 equipment/skills).
-  - Full suite green: 61 test files, 532 tests passed. Build clean.
+  - Full suite green: 61 test files, 533 tests passed. Build clean.
 
 ## Next up
 - Future expansion: Multiclassing and subclass progression deeper into character sheet.

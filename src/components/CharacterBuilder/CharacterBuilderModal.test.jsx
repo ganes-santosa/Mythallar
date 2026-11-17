@@ -253,4 +253,37 @@ describe('CharacterBuilderModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /Tabaxi/i }));
     expect(screen.getByText("Cat's Claws:")).toBeInTheDocument();
   });
+
+  it('renders a long-form layout with stable modal height and interactive section pill bar', async () => {
+    const { container } = render(
+      <CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />
+    );
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Verify modal has consistent, fixed height classes
+    const modalPanel = container.querySelector('.max-w-3xl');
+    expect(modalPanel).toHaveClass('h-[88vh]', 'sm:h-[90vh]', 'max-h-[860px]');
+
+    // Verify all long-form sections are mounted in DOM
+    expect(container.querySelector('#builder-section-ruleset')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-class')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-background')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-species')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-abilities')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-details')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-equipment')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-spells')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-review')).toBeInTheDocument();
+
+    // Click on Review pill in top pill bar
+    const reviewPill = screen.getByRole('button', { name: /9\.\s*Review/i });
+    fireEvent.click(reviewPill);
+
+    // Header subtitle updates to section 9
+    expect(screen.getByText(/Section 9 of 9 — Review/i)).toBeInTheDocument();
+
+    // Footer button changes to Create Character
+    expect(screen.getByRole('button', { name: /Create Character/i })).toBeInTheDocument();
+  });
 });
