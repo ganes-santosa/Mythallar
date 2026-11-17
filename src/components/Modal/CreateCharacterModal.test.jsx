@@ -11,16 +11,61 @@ describe('CreateCharacterModal', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('renders modal with name input and class select when open', () => {
+  it('renders entry screen with Character Builder and Manual Setup choices when open', () => {
     render(
       <CreateCharacterModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />
     );
-    expect(screen.getByRole('heading', { name: 'Create Character' })).toBeInTheDocument();
-    expect(screen.getByText('Adventure awaits')).toBeInTheDocument();
-    expect(screen.getByLabelText(/Character Name/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Starting Class/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Create Character/i })).toBeDisabled();
+    expect(screen.getByRole('heading', { name: /Create your character/i })).toBeInTheDocument();
+    expect(screen.getByText(/Choose how you'd like to get started/i)).toBeInTheDocument();
+
+    // Option 1: Character Builder (Recommended)
+    expect(screen.getByRole('button', { name: /Character Builder/i })).toBeInTheDocument();
+    expect(screen.getByText(/Recommended/i)).toBeInTheDocument();
+    expect(screen.getByText(/Follow a step-by-step process to build your character/i)).toBeInTheDocument();
+
+    // Option 2: Manual Setup
+    expect(screen.getByRole('button', { name: /Manual Setup/i })).toBeInTheDocument();
+    expect(screen.getByText(/Skip the guided process and fill in your character sheet yourself/i)).toBeInTheDocument();
+
     expect(screen.getByRole('button', { name: /Close modal/i })).toBeInTheDocument();
+  });
+
+  it('calls onStartBuilder and closes modal when Character Builder is clicked', () => {
+    const handleStartBuilder = vi.fn();
+    const handleClose = vi.fn();
+    render(
+      <CreateCharacterModal
+        isOpen={true}
+        onClose={handleClose}
+        onCreate={vi.fn()}
+        onStartBuilder={handleStartBuilder}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Character Builder/i }));
+    expect(handleClose).toHaveBeenCalled();
+    expect(handleStartBuilder).toHaveBeenCalled();
+  });
+
+  it('calls onCreate with Level 1 character and closes modal when Manual Setup is clicked', () => {
+    const handleCreate = vi.fn();
+    const handleClose = vi.fn();
+    render(
+      <CreateCharacterModal
+        isOpen={true}
+        onClose={handleClose}
+        onCreate={handleCreate}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Manual Setup/i }));
+    expect(handleCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'New Adventurer',
+        className: 'Wizard',
+      })
+    );
+    expect(handleClose).toHaveBeenCalled();
   });
 
   it('calls onClose when close icon button is clicked', () => {
@@ -29,39 +74,6 @@ describe('CreateCharacterModal', () => {
       <CreateCharacterModal isOpen={true} onClose={handleClose} onCreate={vi.fn()} />
     );
     fireEvent.click(screen.getByRole('button', { name: /Close modal/i }));
-    expect(handleClose).toHaveBeenCalled();
-  });
-
-  it('calls onCreate with trimmed name and selected class', () => {
-    const handleCreate = vi.fn();
-    const handleClose = vi.fn();
-    render(
-      <CreateCharacterModal isOpen={true} onClose={handleClose} onCreate={handleCreate} />
-    );
-
-    fireEvent.change(screen.getByLabelText(/Character Name/i), {
-      target: { value: '   Astarion   ' },
-    });
-    fireEvent.change(screen.getByLabelText(/Starting Class/i), {
-      target: { value: 'Rogue' },
-    });
-
-    const submitBtn = screen.getByRole('button', { name: /Create Character/i });
-    expect(submitBtn).not.toBeDisabled();
-    fireEvent.click(submitBtn);
-
-    expect(handleCreate).toHaveBeenCalledWith({
-      name: 'Astarion',
-      className: 'Rogue',
-    });
-  });
-
-  it('closes when Cancel is clicked', () => {
-    const handleClose = vi.fn();
-    render(
-      <CreateCharacterModal isOpen={true} onClose={handleClose} onCreate={vi.fn()} />
-    );
-    fireEvent.click(screen.getByRole('button', { name: /Cancel/i }));
     expect(handleClose).toHaveBeenCalled();
   });
 });

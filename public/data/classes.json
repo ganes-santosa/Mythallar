@@ -1,0 +1,3410 @@
+[
+  {
+    "id": "artificer-2024",
+    "name": "Artificer",
+    "edition": "2024",
+    "source": "TCE",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "int"
+    ],
+    "savingThrows": [
+      "con",
+      "int"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "firearms"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "history",
+        "investigation",
+        "medicine",
+        "nature",
+        "perception",
+        "sleightOfHand"
+      ]
+    },
+    "spellcastingAbility": "int",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Magical Tinkering",
+        "description": "1st-level artificer feature\n\nYou've learned how to invest a spark of magic into mundane objects. To use this ability, you must have thieves' tools or artisan's tools in hand. You then touch a Tiny nonmagical object as an action and give it one of the following magical properties of your choice:\n\n• The object sheds bright light in a 5-foot radius and dim light for an additional 5 feet.\n\n• Whenever tapped by a creature, the object emits a recorded message that can be heard up to 10 feet away. You utter the message when you bestow this property on the object, and the recording can be no more than 6 seconds long.\n\n• The object continuously emits your choice of an odor or a nonverbal sound (wind, waves, chirping, or the like). The chosen phenomenon is perceivable up to 10 feet away.\n\n• A static visual effect appears on one of the object's surfaces. This effect can be a picture, up to 25 words of text, lines and shapes, or a mixture of these elements, as you like.\n\nThe chosen property lasts indefinitely. As an action, you can touch the object and end the property early.\n\nYou can bestow magic on multiple objects, touching one object each time you use this feature, though a single object can only bear one property at a time. The maximum number of objects you can affect with this feature at one time is equal to your Intelligence modifier (minimum of one object). If you try to exceed your maximum, the oldest property immediately ends, and then the new property applies."
+      },
+      {
+        "name": "Optional Rule: Firearm Proficiency",
+        "description": "The secrets of creating and operating gunpowder weapons have been discovered in various corners of the D&D multiverse. If your Dungeon Master uses the rules on firearms in chapter 9 of the Dungeon Master's Guide and your artificer has been exposed to the operation of such weapons, your artificer is proficient with them."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "1st-level artificer feature\n\nYou've studied the workings of magic and how to cast spells, channeling the magic through objects. To observers, you don't appear to be casting spells in a conventional way; you appear to produce wonders from mundane items and outlandish inventions.\n\nTools Required: You produce your artificer spell effects through your tools. You must have a spellcasting focus—specifically thieves' tools or some kind of artisan's tools—in hand when you cast any spell with this Spellcasting feature (meaning the spell has an 'M' component when you cast it). You must be proficient with the tool to use it in this way. See chapter 5, \"Equipment,\" in the Player's Handbook for descriptions of these tools. After you gain the Infuse Item feature at 2nd level, you can also use any item bearing one of your infusions as a spellcasting focus.\n\nCantrips (0-Level Spells): At 1st level, you know two cantrips of your choice from the artificer spell list. At higher levels, you learn additional artificer cantrips of your choice, as shown in the Cantrips Known column of the Artificer table. When you gain a level in this class, you can replace one of the artificer cantrips you know with another cantrip from the artificer spell list.\n\nPreparing and Casting Spells: The Artificer table shows how many spell slots you have to cast your artificer spells. To cast one of your artificer spells of 1st level or higher, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. You prepare the list of artificer spells that are available for you to cast, choosing from the artificer spell list. When you do so, choose a number of artificer spells equal to your Intelligence modifier + half your artificer level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots. For example, if you are a 5th-level artificer, you have four 1st-level and two 2nd-level spell slots. With an Intelligence of 14, your list of prepared spells can include four spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell cure wounds, you can cast it using a 1st-level or a 2nd-level slot. Casting the spell doesn't remove it from your list of prepared spells. You can change your list of prepared spells when you finish a long rest. Preparing a new list of artificer spells requires time spent tinkering with your spellcasting focuses: at least 1 minute per spell level for each spell on your list.\n\nSpellcasting Ability: Intelligence is your spellcasting ability for your artificer spells; your understanding of the theory behind magic allows you to wield these spells with superior skill. You use your Intelligence whenever an artificer spell refers to your spellcasting ability. In addition, you use your Intelligence modifier when setting the saving throw DC for an artificer spell you cast and when making an attack roll with one.\n\nRitual Casting: You can cast an artificer spell as a ritual if that spell has the ritual tag and you have the spell prepared."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "artificer-alchemist-tce",
+        "name": "Alchemist",
+        "shortName": "Alchemist",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-armorer-tce",
+        "name": "Armorer",
+        "shortName": "Armorer",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-artillerist-tce",
+        "name": "Artillerist",
+        "shortName": "Artillerist",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-battle-smith-tce",
+        "name": "Battle Smith",
+        "shortName": "Battle Smith",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-alchemist-efa",
+        "name": "Alchemist",
+        "shortName": "Alchemist",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-armorer-efa",
+        "name": "Armorer",
+        "shortName": "Armorer",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-artillerist-efa",
+        "name": "Artillerist",
+        "shortName": "Artillerist",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-battle-smith-efa",
+        "name": "Battle Smith",
+        "shortName": "Battle Smith",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-cartographer-efa",
+        "name": "Cartographer",
+        "shortName": "Cartographer",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-reanimator-rhw",
+        "name": "Reanimator",
+        "shortName": "Reanimator",
+        "source": "RHW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A master of invention, utilizing ingenuity and magic to unlock wondrous capabilities in objects."
+  },
+  {
+    "id": "artificer-2014",
+    "name": "Artificer",
+    "edition": "2014",
+    "source": "TCE",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "int"
+    ],
+    "savingThrows": [
+      "con",
+      "int"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "firearms"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "history",
+        "investigation",
+        "medicine",
+        "nature",
+        "perception",
+        "sleightOfHand"
+      ]
+    },
+    "spellcastingAbility": "int",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Magical Tinkering",
+        "description": "1st-level artificer feature\n\nYou've learned how to invest a spark of magic into mundane objects. To use this ability, you must have thieves' tools or artisan's tools in hand. You then touch a Tiny nonmagical object as an action and give it one of the following magical properties of your choice:\n\n• The object sheds bright light in a 5-foot radius and dim light for an additional 5 feet.\n\n• Whenever tapped by a creature, the object emits a recorded message that can be heard up to 10 feet away. You utter the message when you bestow this property on the object, and the recording can be no more than 6 seconds long.\n\n• The object continuously emits your choice of an odor or a nonverbal sound (wind, waves, chirping, or the like). The chosen phenomenon is perceivable up to 10 feet away.\n\n• A static visual effect appears on one of the object's surfaces. This effect can be a picture, up to 25 words of text, lines and shapes, or a mixture of these elements, as you like.\n\nThe chosen property lasts indefinitely. As an action, you can touch the object and end the property early.\n\nYou can bestow magic on multiple objects, touching one object each time you use this feature, though a single object can only bear one property at a time. The maximum number of objects you can affect with this feature at one time is equal to your Intelligence modifier (minimum of one object). If you try to exceed your maximum, the oldest property immediately ends, and then the new property applies."
+      },
+      {
+        "name": "Optional Rule: Firearm Proficiency",
+        "description": "The secrets of creating and operating gunpowder weapons have been discovered in various corners of the D&D multiverse. If your Dungeon Master uses the rules on firearms in chapter 9 of the Dungeon Master's Guide and your artificer has been exposed to the operation of such weapons, your artificer is proficient with them."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "1st-level artificer feature\n\nYou've studied the workings of magic and how to cast spells, channeling the magic through objects. To observers, you don't appear to be casting spells in a conventional way; you appear to produce wonders from mundane items and outlandish inventions.\n\nTools Required: You produce your artificer spell effects through your tools. You must have a spellcasting focus—specifically thieves' tools or some kind of artisan's tools—in hand when you cast any spell with this Spellcasting feature (meaning the spell has an 'M' component when you cast it). You must be proficient with the tool to use it in this way. See chapter 5, \"Equipment,\" in the Player's Handbook for descriptions of these tools. After you gain the Infuse Item feature at 2nd level, you can also use any item bearing one of your infusions as a spellcasting focus.\n\nCantrips (0-Level Spells): At 1st level, you know two cantrips of your choice from the artificer spell list. At higher levels, you learn additional artificer cantrips of your choice, as shown in the Cantrips Known column of the Artificer table. When you gain a level in this class, you can replace one of the artificer cantrips you know with another cantrip from the artificer spell list.\n\nPreparing and Casting Spells: The Artificer table shows how many spell slots you have to cast your artificer spells. To cast one of your artificer spells of 1st level or higher, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. You prepare the list of artificer spells that are available for you to cast, choosing from the artificer spell list. When you do so, choose a number of artificer spells equal to your Intelligence modifier + half your artificer level, rounded down (minimum of one spell). The spells must be of a level for which you have spell slots. For example, if you are a 5th-level artificer, you have four 1st-level and two 2nd-level spell slots. With an Intelligence of 14, your list of prepared spells can include four spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell cure wounds, you can cast it using a 1st-level or a 2nd-level slot. Casting the spell doesn't remove it from your list of prepared spells. You can change your list of prepared spells when you finish a long rest. Preparing a new list of artificer spells requires time spent tinkering with your spellcasting focuses: at least 1 minute per spell level for each spell on your list.\n\nSpellcasting Ability: Intelligence is your spellcasting ability for your artificer spells; your understanding of the theory behind magic allows you to wield these spells with superior skill. You use your Intelligence whenever an artificer spell refers to your spellcasting ability. In addition, you use your Intelligence modifier when setting the saving throw DC for an artificer spell you cast and when making an attack roll with one.\n\nRitual Casting: You can cast an artificer spell as a ritual if that spell has the ritual tag and you have the spell prepared."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "artificer-alchemist-tce",
+        "name": "Alchemist",
+        "shortName": "Alchemist",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-armorer-tce",
+        "name": "Armorer",
+        "shortName": "Armorer",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-artillerist-tce",
+        "name": "Artillerist",
+        "shortName": "Artillerist",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-battle-smith-tce",
+        "name": "Battle Smith",
+        "shortName": "Battle Smith",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-alchemist-efa",
+        "name": "Alchemist",
+        "shortName": "Alchemist",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-armorer-efa",
+        "name": "Armorer",
+        "shortName": "Armorer",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-artillerist-efa",
+        "name": "Artillerist",
+        "shortName": "Artillerist",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-battle-smith-efa",
+        "name": "Battle Smith",
+        "shortName": "Battle Smith",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-cartographer-efa",
+        "name": "Cartographer",
+        "shortName": "Cartographer",
+        "source": "EFA",
+        "edition": "2014"
+      },
+      {
+        "id": "artificer-reanimator-rhw",
+        "name": "Reanimator",
+        "shortName": "Reanimator",
+        "source": "RHW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A master of invention, utilizing ingenuity and magic to unlock wondrous capabilities in objects."
+  },
+  {
+    "id": "barbarian-2024",
+    "name": "Barbarian",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 12,
+    "hitDieString": "d12",
+    "primaryAbility": [
+      "str"
+    ],
+    "savingThrows": [
+      "str",
+      "con"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "animalHandling",
+        "athletics",
+        "intimidation",
+        "nature",
+        "perception",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Rage",
+        "description": "You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.\n\nYou can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.\n\nWhile active, your Rage follows the rules below.\n\nDamage Resistance: You have Resistance to Bludgeoning, Piercing, and Slashing damage.\n\nRage Damage: When you make an attack using Strength—with either a weapon or an Unarmed Strike—and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Barbarian, as shown in the Rage Damage column of the Barbarian Features table.\n\nStrength Advantage: You have Advantage on Strength checks and Strength saving throws.\n\nNo Concentration or Spells: You can't maintain Concentration, and you can't cast spells.\n\nDuration: The Rage lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Rage is still active on your next turn, you can extend the Rage for another round by doing one of the following:\n\n• Make an attack roll against an enemy.\n\n• Force an enemy to make a saving throw.\n\n• Take a Bonus Action to extend your Rage.\n\nEach time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes."
+      },
+      {
+        "name": "Unarmored Defense",
+        "description": "While you aren't wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain this benefit."
+      },
+      {
+        "name": "Weapon Mastery",
+        "description": "Your training with weapons allows you to use the weapon mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxe and Handaxe. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.\n\nWhen you reach certain Barbarian levels, you gain the ability to use the weapon mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "barbarian-path-of-the-ancestral-guardian-xge",
+        "name": "Path of the Ancestral Guardian",
+        "shortName": "Ancestral Guardian",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-storm-herald-xge",
+        "name": "Path of the Storm Herald",
+        "shortName": "Storm Herald",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-zealot-xge",
+        "name": "Path of the Zealot",
+        "shortName": "Zealot",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-beast-tce",
+        "name": "Path of the Beast",
+        "shortName": "Beast",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-wild-magic-tce",
+        "name": "Path of Wild Magic",
+        "shortName": "Wild Magic",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-berserker-xphb",
+        "name": "Path of the Berserker",
+        "shortName": "Berserker",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "barbarian-path-of-the-wild-heart-xphb",
+        "name": "Path of the Wild Heart",
+        "shortName": "Wild Heart",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "barbarian-path-of-the-world-tree-xphb",
+        "name": "Path of the World Tree",
+        "shortName": "World Tree",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "barbarian-path-of-the-zealot-xphb",
+        "name": "Path of the Zealot",
+        "shortName": "Zealot",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Greataxe, 4 Handaxe, Explorer's Pack, and 15 GP; or (B) 75 GP",
+    "description": "A fierce warrior of primitive background who can enter a battle rage."
+  },
+  {
+    "id": "barbarian-2014",
+    "name": "Barbarian",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 12,
+    "hitDieString": "d12",
+    "primaryAbility": [
+      "str"
+    ],
+    "savingThrows": [
+      "str",
+      "con"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "animalHandling",
+        "athletics",
+        "intimidation",
+        "nature",
+        "perception",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Rage",
+        "description": "In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.\n\nWhile raging, you gain the following benefits if you aren't wearing heavy armor:\n\n• You have advantage on Strength checks and Strength saving throws.\n\n• When you make a melee weapon attack using Strength, you gain a +2 bonus to the damage roll. This bonus increases as you level.\n\n• You have resistance to bludgeoning, piercing, and slashing damage.\n\nIf you are able to cast spells, you can't cast them or concentrate on them while raging.\n\nYour rage lasts for 1 minute. It ends early if you are knocked unconscious or if your turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action.\n\nOnce you have raged the maximum number of times for your barbarian level, you must finish a long rest before you can rage again. You may rage 2 times at 1st level, 3 at 3rd, 4 at 6th, 5 at 12th, and 6 at 17th."
+      },
+      {
+        "name": "Unarmored Defense",
+        "description": "While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. You can use a shield and still gain this benefit."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "barbarian-path-of-the-berserker-phb",
+        "name": "Path of the Berserker",
+        "shortName": "Berserker",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-totem-warrior-phb",
+        "name": "Path of the Totem Warrior",
+        "shortName": "Totem Warrior",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-battlerager-scag",
+        "name": "Path of the Battlerager",
+        "shortName": "Battlerager",
+        "source": "SCAG",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-ancestral-guardian-xge",
+        "name": "Path of the Ancestral Guardian",
+        "shortName": "Ancestral Guardian",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-storm-herald-xge",
+        "name": "Path of the Storm Herald",
+        "shortName": "Storm Herald",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-zealot-xge",
+        "name": "Path of the Zealot",
+        "shortName": "Zealot",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-beast-tce",
+        "name": "Path of the Beast",
+        "shortName": "Beast",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-wild-magic-tce",
+        "name": "Path of Wild Magic",
+        "shortName": "Wild Magic",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-giant-bgg",
+        "name": "Path of the Giant",
+        "shortName": "Giant",
+        "source": "BGG",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-elements-wow",
+        "name": "Path of the Elements",
+        "shortName": "Elements",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "barbarian-path-of-the-spiritual-guardian-wow",
+        "name": "Path of the Spiritual Guardian",
+        "shortName": "Spiritual Guardian",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A fierce warrior of primitive background who can enter a battle rage."
+  },
+  {
+    "id": "bard-2024",
+    "name": "Bard",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "dex",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 3,
+      "from": "all"
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Bardic Inspiration",
+        "description": "You can supernaturally inspire others through words, music, or dance. This inspiration is represented by your Bardic Inspiration die, which is a d6.\n\nUsing Bardic Inspiration: As a Bonus Action, you can inspire another creature within 60 feet of yourself who can see or hear you. That creature gains one of your Bardic Inspiration dice. A creature can have only one Bardic Inspiration die at a time. Once within the next hour when the creature fails a D20 Test, the creature can roll the Bardic Inspiration die and add the number rolled to the d20, potentially turning the failure into a success. A Bardic Inspiration die is expended when it's rolled.\n\nNumber of Uses: You can confer a Bardic Inspiration die a number of times equal to your Charisma modifier (minimum of once), and you regain all expended uses when you finish a Long Rest.\n\nAt Higher Levels: Your Bardic Inspiration die changes when you reach certain Bard levels, as shown in the Bardic Die column of the Bard Features table. The die becomes a d8 at level 5, a d10 at level 10, and a d12 at level 15."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to cast spells through your bardic arts. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Bard spells, which appear in the Bard spell list later in the class's description.\n\nCantrips: You know two cantrips of your choice from the Bard spell list. Dancing Lights and Vicious Mockery are recommended. Whenever you gain a Bard level, you can replace one of your cantrips with another cantrip of your choice from the Bard spell list. When you reach Bard levels 4 and 10, you learn another cantrip of your choice from the Bard spell list, as shown in the Cantrips column of the Bard Features table.\n\nSpell Slots: The Bard Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose four level 1 spells from the Bard spell list. Charm Person, Color Spray, Dissonant Whispers, and Healing Word are recommended. The number of spells on your list increases as you gain Bard levels, as shown in the Prepared Spells column of the Bard Features table. Whenever that number increases, choose additional spells from the Bard spell list until the number of spells on your list matches the number on the table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Bard, your list of prepared spells can include six spells of levels 1 and 2 in any combination. If another Bard feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Bard spells for you.\n\nChanging Your Prepared Spells: Whenever you gain a Bard level, you can replace one spell on your list with another Bard spell for which you have spell slots.\n\nSpellcasting Ability: Charisma is your spellcasting ability for your Bard spells.\n\nSpellcasting Focus: You can use a Musical Instrument as a Spellcasting Focus for your Bard spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "bard-college-of-glamour-xge",
+        "name": "College of Glamour",
+        "shortName": "Glamour",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-swords-xge",
+        "name": "College of Swords",
+        "shortName": "Swords",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-whispers-xge",
+        "name": "College of Whispers",
+        "shortName": "Whispers",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-creation-tce",
+        "name": "College of Creation",
+        "shortName": "Creation",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-eloquence-tce",
+        "name": "College of Eloquence",
+        "shortName": "Eloquence",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-dance-xphb",
+        "name": "College of Dance",
+        "shortName": "Dance",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "bard-college-of-glamour-xphb",
+        "name": "College of Glamour",
+        "shortName": "Glamour",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "bard-college-of-lore-xphb",
+        "name": "College of Lore",
+        "shortName": "Lore",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "bard-college-of-valor-xphb",
+        "name": "College of Valor",
+        "shortName": "Valor",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Leather Armor, 2 Dagger, Musical Instrument of your choice, Entertainer's Pack, 19 GP; or (B) 90 GP",
+    "description": "An inspiring magician whose power echoes the music of creation."
+  },
+  {
+    "id": "bard-2014",
+    "name": "Bard",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "dex",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "hand crossbow",
+      "longsword",
+      "rapier",
+      "shortsword"
+    ],
+    "skillChoices": {
+      "count": 3,
+      "from": "all"
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Bardic Inspiration",
+        "description": "You can inspire others through stirring words or music. To do so, you use a bonus action on your turn to choose one creature other than yourself within 60 feet of you who can hear you. That creature gains one Bardic Inspiration die, a d6.\n\nOnce within the next 10 minutes, the creature can roll the die and add the number rolled to one ability check, attack roll, or saving throw it makes. The creature can wait until after it rolls the d20 before deciding to use the Bardic Inspiration die, but must decide before the DM says whether the roll succeeds or fails. Once the Bardic Inspiration die is rolled, it is lost. A creature can have only one Bardic Inspiration die at a time.\n\nYou can use this feature a number of times equal to your Charisma modifier (a minimum of once). You regain any expended uses when you finish a long rest.\n\nYour Bardic Inspiration die changes when you reach certain levels in this class. The die becomes a d8 at 5th level, a d10 at 10th level, and a d12 at 15th level."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to untangle and reshape the fabric of reality in harmony with your wishes and music. Your spells are part of your vast repertoire, magic that you can tune to different situations. See chapter 10 for the general rules of spellcasting and chapter 11 for the bard spell list.\n\nCantrips: You know two cantrips of your choice from the bard spell list. You learn additional bard cantrips of your choice at higher levels, learning a 3rd cantrip at 4th level and a 4th at 10th level.\n\nSpell Slots: The Bard table shows how many spell slots you have to cast your bard spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. For example, if you know the 1st-level spell cure wounds and have a 1st-level and a 2nd-level spell slot available, you can cast cure wounds using either slot.\n\nSpells Known of 1st Level and Higher: You know four 1st-level spells of your choice from the bard spell list. You learn an additional bard spell of your choice at each level except 12th, 16th, 19th, and 20th. Each of these spells must be of a level for which you have spell slots. For instance, when you reach 3rd level in this class, you can learn one new spell of 1st or 2nd level. Additionally, when you gain a level in this class, you can choose one of the bard spells you know and replace it with another spell from the bard spell list, which also must be of a level for which you have spell slots.\n\nSpellcasting Ability: Charisma is your spellcasting ability for your bard spells. Your magic comes from the heart and soul you pour into the performance of your music or oration. You use your Charisma whenever a spell refers to your spellcasting ability. In addition, you use your Charisma modifier when setting the saving throw DC for a bard spell you cast and when making an attack roll with one.\n\nRitual Casting: You can cast any bard spell you know as a ritual if that spell has the ritual tag.\n\nSpellcasting Focus: You can use a musical instrument as a spellcasting focus for your bard spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "bard-college-of-lore-phb",
+        "name": "College of Lore",
+        "shortName": "Lore",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-valor-phb",
+        "name": "College of Valor",
+        "shortName": "Valor",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-glamour-xge",
+        "name": "College of Glamour",
+        "shortName": "Glamour",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-swords-xge",
+        "name": "College of Swords",
+        "shortName": "Swords",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-whispers-xge",
+        "name": "College of Whispers",
+        "shortName": "Whispers",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-creation-tce",
+        "name": "College of Creation",
+        "shortName": "Creation",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-eloquence-tce",
+        "name": "College of Eloquence",
+        "shortName": "Eloquence",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-spirits-vrgr",
+        "name": "College of Spirits",
+        "shortName": "Spirits",
+        "source": "VRGR",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-the-moon-frhof",
+        "name": "College of the Moon",
+        "shortName": "Moon",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "bard-college-of-spirits-rhw",
+        "name": "College of Spirits",
+        "shortName": "Spirits",
+        "source": "RHW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "An inspiring magician whose power echoes the music of creation."
+  },
+  {
+    "id": "cleric-2024",
+    "name": "Cleric",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "wis"
+    ],
+    "savingThrows": [
+      "wis",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "history",
+        "insight",
+        "medicine",
+        "persuasion",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Divine Order",
+        "description": "You have dedicated yourself to one of the following sacred roles of your choice."
+      },
+      {
+        "name": "Protector",
+        "description": "Trained for battle, you gain proficiency with Martial weapons and training with Heavy armor."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to cast spells through prayer and meditation. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Cleric spells, which appear on the Cleric spell list later in the class's description.\n\nCantrips: You know three cantrips of your choice from the Cleric spell list. Guidance, Sacred Flame, and Thaumaturgy are recommended. Whenever you gain a Cleric level, you can replace one of your cantrips with another cantrip of your choice from the Cleric spell list. When you reach Cleric levels 4 and 10, you learn another cantrip of your choice from the Cleric spell list, as shown in the Cantrips column of the Cleric Features table.\n\nSpell Slots: The Cleric Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose four level 1 spells from the Cleric spell list. Bless, Cure Wounds, Guiding Bolt, and Shield of Faith are recommended. The number of spells on your list increases as you gain Cleric levels, as shown in the Prepared Spells column of the Cleric Features table. Whenever that number increases, choose additional spells from the Cleric spell list until the number of spells on your list matches the number on the table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Cleric, your list of prepared spells can include six spells of levels 1 and 2 in any combination. If another Cleric feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Cleric spells for you.\n\nChanging Your Prepared Spells: Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with other Cleric spells for which you have spell slots.\n\nSpellcasting Ability: Wisdom is your spellcasting ability for your Cleric spells.\n\nSpellcasting Focus: You can use a Holy Symbol as a Spellcasting Focus for your Cleric spells."
+      },
+      {
+        "name": "Thaumaturge",
+        "description": "You know one extra cantrip from the Cleric spell list. In addition, your mystical connection to the divine gives you a bonus to your Intelligence (Arcana or Religion) checks. The bonus equals your Wisdom modifier (minimum of +1)."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "cleric-forge-domain-xge",
+        "name": "Forge Domain",
+        "shortName": "Forge",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-grave-domain-xge",
+        "name": "Grave Domain",
+        "shortName": "Grave",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-order-domain-tce",
+        "name": "Order Domain",
+        "shortName": "Order",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-peace-domain-tce",
+        "name": "Peace Domain",
+        "shortName": "Peace",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-twilight-domain-tce",
+        "name": "Twilight Domain",
+        "shortName": "Twilight",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-life-domain-xphb",
+        "name": "Life Domain",
+        "shortName": "Life",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "cleric-light-domain-xphb",
+        "name": "Light Domain",
+        "shortName": "Light",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "cleric-trickery-domain-xphb",
+        "name": "Trickery Domain",
+        "shortName": "Trickery",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "cleric-war-domain-xphb",
+        "name": "War Domain",
+        "shortName": "War",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Chain Shirt, Shield, Mace, Holy Symbol, Priest's Pack, 7 GP; or (B) 110 GP",
+    "description": "A priestly champion who wields divine magic in service of a higher power."
+  },
+  {
+    "id": "cleric-2014",
+    "name": "Cleric",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "wis"
+    ],
+    "savingThrows": [
+      "wis",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "history",
+        "insight",
+        "medicine",
+        "persuasion",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Divine Domain",
+        "description": "Choose one domain related to your deity from the list of available domains. Each domain is detailed in their own feature, and each one provides examples of gods associated with it. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.\n\nDomain Spells: Each domain has a list of spells—its domain spells—that you gain at the cleric levels noted in the domain description. Once you gain a domain spell, you always have it prepared, and it doesn't count against the number of spells you can prepare each day. If you have a domain spell that doesn't appear on the cleric spell list, the spell is nonetheless a cleric spell for you."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "As a conduit for divine power, you can cast cleric spells. See chapter 10 for the general rules of spellcasting and chapter 11 for a selection of cleric spells.\n\nCantrips: At 1st level, you know three cantrips of your choice from the cleric spell list. You learn additional cleric cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Cleric table.\n\nPreparing and Casting Spells: The Cleric table shows how many spell slots you have to cast your cleric spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. You prepare the list of cleric spells that are available for you to cast, choosing from the cleric spell list. When you do so, choose a number of cleric spells equal to your Wisdom modifier + your cleric level (minimum of one spell). The spells must be of a level for which you have spell slots. For example, if you are a 3rd-level cleric, you have four 1st-level and two 2nd-level spell slots. With a Wisdom of 16, your list of prepared spells can include six spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell cure wounds, you can cast it using a 1st-level or 2nd-level slot. Casting the spell doesn't remove it from your list of prepared spells. You can change your list of prepared spells when you finish a long rest. Preparing a new list of cleric spells requires time spent in prayer and meditation: at least 1 minute per spell level for each spell on your list.\n\nSpellcasting Ability: Wisdom is your spellcasting ability for your cleric spells. The power of your spells comes from your devotion to your deity. You use your Wisdom whenever a cleric spell refers to your spellcasting ability. In addition, you use your Wisdom modifier when setting the saving throw DC for a cleric spell you cast and when making an attack roll with one.\n\nRitual Casting: You can cast a cleric spell as a ritual if that spell has the ritual tag and you have the spell prepared.\n\nSpellcasting Focus: You can use a holy symbol as a spellcasting focus for your cleric spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "cleric-knowledge-domain-phb",
+        "name": "Knowledge Domain",
+        "shortName": "Knowledge",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-life-domain-phb",
+        "name": "Life Domain",
+        "shortName": "Life",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-light-domain-phb",
+        "name": "Light Domain",
+        "shortName": "Light",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-nature-domain-phb",
+        "name": "Nature Domain",
+        "shortName": "Nature",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-tempest-domain-phb",
+        "name": "Tempest Domain",
+        "shortName": "Tempest",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-trickery-domain-phb",
+        "name": "Trickery Domain",
+        "shortName": "Trickery",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-war-domain-phb",
+        "name": "War Domain",
+        "shortName": "War",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-death-domain-dmg",
+        "name": "Death Domain",
+        "shortName": "Death",
+        "source": "DMG",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-arcana-domain-scag",
+        "name": "Arcana Domain",
+        "shortName": "Arcana",
+        "source": "SCAG",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-ambition-domain-psa--psa",
+        "name": "Ambition Domain (PSA)",
+        "shortName": "Ambition (PSA)",
+        "source": "PSA",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-knowledge-domain-psa--psa",
+        "name": "Knowledge Domain (PSA)",
+        "shortName": "Knowledge (PSA)",
+        "source": "PSA",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-solidarity-domain-psa--psa",
+        "name": "Solidarity Domain (PSA)",
+        "shortName": "Solidarity (PSA)",
+        "source": "PSA",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-strength-domain-psa--psa",
+        "name": "Strength Domain (PSA)",
+        "shortName": "Strength (PSA)",
+        "source": "PSA",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-zeal-domain-psa--psa",
+        "name": "Zeal Domain (PSA)",
+        "shortName": "Zeal (PSA)",
+        "source": "PSA",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-forge-domain-xge",
+        "name": "Forge Domain",
+        "shortName": "Forge",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-grave-domain-xge",
+        "name": "Grave Domain",
+        "shortName": "Grave",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-order-domain-tce",
+        "name": "Order Domain",
+        "shortName": "Order",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-peace-domain-tce",
+        "name": "Peace Domain",
+        "shortName": "Peace",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-twilight-domain-tce",
+        "name": "Twilight Domain",
+        "shortName": "Twilight",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-knowledge-domain-frhof",
+        "name": "Knowledge Domain",
+        "shortName": "Knowledge",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-grave-domain-rhw",
+        "name": "Grave Domain",
+        "shortName": "Grave",
+        "source": "RHW",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-arcana-domain-au",
+        "name": "Arcana Domain",
+        "shortName": "Arcana",
+        "source": "AU",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-discipline-domain-wow",
+        "name": "Discipline Domain",
+        "shortName": "Discipline",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "cleric-shadow-domain-wow",
+        "name": "Shadow Domain",
+        "shortName": "Shadow",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A priestly champion who wields divine magic in service of a higher power."
+  },
+  {
+    "id": "druid-2024",
+    "name": "Druid",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "wis"
+    ],
+    "savingThrows": [
+      "int",
+      "wis"
+    ],
+    "armorProficiencies": [
+      "light",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "animalHandling",
+        "insight",
+        "medicine",
+        "nature",
+        "perception",
+        "religion",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Druidic",
+        "description": "You know Druidic, the secret language of Druids. While learning this ancient tongue, you also unlocked the magic of communicating with animals; you always have the Speak with Animals spell prepared.\n\nYou can use Druidic to leave hidden messages. You and others who know Druidic automatically spot such a message. Others spot the message's presence with a successful 15 Intelligence (Investigation) check but can't decipher it without magic."
+      },
+      {
+        "name": "Magician",
+        "description": "You know one extra cantrip from the Druid spell list. In addition, your mystical connection to nature gives you a bonus to your Intelligence (Arcana or Nature) checks. The bonus equals your Wisdom modifier (minimum bonus of +1)."
+      },
+      {
+        "name": "Primal Order",
+        "description": "You have dedicated yourself to one of the following sacred roles of your choice."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to cast spells through studying the mystical forces of nature. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Druid spells, which appear on the Druid spell list later in the class's description.\n\nCantrips: You know two cantrips of your choice from the Druid spell list. Druidcraft and Produce Flame are recommended. Whenever you gain a Druid level, you can replace one of your cantrips with another cantrip of your choice from the Druid spell list. When you reach Druid levels 4 and 10, you learn another cantrip of your choice from the Druid spell list, as shown in the Cantrips column of the Druid Features table.\n\nSpell Slots: The Druid Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose four level 1 spells from the Druid spell list. Animal Friendship, Cure Wounds, Faerie Fire, and Thunderwave are recommended. The number of spells on your list increases as you gain Druid levels, as shown in the Prepared Spells column of the Druid Features table. Whenever that number increases, choose additional spells from the Druid spell list until the number of spells on your list matches the number on the table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Druid, your list of prepared spells can include six spells of levels 1 and 2 in any combination. If another Druid feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Druid spells for you.\n\nChanging Your Prepared Spells: Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells with other Druid spells for which you have spell slots.\n\nSpellcasting Ability: Wisdom is your spellcasting ability for your Druid spells.\n\nSpellcasting Focus: You can use a Druidic Focus as a Spellcasting Focus for your Druid spells."
+      },
+      {
+        "name": "Warden",
+        "description": "Trained for battle, you gain proficiency with Martial weapons and training with Medium armor."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "druid-circle-of-dreams-xge",
+        "name": "Circle of Dreams",
+        "shortName": "Dreams",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-shepherd-xge",
+        "name": "Circle of the Shepherd",
+        "shortName": "Shepherd",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-spores-tce",
+        "name": "Circle of Spores",
+        "shortName": "Spores",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-stars-tce",
+        "name": "Circle of Stars",
+        "shortName": "Stars",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-wildfire-tce",
+        "name": "Circle of Wildfire",
+        "shortName": "Wildfire",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-land-xphb",
+        "name": "Circle of the Land",
+        "shortName": "Land",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "druid-circle-of-the-moon-xphb",
+        "name": "Circle of the Moon",
+        "shortName": "Moon",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "druid-circle-of-the-sea-xphb",
+        "name": "Circle of the Sea",
+        "shortName": "Sea",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "druid-circle-of-the-stars-xphb",
+        "name": "Circle of the Stars",
+        "shortName": "Stars",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Leather Armor, Shield, Sickle, Druidic Focus, Explorer's Pack, Herbalism kit, 9 GP; or (B) 50 GP",
+    "description": "A priest of the Old Faith, wielding the powers of nature and adopting animal forms."
+  },
+  {
+    "id": "druid-2014",
+    "name": "Druid",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "wis"
+    ],
+    "savingThrows": [
+      "int",
+      "wis"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "club",
+      "dagger",
+      "dart",
+      "javelin",
+      "mace",
+      "quarterstaff",
+      "scimitar",
+      "sickle",
+      "sling",
+      "spear"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "animalHandling",
+        "insight",
+        "medicine",
+        "nature",
+        "perception",
+        "religion",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Druidic",
+        "description": "You know Druidic, the secret language of druids. You can speak the language and use it to leave hidden messages. You and others who know this language automatically spot such a message. Others spot the message's presence with a successful 15 Wisdom (Perception) check but can't decipher it without magic."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "Drawing on the divine essence of nature itself, you can cast spells to shape that essence to your will. See chapter 10 for the general rules of spellcasting and chapter 11 for the druid spell list.\n\nCantrips: At 1st level, you know two cantrips of your choice from the druid spell list. You learn additional druid cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Druid table.\n\nPreparing and Casting Spells: The Druid table shows how many spell slots you have to cast your druid spells of 1st level and higher. To cast one of these druid spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. You prepare the list of druid spells that are available for you to cast, choosing from the druid spell list. When you do so, choose a number of druid spells equal to your Wisdom modifier + your druid level (minimum of one spell). The spells must be of a level for which you have spell slots. For example, if you are a 3rd-level druid, you have four 1st-level and two 2nd-level spell slots. With a Wisdom of 16, your list of prepared spells can include six spells of 1st or 2nd level, in any combination. If you prepare the 1st-level spell cure wounds, you can cast it using a 1st-level or 2nd-level slot. Casting the spell doesn't remove it from your list of prepared spells. You can also change your list of prepared spells when you finish a long rest. Preparing a new list of druid spells requires time spent in prayer and meditation: at least 1 minute per spell level for each spell on your list.\n\nSpellcasting Ability: Wisdom is your spellcasting ability for your druid spells, since your magic draws upon your devotion and attunement to nature. You use your Wisdom whenever a spell refers to your spellcasting ability. In addition, you use your Wisdom modifier when setting the saving throw DC for a druid spell you cast and when making an attack roll with one.\n\nRitual Casting: You can cast a druid spell as a ritual if that spell has the ritual tag and you have the spell prepared.\n\nSpellcasting Focus: You can use a druidic focus as a spellcasting focus for your druid spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "druid-circle-of-the-land-phb",
+        "name": "Circle of the Land",
+        "shortName": "Land",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-moon-phb",
+        "name": "Circle of the Moon",
+        "shortName": "Moon",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-dreams-xge",
+        "name": "Circle of Dreams",
+        "shortName": "Dreams",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-shepherd-xge",
+        "name": "Circle of the Shepherd",
+        "shortName": "Shepherd",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-spores-tce",
+        "name": "Circle of Spores",
+        "shortName": "Spores",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-stars-tce",
+        "name": "Circle of Stars",
+        "shortName": "Stars",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-wildfire-tce",
+        "name": "Circle of Wildfire",
+        "shortName": "Wildfire",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-land-wow",
+        "name": "Circle of the Land",
+        "shortName": "Land",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-moon-wow",
+        "name": "Circle of the Moon",
+        "shortName": "Moon",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "druid-circle-of-the-stars-wow",
+        "name": "Circle of the Stars",
+        "shortName": "Stars",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A priest of the Old Faith, wielding the powers of nature and adopting animal forms."
+  },
+  {
+    "id": "fighter-2024",
+    "name": "Fighter",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 10,
+    "hitDieString": "d10",
+    "primaryAbility": [
+      "str",
+      "dex"
+    ],
+    "savingThrows": [
+      "str",
+      "con"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "acrobatics",
+        "animalHandling",
+        "athletics",
+        "history",
+        "insight",
+        "intimidation",
+        "perception",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Fighting Style",
+        "description": "You have honed your martial prowess and gain a Fighting Style feat of your choice. Defense is recommended.\n\nWhenever you gain a Fighter level, you can replace the feat you chose with a different Fighting Style feat."
+      },
+      {
+        "name": "Second Wind",
+        "description": "You have a limited well of physical and mental stamina that you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level.\n\nYou can use this feature twice. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.\n\nWhen you reach certain Fighter levels, you gain more uses of this feature, as shown in the Second Wind column of the Fighter Features table."
+      },
+      {
+        "name": "Weapon Mastery",
+        "description": "Your training with weapons allows you to use the weapon mastery properties of three kinds of Simple or Martial weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.\n\nWhen you reach certain Fighter levels, you gain the ability to use the weapon mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Fighter Features table."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "fighter-arcane-archer-xge",
+        "name": "Arcane Archer",
+        "shortName": "Arcane Archer",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-cavalier-xge",
+        "name": "Cavalier",
+        "shortName": "Cavalier",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-samurai-xge",
+        "name": "Samurai",
+        "shortName": "Samurai",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-echo-knight-egw",
+        "name": "Echo Knight",
+        "shortName": "Echo Knight",
+        "source": "EGW",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-psi-warrior-tce",
+        "name": "Psi Warrior",
+        "shortName": "Psi Warrior",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-rune-knight-tce",
+        "name": "Rune Knight",
+        "shortName": "Rune Knight",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-battle-master-xphb",
+        "name": "Battle Master",
+        "shortName": "Battle Master",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "fighter-champion-xphb",
+        "name": "Champion",
+        "shortName": "Champion",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "fighter-eldritch-knight-xphb",
+        "name": "Eldritch Knight",
+        "shortName": "Eldritch Knight",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "fighter-psi-warrior-xphb",
+        "name": "Psi Warrior",
+        "shortName": "Psi Warrior",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A, B, or C: (A) Chain Mail, Greatsword, Flail, 8 Javelin, Dungeoneer's Pack, and 4 GP; (B) Studded Leather Armor, Scimitar, Shortsword, Longbow, Arrows (20), Quiver, Dungeoneer's Pack, and 11 GP; or (C) 155 GP",
+    "description": "A master of martial combat, skilled with a variety of weapons and armor."
+  },
+  {
+    "id": "fighter-2014",
+    "name": "Fighter",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 10,
+    "hitDieString": "d10",
+    "primaryAbility": [
+      "str"
+    ],
+    "savingThrows": [
+      "str",
+      "con"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "acrobatics",
+        "animalHandling",
+        "athletics",
+        "history",
+        "insight",
+        "intimidation",
+        "perception",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Fighting Style",
+        "description": "You adopt a particular style of fighting as your specialty. Choose one of the following options. You can't take the same Fighting Style option more than once, even if you get to choose again."
+      },
+      {
+        "name": "Second Wind",
+        "description": "You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level.\n\nOnce you use this feature, you must finish a short or long rest before you can use it again."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "fighter-battle-master-phb",
+        "name": "Battle Master",
+        "shortName": "Battle Master",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-champion-phb",
+        "name": "Champion",
+        "shortName": "Champion",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-eldritch-knight-phb",
+        "name": "Eldritch Knight",
+        "shortName": "Eldritch Knight",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-purple-dragon-knight-banneret--scag",
+        "name": "Purple Dragon Knight (Banneret)",
+        "shortName": "Purple Dragon Knight (Banneret)",
+        "source": "SCAG",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-arcane-archer-xge",
+        "name": "Arcane Archer",
+        "shortName": "Arcane Archer",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-cavalier-xge",
+        "name": "Cavalier",
+        "shortName": "Cavalier",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-samurai-xge",
+        "name": "Samurai",
+        "shortName": "Samurai",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-echo-knight-egw",
+        "name": "Echo Knight",
+        "shortName": "Echo Knight",
+        "source": "EGW",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-psi-warrior-tce",
+        "name": "Psi Warrior",
+        "shortName": "Psi Warrior",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-rune-knight-tce",
+        "name": "Rune Knight",
+        "shortName": "Rune Knight",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-banneret-frhof",
+        "name": "Banneret",
+        "shortName": "Banneret",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "fighter-arcane-archer-au",
+        "name": "Arcane Archer",
+        "shortName": "Arcane Archer",
+        "source": "AU",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A master of martial combat, skilled with a variety of weapons and armor."
+  },
+  {
+    "id": "monk-2024",
+    "name": "Monk",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "dex"
+    ],
+    "savingThrows": [
+      "str",
+      "dex"
+    ],
+    "armorProficiencies": [],
+    "weaponProficiencies": [
+      "simple",
+      "martial weapons that have the light property"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "acrobatics",
+        "athletics",
+        "history",
+        "insight",
+        "religion",
+        "stealth"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Bonus Unarmed Strike",
+        "description": "You can make an Unarmed Strike as a Bonus Action."
+      },
+      {
+        "name": "Dexterous Attacks",
+        "description": "You can use your Dexterity modifier instead of your Strength modifier for the attack and damage rolls of your Unarmed Strikes and Monk weapons. In addition, when you use the Grapple or Shove option of your Unarmed Strike, you can use your Dexterity modifier instead of your Strength modifier to determine the save DC."
+      },
+      {
+        "name": "Martial Arts",
+        "description": "Your practice of martial arts gives you mastery of combat styles that use your Unarmed Strike and Monk weapons, which are the following:\n\n• Simple Melee Weapons\n\n• Martial Melee Weapons that have the Light property\n\nYou gain the following benefits while you are unarmed or wielding only Monk weapons and you aren't wearing armor or wielding a Shield."
+      },
+      {
+        "name": "Martial Arts Die",
+        "description": "You can roll 1d6 in place of the normal damage of your Unarmed Strike or Monk weapons. This die changes as you gain Monk levels, as shown in the Martial Arts column of the Monk Features table."
+      },
+      {
+        "name": "Unarmored Defense",
+        "description": "While you aren't wearing armor or wielding a Shield, your base Armor Class equals 10 plus your Dexterity and Wisdom modifiers."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "monk-way-of-the-drunken-master-xge",
+        "name": "Way of the Drunken Master",
+        "shortName": "Drunken Master",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-kensei-xge",
+        "name": "Way of the Kensei",
+        "shortName": "Kensei",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-sun-soul-xge",
+        "name": "Way of the Sun Soul",
+        "shortName": "Sun Soul",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-mercy-tce",
+        "name": "Way of Mercy",
+        "shortName": "Mercy",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-astral-self-tce",
+        "name": "Way of the Astral Self",
+        "shortName": "Astral Self",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-warrior-of-mercy-xphb",
+        "name": "Warrior of Mercy",
+        "shortName": "Mercy",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "monk-warrior-of-shadow-xphb",
+        "name": "Warrior of Shadow",
+        "shortName": "Shadow",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "monk-warrior-of-the-elements-xphb",
+        "name": "Warrior of the Elements",
+        "shortName": "Elements",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "monk-warrior-of-the-open-hand-xphb",
+        "name": "Warrior of the Open Hand",
+        "shortName": "Open Hand",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Spear, 5 Dagger, Artisan's Tools or Musical Instrument chosen for the tool proficiency above, Explorer's Pack, and 11 GP; or (B) 50 GP",
+    "description": "A master of martial arts, harnessing the power of the body in pursuit of physical and spiritual perfection."
+  },
+  {
+    "id": "monk-2014",
+    "name": "Monk",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "str"
+    ],
+    "savingThrows": [
+      "str",
+      "dex"
+    ],
+    "armorProficiencies": [],
+    "weaponProficiencies": [
+      "simple",
+      "shortsword"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "acrobatics",
+        "athletics",
+        "history",
+        "insight",
+        "religion",
+        "stealth"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Martial Arts",
+        "description": "Your practice of martial arts gives you mastery of combat styles that use unarmed strikes and monk weapons, which are shortsword and any simple melee weapons that don't have the two-handed or heavy property.\n\nYou gain the following benefits while you are unarmed or wielding only monk weapons and you aren't wearing armor or wielding a shield.\n\n• You can use Dexterity instead of Strength for the attack and damage rolls of your unarmed strikes and monk weapons.\n\n• You can roll a d4 in place of the normal damage of your unarmed strike or monk weapon. This die changes as you gain monk levels, as shown in the Martial Arts column of the Monk table.\n\n• When you use the Attack action with an unarmed strike or a monk weapon on your turn, you can make one unarmed strike as a bonus action. For example, if you take the Attack action and attack with a quarterstaff, you can also make an unarmed strike as a bonus action, assuming you haven't already taken a bonus action this turn.\n\nCertain monasteries use specialized forms of the monk weapons. For example, you might use a club that is two lengths of wood connected by a short chain (called a nunchaku) or a sickle with a shorter, straighter blade (called a kama)."
+      },
+      {
+        "name": "Unarmored Defense",
+        "description": "Beginning at 1st level, while you are wearing no armor and not wielding a shield, your AC equals 10 + your Dexterity modifier + your Wisdom modifier."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "monk-way-of-shadow-phb",
+        "name": "Way of Shadow",
+        "shortName": "Shadow",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-four-elements-phb",
+        "name": "Way of the Four Elements",
+        "shortName": "Four Elements",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-open-hand-phb",
+        "name": "Way of the Open Hand",
+        "shortName": "Open Hand",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-long-death-scag",
+        "name": "Way of the Long Death",
+        "shortName": "Long Death",
+        "source": "SCAG",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-drunken-master-xge",
+        "name": "Way of the Drunken Master",
+        "shortName": "Drunken Master",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-kensei-xge",
+        "name": "Way of the Kensei",
+        "shortName": "Kensei",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-sun-soul-xge",
+        "name": "Way of the Sun Soul",
+        "shortName": "Sun Soul",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-mercy-tce",
+        "name": "Way of Mercy",
+        "shortName": "Mercy",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-astral-self-tce",
+        "name": "Way of the Astral Self",
+        "shortName": "Astral Self",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-way-of-the-ascendant-dragon-ftd",
+        "name": "Way of the Ascendant Dragon",
+        "shortName": "Ascendant Dragon",
+        "source": "FTD",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-warrior-of-the-mystic-arts-au",
+        "name": "Warrior of the Mystic Arts",
+        "shortName": "Mystic Arts",
+        "source": "AU",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-warrior-of-mercy-wow",
+        "name": "Warrior of Mercy",
+        "shortName": "Mercy",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-warrior-of-mystic-brews-wow",
+        "name": "Warrior of Mystic Brews",
+        "shortName": "Mystic Brews",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "monk-warrior-of-the-open-hand-wow",
+        "name": "Warrior of the Open Hand",
+        "shortName": "Open Hand",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A master of martial arts, harnessing the power of the body in pursuit of physical and spiritual perfection."
+  },
+  {
+    "id": "paladin-2024",
+    "name": "Paladin",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 10,
+    "hitDieString": "d10",
+    "primaryAbility": [
+      "str"
+    ],
+    "savingThrows": [
+      "wis",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "athletics",
+        "insight",
+        "intimidation",
+        "medicine",
+        "persuasion",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Lay on Hands",
+        "description": "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you finish a Long Rest. With that pool, you can restore a total number of Hit Points equal to five times your Paladin level.\n\nAs a Bonus Action, you can touch a creature (which could be yourself) and draw power from the pool of healing to restore a number of Hit Points to that creature, up to the maximum amount remaining in the pool.\n\nYou can also expend 5 Hit Points from the pool of healing power to remove the Poisoned condition from the creature; those points don't also restore Hit Points to the creature."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to cast spells through prayer and meditation. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Paladin spells, which appear in the Paladin spell list later in the class's description.\n\nSpell Slots: The Paladin Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose two level 1 Paladin spells. Heroism and Searing Smite are recommended. The number of spells on your list increases as you gain Paladin levels, as shown in the Prepared Spells column of the Paladin Features table. Whenever that number increases, choose additional Paladin spells until the number of spells on your list matches the number in the Paladin Features table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 5 Paladin, your list of prepared spells can include six Paladin spells of level 1 or 2 in any combination. If another Paladin feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Paladin spells for you.\n\nChanging Your Prepared Spells: Whenever you finish a Long Rest, you can replace one spell on your list with another Paladin spell for which you have spell slots.\n\nSpellcasting Ability: Charisma is your spellcasting ability for your Paladin spells.\n\nSpellcasting Focus: You can use a Holy Symbol as a Spellcasting Focus for your Paladin spells."
+      },
+      {
+        "name": "Weapon Mastery",
+        "description": "Your training with weapons allows you to use the weapon mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Longsword and Javelin.\n\nWhenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the weapon mastery properties of Halberd and Flail."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "paladin-oath-of-conquest-xge",
+        "name": "Oath of Conquest",
+        "shortName": "Conquest",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-redemption-xge",
+        "name": "Oath of Redemption",
+        "shortName": "Redemption",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-glory-tce",
+        "name": "Oath of Glory",
+        "shortName": "Glory",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-the-watchers-tce",
+        "name": "Oath of the Watchers",
+        "shortName": "Watchers",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-devotion-xphb",
+        "name": "Oath of Devotion",
+        "shortName": "Devotion",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "paladin-oath-of-glory-xphb",
+        "name": "Oath of Glory",
+        "shortName": "Glory",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "paladin-oath-of-the-ancients-xphb",
+        "name": "Oath of the Ancients",
+        "shortName": "Ancients",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "paladin-oath-of-vengeance-xphb",
+        "name": "Oath of Vengeance",
+        "shortName": "Vengeance",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Chain Mail, Shield, Longsword, 6 Javelin, Holy Symbol, Priest's Pack, and 9 GP; or (B) 150 GP",
+    "description": "A holy warrior bound to a sacred oath."
+  },
+  {
+    "id": "paladin-2014",
+    "name": "Paladin",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 10,
+    "hitDieString": "d10",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "wis",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "heavy",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "athletics",
+        "insight",
+        "intimidation",
+        "medicine",
+        "persuasion",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Divine Sense",
+        "description": "The presence of strong evil registers on your senses like a noxious odor, and powerful good rings like heavenly music in your ears. As an action, you can open your awareness to detect such forces. Until the end of your next turn, you know the location of any celestial, fiend, or undead within 60 feet of you that is not behind Cover. You know the type (celestial, fiend, or undead) of any being whose presence you sense, but not its identity (the vampire Count Strahd von Zarovich, for instance). Within the same radius, you also detect the presence of any place or object that has been consecrated or desecrated, as with the hallow spell.\n\nYou can use this feature a number of times equal to 1 + your Charisma modifier. When you finish a long rest, you regain all expended uses."
+      },
+      {
+        "name": "Lay on Hands",
+        "description": "Your blessed touch can heal wounds. You have a pool of healing power that replenishes when you take a long rest. With that pool, you can restore a total number of hit points equal to your paladin level × 5.\n\nAs an action, you can touch a creature and draw power from the pool to restore a number of hit points to that creature, up to the maximum amount remaining in your pool.\n\nAlternatively, you can expend 5 hit points from your pool of healing to cure the target of one disease or neutralize one poison affecting it. You can cure multiple diseases and neutralize multiple poisons with a single use of Lay on Hands, expending hit points separately for each one.\n\nThis feature has no effect on undead and constructs."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "paladin-oath-of-devotion-phb",
+        "name": "Oath of Devotion",
+        "shortName": "Devotion",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-the-ancients-phb",
+        "name": "Oath of the Ancients",
+        "shortName": "Ancients",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-vengeance-phb",
+        "name": "Oath of Vengeance",
+        "shortName": "Vengeance",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oathbreaker-dmg",
+        "name": "Oathbreaker",
+        "shortName": "Oathbreaker",
+        "source": "DMG",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-the-crown-scag",
+        "name": "Oath of the Crown",
+        "shortName": "Crown",
+        "source": "SCAG",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-conquest-xge",
+        "name": "Oath of Conquest",
+        "shortName": "Conquest",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-redemption-xge",
+        "name": "Oath of Redemption",
+        "shortName": "Redemption",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-glory-tce",
+        "name": "Oath of Glory",
+        "shortName": "Glory",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-the-watchers-tce",
+        "name": "Oath of the Watchers",
+        "shortName": "Watchers",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-the-noble-genies-frhof",
+        "name": "Oath of the Noble Genies",
+        "shortName": "Noble Genies",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-devotion-wow",
+        "name": "Oath of Devotion",
+        "shortName": "Devotion",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-the-holy-wow",
+        "name": "Oath of the Holy",
+        "shortName": "Holy",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "paladin-oath-of-vengeance-wow",
+        "name": "Oath of Vengeance",
+        "shortName": "Vengeance",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A holy warrior bound to a sacred oath."
+  },
+  {
+    "id": "ranger-2024",
+    "name": "Ranger",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 10,
+    "hitDieString": "d10",
+    "primaryAbility": [
+      "dex"
+    ],
+    "savingThrows": [
+      "str",
+      "dex"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 3,
+      "from": [
+        "animalHandling",
+        "athletics",
+        "insight",
+        "investigation",
+        "nature",
+        "perception",
+        "stealth",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Favored Enemy",
+        "description": "You always have the Hunter's Mark spell prepared. You can cast it twice without expending a spell slot, and you regain all expended uses of this ability when you finish a Long Rest.\n\nThe number of times you can cast the spell without a spell slot increases when you reach certain Ranger levels, as shown in the Favored Enemy column of the Ranger Features table."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "You have learned to channel the magical essence of nature to cast spells. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Ranger spells, which appear in the Ranger spell list later in the class's description.\n\nSpell Slots: The Ranger Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose two level 1 Ranger spells. Cure Wounds and Ensnaring Strike are recommended. The number of spells on your list increases as you gain Ranger levels, as shown in the Prepared Spells column of the Ranger Features table. Whenever that number increases, choose additional Ranger spells until the number of spells on your list matches the number in the Ranger Features table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 5 Ranger, your list of prepared spells can include six Ranger spells of level 1 or 2 in any combination. If another Ranger feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Ranger spells for you.\n\nChanging Your Prepared Spells: Whenever you finish a Long Rest, you can replace one spell on your list with another Ranger spell for which you have spell slots.\n\nSpellcasting Ability: Wisdom is your spellcasting ability for your Ranger spells.\n\nSpellcasting Focus: You can use a Druidic Focus as a Spellcasting Focus for your Ranger spells."
+      },
+      {
+        "name": "Weapon Mastery",
+        "description": "Your training with weapons allows you to use the weapon mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Longbow and Shortsword.\n\nWhenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the weapon mastery properties of Scimitar and Longsword."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "ranger-gloom-stalker-xge",
+        "name": "Gloom Stalker",
+        "shortName": "Gloom Stalker",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-horizon-walker-xge",
+        "name": "Horizon Walker",
+        "shortName": "Horizon Walker",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-monster-slayer-xge",
+        "name": "Monster Slayer",
+        "shortName": "Monster Slayer",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-fey-wanderer-tce",
+        "name": "Fey Wanderer",
+        "shortName": "Fey Wanderer",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-swarmkeeper-tce",
+        "name": "Swarmkeeper",
+        "shortName": "Swarmkeeper",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-beast-master-xphb",
+        "name": "Beast Master",
+        "shortName": "Beast Master",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "ranger-fey-wanderer-xphb",
+        "name": "Fey Wanderer",
+        "shortName": "Fey Wanderer",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "ranger-gloom-stalker-xphb",
+        "name": "Gloom Stalker",
+        "shortName": "Gloom Stalker",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "ranger-hunter-xphb",
+        "name": "Hunter",
+        "shortName": "Hunter",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Studded Leather Armor, Scimitar, Shortsword, Longbow, Arrows (20), Quiver, Druidic Focus (sprig of mistletoe), Explorer's Pack, and 7 GP; or (B) 150 GP",
+    "description": "A warrior who combats threats on the edges of civilization."
+  },
+  {
+    "id": "ranger-2014",
+    "name": "Ranger",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 10,
+    "hitDieString": "d10",
+    "primaryAbility": [
+      "wis"
+    ],
+    "savingThrows": [
+      "str",
+      "dex"
+    ],
+    "armorProficiencies": [
+      "light",
+      "medium",
+      "shield"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial"
+    ],
+    "skillChoices": {
+      "count": 3,
+      "from": [
+        "animalHandling",
+        "athletics",
+        "insight",
+        "investigation",
+        "nature",
+        "perception",
+        "stealth",
+        "survival"
+      ]
+    },
+    "spellcastingAbility": "wis",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Favored Enemy",
+        "description": "Beginning at 1st level, you have significant experience studying, tracking, hunting, and even talking to a certain type of enemy.\n\nChoose a type of favored enemy: aberrations, beasts, celestials, constructs, dragons, elementals, fey, fiends, giants, monstrosities, oozes, plants, or undead. Alternatively, you can select two races of humanoid (such as gnoll and orc) as favored enemies.\n\nYou have advantage on Wisdom (Survival) checks to track your favored enemies, as well as on Intelligence checks to recall information about them.\n\nWhen you gain this feature, you also learn one language of your choice that is spoken by your favored enemies, if they speak one at all.\n\nYou choose one additional favored enemy, as well as an associated language, at 6th and 14th level. As you gain levels, your choices should reflect the types of monsters you have encountered on your adventures."
+      },
+      {
+        "name": "Natural Explorer",
+        "description": "You are particularly familiar with one type of natural environment and are adept at traveling and surviving in such regions. Choose one type of favored terrain: arctic, coast, desert, forest, grassland, mountain, swamp, or the Underdark. When you make an Intelligence or Wisdom check related to your favored terrain, your proficiency bonus is doubled if you are using a skill that you're proficient in.\n\nWhile traveling for an hour or more in your favored terrain, you gain the following benefits:\n\n• Difficult terrain doesn't slow your group's travel.\n\n• Your group can't become lost except by magical means.\n\n• Even when you are engaged in another activity while traveling (such as foraging, navigating, or tracking), you remain alert to danger.\n\n• If you are traveling alone, you can move stealthily at a normal pace.\n\n• When you forage, you find twice as much food as you normally would.\n\n• While tracking other creatures, you also learn their exact number, their sizes, and how long ago they passed through the area.\n\nYou choose additional favored terrain types at 6th and 10th level."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "ranger-beast-master-phb",
+        "name": "Beast Master",
+        "shortName": "Beast Master",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-hunter-phb",
+        "name": "Hunter",
+        "shortName": "Hunter",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-gloom-stalker-xge",
+        "name": "Gloom Stalker",
+        "shortName": "Gloom Stalker",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-horizon-walker-xge",
+        "name": "Horizon Walker",
+        "shortName": "Horizon Walker",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-monster-slayer-xge",
+        "name": "Monster Slayer",
+        "shortName": "Monster Slayer",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-fey-wanderer-tce",
+        "name": "Fey Wanderer",
+        "shortName": "Fey Wanderer",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-swarmkeeper-tce",
+        "name": "Swarmkeeper",
+        "shortName": "Swarmkeeper",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-drakewarden-ftd",
+        "name": "Drakewarden",
+        "shortName": "Drakewarden",
+        "source": "FTD",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-winter-walker-frhof",
+        "name": "Winter Walker",
+        "shortName": "Winter Walker",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "ranger-hollow-warden-rhw",
+        "name": "Hollow Warden",
+        "shortName": "Hollow Warden",
+        "source": "RHW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A warrior who combats threats on the edges of civilization."
+  },
+  {
+    "id": "rogue-2024",
+    "name": "Rogue",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "dex"
+    ],
+    "savingThrows": [
+      "dex",
+      "int"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "martial weapons that have the finesse or light property"
+    ],
+    "skillChoices": {
+      "count": 4,
+      "from": [
+        "acrobatics",
+        "athletics",
+        "deception",
+        "insight",
+        "intimidation",
+        "investigation",
+        "perception",
+        "performance",
+        "persuasion",
+        "sleightOfHand",
+        "stealth"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Expertise",
+        "description": "You gain Expertise in two of your skill proficiencies of your choice. Sleight of Hand and Stealth are recommended if you have proficiency in them.\n\nAt Rogue level 6, you gain Expertise in two more of your skill proficiencies of your choice."
+      },
+      {
+        "name": "Sneak Attack",
+        "description": "You know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage's type is the same as the weapon's type.\n\nYou don't need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage on the attack roll.\n\nThe extra damage increases as you gain Rogue levels, as shown in the Sneak Attack column of the Rogue Features table."
+      },
+      {
+        "name": "Thieves' Cant",
+        "description": "You picked up various languages in the communities where you plied your roguish talents. You know Thieves' Cant and one other language of your choice, which you choose from the language tables in chapter 2."
+      },
+      {
+        "name": "Weapon Mastery",
+        "description": "Your training with weapons allows you to use the weapon mastery properties of two kinds of weapons of your choice with which you have proficiency, such as Dagger and Shortbow.\n\nWhenever you finish a Long Rest, you can change the kinds of weapons you chose. For example, you could switch to using the weapon mastery properties of Scimitar and Shortsword."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "rogue-inquisitive-xge",
+        "name": "Inquisitive",
+        "shortName": "Inquisitive",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-mastermind-xge",
+        "name": "Mastermind",
+        "shortName": "Mastermind",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-scout-xge",
+        "name": "Scout",
+        "shortName": "Scout",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-swashbuckler-xge",
+        "name": "Swashbuckler",
+        "shortName": "Swashbuckler",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-phantom-tce",
+        "name": "Phantom",
+        "shortName": "Phantom",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-soulknife-tce",
+        "name": "Soulknife",
+        "shortName": "Soulknife",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-arcane-trickster-xphb",
+        "name": "Arcane Trickster",
+        "shortName": "Arcane Trickster",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "rogue-assassin-xphb",
+        "name": "Assassin",
+        "shortName": "Assassin",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "rogue-soulknife-xphb",
+        "name": "Soulknife",
+        "shortName": "Soulknife",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "rogue-thief-xphb",
+        "name": "Thief",
+        "shortName": "Thief",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Leather Armor, 2 Dagger, Shortsword, Shortbow, Arrows (20), Quiver, Thieves' Tools, Burglar's Pack, and 8 GP; or (B) 100 GP",
+    "description": "A scoundrel who uses stealth and trickery to overcome obstacles and enemies."
+  },
+  {
+    "id": "rogue-2014",
+    "name": "Rogue",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "str"
+    ],
+    "savingThrows": [
+      "dex",
+      "int"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple",
+      "hand crossbow",
+      "longsword",
+      "rapier",
+      "shortsword"
+    ],
+    "skillChoices": {
+      "count": 4,
+      "from": [
+        "acrobatics",
+        "athletics",
+        "deception",
+        "insight",
+        "intimidation",
+        "investigation",
+        "perception",
+        "performance",
+        "persuasion",
+        "sleightOfHand",
+        "stealth"
+      ]
+    },
+    "spellcastingAbility": null,
+    "hasSpellcasting": false,
+    "level1Features": [
+      {
+        "name": "Expertise",
+        "description": "At 1st level, choose two of your skill proficiencies, or one of your skill proficiencies and your proficiency with thieves' tools. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies.\n\nAt 6th level, you can choose two more of your proficiencies (in skills or with thieves' tools) to gain this benefit."
+      },
+      {
+        "name": "Sneak Attack",
+        "description": "Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon.\n\nYou don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.\n\nThe amount of the extra damage increases as you gain levels in this class, as shown in the Sneak Attack column of the Rogue table."
+      },
+      {
+        "name": "Thieves' Cant",
+        "description": "During your rogue training you learned thieves' cant, a secret mix of dialect, jargon, and code that allows you to hide messages in seemingly normal conversation. Only another creature that knows thieves' cant understands such messages. It takes four times longer to convey such a message than it does to speak the same idea plainly.\n\nIn addition, you understand a set of secret signs and symbols used to convey short, simple messages, such as whether an area is dangerous or the territory of a thieves' guild, whether loot is nearby, or whether the people in an area are easy marks or will provide a safe house for thieves on the run."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "rogue-arcane-trickster-phb",
+        "name": "Arcane Trickster",
+        "shortName": "Arcane Trickster",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-assassin-phb",
+        "name": "Assassin",
+        "shortName": "Assassin",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-thief-phb",
+        "name": "Thief",
+        "shortName": "Thief",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-inquisitive-xge",
+        "name": "Inquisitive",
+        "shortName": "Inquisitive",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-mastermind-xge",
+        "name": "Mastermind",
+        "shortName": "Mastermind",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-scout-xge",
+        "name": "Scout",
+        "shortName": "Scout",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-swashbuckler-xge",
+        "name": "Swashbuckler",
+        "shortName": "Swashbuckler",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-phantom-tce",
+        "name": "Phantom",
+        "shortName": "Phantom",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-soulknife-tce",
+        "name": "Soulknife",
+        "shortName": "Soulknife",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-scion-of-the-three-frhof",
+        "name": "Scion of the Three",
+        "shortName": "Scion of the Three",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-phantom-rhw",
+        "name": "Phantom",
+        "shortName": "Phantom",
+        "source": "RHW",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-assassin-wow",
+        "name": "Assassin",
+        "shortName": "Assassin",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-soulknife-wow",
+        "name": "Soulknife",
+        "shortName": "Soulknife",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "rogue-swashbuckler-wow",
+        "name": "Swashbuckler",
+        "shortName": "Swashbuckler",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A scoundrel who uses stealth and trickery to overcome obstacles and enemies."
+  },
+  {
+    "id": "sorcerer-2024",
+    "name": "Sorcerer",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 6,
+    "hitDieString": "d6",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "con",
+      "cha"
+    ],
+    "armorProficiencies": [],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "deception",
+        "insight",
+        "intimidation",
+        "persuasion",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Innate Sorcery",
+        "description": "An event in your past left an indelible mark on you, infusing you with simmering magic. As a Bonus Action, you can unleash that magic for 1 minute, during which you gain the following benefits:\n\n• The spell save DC of your Sorcerer spells increases by 1.\n\n• You have Advantage on the attack rolls of Sorcerer spells you cast.\n\nYou can use this feature twice, and you regain all expended uses of it when you finish a Long Rest."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "Drawing from your innate magic, you can cast spells. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Sorcerer spells, which appear in the Sorcerer spell list later in the class's description.\n\nCantrips: You know four Sorcerer cantrips of your choice. Light, Prestidigitation, Shocking Grasp, and Sorcerous Burst are recommended. Whenever you gain a Sorcerer level, you can replace one of your cantrips from this feature with another Sorcerer cantrip of your choice. When you reach Sorcerer levels 4 and 10, you learn another Sorcerer cantrip of your choice, as shown in the Cantrips column of the Sorcerer Features table.\n\nSpell Slots: The Sorcerer Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose two level 1 Sorcerer spells. Burning Hands and Detect Magic are recommended. The number of spells on your list increases as you gain Sorcerer levels, as shown in the Prepared Spells column of the Sorcerer Features table. Whenever that number increases, choose additional Sorcerer spells until the number of spells on your list matches the number in the Sorcerer Features table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Sorcerer, your list of prepared spells can include six Sorcerer spells of level 1 or 2 in any combination. If another Sorcerer feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Sorcerer spells for you.\n\nChanging Your Prepared Spells: Whenever you gain a Sorcerer level, you can replace one spell on your list with another Sorcerer spell for which you have spell slots.\n\nSpellcasting Ability: Charisma is your spellcasting ability for your Sorcerer spells.\n\nSpellcasting Focus: You can use an Arcane Focus as a Spellcasting Focus for your Sorcerer spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "sorcerer-divine-soul-xge",
+        "name": "Divine Soul",
+        "shortName": "Divine Soul",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-shadow-magic-xge",
+        "name": "Shadow Magic",
+        "shortName": "Shadow",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-storm-sorcery-xge",
+        "name": "Storm Sorcery",
+        "shortName": "Storm",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-aberrant-mind-tce",
+        "name": "Aberrant Mind",
+        "shortName": "Aberrant Mind",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-clockwork-soul-tce",
+        "name": "Clockwork Soul",
+        "shortName": "Clockwork Soul",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-aberrant-sorcery-xphb",
+        "name": "Aberrant Sorcery",
+        "shortName": "Aberrant",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "sorcerer-clockwork-sorcery-xphb",
+        "name": "Clockwork Sorcery",
+        "shortName": "Clockwork",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "sorcerer-draconic-sorcery-xphb",
+        "name": "Draconic Sorcery",
+        "shortName": "Draconic",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "sorcerer-wild-magic-sorcery-xphb",
+        "name": "Wild Magic Sorcery",
+        "shortName": "Wild Magic",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Spear, 2 Dagger, Arcane Focus (crystal), Dungeoneer's Pack, and 28 GP; or (B) 50 GP",
+    "description": "A spellcaster who draws on inherent magic from a gift or bloodline."
+  },
+  {
+    "id": "sorcerer-2014",
+    "name": "Sorcerer",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 6,
+    "hitDieString": "d6",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "con",
+      "cha"
+    ],
+    "armorProficiencies": [],
+    "weaponProficiencies": [
+      "dagger",
+      "dart",
+      "sling",
+      "quarterstaff",
+      "light crossbow"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "deception",
+        "insight",
+        "intimidation",
+        "persuasion",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Sorcerous Origin",
+        "description": "Choose a sorcerous origin, which describes the source of your innate magical power, from the list of available origins.\n\nYour choice grants you features when you choose it at 1st level and again at 6th, 14th, and 18th level."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "An event in your past, or in the life of a parent or ancestor, left an indelible mark on you, infusing you with arcane magic. This font of magic, whatever its origin, fuels your spells. See chapter 10 for the general rules of spellcasting and chapter 11 for the sorcerer spell list.\n\nCantrips: At 1st level, you know four cantrips of your choice from the sorcerer spell list. You learn an additional sorcerer cantrip of your choice at 4th level and another at 10th level.\n\nSpell Slots: The Sorcerer table shows how many spell slots you have to cast your sorcerer spells of 1st level and higher. To cast one of these sorcerer spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. For example, if you know the 1st-level spell burning hands and have a 1st-level and a 2nd-level spell slot available, you can cast burning hands using either slot.\n\nSpells Known of 1st Level and Higher: You know two 1st-level spells of your choice from the sorcerer spell list. You learn an additional sorcerer spell of your choice at each level except 12th, 14th, 16th, 18th, 19th, and 20th. Each of these spells must be of a level for which you have spell slots. For instance, when you reach 3rd level in this class, you can learn one new spell of 1st or 2nd level. Additionally, when you gain a level in this class, you can choose one of the sorcerer spells you know and replace it with another spell from the sorcerer spell list, which also must be of a level for which you have spell slots.\n\nSpellcasting Ability: Charisma is your spellcasting ability for your sorcerer spells, since the power of your magic relies on your ability to project your will into the world. You use your Charisma whenever a spell refers to your spellcasting ability. In addition, you use your Charisma modifier when setting the saving throw DC for a sorcerer spell you cast and when making an attack roll with one.\n\nSpellcasting Focus: You can use an arcane focus as a spellcasting focus for your sorcerer spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "sorcerer-draconic-bloodline-phb",
+        "name": "Draconic Bloodline",
+        "shortName": "Draconic",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-wild-magic-phb",
+        "name": "Wild Magic",
+        "shortName": "Wild",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-pyromancer-psk--psk",
+        "name": "Pyromancer (PSK)",
+        "shortName": "Pyromancer (PSK)",
+        "source": "PSK",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-divine-soul-xge",
+        "name": "Divine Soul",
+        "shortName": "Divine Soul",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-shadow-magic-xge",
+        "name": "Shadow Magic",
+        "shortName": "Shadow",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-storm-sorcery-xge",
+        "name": "Storm Sorcery",
+        "shortName": "Storm",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-aberrant-mind-tce",
+        "name": "Aberrant Mind",
+        "shortName": "Aberrant Mind",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-clockwork-soul-tce",
+        "name": "Clockwork Soul",
+        "shortName": "Clockwork Soul",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-lunar-sorcery-dsotdq",
+        "name": "Lunar Sorcery",
+        "shortName": "Lunar",
+        "source": "DSotDQ",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-spellfire-sorcery-frhof",
+        "name": "Spellfire Sorcery",
+        "shortName": "Spellfire",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "sorcerer-shadow-sorcery-rhw",
+        "name": "Shadow Sorcery",
+        "shortName": "Shadow",
+        "source": "RHW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A spellcaster who draws on inherent magic from a gift or bloodline."
+  },
+  {
+    "id": "warlock-2024",
+    "name": "Warlock",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "wis",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "deception",
+        "history",
+        "intimidation",
+        "investigation",
+        "nature",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Eldritch Invocation Options",
+        "description": "Eldritch Invocation options appear in alphabetical order."
+      },
+      {
+        "name": "Eldritch Invocations",
+        "description": "You have unearthed Eldritch Invocations, pieces of forbidden knowledge that imbue you with an abiding magical ability or other lessons. You gain one invocation of your choice, such as Pact of the Tome. Invocations are described in the \"Eldritch Invocation Options\" section later in this class's description.\n\nPrerequisites: If an invocation has a prerequisite, you must meet it to learn that invocation. For example, if an invocation requires you to be a level 5+ Warlock, you can select the invocation once you reach Warlock level 5.\n\nReplacing and Gaining Invocations: Whenever you gain a Warlock level, you can replace one of your invocations with another one for which you qualify. You can't replace an invocation if it's a prerequisite for another invocation that you have.\n\nWhen you gain certain Warlock levels, you gain more invocations of your choice, as shown in the Invocations column of the Warlock Features table.\n\nYou can't pick the same invocation more than once unless its description says otherwise."
+      },
+      {
+        "name": "Pact Magic",
+        "description": "Through occult ceremony, you have formed a pact with a mysterious entity to gain magical powers. The entity is a voice in the shadows—its identity unclear—but its boon to you is concrete: the ability to cast spells. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Warlock spells, which appear in the Warlock spell list later in the class's description.\n\nCantrips: You know two Warlock cantrips of your choice. Eldritch Blast and Prestidigitation are recommended. Whenever you gain a Warlock level, you can replace one of your cantrips from this feature with another Warlock cantrip of your choice. When you reach Warlock levels 4 and 10, you learn another Warlock cantrip of your choice, as shown in the Cantrips column of the Warlock Features table.\n\nSpell Slots: The Warlock Features table shows how many spell slots you have to cast your Warlock spells of levels 1–5. The table also shows the level of those slots, all of which are the same level. You regain all expended Pact Magic spell slots when you finish a Short Rest or Long Rest. For example, when you're a level 5 Warlock, you have two level 3 spell slots. To cast the level 1 spell Witch Bolt, you must spend one of those slots, and you cast it as a level 3 spell.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To start, choose two level 1 Warlock spells. Charm Person and Hex are recommended.\n\nThe number of spells on your list increases as you gain Warlock levels, as shown in the Prepared Spells column of the Warlock Features table. Whenever that number increases, choose additional Warlock spells until the number of spells on your list matches the number in the table. The chosen spells must be of a level no higher than what's shown in the table's Slot Level column for your level. When you reach level 6, for example, you learn a new Warlock spell, which can be of levels 1–3.\n\nIf another Warlock feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Warlock spells for you.\n\nChanging Your Prepared Spells: Whenever you gain a Warlock level, you can replace one spell on your list with another Warlock spell of an eligible level.\n\nSpellcasting Ability: Charisma is the spellcasting ability for your Warlock spells.\n\nSpellcasting Focus: You can use an Arcane Focus as a Spellcasting Focus for your Warlock spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "warlock-the-celestial-xge",
+        "name": "The Celestial",
+        "shortName": "Celestial",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-hexblade-xge",
+        "name": "The Hexblade",
+        "shortName": "Hexblade",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-fathomless-tce",
+        "name": "The Fathomless",
+        "shortName": "Fathomless",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-genie-tce",
+        "name": "The Genie",
+        "shortName": "Genie",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-archfey-patron-xphb",
+        "name": "Archfey Patron",
+        "shortName": "Archfey",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "warlock-celestial-patron-xphb",
+        "name": "Celestial Patron",
+        "shortName": "Celestial",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "warlock-fiend-patron-xphb",
+        "name": "Fiend Patron",
+        "shortName": "Fiend",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "warlock-great-old-one-patron-xphb",
+        "name": "Great Old One Patron",
+        "shortName": "Great Old One",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) Leather Armor, Sickle, 2 Dagger, Arcane Focus (orb), Book (occult lore), Scholar's Pack, and 15 GP; or (B) 100 GP",
+    "description": "A wielder of magic that is derived from a bargain with an extraplanar entity."
+  },
+  {
+    "id": "warlock-2014",
+    "name": "Warlock",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 8,
+    "hitDieString": "d8",
+    "primaryAbility": [
+      "cha"
+    ],
+    "savingThrows": [
+      "wis",
+      "cha"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "deception",
+        "history",
+        "intimidation",
+        "investigation",
+        "nature",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "cha",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Otherworldly Patron",
+        "description": "At 1st level, you have struck a bargain with an otherworldly being chosen from the list of available patrons. Your choice grants you features at 1st level and again at 6th, 10th, and 14th level."
+      },
+      {
+        "name": "Pact Magic",
+        "description": "Your arcane research and the magic bestowed on you by your patron have given you facility with spells. See chapter 10 for the general rules of spellcasting and chapter 11 for the warlock spell list.\n\nCantrips: You know two cantrips of your choice from the warlock spell list. You learn additional warlock cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Warlock table.\n\nSpell Slots: The Warlock table shows how many spell slots you have to cast your warlock spells of 1st through 5th level. The table also shows what the level of those slots is; all of your spell slots are the same level. To cast one of your warlock spells of 1st level or higher, you must expend a spell slot. You regain all expended spell slots when you finish a short or long rest. For example, when you are 5th level, you have two 3rd-level spell slots. To cast the 1st-level spell witch bolt, you must spend one of those slots, and you cast it as a 3rd-level spell.\n\nSpells Known of 1st Level and Higher: At 1st level, you know two 1st-level spells of your choice from the warlock spell list. The Spells Known column of the Warlock table shows when you learn more warlock spells of your choice of 1st level and higher. A spell you choose must be of a level no higher than what's shown in the table's Slot Level column for your level. When you reach 6th level, for example, you learn a new warlock spell, which can be 1st, 2nd, or 3rd level. Additionally, when you gain a level in this class, you can choose one of the warlock spells you know and replace it with another spell from the warlock spell list, which also must be of a level for which you have spell slots.\n\nSpellcasting Ability: Charisma is your spellcasting ability for your warlock spells, so you use your Charisma whenever a spell refers to your spellcasting ability. In addition, you use your Charisma modifier when setting the saving throw DC for a warlock spell you cast and when making an attack roll with one.\n\nSpellcasting Focus: You can use an arcane focus as a spellcasting focus for your warlock spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "warlock-the-archfey-phb",
+        "name": "The Archfey",
+        "shortName": "Archfey",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-fiend-phb",
+        "name": "The Fiend",
+        "shortName": "Fiend",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-great-old-one-phb",
+        "name": "The Great Old One",
+        "shortName": "Great Old One",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-undying-scag",
+        "name": "The Undying",
+        "shortName": "Undying",
+        "source": "SCAG",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-celestial-xge",
+        "name": "The Celestial",
+        "shortName": "Celestial",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-hexblade-xge",
+        "name": "The Hexblade",
+        "shortName": "Hexblade",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-fathomless-tce",
+        "name": "The Fathomless",
+        "shortName": "Fathomless",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-genie-tce",
+        "name": "The Genie",
+        "shortName": "Genie",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-the-undead-vrgr",
+        "name": "The Undead",
+        "shortName": "Undead",
+        "source": "VRGR",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-undead-patron-rhw",
+        "name": "Undead Patron",
+        "shortName": "Undead",
+        "source": "RHW",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-vestige-patron-au",
+        "name": "Vestige Patron",
+        "shortName": "Vestige",
+        "source": "AU",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-fiend-patron-wow",
+        "name": "Fiend Patron",
+        "shortName": "Fiend",
+        "source": "WoW",
+        "edition": "2014"
+      },
+      {
+        "id": "warlock-great-old-one-patron-wow",
+        "name": "Great Old One Patron",
+        "shortName": "Great Old One",
+        "source": "WoW",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A wielder of magic that is derived from a bargain with an extraplanar entity."
+  },
+  {
+    "id": "wizard-2024",
+    "name": "Wizard",
+    "edition": "2024",
+    "source": "XPHB",
+    "hitDie": 6,
+    "hitDieString": "d6",
+    "primaryAbility": [
+      "int"
+    ],
+    "savingThrows": [
+      "int",
+      "wis"
+    ],
+    "armorProficiencies": [],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "history",
+        "insight",
+        "investigation",
+        "medicine",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "int",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Arcane Recovery",
+        "description": "You can regain some of your magical energy by studying your spellbook. When you finish a Short Rest, you can choose expended spell slots to recover. The spell slots can have a combined level equal to no more than half your Wizard level (round up), and none of the slots can be level 6 or higher. For example, if you're a level 4 Wizard, you can recover up to two levels' worth of spell slots, regaining either one level 2 spell slot or two level 1 spell slots.\n\nOnce you use this feature, you can't do so again until you finish a Long Rest."
+      },
+      {
+        "name": "Ritual Adept",
+        "description": "You can cast any spell as a Ritual if that spell has the Ritual tag and the spell is in your spellbook. You needn't have the spell prepared, but you must read from the book to cast a spell in this way."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "As a student of arcane magic, you have learned to cast spells. See chapter 7 for the rules on spellcasting. The information below details how you use those rules with Wizard spells, which appear in the Wizard spell list later in the class's description.\n\nCantrips: You know three Wizard cantrips of your choice. Light, Mage Hand, and Ray of Frost are recommended. Whenever you finish a Long Rest, you can replace one of your cantrips from this feature with another Wizard cantrip of your choice. When you reach Wizard levels 4 and 10, you learn another Wizard cantrip of your choice, as shown in the Cantrips column of the Wizard Features table.\n\nSpellbook: Your wizardly apprenticeship culminated in the creation of a unique book: your spellbook. It is a Tiny object that weighs 3 pounds, contains 100 pages, and can be read only by you or someone casting Identify. You determine the book's appearance and materials, such as a gilt-edged tome or a collection of vellum bound with twine. The book contains the level 1+ spells you know. It starts with six level 1 Wizard spells of your choice. Detect Magic, Feather Fall, Mage Armor, Magic Missile, Sleep, and Thunderwave are recommended. Whenever you gain a Wizard level after 1, add two Wizard spells of your choice to your spellbook. Each of these spells must be of a level for which you have spell slots, as shown in the Wizard Features table. The spells are the culmination of arcane research you do regularly.\n\nSpell Slots: The Wizard Features table shows how many spell slots you have to cast your level 1+ spells. You regain all expended slots when you finish a Long Rest.\n\nPrepared Spells of Level 1+: You prepare the list of level 1+ spells that are available for you to cast with this feature. To do so, choose four spells from your spellbook. The chosen spells must be of a level for which you have spell slots. The number of spells on your list increases as you gain Wizard levels, as shown in the Prepared Spells column of the Wizard Features table. Whenever that number increases, choose additional Wizard spells until the number of spells on your list matches the number in the table. The chosen spells must be of a level for which you have spell slots. For example, if you're a level 3 Wizard, your list of prepared spells can include six spells of levels 1 and 2 in any combination, chosen from your spellbook. If another Wizard feature gives you spells that you always have prepared, those spells don't count against the number of spells you can prepare with this feature, but those spells otherwise count as Wizard spells for you.\n\nChanging Your Prepared Spells: Whenever you finish a Long Rest, you can change your list of prepared spells, replacing any of the spells there with spells from your spellbook.\n\nSpellcasting Ability: Intelligence is your spellcasting ability for your Wizard spells.\n\nSpellcasting Focus: You can use an Arcane Focus or your spellbook as a Spellcasting Focus for your Wizard spells."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "wizard-war-magic-xge",
+        "name": "War Magic",
+        "shortName": "War",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-chronurgy-magic-egw",
+        "name": "Chronurgy Magic",
+        "shortName": "Chronurgy",
+        "source": "EGW",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-graviturgy-magic-egw",
+        "name": "Graviturgy Magic",
+        "shortName": "Graviturgy",
+        "source": "EGW",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-bladesinging-tce",
+        "name": "Bladesinging",
+        "shortName": "Bladesinging",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-order-of-scribes-tce",
+        "name": "Order of Scribes",
+        "shortName": "Scribes",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-abjurer-xphb",
+        "name": "Abjurer",
+        "shortName": "Abjurer",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "wizard-diviner-xphb",
+        "name": "Diviner",
+        "shortName": "Diviner",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "wizard-evoker-xphb",
+        "name": "Evoker",
+        "shortName": "Evoker",
+        "source": "XPHB",
+        "edition": "2024"
+      },
+      {
+        "id": "wizard-illusionist-xphb",
+        "name": "Illusionist",
+        "shortName": "Illusionist",
+        "source": "XPHB",
+        "edition": "2024"
+      }
+    ],
+    "equipmentText": "Choose A or B: (A) 2 Dagger, Arcane Focus (Quarterstaff), Robe, Spellbook, Scholar's Pack, and 5 GP; or (B) 55 GP",
+    "description": "A scholarly magic-user capable of manipulating the structures of reality."
+  },
+  {
+    "id": "wizard-2014",
+    "name": "Wizard",
+    "edition": "2014",
+    "source": "PHB",
+    "hitDie": 6,
+    "hitDieString": "d6",
+    "primaryAbility": [
+      "int"
+    ],
+    "savingThrows": [
+      "int",
+      "wis"
+    ],
+    "armorProficiencies": [],
+    "weaponProficiencies": [
+      "dagger",
+      "dart",
+      "sling",
+      "quarterstaff",
+      "light crossbow"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "history",
+        "insight",
+        "investigation",
+        "medicine",
+        "religion"
+      ]
+    },
+    "spellcastingAbility": "int",
+    "hasSpellcasting": true,
+    "level1Features": [
+      {
+        "name": "Arcane Recovery",
+        "description": "You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up), and none of the slots can be 6th level or higher.\n\nFor example, if you're a 4th-level wizard, you can recover up to two levels worth of spell slots. You can recover either a 2nd-level spell slot or two 1st-level spell slots."
+      },
+      {
+        "name": "Spellcasting",
+        "description": "As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. See chapter 10 for the general rules of spellcasting and chapter 11 for the wizard spell list.\n\nCantrips: At 1st level, you know three cantrips of your choice from the wizard spell list. You learn additional wizard cantrips of your choice at higher levels, as shown in the Cantrips Known column of the Wizard table.\n\nSpellbook: At 1st level, you have a spellbook containing six 1st-level wizard spells of your choice. Your spellbook is the repository of the wizard spells you know, except your cantrips, which are fixed in your mind.\n\nPreparing and Casting Spells: The Wizard table shows how many spell slots you have to cast your wizard spells of 1st level and higher. To cast one of these spells, you must expend a slot of the spell's level or higher. You regain all expended spell slots when you finish a long rest. You prepare the list of wizard spells that are available for you to cast. To do so, choose a number of wizard spells from your spellbook equal to your Intelligence modifier + your wizard level (minimum of one spell). The spells must be of a level for which you have spell slots. For example, if you're a 3rd-level wizard, you have four 1st-level and two 2nd-level spell slots. With an Intelligence of 16, your list of prepared spells can include six spells of 1st or 2nd level, in any combination, chosen from your spellbook. If you prepare the 1st-level spell magic missile, you can cast it using a 1st-level or a 2nd-level slot. Casting the spell doesn't remove it from your list of prepared spells. You can change your list of prepared spells when you finish a long rest. Preparing a new list of wizard spells requires time spent studying your spellbook and memorizing the incantations and gestures you must make to cast the spell: at least 1 minute per spell level for each spell on your list.\n\nSpellcasting Ability: Intelligence is your spellcasting ability for your wizard spells, since you learn your wizard spells through dedicated study and memorization. You use your Intelligence whenever a spell refers to your spellcasting ability. In addition, you use your Intelligence modifier when setting the saving throw DC for a wizard spell you cast and when making an attack roll with one.\n\nRitual Casting: You can cast a wizard spell as a ritual if that spell has the ritual tag and you have the spell in your spellbook. You don't need to have the spell prepared.\n\nSpellcasting Focus: You can use an arcane focus as a spellcasting focus for your wizard spells.\n\nLearning Spells of 1st Level and Higher: Each time you gain a wizard level, you can add two wizard spells of your choice to your spellbook. Each of these spells must be of a level for which you have spell slots, as shown on the Wizard table. On your adventures, you might find other spells that you can add to your spellbook (see \"Your Spellbook\")."
+      }
+    ],
+    "subclasses": [
+      {
+        "id": "wizard-school-of-abjuration-phb",
+        "name": "School of Abjuration",
+        "shortName": "Abjuration",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-conjuration-phb",
+        "name": "School of Conjuration",
+        "shortName": "Conjuration",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-divination-phb",
+        "name": "School of Divination",
+        "shortName": "Divination",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-enchantment-phb",
+        "name": "School of Enchantment",
+        "shortName": "Enchantment",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-evocation-phb",
+        "name": "School of Evocation",
+        "shortName": "Evocation",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-illusion-phb",
+        "name": "School of Illusion",
+        "shortName": "Illusion",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-necromancy-phb",
+        "name": "School of Necromancy",
+        "shortName": "Necromancy",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-school-of-transmutation-phb",
+        "name": "School of Transmutation",
+        "shortName": "Transmutation",
+        "source": "PHB",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-war-magic-xge",
+        "name": "War Magic",
+        "shortName": "War",
+        "source": "XGE",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-chronurgy-magic-egw",
+        "name": "Chronurgy Magic",
+        "shortName": "Chronurgy",
+        "source": "EGW",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-graviturgy-magic-egw",
+        "name": "Graviturgy Magic",
+        "shortName": "Graviturgy",
+        "source": "EGW",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-bladesinging-tce",
+        "name": "Bladesinging",
+        "shortName": "Bladesinging",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-order-of-scribes-tce",
+        "name": "Order of Scribes",
+        "shortName": "Scribes",
+        "source": "TCE",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-bladesinger-frhof",
+        "name": "Bladesinger",
+        "shortName": "Bladesinger",
+        "source": "FRHoF",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-conjurer-au",
+        "name": "Conjurer",
+        "shortName": "Conjurer",
+        "source": "AU",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-enchanter-au",
+        "name": "Enchanter",
+        "shortName": "Enchanter",
+        "source": "AU",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-necromancer-au",
+        "name": "Necromancer",
+        "shortName": "Necromancer",
+        "source": "AU",
+        "edition": "2014"
+      },
+      {
+        "id": "wizard-transmuter-au",
+        "name": "Transmuter",
+        "shortName": "Transmuter",
+        "source": "AU",
+        "edition": "2014"
+      }
+    ],
+    "equipmentText": "Standard class starting equipment or starting wealth.",
+    "description": "A scholarly magic-user capable of manipulating the structures of reality."
+  }
+]

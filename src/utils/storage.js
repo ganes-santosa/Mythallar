@@ -357,6 +357,7 @@ export function createDefaultProfile(name = 'New Adventurer', className = 'Wizar
     name,
     className,
     level: 1,
+    classes: [{ className, level: 1 }],
     customSlots: {},
     slotsUsed: {},
     spells: [], // array of { id: string, prepared: boolean }

@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import LevelUpModal from './LevelUpModal';
+import { buildLevel1Character } from '../../utils/characterGenerator';
 
 const mockCharacter = {
   id: 'c1',
@@ -174,5 +175,39 @@ describe('LevelUpModal', () => {
     fireEvent.click(fighterTab);
 
     expect(screen.getByText(/Fighter Lvl 1/i)).toBeInTheDocument();
+  });
+
+  it('levels up a builder-generated Level 1 character to Level 2', () => {
+    const builderChar = buildLevel1Character({
+      name: 'Bruenor',
+      ruleset: '2024',
+      selectedClass: { name: 'Fighter', hitDie: 10, hitDieString: 'd10' },
+      selectedSpecies: { name: 'Dwarf' },
+      selectedBackground: { name: 'Soldier', eligibleAbilities: ['str', 'con'] },
+      baseScores: { str: 15, dex: 13, con: 14, int: 10, wis: 12, cha: 8 },
+    });
+
+    const handleConfirm = vi.fn();
+    render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={builderChar}
+        initialMode="levelup"
+        onConfirmLevelUp={handleConfirm}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText(/Choose Class for Level 2/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Level Up' }));
+
+    expect(handleConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 2,
+        className: 'Fighter',
+        classes: [{ className: 'Fighter', level: 2 }],
+      })
+    );
   });
 });

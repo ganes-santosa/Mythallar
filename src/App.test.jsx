@@ -473,19 +473,13 @@ describe('App End-to-End Integration', () => {
 
     // Click button to open modal
     fireEvent.click(screen.getByRole('button', { name: /Create First Character/i }));
-    expect(screen.getByRole('heading', { name: 'Create Character' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Create your character/i })).toBeInTheDocument();
 
-    // Fill form and create
-    fireEvent.change(screen.getByLabelText(/Character Name/i), {
-      target: { value: 'Gandalf the Grey' },
-    });
-    fireEvent.change(screen.getByLabelText(/Starting Class/i), {
-      target: { value: 'Wizard' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Create Character/i }));
+    // Click Manual Setup to bypass builder
+    fireEvent.click(screen.getByRole('button', { name: /Manual Setup/i }));
 
     // Character created and active
-    expect(await screen.findByRole('heading', { level: 2, name: 'Gandalf the Grey' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 2, name: 'New Adventurer' })).toBeInTheDocument();
     expect(screen.queryByText('No Character Selected')).not.toBeInTheDocument();
   });
 

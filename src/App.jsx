@@ -48,6 +48,7 @@ import CharacterHeader from './components/Header/CharacterHeader';
 import AuthStatus from './components/Header/AuthStatus';
 import SettingsModal from './components/Header/SettingsModal';
 import CreateCharacterModal from './components/Modal/CreateCharacterModal';
+import CharacterBuilderModal from './components/CharacterBuilder/CharacterBuilderModal';
 import LocalCharactersImportModal from './components/Modal/LocalCharactersImportModal';
 import { CloudSyncContext } from './context/CloudSyncContext';
 import ShortRestModal from './components/Modal/ShortRestModal';
@@ -65,6 +66,7 @@ export default function App() {
   // --- Character & Profile State ---
   const [profileData, setProfileData] = useState(() => loadCharacterProfiles());
   const [isCreateCharacterModalOpen, setIsCreateCharacterModalOpen] = useState(false);
+  const [isCharacterBuilderModalOpen, setIsCharacterBuilderModalOpen] = useState(false);
   const [leftPaneView, setLeftPaneView] = useState('spells'); // 'spells' | 'sheet'
   const [mobileView, setMobileView] = useState(() => (profileData?.profiles?.length ? 'spellbook' : 'catalog')); // 'sheet' | 'spellbook' | 'catalog'
   const [isFilterHidden, setIsFilterHidden] = useState(false); // mobile only: hide search panel on scroll down
@@ -701,12 +703,26 @@ export default function App() {
     setIsCreateCharacterModalOpen(true);
   }, []);
 
+  const handleStartCharacterBuilder = useCallback(() => {
+    setIsCreateCharacterModalOpen(false);
+    setIsCharacterBuilderModalOpen(true);
+  }, []);
+
   const handleOpenHomebrewModal = useCallback(() => {
     setIsHomebrewSpellModalOpen(true);
   }, []);
 
-  const handleSaveNewCharacter = ({ name, className }) => {
-    const created = createDefaultProfile(name, className);
+  const handleSaveNewCharacter = (charData = {}) => {
+    let created;
+    if (charData && charData.id && charData.sheet) {
+      created = charData;
+    } else {
+      created = createDefaultProfile(
+        charData?.name || 'New Adventurer',
+        charData?.className || 'Wizard'
+      );
+      if (charData?.ruleset) created.ruleset = charData.ruleset;
+    }
     // Signed in: new characters belong to the account and sync. Signed out: Local Only.
     const newChar = user ? { ...created, syncOwner: user.id } : created;
     setProfileData((prev) => ({
@@ -714,6 +730,8 @@ export default function App() {
       activeId: newChar.id,
     }));
     setIsCreateCharacterModalOpen(false);
+    setIsCharacterBuilderModalOpen(false);
+    setLeftPaneView('sheet');
     showToast(`Created new profile: ${newChar.name}`, 'success');
   };
 
@@ -2057,7 +2075,17 @@ export default function App() {
         isOpen={isCreateCharacterModalOpen}
         onClose={() => setIsCreateCharacterModalOpen(false)}
         onCreate={handleSaveNewCharacter}
+        onStartBuilder={handleStartCharacterBuilder}
       />
+
+      {/* Character Builder Modal */}
+      {isCharacterBuilderModalOpen && (
+        <CharacterBuilderModal
+          isOpen={isCharacterBuilderModalOpen}
+          onClose={() => setIsCharacterBuilderModalOpen(false)}
+          onCreate={handleSaveNewCharacter}
+        />
+      )}
 
       {/* Homebrew Spell Modal */}
       <HomebrewSpellModal
