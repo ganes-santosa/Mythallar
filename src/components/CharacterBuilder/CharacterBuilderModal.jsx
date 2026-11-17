@@ -216,7 +216,6 @@ export default function CharacterBuilderModal({
     { key: 'species', label: 'Species' },
     { key: 'abilities', label: 'Abilities' },
     { key: 'equipment', label: 'Equipment' },
-    { key: 'review', label: 'Review' },
   ];
 
   const STEPS_2014 = [
@@ -227,7 +226,6 @@ export default function CharacterBuilderModal({
     { key: 'abilities', label: 'Abilities' },
     { key: 'background', label: 'Background' },
     { key: 'equipment', label: 'Equipment' },
-    { key: 'review', label: 'Review' },
   ];
 
   const steps = ruleset === '2024' ? STEPS_2024 : STEPS_2014;
@@ -441,7 +439,7 @@ export default function CharacterBuilderModal({
     const scrollHeight = container.scrollHeight;
     const clientHeight = container.clientHeight;
 
-    // Bottom reached -> mark review step as active
+    // Bottom reached -> mark last step as active
     if (scrollHeight > 0 && scrollTop + clientHeight >= scrollHeight - 40) {
       setStepIndex(steps.length - 1);
       return;
@@ -1463,64 +1461,6 @@ export default function CharacterBuilderModal({
                   Start with 100 GP to purchase custom gear during adventure.
                 </p>
               </button>
-            </div>
-          </div>
-        );
-
-      case 'review':
-        return (
-          <div className="space-y-4 text-xs text-slate-300">
-            <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Review your character
-              </h4>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Confirm your selections to create your Level 1 character sheet.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-              <div className="p-3 rounded-xl bg-dnd-panel/60">
-                <div className="text-[10px] text-slate-500 uppercase">Name</div>
-                <div className="font-bold text-slate-100 text-sm truncate">
-                  {characterName.trim() || 'New Adventurer'}
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-dnd-panel/60">
-                <div className="text-[10px] text-slate-500 uppercase">Class &amp; Level</div>
-                <div className="font-bold text-slate-100 text-sm">
-                  {selectedClass?.name} 1
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-dnd-panel/60">
-                <div className="text-[10px] text-slate-500 uppercase">Ruleset</div>
-                <div className="font-bold text-slate-100 text-sm">
-                  5e ({ruleset})
-                </div>
-              </div>
-              <div className="p-3 rounded-xl bg-dnd-panel/60">
-                <div className="text-[10px] text-slate-500 uppercase">Ancestry</div>
-                <div className="font-bold text-slate-100 text-sm truncate">
-                  {selectedSubrace?.name || selectedSpecies?.name || 'None'}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-xl bg-dnd-panel/60 space-y-2">
-              <div className="font-bold text-slate-200">Abilities &amp; Modifiers:</div>
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center">
-                {ABILITY_KEYS.map((k) => (
-                  <div key={k} className="p-2 rounded-lg bg-dnd-card">
-                    <div className="text-[10px] text-slate-400 uppercase">{k}</div>
-                    <div className="font-bold text-sm text-slate-100">
-                      {abilityCalculation.finalScores[k]}
-                    </div>
-                    <div className="text-[10px] font-mono text-dnd-gold">
-                      {formatModifier(abilityCalculation.modifiers[k])}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         );

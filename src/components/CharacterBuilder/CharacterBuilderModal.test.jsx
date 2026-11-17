@@ -175,13 +175,8 @@ describe('CharacterBuilderModal', () => {
     expect(await screen.findByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
-    // Step 7: Equipment
+    // Step 7: Equipment (final step)
     expect(await screen.findByRole('heading', { name: /Prepare your equipment/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    // Step 8: Review
-    expect(await screen.findByRole('heading', { name: /Review your character/i })).toBeInTheDocument();
-    expect(screen.getByText('Minsc and Boo')).toBeInTheDocument();
 
     // Final Create
     fireEvent.click(screen.getByRole('button', { name: /Create Character/i }));
@@ -278,14 +273,13 @@ describe('CharacterBuilderModal', () => {
     expect(container.querySelector('#builder-section-species')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-abilities')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-equipment')).toBeInTheDocument();
-    expect(container.querySelector('#builder-section-review')).toBeInTheDocument();
 
-    // Click on Review pill in top pill bar
-    const reviewPill = screen.getByRole('button', { name: /8\.\s*Review/i });
-    fireEvent.click(reviewPill);
+    // Click on Equipment pill in top pill bar
+    const equipPill = screen.getByRole('button', { name: /7\.\s*Equipment/i });
+    fireEvent.click(equipPill);
 
-    // Header subtitle updates to section 8
-    expect(screen.getByText(/Section 8 of 8 — Review/i)).toBeInTheDocument();
+    // Header subtitle updates to section 7
+    expect(screen.getByText(/Section 7 of 7 — Equipment/i)).toBeInTheDocument();
 
     // Footer button changes to Create Character
     expect(screen.getByRole('button', { name: /Create Character/i })).toBeInTheDocument();
