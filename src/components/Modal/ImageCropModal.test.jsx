@@ -103,4 +103,23 @@ describe('ImageCropModal', () => {
       expect(handleApply).toHaveBeenCalledWith(expect.stringContaining('data:image/'));
     });
   });
+
+  it('renders image without transition-transform lag class and supports zooming below 1.0x to fit farthest side', () => {
+    render(
+      <ImageCropModal
+        isOpen={true}
+        imageSrc={sampleImage}
+        onClose={vi.fn()}
+        onApplyCrop={vi.fn()}
+      />
+    );
+
+    const img = screen.getByAltText(/Portrait Crop Preview/i);
+    expect(img.className).not.toContain('transition-transform');
+    expect(img.className).not.toContain('duration-75');
+
+    const zoomInput = screen.getByLabelText(/Zoom/i);
+    const minVal = parseFloat(zoomInput.getAttribute('min'));
+    expect(minVal).toBeLessThanOrEqual(0.5);
+  });
 });

@@ -8,11 +8,46 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, panX: 0, panY: 0 });
+  const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
 
   const containerRef = useRef(null);
   const imgRef = useRef(null);
 
-  // Reset controls when a new image is loaded
+  const cropBoxW = aspectRatio === '3:4' ? 210 : 240;
+  const cropBoxH = aspectRatio === '3:4' ? 280 : 240;
+
+  // Read natural image dimensions
+  useEffect(() => {
+    if (!imageSrc) return;
+    const img = new Image();
+    img.onload = () => {
+      setNaturalSize({
+        width: img.naturalWidth || 384,
+        height: img.naturalHeight || 512,
+      });
+    };
+    img.src = imageSrc;
+  }, [imageSrc]);
+
+  const handleImageLoad = (e) => {
+    const nw = e.target.naturalWidth || e.target.width;
+    const nh = e.target.naturalHeight || e.target.height;
+    if (nw && nh) {
+      setNaturalSize({ width: nw, height: nh });
+    }
+  };
+
+  // Base sizing so 1.0x zoom exactly covers the crop frame
+  const nw = naturalSize.width || 384;
+  const nh = naturalSize.height || 512;
+  const coverScale = Math.max(cropBoxW / nw, cropBoxH / nh);
+  const containScale = Math.min(cropBoxW / nw, cropBoxH / nh);
+  const baseWidth = Math.round(nw * coverScale);
+  const baseHeight = Math.round(nh * coverScale);
+  const minZoomRatio = coverScale > 0 ? +(containScale / coverScale).toFixed(2) : 0.5;
+  const minZoom = Math.max(0.2, Math.min(0.5, minZoomRatio));
+
+  // Reset controls when a new image is loaded or modal opens
   useEffect(() => {
     if (isOpen) {
       setZoom(1);
@@ -20,6 +55,12 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
       setAspectRatio('3:4');
     }
   }, [isOpen, imageSrc]);
+
+  const handleAspectRatioChange = (ratio) => {
+    setAspectRatio(ratio);
+    setPan({ x: 0, y: 0 });
+    setZoom(1);
+  };
 
   const handlePointerDown = (e) => {
     e.preventDefault();
@@ -47,14 +88,19 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     });
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e) => {
     setIsDragging(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
   };
 
   const handleWheel = (e) => {
     e.preventDefault();
-    const delta = e.deltaY < 0 ? 0.1 : -0.1;
-    setZoom((prev) => Math.min(3, Math.max(1, +(prev + delta).toFixed(2))));
+    const delta = e.deltaY < 0 ? 0.05 : -0.05;
+    setZoom((prev) => Math.min(3, Math.max(minZoom, +(prev + delta).toFixed(2))));
   };
 
   const handleApply = useCallback(async () => {
@@ -74,42 +120,51 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
 
       if (ctx && imgRef.current && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
-        const cropBoxW = aspectRatio === '3:4' ? 210 : 240;
-        const cropBoxH = aspectRatio === '3:4' ? 280 : 240;
+        const currentCropW = aspectRatio === '3:4' ? 210 : 240;
+        const currentCropH = aspectRatio === '3:4' ? 280 : 240;
 
         // Visual crop box center relative to container
         const cropCenterX = containerRect.width / 2;
         const cropCenterY = containerRect.height / 2;
 
-        // Image rendered dimensions
+        // Image rendered dimensions with zoom applied
         const img = imgRef.current;
-        const renderedW = img.offsetWidth || img.naturalWidth || 384;
-        const renderedH = img.offsetHeight || img.naturalHeight || 512;
+        const currentBaseW = baseWidth || img.offsetWidth || img.naturalWidth || 384;
+        const currentBaseH = baseHeight || img.offsetHeight || img.naturalHeight || 512;
+        const renderedW = currentBaseW * zoom;
+        const renderedH = currentBaseH * zoom;
 
         // Image center is offset by pan
         const imgCenterX = containerRect.width / 2 + pan.x;
         const imgCenterY = containerRect.height / 2 + pan.y;
 
         // Top-left of image on screen
-        const imgLeft = imgCenterX - (renderedW * zoom) / 2;
-        const imgTop = imgCenterY - (renderedH * zoom) / 2;
+        const imgLeft = imgCenterX - renderedW / 2;
+        const imgTop = imgCenterY - renderedH / 2;
 
         // Crop box top-left on screen
-        const cropLeft = cropCenterX - cropBoxW / 2;
-        const cropTop = cropCenterY - cropBoxH / 2;
+        const cropLeft = cropCenterX - currentCropW / 2;
+        const cropTop = cropCenterY - currentCropH / 2;
 
-        // Calculate source rectangle on natural image
-        const naturalW = img.naturalWidth || renderedW;
-        const naturalH = img.naturalHeight || renderedH;
-        const scaleX = naturalW / (renderedW * zoom);
-        const scaleY = naturalH / (renderedH * zoom);
+        // Position of image relative to crop frame
+        const dxOnCrop = imgLeft - cropLeft;
+        const dyOnCrop = imgTop - cropTop;
 
-        const sx = Math.max(0, (cropLeft - imgLeft) * scaleX);
-        const sy = Math.max(0, (cropTop - imgTop) * scaleY);
-        const sWidth = Math.min(naturalW - sx, cropBoxW * scaleX);
-        const sHeight = Math.min(naturalH - sy, cropBoxH * scaleY);
+        // Output scale factor from on-screen crop box to canvas
+        const outputScale = targetW / currentCropW;
 
-        ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
+        // Fill background in case image is zoomed out past frame
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, targetW, targetH);
+
+        // Draw image onto canvas
+        ctx.drawImage(
+          img,
+          dxOnCrop * outputScale,
+          dyOnCrop * outputScale,
+          renderedW * outputScale,
+          renderedH * outputScale
+        );
       }
 
       const croppedDataUrl = canvas.toDataURL('image/webp', 0.85);
@@ -123,7 +178,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
       onApplyCrop?.(fallbackUrl);
       onClose?.();
     }
-  }, [imageSrc, aspectRatio, zoom, pan, onApplyCrop, onClose]);
+  }, [imageSrc, aspectRatio, zoom, pan, baseWidth, baseHeight, onApplyCrop, onClose]);
 
   if (!isOpen) return null;
 
@@ -170,11 +225,14 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
               ref={imgRef}
               src={imageSrc}
               alt="Portrait Crop Preview"
+              onLoad={handleImageLoad}
               style={{
+                width: baseWidth ? `${baseWidth}px` : 'auto',
+                height: baseHeight ? `${baseHeight}px` : 'auto',
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                 transformOrigin: 'center center',
               }}
-              className="max-w-none max-h-none pointer-events-none select-none transition-transform duration-75"
+              className="max-w-none max-h-none pointer-events-none select-none transition-none"
             />
           )}
 
@@ -210,7 +268,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
             <div className="flex items-center space-x-1 bg-dnd-card/80 p-1 rounded-lg">
               <button
                 type="button"
-                onClick={() => setAspectRatio('3:4')}
+                onClick={() => handleAspectRatioChange('3:4')}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                   aspectRatio === '3:4'
                     ? 'bg-dnd-gold/20 text-dnd-gold'
@@ -221,7 +279,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
               </button>
               <button
                 type="button"
-                onClick={() => setAspectRatio('1:1')}
+                onClick={() => handleAspectRatioChange('1:1')}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
                   aspectRatio === '1:1'
                     ? 'bg-dnd-gold/20 text-dnd-gold'
@@ -237,7 +295,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
               <ZoomOut size={14} className="text-slate-400 shrink-0" />
               <input
                 type="range"
-                min="1"
+                min={minZoom}
                 max="3"
                 step="0.05"
                 value={zoom}
