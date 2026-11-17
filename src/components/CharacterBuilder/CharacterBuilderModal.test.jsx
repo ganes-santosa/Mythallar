@@ -426,4 +426,64 @@ describe('CharacterBuilderModal', () => {
     fireEvent.click(screen.getByText(/D&D 5th Edition 2024/i));
     expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
   });
+
+  it('applies uniform opening and closing transition classes to Lineage panel when switching species', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Switch to 2014 where Dwarf has subrace and Tabaxi has none
+    fireEvent.click(screen.getByText(/D&D 5th Edition 2014 \(Legacy\)/i));
+
+    // Navigate to Race section
+    fireEvent.click(screen.getByRole('button', { name: /3\.\s*Race & Subrace/i }));
+    expect(await screen.findByRole('heading', { name: /Choose your race & subrace/i })).toBeInTheDocument();
+
+    // Select Dwarf -> has subraces
+    fireEvent.click(screen.getByRole('button', { name: /^Dwarf/i }));
+    const lineageHeading = screen.getByText(/Choose Subrace for Dwarf:/i);
+    const lineageWrapper = lineageHeading.closest('.grid');
+    expect(lineageWrapper).toHaveClass('grid-rows-[1fr]');
+    expect(lineageWrapper).toHaveClass('opacity-100');
+    expect(lineageWrapper).toHaveClass('transition-[grid-template-rows,opacity]');
+
+    // Select Tabaxi -> has no subraces -> panel closes smoothly
+    fireEvent.click(screen.getByRole('button', { name: /^Tabaxi/i }));
+    expect(lineageWrapper).toHaveClass('grid-rows-[0fr]');
+    expect(lineageWrapper).toHaveClass('opacity-0');
+    expect(lineageWrapper).toHaveClass('pointer-events-none');
+    // Content stays mounted in DOM during exit animation
+    expect(screen.getByText(/Choose Subrace for Dwarf:/i)).toBeInTheDocument();
+  });
+
+  it('animates ability score helper banners on open and close across method changes', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Navigate to Abilities section
+    fireEvent.click(screen.getByRole('button', { name: /6\.\s*Abilities/i }));
+    expect(await screen.findByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
+
+    // Default method is Standard Array
+    const stdPoolLabel = screen.getByText(/Standard Array Pool:/i);
+    const stdWrapper = stdPoolLabel.closest('.grid');
+    expect(stdWrapper).toHaveClass('grid-rows-[1fr]');
+    expect(stdWrapper).toHaveClass('opacity-100');
+
+    // Switch to Custom -> Standard Array closes with grid-rows-[0fr] opacity-0
+    fireEvent.click(screen.getByRole('button', { name: 'Custom' }));
+    expect(stdWrapper).toHaveClass('grid-rows-[0fr]');
+    expect(stdWrapper).toHaveClass('opacity-0');
+    // Elements remain mounted in DOM to animate closing
+    expect(screen.getByText(/Standard Array Pool:/i)).toBeInTheDocument();
+
+    // Switch to Point Buy -> Point Buy expands with grid-rows-[1fr] opacity-100
+    fireEvent.click(screen.getByRole('button', { name: 'Point Buy' }));
+    const pbLabel = screen.getByText(/Point Buy Budget:/i);
+    const pbWrapper = pbLabel.closest('.grid');
+    expect(pbWrapper).toHaveClass('grid-rows-[1fr]');
+    expect(pbWrapper).toHaveClass('opacity-100');
+    expect(stdWrapper).toHaveClass('grid-rows-[0fr]');
+  });
 });

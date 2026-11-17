@@ -168,6 +168,27 @@ export default function CharacterBuilderModal({
     [backgroundsForRuleset, selectedBackgroundId]
   );
 
+  // Persistent refs for closing animations (prevents abrupt unmount during collapse transitions)
+  const hasSelectedClass = Boolean(selectedClass);
+  const lastSelectedClassRef = useRef(null);
+  if (hasSelectedClass) lastSelectedClassRef.current = selectedClass;
+  const displayedClass = hasSelectedClass ? selectedClass : lastSelectedClassRef.current;
+
+  const hasSubraces = Boolean(selectedSpecies?.subraces?.length > 0);
+  const lastSubracesSpeciesRef = useRef(null);
+  if (hasSubraces) lastSubracesSpeciesRef.current = selectedSpecies;
+  const subracesSpeciesToDisplay = hasSubraces ? selectedSpecies : lastSubracesSpeciesRef.current;
+
+  const hasSelectedSpecies = Boolean(selectedSpecies);
+  const lastSelectedSpeciesRef = useRef(null);
+  if (hasSelectedSpecies) lastSelectedSpeciesRef.current = selectedSpecies;
+  const displayedSpecies = hasSelectedSpecies ? selectedSpecies : lastSelectedSpeciesRef.current;
+
+  const hasSelectedBg = Boolean(selectedBackground);
+  const lastSelectedBgRef = useRef(null);
+  if (hasSelectedBg) lastSelectedBgRef.current = selectedBackground;
+  const displayedBackground = hasSelectedBg ? selectedBackground : lastSelectedBgRef.current;
+
   // Set default selections once loaded
   useEffect(() => {
     if (classesForRuleset.length > 0 && !selectedClassId) {
@@ -681,108 +702,119 @@ export default function CharacterBuilderModal({
               })}
             </div>
 
-            {selectedClass && (
-              <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-200 text-sm">{selectedClass.name}</span>
-                  <span className="text-[11px] text-dnd-gold font-mono">
-                    Hit Die: {selectedClass.hitDieString} • Saves:{' '}
-                    {selectedClass.savingThrows?.map((s) => s.toUpperCase()).join(', ')}
-                  </span>
-                </div>
-                <p className="text-slate-400 text-xs leading-relaxed">
-                  {selectedClass.description}
-                </p>
-
-                {/* Skill choice with checkboxes and Title Case labels */}
-                {selectedClass.skillChoices && (
-                  <div className="pt-2 border-t border-white/5 space-y-1.5">
-                    <div className="text-[11px] font-medium text-slate-300">
-                      Choose {selectedClass.skillChoices.count} Skill Proficiencies ({chosenSkills.length}/{selectedClass.skillChoices.count}):
-                    </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(selectedClass.skillChoices.from === 'all'
-                        ? ['acrobatics', 'animalHandling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleightOfHand', 'stealth', 'survival']
-                        : selectedClass.skillChoices.from
-                      ).map((sk) => {
-                        const isPicked = chosenSkills.includes(sk);
-                        return (
-                          <button
-                            key={sk}
-                            type="button"
-                            onClick={() => {
-                              if (isPicked) {
-                                setChosenSkills(chosenSkills.filter((s) => s !== sk));
-                              } else if (chosenSkills.length < selectedClass.skillChoices.count) {
-                                setChosenSkills([...chosenSkills, sk]);
-                              }
-                            }}
-                            className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-sm ${
-                              isPicked
-                                ? 'bg-dnd-card ring-1 ring-dnd-gold text-slate-100 font-bold'
-                                : 'bg-dnd-card/70 text-slate-300 hover:bg-dnd-card'
-                            }`}
-                          >
-                            <span
-                              className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 transition-colors ${
-                                isPicked
-                                  ? 'bg-dnd-gold text-slate-950'
-                                  : 'bg-white/5 border border-white/20'
-                              }`}
-                            >
-                              {isPicked && <Check size={11} strokeWidth={3} />}
-                            </span>
-                            <span>{getSkillLabel(sk)}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Starting Features Accordion */}
-                {selectedClass.level1Features?.length > 0 && (
-                  <div className="pt-2 border-t border-white/5 space-y-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowClassFeatures(!showClassFeatures)}
-                      className="flex items-center space-x-1.5 text-left group focus:outline-none cursor-pointer"
-                      aria-label={showClassFeatures ? 'Collapse Starting Features' : 'Expand Starting Features'}
-                    >
-                      <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
-                      <span className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
-                        Starting Features
+            {/* Class Detail Viewer */}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                hasSelectedClass
+                  ? 'grid-rows-[1fr] opacity-100'
+                  : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                {displayedClass && (
+                  <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200 text-sm">{displayedClass.name}</span>
+                      <span className="text-[11px] text-dnd-gold font-mono">
+                        Hit Die: {displayedClass.hitDieString} • Saves:{' '}
+                        {displayedClass.savingThrows?.map((s) => s.toUpperCase()).join(', ')}
                       </span>
-                      <ChevronDown
-                        size={13}
-                        className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
-                          showClassFeatures ? '' : '-rotate-90'
-                        }`}
-                      />
-                    </button>
+                    </div>
+                    <p className="text-slate-400 text-xs leading-relaxed">
+                      {displayedClass.description}
+                    </p>
 
-                    <div
-                      className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
-                        showClassFeatures ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="pt-1.5 space-y-2">
-                          {selectedClass.level1Features.map((f) => (
-                            <div key={f.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
-                              <div className="font-bold text-white text-xs">{f.name}</div>
-                              <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
-                                {f.description}
-                              </p>
-                            </div>
-                          ))}
+                    {/* Skill choice with checkboxes and Title Case labels */}
+                    {displayedClass.skillChoices && (
+                      <div className="pt-2 border-t border-white/5 space-y-1.5">
+                        <div className="text-[11px] font-medium text-slate-300">
+                          Choose {displayedClass.skillChoices.count} Skill Proficiencies ({chosenSkills.length}/{displayedClass.skillChoices.count}):
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(displayedClass.skillChoices.from === 'all'
+                            ? ['acrobatics', 'animalHandling', 'arcana', 'athletics', 'deception', 'history', 'insight', 'intimidation', 'investigation', 'medicine', 'nature', 'perception', 'performance', 'persuasion', 'religion', 'sleightOfHand', 'stealth', 'survival']
+                            : displayedClass.skillChoices.from
+                          ).map((sk) => {
+                            const isPicked = chosenSkills.includes(sk);
+                            return (
+                              <button
+                                key={sk}
+                                type="button"
+                                onClick={() => {
+                                  if (isPicked) {
+                                    setChosenSkills(chosenSkills.filter((s) => s !== sk));
+                                  } else if (chosenSkills.length < displayedClass.skillChoices.count) {
+                                    setChosenSkills([...chosenSkills, sk]);
+                                  }
+                                }}
+                                className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-sm ${
+                                  isPicked
+                                    ? 'bg-dnd-card ring-1 ring-dnd-gold text-slate-100 font-bold'
+                                    : 'bg-dnd-card/70 text-slate-300 hover:bg-dnd-card'
+                                }`}
+                              >
+                                <span
+                                  className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 transition-colors ${
+                                    isPicked
+                                      ? 'bg-dnd-gold text-slate-950'
+                                      : 'bg-white/5 border border-white/20'
+                                  }`}
+                                >
+                                  {isPicked && <Check size={11} strokeWidth={3} />}
+                                </span>
+                                <span>{getSkillLabel(sk)}</span>
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
-                    </div>
+                    )}
+
+                    {/* Starting Features Accordion */}
+                    {displayedClass.level1Features?.length > 0 && (
+                      <div className="pt-2 border-t border-white/5 space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowClassFeatures(!showClassFeatures)}
+                          className="flex items-center space-x-1.5 text-left group focus:outline-none cursor-pointer"
+                          aria-label={showClassFeatures ? 'Collapse Starting Features' : 'Expand Starting Features'}
+                        >
+                          <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                          <span className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
+                            Starting Features
+                          </span>
+                          <ChevronDown
+                            size={13}
+                            className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
+                              showClassFeatures ? '' : '-rotate-90'
+                            }`}
+                          />
+                        </button>
+
+                        <div
+                          className={`grid transition-[grid-template-rows,opacity] duration-200 ease-in-out ${
+                            showClassFeatures ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                          }`}
+                        >
+                          <div className="overflow-hidden">
+                            <div className="pt-1.5 space-y-2">
+                              {displayedClass.level1Features.map((f) => (
+                                <div key={f.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
+                                  <div className="font-bold text-white text-xs">{f.name}</div>
+                                  <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
+                                    {f.description}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         );
 
@@ -851,90 +883,110 @@ export default function CharacterBuilderModal({
             </div>
 
             {/* Subrace / Lineage Selector */}
-            {selectedSpecies?.subraces?.length > 0 && (
-              <div className="p-3 rounded-xl bg-dnd-panel/60 space-y-2">
-                <div className="text-xs font-semibold text-slate-300">
-                  {ruleset === '2024' ? 'Choose Lineage / Ancestry for' : 'Choose Subrace for'} {selectedSpecies.name}:
-                </div>
-                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scroll pr-1">
-                  {selectedSpecies.subraces.map((sub) => {
-                    const isSubSel = selectedSubrace?.id === sub.id;
-                    return (
-                      <button
-                        key={sub.id}
-                        type="button"
-                        onClick={() => setSelectedSubraceId(sub.id)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-                          isSubSel
-                            ? 'bg-dnd-gold text-slate-950 font-bold'
-                            : 'bg-dnd-card text-slate-300 hover:bg-white/10'
-                        }`}
-                      >
-                        {sub.subraceName || sub.name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Selected Species Preview */}
-            {selectedSpecies && (
-              <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-2 text-xs text-slate-300">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-bold text-slate-200 text-sm">
-                    {selectedSubrace?.name || selectedSpecies.name}
-                  </span>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {selectedSpecies.size && (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
-                        <User size={11} className="text-dnd-gold" />
-                        <span>{selectedSpecies.size}</span>
-                      </span>
-                    )}
-                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
-                      <Footprints size={11} className="text-emerald-400" />
-                      <span>{selectedSubrace?.speed || selectedSpecies.speed} ft Speed</span>
-                    </span>
-                    {(selectedSubrace?.darkvision || selectedSpecies.darkvision) > 0 && (
-                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
-                        <Eye size={11} className="text-purple-400" />
-                        <span>Darkvision {selectedSubrace?.darkvision || selectedSpecies.darkvision} ft</span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* 2014 Racial ASI */}
-                {ruleset === '2014' && (
-                  <div className="text-[11px] text-dnd-gold font-medium">
-                    Ability Bonuses:{' '}
-                    {Object.entries({
-                      ...(selectedSpecies.abilityBonuses || {}),
-                      ...(selectedSubrace?.abilityBonuses || {}),
-                    })
-                      .filter(([k, v]) => typeof v === 'number' && v > 0)
-                      .map(([k, v]) => `+${v} ${k.toUpperCase()}`)
-                      .join(', ') || 'Flexible'}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                hasSubraces
+                  ? 'grid-rows-[1fr] opacity-100'
+                  : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                {subracesSpeciesToDisplay?.subraces?.length > 0 && (
+                  <div className="p-3 rounded-xl bg-dnd-panel/60 space-y-2">
+                    <div className="text-xs font-semibold text-slate-300">
+                      {ruleset === '2024' ? 'Choose Lineage / Ancestry for' : 'Choose Subrace for'} {subracesSpeciesToDisplay.name}:
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto custom-scroll pr-1">
+                      {subracesSpeciesToDisplay.subraces.map((sub) => {
+                        const isSubSel = selectedSubrace?.id === sub.id;
+                        return (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => setSelectedSubraceId(sub.id)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                              isSubSel
+                                ? 'bg-dnd-gold text-slate-950 font-bold'
+                                : 'bg-dnd-card text-slate-300 hover:bg-white/10'
+                            }`}
+                          >
+                            {sub.subraceName || sub.name}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
-
-                {/* Traits / Starting Features */}
-                <div className="space-y-2 pt-1 border-t border-white/5 max-h-72 overflow-y-auto custom-scroll pr-1">
-                  {[
-                    ...(selectedSpecies.traits || []),
-                    ...(selectedSubrace?.traits || []),
-                  ].map((t) => (
-                    <div key={t.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
-                      <div className="font-bold text-white text-xs">{t.name}</div>
-                      <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
-                        {t.description}
-                      </p>
-                    </div>
-                  ))}
-                </div>
               </div>
-            )}
+            </div>
+
+            {/* Selected Species Preview */}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                hasSelectedSpecies
+                  ? 'grid-rows-[1fr] opacity-100'
+                  : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                {displayedSpecies && (
+                  <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-2 text-xs text-slate-300">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="font-bold text-slate-200 text-sm">
+                        {selectedSubrace?.name || displayedSpecies.name}
+                      </span>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {displayedSpecies.size && (
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
+                            <User size={11} className="text-dnd-gold" />
+                            <span>{displayedSpecies.size}</span>
+                          </span>
+                        )}
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
+                          <Footprints size={11} className="text-emerald-400" />
+                          <span>{selectedSubrace?.speed || displayedSpecies.speed} ft Speed</span>
+                        </span>
+                        {(selectedSubrace?.darkvision || displayedSpecies.darkvision) > 0 && (
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
+                            <Eye size={11} className="text-purple-400" />
+                            <span>Darkvision {selectedSubrace?.darkvision || displayedSpecies.darkvision} ft</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 2014 Racial ASI */}
+                    {ruleset === '2014' && (
+                      <div className="text-[11px] text-dnd-gold font-medium">
+                        Ability Bonuses:{' '}
+                        {Object.entries({
+                          ...(displayedSpecies.abilityBonuses || {}),
+                          ...(selectedSubrace?.abilityBonuses || {}),
+                        })
+                          .filter(([k, v]) => typeof v === 'number' && v > 0)
+                          .map(([k, v]) => `+${v} ${k.toUpperCase()}`)
+                          .join(', ') || 'Flexible'}
+                      </div>
+                    )}
+
+                    {/* Traits / Starting Features */}
+                    <div className="space-y-2 pt-1 border-t border-white/5 max-h-72 overflow-y-auto custom-scroll pr-1">
+                      {[
+                        ...(displayedSpecies.traits || []),
+                        ...(selectedSubrace?.traits || []),
+                      ].map((t) => (
+                        <div key={t.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
+                          <div className="font-bold text-white text-xs">{t.name}</div>
+                          <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
+                            {t.description}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         );
 
@@ -977,107 +1029,118 @@ export default function CharacterBuilderModal({
               })}
             </div>
 
-            {selectedBackground && (
-              <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-200 text-sm">{selectedBackground.name}</span>
-                  {selectedBackground.originFeat && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-dnd-gold/15 text-dnd-gold font-semibold">
-                      Origin Feat: {selectedBackground.originFeat}
-                    </span>
-                  )}
-                </div>
-
-                {/* 2024 Background ASI Distribution: Point-Buy Style Stepper */}
-                {ruleset === '2024' && selectedBackground.eligibleAbilities?.length > 0 && (() => {
-                  const allocatedPoints = selectedBackground.eligibleAbilities.reduce(
-                    (sum, ab) => sum + (bgBonusChoice[ab] || 0),
-                    0
-                  );
-                  const remainingPoints = 3 - allocatedPoints;
-
-                  return (
-                    <div className="pt-2 border-t border-white/5 space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-medium text-slate-300">
-                        <span>
-                          Ability Score Boost (Eligible: {selectedBackground.eligibleAbilities.map((a) => a.toUpperCase()).join(', ')}):
+            {/* Background Detail Viewer */}
+            <div
+              className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                hasSelectedBg
+                  ? 'grid-rows-[1fr] opacity-100'
+                  : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                {displayedBackground && (
+                  <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200 text-sm">{displayedBackground.name}</span>
+                      {displayedBackground.originFeat && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-dnd-gold/15 text-dnd-gold font-semibold">
+                          Origin Feat: {displayedBackground.originFeat}
                         </span>
-                        <span className="font-bold text-amber-400">
-                          {remainingPoints} of 3 points remaining
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-400">
-                        Allocate up to +2 to one ability and +1 to another, or +1 to each of the three abilities.
-                      </p>
-                      <div className="flex flex-wrap gap-2.5 pt-1">
-                        {selectedBackground.eligibleAbilities.map((ab) => {
-                          const val = bgBonusChoice[ab] || 0;
-                          const canMinus = val > 0;
-                          const canPlus = val < 2 && remainingPoints > 0;
-                          return (
-                            <div
-                              key={ab}
-                              className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-xl transition-all shadow-sm ${
-                                val > 0
-                                  ? 'bg-dnd-card ring-1 ring-dnd-gold'
-                                  : 'bg-dnd-card'
-                              }`}
-                            >
-                              <span className="text-xs font-bold text-slate-100">{ab.toUpperCase()}</span>
-                              <div className="flex items-center space-x-1.5">
-                                <button
-                                  type="button"
-                                  aria-label={`Decrease ${ab.toUpperCase()}`}
-                                  disabled={!canMinus}
-                                  onClick={() =>
-                                    setBgBonusChoice((prev) => ({
-                                      ...prev,
-                                      [ab]: Math.max(0, (prev[ab] || 0) - 1),
-                                    }))
-                                  }
-                                  className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
-                                >
-                                  -
-                                </button>
-                                <span className="font-bold text-xs text-dnd-gold w-6 text-center">
-                                  +{val}
-                                </span>
-                                <button
-                                  type="button"
-                                  aria-label={`Increase ${ab.toUpperCase()}`}
-                                  disabled={!canPlus}
-                                  onClick={() =>
-                                    setBgBonusChoice((prev) => ({
-                                      ...prev,
-                                      [ab]: Math.min(2, (prev[ab] || 0) + 1),
-                                    }))
-                                  }
-                                  className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
-                                >
-                                  +
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      )}
                     </div>
-                  );
-                })()}
 
-                {/* 2014 Feature */}
-                {ruleset === '2014' && selectedBackground.feature && (
-                  <div className="pt-2 border-t border-white/5 text-[11px]">
-                    <strong className="text-slate-200">
-                      Feature: {selectedBackground.feature.name}
-                    </strong>
-                    <p className="text-slate-400 mt-1 leading-relaxed">
-                      {selectedBackground.feature.description}
-                    </p>
+                    {/* 2024 Background ASI Distribution: Point-Buy Style Stepper */}
+                    {ruleset === '2024' && displayedBackground.eligibleAbilities?.length > 0 && (() => {
+                      const allocatedPoints = displayedBackground.eligibleAbilities.reduce(
+                        (sum, ab) => sum + (bgBonusChoice[ab] || 0),
+                        0
+                      );
+                      const remainingPoints = 3 - allocatedPoints;
+
+                      return (
+                        <div className="pt-2 border-t border-white/5 space-y-2">
+                          <div className="flex items-center justify-between text-[11px] font-medium text-slate-300">
+                            <span>
+                              Ability Score Boost (Eligible: {displayedBackground.eligibleAbilities.map((a) => a.toUpperCase()).join(', ')}):
+                            </span>
+                            <span className="font-bold text-amber-400">
+                              {remainingPoints} of 3 points remaining
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400">
+                            Allocate up to +2 to one ability and +1 to another, or +1 to each of the three abilities.
+                          </p>
+                          <div className="flex flex-wrap gap-2.5 pt-1">
+                            {displayedBackground.eligibleAbilities.map((ab) => {
+                              const val = bgBonusChoice[ab] || 0;
+                              const canMinus = val > 0;
+                              const canPlus = val < 2 && remainingPoints > 0;
+                              return (
+                                <div
+                                  key={ab}
+                                  className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-xl transition-all shadow-sm ${
+                                    val > 0
+                                      ? 'bg-dnd-card ring-1 ring-dnd-gold'
+                                      : 'bg-dnd-card'
+                                  }`}
+                                >
+                                  <span className="text-xs font-bold text-slate-100">{ab.toUpperCase()}</span>
+                                  <div className="flex items-center space-x-1.5">
+                                    <button
+                                      type="button"
+                                      aria-label={`Decrease ${ab.toUpperCase()}`}
+                                      disabled={!canMinus}
+                                      onClick={() =>
+                                        setBgBonusChoice((prev) => ({
+                                          ...prev,
+                                          [ab]: Math.max(0, (prev[ab] || 0) - 1),
+                                        }))
+                                      }
+                                      className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
+                                    >
+                                      -
+                                    </button>
+                                    <span className="font-bold text-xs text-dnd-gold w-6 text-center">
+                                      +{val}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      aria-label={`Increase ${ab.toUpperCase()}`}
+                                      disabled={!canPlus}
+                                      onClick={() =>
+                                        setBgBonusChoice((prev) => ({
+                                          ...prev,
+                                          [ab]: Math.min(2, (prev[ab] || 0) + 1),
+                                        }))
+                                      }
+                                      className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+
+                    {/* 2014 Feature */}
+                    {ruleset === '2014' && displayedBackground.feature && (
+                      <div className="pt-2 border-t border-white/5 text-[11px]">
+                        <strong className="text-slate-200">
+                          Feature: {displayedBackground.feature.name}
+                        </strong>
+                        <p className="text-slate-400 mt-1 leading-relaxed">
+                          {displayedBackground.feature.description}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
-            )}
+            </div>
           </div>
         );
 
@@ -1116,95 +1179,124 @@ export default function CharacterBuilderModal({
               ))}
             </div>
 
-            {/* Method-specific helper banners */}
-            {abilityMethod === 'standard' && (
-              <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                <span className="text-slate-400">Standard Array Pool:</span>
-                {STANDARD_ARRAY.map((num) => {
-                  const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
-                  return (
-                    <span
-                      key={num}
-                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
-                        assignedKey
-                          ? 'bg-dnd-card text-slate-400'
-                          : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
-                      }`}
+            {/* Method-specific helper banners with uniform opening & closing animations */}
+            <div className="space-y-0">
+              {/* Stat Roll Banner */}
+              <div
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                  abilityMethod === 'roll'
+                    ? 'grid-rows-[1fr] opacity-100'
+                    : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-slate-400">Rolled Pool:</span>
+                      {rollPool.map((r, i) => {
+                        const assignedKey = ABILITY_KEYS.find((k) => rollAssignments[k] === i);
+                        return (
+                          <span
+                            key={i}
+                            title={`Dice: [${r.rolls.join(', ')}], dropped: ${r.dropped}`}
+                            className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
+                              assignedKey
+                                ? 'bg-dnd-card text-slate-400'
+                                : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                            }`}
+                          >
+                            <span>{r.total}</span>
+                            {assignedKey && (
+                              <span className="text-[10px] text-dnd-gold font-semibold">
+                                ({assignedKey.toUpperCase()})
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRollReroll}
+                      className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
                     >
-                      <span>{num}</span>
-                      {assignedKey && (
-                        <span className="text-[10px] text-dnd-gold font-semibold">
-                          ({assignedKey.toUpperCase()})
-                        </span>
-                      )}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
-            {abilityMethod === 'pointbuy' && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                <div className="flex items-center space-x-2">
-                  <span>Point Buy Budget:</span>
-                  <span
-                    className={`font-bold ${
-                      pointBuyRemaining === 0
-                        ? 'text-emerald-400'
-                        : pointBuyRemaining > 0
-                        ? 'text-amber-400'
-                        : 'text-red-400'
-                    }`}
-                  >
-                    {pointBuyRemaining} of {POINT_BUY_TOTAL} points remaining
-                  </span>
+                      <RotateCcw size={12} />
+                      <span>Re-roll Pool</span>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
-                  className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
-                >
-                  Reset
-                </button>
               </div>
-            )}
 
-            {abilityMethod === 'roll' && (
-              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-slate-400">Rolled Pool:</span>
-                  {rollPool.map((r, i) => {
-                    const assignedKey = ABILITY_KEYS.find((k) => rollAssignments[k] === i);
-                    return (
+              {/* Standard Array Banner */}
+              <div
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                  abilityMethod === 'standard'
+                    ? 'grid-rows-[1fr] opacity-100'
+                    : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                    <span className="text-slate-400">Standard Array Pool:</span>
+                    {STANDARD_ARRAY.map((num) => {
+                      const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
+                      return (
+                        <span
+                          key={num}
+                          className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
+                            assignedKey
+                              ? 'bg-dnd-card text-slate-400'
+                              : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                          }`}
+                        >
+                          <span>{num}</span>
+                          {assignedKey && (
+                            <span className="text-[10px] text-dnd-gold font-semibold">
+                              ({assignedKey.toUpperCase()})
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Point Buy Banner */}
+              <div
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                  abilityMethod === 'pointbuy'
+                    ? 'grid-rows-[1fr] opacity-100'
+                    : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                    <div className="flex items-center space-x-2">
+                      <span>Point Buy Budget:</span>
                       <span
-                        key={i}
-                        title={`Dice: [${r.rolls.join(', ')}], dropped: ${r.dropped}`}
-                        className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
-                          assignedKey
-                            ? 'bg-dnd-card text-slate-400'
-                            : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                        className={`font-bold ${
+                          pointBuyRemaining === 0
+                            ? 'text-emerald-400'
+                            : pointBuyRemaining > 0
+                            ? 'text-amber-400'
+                            : 'text-red-400'
                         }`}
                       >
-                        <span>{r.total}</span>
-                        {assignedKey && (
-                          <span className="text-[10px] text-dnd-gold font-semibold">
-                            ({assignedKey.toUpperCase()})
-                          </span>
-                        )}
+                        {pointBuyRemaining} of {POINT_BUY_TOTAL} points remaining
                       </span>
-                    );
-                  })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
+                      className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
+                    >
+                      Reset
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleRollReroll}
-                  className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
-                >
-                  <RotateCcw size={12} />
-                  <span>Re-roll Pool</span>
-                </button>
               </div>
-            )}
+            </div>
 
             {/* D&D Beyond-Style Unified Ability Score Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
