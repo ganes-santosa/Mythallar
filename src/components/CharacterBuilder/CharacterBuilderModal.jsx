@@ -646,7 +646,7 @@ export default function CharacterBuilderModal({
             <div className="space-y-3">
               <div className="character-profile-card w-full rounded-xl bg-dnd-card shadow-sm flex items-stretch overflow-hidden">
                 {/* Left: Prominent Portrait Column with Gradient Fade to Right */}
-                <div className="relative flex-shrink-0 w-28 sm:w-36 md:w-40 max-h-36 sm:max-h-40 self-stretch overflow-hidden group select-none">
+                <div className="relative flex-shrink-0 w-28 sm:w-36 md:w-40 self-stretch overflow-hidden group select-none">
                   {details.portrait ? (
                     <img
                       src={details.portrait}

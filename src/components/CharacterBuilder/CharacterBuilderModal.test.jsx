@@ -603,7 +603,6 @@ describe('CharacterBuilderModal', () => {
     // Portrait upload container and button
     const portraitBtn = screen.getByRole('button', { name: /Upload character portrait/i });
     expect(portraitBtn).toBeInTheDocument();
-    expect(portraitBtn.parentElement.className).toContain('max-h-36');
     expect(screen.getByText('Add Portrait')).toBeInTheDocument();
 
     // Check gradient overlay element
