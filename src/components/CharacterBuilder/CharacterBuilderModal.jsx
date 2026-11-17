@@ -1229,18 +1229,8 @@ export default function CharacterBuilderModal({
                     className="p-3 rounded-xl bg-dnd-panel/70 shadow-sm flex flex-col items-center text-center space-y-2.5"
                   >
                     {/* Top: Ability Label */}
-                    <div className="flex items-center justify-between gap-1 w-full px-1">
-                      <div className="text-xs font-bold text-slate-100 tracking-wide truncate">
-                        {ABILITY_LABELS[k]}
-                      </div>
-                      {bonus !== 0 && (
-                        <span
-                          title={`+${bonus} ${ruleset === '2024' ? 'Background' : 'Species'} Bonus`}
-                          className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap"
-                        >
-                          +{bonus} {ruleset === '2024' ? 'Background' : 'Species'}
-                        </span>
-                      )}
+                    <div className="text-xs font-bold text-slate-100 tracking-wide">
+                      {ABILITY_LABELS[k]}
                     </div>
 
                     {/* Middle: Base Score Input / Pool Assignment */}
@@ -1253,8 +1243,8 @@ export default function CharacterBuilderModal({
                           >
                             {isAssigned ? rawBase : '—'}
                           </div>
-                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                            Assign
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            Assign :
                           </span>
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             {STANDARD_ARRAY.map((val) => {
@@ -1299,8 +1289,8 @@ export default function CharacterBuilderModal({
                           >
                             {isAssigned ? rawBase : '—'}
                           </div>
-                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-                            Assign
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            Assign :
                           </span>
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             {rollPool.map((r, idx) => {
