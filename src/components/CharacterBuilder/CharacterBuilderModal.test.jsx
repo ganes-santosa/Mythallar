@@ -152,27 +152,27 @@ describe('CharacterBuilderModal', () => {
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
-    // Step 2: Class
-    expect(await screen.findByRole('heading', { name: /Choose your class/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    // Step 3: Background
-    expect(await screen.findByRole('heading', { name: /Choose your background/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    // Step 4: Species
-    expect(await screen.findByRole('heading', { name: /Choose your species/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    // Step 5: Ability Scores
-    expect(await screen.findByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    // Step 6: Details (enter name)
-    expect(await screen.findByRole('heading', { name: /Who is your character/i })).toBeInTheDocument();
+    // Step 2: Identity (enter name)
+    expect(await screen.findByRole('heading', { name: /Character Identity/i })).toBeInTheDocument();
     fireEvent.change(screen.getByPlaceholderText(/e\.g\. Gale of Waterdeep/i), {
       target: { value: 'Minsc and Boo' },
     });
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    // Step 3: Class
+    expect(await screen.findByRole('heading', { name: /Choose your class/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    // Step 4: Background
+    expect(await screen.findByRole('heading', { name: /Choose your background/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    // Step 5: Species
+    expect(await screen.findByRole('heading', { name: /Choose your species/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    // Step 6: Ability Scores
+    expect(await screen.findByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
     // Step 7: Equipment
@@ -211,7 +211,11 @@ describe('CharacterBuilderModal', () => {
     fireEvent.click(screen.getByText(/D&D 5th Edition \(2014\)/i));
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
-    // Step 2 in 2014 is Race & Subrace
+    // Step 2 in 2014 is Identity
+    expect(await screen.findByRole('heading', { name: /Character Identity/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+
+    // Step 3 in 2014 is Race & Subrace
     expect(await screen.findByRole('heading', { name: /Choose your race & subrace/i })).toBeInTheDocument();
   });
 
@@ -221,8 +225,8 @@ describe('CharacterBuilderModal', () => {
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
-    // Now on Class step
-    expect(await screen.findByRole('heading', { name: /Choose your class/i })).toBeInTheDocument();
+    // Now on Identity step
+    expect(await screen.findByRole('heading', { name: /Character Identity/i })).toBeInTheDocument();
 
     // Click Back
     fireEvent.click(screen.getByRole('button', { name: /Previous step/i }));
@@ -235,14 +239,17 @@ describe('CharacterBuilderModal', () => {
     // Step 1: Ruleset
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-    // Step 2: Class
+    // Step 2: Identity
+    expect(await screen.findByRole('heading', { name: /Character Identity/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
+    // Step 3: Class
     expect(await screen.findByRole('heading', { name: /Choose your class/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-    // Step 3: Background
+    // Step 4: Background
     expect(await screen.findByRole('heading', { name: /Choose your background/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
-    // Step 4: Species
+    // Step 5: Species
     expect(await screen.findByRole('heading', { name: /Choose your species/i })).toBeInTheDocument();
 
     // Search for "tabaxi"
@@ -267,11 +274,11 @@ describe('CharacterBuilderModal', () => {
 
     // Verify all long-form sections are mounted in DOM
     expect(container.querySelector('#builder-section-ruleset')).toBeInTheDocument();
+    expect(container.querySelector('#builder-section-identity')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-class')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-background')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-species')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-abilities')).toBeInTheDocument();
-    expect(container.querySelector('#builder-section-details')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-equipment')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-spells')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-review')).toBeInTheDocument();
@@ -285,5 +292,48 @@ describe('CharacterBuilderModal', () => {
 
     // Footer button changes to Create Character
     expect(screen.getByRole('button', { name: /Create Character/i })).toBeInTheDocument();
+  });
+
+  it('displays skill proficiencies in Title Case with visual checkboxes', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    // Wait for class section to be rendered
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // In Fighter mock, skill choices from: ['athletics', 'perception']
+    const athleticsChip = screen.getByRole('button', { name: /Athletics/i });
+    const perceptionChip = screen.getByRole('button', { name: /Perception/i });
+    expect(athleticsChip).toBeInTheDocument();
+    expect(perceptionChip).toBeInTheDocument();
+
+    // Select Athletics
+    fireEvent.click(athleticsChip);
+    expect(screen.getByText(/1\/2/)).toBeInTheDocument();
+
+    // Select Perception
+    fireEvent.click(perceptionChip);
+    expect(screen.getByText(/2\/2/)).toBeInTheDocument();
+  });
+
+  it('allocates 2024 background ASI using point-buy steppers with a 3-point budget', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Soldier background has eligible abilities: ['str', 'dex', 'con']
+    // Defaults to +2 to STR, +1 to DEX -> 0 points remaining
+    expect(screen.getByText(/0 of 3 points remaining/i)).toBeInTheDocument();
+
+    // Decrease STR from +2 to +1
+    const decreaseStr = screen.getByRole('button', { name: /Decrease STR/i });
+    fireEvent.click(decreaseStr);
+    expect(screen.getByText(/1 of 3 points remaining/i)).toBeInTheDocument();
+
+    // Increase CON by 1
+    const increaseCon = screen.getByRole('button', { name: /Increase CON/i });
+    fireEvent.click(increaseCon);
+    expect(screen.getByText(/0 of 3 points remaining/i)).toBeInTheDocument();
+    // At 0 points remaining, increase buttons should be disabled
+    expect(increaseCon).toBeDisabled();
   });
 });
