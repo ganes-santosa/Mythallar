@@ -49,7 +49,7 @@ describe('ImageCropModal', () => {
     expect(screen.getByRole('button', { name: /Apply Crop/i })).toBeInTheDocument();
   });
 
-  it('toggles aspect ratio between 3:4 and 1:1', () => {
+  it('supports 3-way toggle between 3:4 Portrait, 1:1 Square, and Custom', () => {
     render(
       <ImageCropModal
         isOpen={true}
@@ -61,13 +61,25 @@ describe('ImageCropModal', () => {
 
     const btn34 = screen.getByRole('button', { name: /3:4 Portrait/i });
     const btn11 = screen.getByRole('button', { name: /1:1 Square/i });
+    const btnCustom = screen.getByRole('button', { name: /^Custom$/i });
 
     // 3:4 is default active
     expect(btn34.className).toContain('text-dnd-gold');
+    const framingBox = screen.getByTestId('crop-framing-box');
+    expect(framingBox.style.height).toBe('280px');
+    expect(framingBox.style.width).toBe('210px');
 
     // Switch to 1:1
     fireEvent.click(btn11);
     expect(btn11.className).toContain('text-dnd-gold');
+    expect(btn34.className).not.toContain('text-dnd-gold');
+    expect(framingBox.style.height).toBe('210px');
+    expect(framingBox.style.width).toBe('210px');
+
+    // Switch to Custom
+    fireEvent.click(btnCustom);
+    expect(btnCustom.className).toContain('text-dnd-gold');
+    expect(btn11.className).not.toContain('text-dnd-gold');
     expect(btn34.className).not.toContain('text-dnd-gold');
   });
 

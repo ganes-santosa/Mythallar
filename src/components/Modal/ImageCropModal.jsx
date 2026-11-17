@@ -3,7 +3,8 @@ import { X, Crop, ZoomIn, ZoomOut, Check } from 'lucide-react';
 import { compressImageFile } from '../../utils/imageCompressor';
 
 export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop }) {
-  const [aspectRatio, setAspectRatio] = useState('3:4'); // '3:4' | '1:1'
+  const [cropMode, setCropMode] = useState('3:4'); // '3:4' | '1:1' | 'custom'
+  const [cropH, setCropH] = useState(280); // 210 to 280
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -13,8 +14,8 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
   const containerRef = useRef(null);
   const imgRef = useRef(null);
 
-  const cropBoxW = aspectRatio === '3:4' ? 210 : 240;
-  const cropBoxH = aspectRatio === '3:4' ? 280 : 240;
+  const cropBoxW = 210;
+  const cropBoxH = cropH;
 
   // Read natural image dimensions
   useEffect(() => {
@@ -61,14 +62,22 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     if (isOpen) {
       setZoom(1);
       setPan({ x: 0, y: 0 });
-      setAspectRatio('3:4');
+      setCropMode('3:4');
+      setCropH(280);
     }
   }, [isOpen, imageSrc]);
 
-  const handleAspectRatioChange = (ratio) => {
-    setAspectRatio(ratio);
-    setPan({ x: 0, y: 0 });
-    setZoom(1);
+  const handleModeChange = (mode) => {
+    setCropMode(mode);
+    if (mode === '3:4') {
+      setCropH(280);
+      setPan({ x: 0, y: 0 });
+      setZoom(1);
+    } else if (mode === '1:1') {
+      setCropH(210);
+      setPan({ x: 0, y: 0 });
+      setZoom(1);
+    }
   };
 
   const handlePointerDown = (e) => {
@@ -128,16 +137,16 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     try {
       // Create offscreen canvas for cropping
       const canvas = document.createElement('canvas');
-      const targetW = aspectRatio === '3:4' ? 384 : 384;
-      const targetH = aspectRatio === '3:4' ? 512 : 384;
+      const targetW = 384;
+      const targetH = Math.round(384 * (cropH / cropBoxW));
       canvas.width = targetW;
       canvas.height = targetH;
       const ctx = canvas.getContext('2d');
 
       if (ctx && imgRef.current && containerRef.current) {
         const containerRect = containerRef.current.getBoundingClientRect();
-        const currentCropW = aspectRatio === '3:4' ? 210 : 240;
-        const currentCropH = aspectRatio === '3:4' ? 280 : 240;
+        const currentCropW = cropBoxW;
+        const currentCropH = cropH;
 
         // Visual crop box center relative to container
         const cropCenterX = containerRect.width / 2;
@@ -194,7 +203,7 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
       onApplyCrop?.(fallbackUrl);
       onClose?.();
     }
-  }, [imageSrc, aspectRatio, zoom, pan, baseWidth, baseHeight, onApplyCrop, onClose]);
+  }, [imageSrc, cropH, cropBoxW, zoom, pan, baseWidth, baseHeight, onApplyCrop, onClose]);
 
   if (!isOpen) return null;
 
@@ -254,9 +263,9 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
 
           {/* Centered Framing Guide with Dimmed Mask */}
           <div
-            className={`pointer-events-none absolute transition-all duration-150 ${
-              aspectRatio === '3:4' ? 'w-[210px] h-[280px]' : 'w-[240px] h-[240px]'
-            } rounded-lg ring-2 ring-dnd-gold shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]`}
+            data-testid="crop-framing-box"
+            style={{ width: `${cropBoxW}px`, height: `${cropBoxH}px` }}
+            className="pointer-events-none absolute transition-all duration-150 rounded-lg ring-2 ring-dnd-gold shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]"
           >
             {/* Rule of thirds grid lines inside crop frame */}
             <div className="w-full h-full grid grid-cols-3 grid-rows-3 pointer-events-none opacity-20">
@@ -284,9 +293,9 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
             <div className="flex items-center space-x-1 bg-dnd-card/80 p-1 rounded-lg">
               <button
                 type="button"
-                onClick={() => handleAspectRatioChange('3:4')}
+                onClick={() => handleModeChange('3:4')}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                  aspectRatio === '3:4'
+                  cropMode === '3:4'
                     ? 'bg-dnd-gold/20 text-dnd-gold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
@@ -295,14 +304,25 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
               </button>
               <button
                 type="button"
-                onClick={() => handleAspectRatioChange('1:1')}
+                onClick={() => handleModeChange('1:1')}
                 className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
-                  aspectRatio === '1:1'
+                  cropMode === '1:1'
                     ? 'bg-dnd-gold/20 text-dnd-gold'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 1:1 Square
+              </button>
+              <button
+                type="button"
+                onClick={() => handleModeChange('custom')}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors cursor-pointer ${
+                  cropMode === 'custom'
+                    ? 'bg-dnd-gold/20 text-dnd-gold'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Custom
               </button>
             </div>
 
