@@ -631,4 +631,40 @@ describe('CharacterBuilderModal', () => {
     expect(genderInput.closest('div')).toHaveClass('col-span-1');
     expect(alignmentInput.closest('div')).toHaveClass('col-span-2');
   });
+
+  it('opens ImageCropModal upon file selection in Identity step and sets portrait on apply', async () => {
+    // Mock canvas methods for jsdom
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+      drawImage: vi.fn(),
+      clearRect: vi.fn(),
+      fillRect: vi.fn(),
+      getImageData: vi.fn(),
+      putImageData: vi.fn(),
+    });
+    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/webp;base64,mockCroppedAvatar');
+
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    // Navigate to Identity step
+    fireEvent.click(screen.getByRole('button', { name: /2\.\s*Identity/i }));
+    expect(await screen.findByRole('heading', { name: /Character Identity/i })).toBeInTheDocument();
+
+    const fileInput = screen.getByLabelText('Portrait file input');
+    const fakeFile = new File(['fake-bytes'], 'avatar.jpg', { type: 'image/jpeg' });
+
+    fireEvent.change(fileInput, { target: { files: [fakeFile] } });
+
+    // Expect crop modal to open
+    expect(await screen.findByRole('heading', { name: /Crop Character Portrait/i })).toBeInTheDocument();
+
+    // Click Apply Crop
+    fireEvent.click(screen.getByRole('button', { name: /Apply Crop/i }));
+
+    // Crop modal closes and portrait image is rendered in the identity card
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: /Crop Character Portrait/i })).toBeNull();
+    });
+    const portraitImg = screen.getByAltText(/Character Portrait/i);
+    expect(portraitImg).toBeInTheDocument();
+  });
 });
