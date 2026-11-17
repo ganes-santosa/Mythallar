@@ -408,4 +408,22 @@ describe('CharacterBuilderModal', () => {
     fireEvent.click(incStr);
     expect(strInput.value).toBe('19');
   });
+
+  it('scrolls to top 0 when clicking either ruleset card or step 1 pill', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    const rulesetSection = document.getElementById('builder-section-ruleset');
+    const scrollContainer = rulesetSection.parentElement;
+    scrollContainer.scrollTo = vi.fn();
+
+    // Click 2014 card
+    fireEvent.click(screen.getByText(/D&D 5th Edition \(2014\)/i));
+    expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+
+    // Click 2024 card
+    fireEvent.click(screen.getByText(/D&D 5th Edition \(2024\)/i));
+    expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
+  });
 });

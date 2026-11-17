@@ -419,7 +419,13 @@ export default function CharacterBuilderModal({
 
     const container = scrollContainerRef.current;
     const target = document.getElementById(`builder-section-${key}`);
-    if (container && target) {
+    if (container && (targetIndex === 0 || key === steps[0]?.key)) {
+      if (typeof container.scrollTo === 'function') {
+        container.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        container.scrollTop = 0;
+      }
+    } else if (container && target) {
       const containerRect = container.getBoundingClientRect();
       const targetRect = target.getBoundingClientRect();
       const relativeTop = targetRect.top - containerRect.top + container.scrollTop;
