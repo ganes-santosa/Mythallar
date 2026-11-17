@@ -1448,9 +1448,9 @@ export default function ResourcesCard({
       )}
 
       {/* 2. Feats Subdivision */}
-      <div data-testid="feats-subdivision" className="space-y-1.5">
+      <div data-testid="feats-subdivision" className="space-y-1">
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-          <span className="flex items-center gap-1 font-semibold text-slate-300">
+          <span className="flex items-center gap-1">
             <Award size={10} className="text-amber-400" /> Feats:
           </span>
           <button
@@ -1488,12 +1488,12 @@ export default function ResourcesCard({
 
         {normalizedFeats.length === 0 && !isAddingFeat && !editingFeatId && (
           <div className="min-h-[20px] flex items-center">
-            <span className="text-[11px] text-slate-500 italic">No feats recorded.</span>
+            <span className="text-[10px] text-slate-500 italic">None recorded</span>
           </div>
         )}
 
         {normalizedFeats.length > 0 && (
-          <div data-testid="feats-chips-container" className="flex flex-wrap gap-1.5">
+          <div data-testid="feats-chips-container" className="flex flex-wrap items-center gap-1 min-h-[20px]">
             {normalizedFeats.map((feat) => {
               const linkedRes = findLinkedResource(feat);
               const isViewing =
@@ -1517,23 +1517,14 @@ export default function ResourcesCard({
                       handleToggleFeatView(feat.id);
                     }
                   }}
-                  className={`group relative inline-flex items-center gap-1.5 py-1 px-2.5 rounded-md text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
+                  className={`group inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] select-none transition-colors shadow-sm cursor-pointer ${
                     isViewing
                       ? 'ring-1 ring-dnd-gold bg-dnd-card/90 shadow-md text-white'
                       : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
                   }`}
                 >
-                  <div
-                    aria-hidden="true"
-                    data-testid="feat-right-gradient"
-                    style={{
-                      background: colorCfg.id === 'none' ? 'none' : colorCfg.glow,
-                    }}
-                    className="absolute inset-0 pointer-events-none rounded-md"
-                  />
-
                   <span
-                    className={`relative z-10 font-medium truncate max-w-[140px] sm:max-w-[180px] ${
+                    className={`font-medium truncate max-w-[140px] sm:max-w-[180px] ${
                       isViewing ? 'text-white' : 'text-slate-200'
                     }`}
                   >
@@ -1541,23 +1532,23 @@ export default function ResourcesCard({
                   </span>
                   {linkedRes && (
                     <Link2
-                      size={10}
+                      size={9}
                       data-testid="feat-linked-icon"
                       title={`Linked with Tracked Resource: ${linkedRes.name}`}
-                      className="relative z-10 shrink-0 text-slate-400/70"
+                      className="shrink-0 text-slate-400/70"
                     />
                   )}
                   {statBadge && (
                     <span
                       data-testid="feat-stat-badge"
                       title={`Modifies Ability Score (${statBadge})`}
-                      className="relative z-10 text-[9px] font-bold px-1 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
+                      className="text-[9px] font-bold px-1 py-0.2 rounded bg-dnd-gold/15 text-dnd-gold shrink-0"
                     >
                       {statBadge}
                     </span>
                   )}
                   {isEditing && (
-                    <span className="relative z-10 shrink-0">
+                    <span className="shrink-0">
                       <FeatChipDeleteButton
                         featName={feat.name}
                         onDelete={() => handleDeleteFeat(feat.id)}
@@ -1570,6 +1561,8 @@ export default function ResourcesCard({
           </div>
         )}
       </div>
+
+      <div data-testid="character-features-divider" className="border-t border-white/10 my-3" />
 
       {/* 3. Tracked Resources Subdivision */}
       <div data-testid="tracked-resources-subdivision" className="space-y-1.5">
@@ -1862,6 +1855,8 @@ export default function ResourcesCard({
           </div>
         )}
       </div>
+
+      <div data-testid="character-features-divider" className="border-t border-white/10 my-3" />
 
       {/* 4. Freeform Notes Subdivision */}
       <div data-testid="notes-subdivision" className="space-y-1">

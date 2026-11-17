@@ -1033,4 +1033,44 @@ describe('ResourcesCard', () => {
     expect(within(resourcesSection).getByText(/^Tracked Resources/i)).toBeInTheDocument();
     expect(within(notesSection).getByText(/^Features & Freeform Notes/i)).toBeInTheDocument();
   });
+
+  it('styles feat chips like Conditions/Defenses and renders subtle separator lines between subdivisions', () => {
+    const { rerender } = render(
+      <ResourcesCard
+        trackedResources={[{ id: 'res_1', name: 'Ki', current: 2, max: 4 }]}
+        featuresNotes="Some notes"
+        feats={[{ id: 'feat_alert', name: 'Alert' }]}
+      />
+    );
+
+    const featChip = screen.getByTestId('feat-chip-feat_alert');
+    // Compact tag chip styling matching Conditions and Resistance & Immunities
+    expect(featChip.className).toContain('rounded-lg');
+    expect(featChip.className).toContain('text-[11px]');
+    expect(featChip.className).toContain('px-2');
+    expect(featChip.className).toContain('py-0.5');
+
+    // Feats subheader matches Conditions / Resistance & Immunities appearance and icon color
+    const featsLabel = screen.getByText('Feats:').closest('span');
+    expect(featsLabel.className).not.toContain('font-semibold');
+    expect(featsLabel.className).not.toContain('text-slate-300');
+    const featsIcon = featsLabel.querySelector('svg');
+    expect(featsIcon.getAttribute('class')).toContain('text-amber-400');
+
+    // Subtle divider lines like Inventory categories
+    const dividers = screen.getAllByTestId('character-features-divider');
+    expect(dividers.length).toBeGreaterThanOrEqual(2);
+    expect(dividers[0].className).toContain('border-t');
+    expect(dividers[0].className).toContain('border-white/10');
+
+    // Empty state matches Resistance & Immunities
+    rerender(
+      <ResourcesCard
+        trackedResources={[]}
+        featuresNotes=""
+        feats={[]}
+      />
+    );
+    expect(screen.getByText('None recorded')).toBeInTheDocument();
+  });
 });
