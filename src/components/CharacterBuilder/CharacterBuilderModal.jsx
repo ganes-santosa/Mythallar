@@ -3,17 +3,11 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Check,
   Wand2,
-  BookOpen,
   Sparkles,
-  Shield,
-  Heart,
-  Dices,
   RotateCcw,
-  User,
-  Backpack,
-  Award,
   Search,
 } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
@@ -66,8 +60,9 @@ export default function CharacterBuilderModal({
   const [selectedBackgroundId, setSelectedBackgroundId] = useState('');
   const [speciesSearch, setSpeciesSearch] = useState('');
 
-  // Class skill picks
+  // Class skill picks & feature preview
   const [chosenSkills, setChosenSkills] = useState([]);
+  const [showClassFeatures, setShowClassFeatures] = useState(false);
 
   // Ability Scores
   const [abilityMethod, setAbilityMethod] = useState('standard'); // 'standard' | 'pointbuy' | 'roll'
@@ -83,9 +78,8 @@ export default function CharacterBuilderModal({
   const [bgBonusChoice, setBgBonusChoice] = useState({}); // e.g. { int: 2, con: 1 }
   const [racialChoice, setRacialChoice] = useState({});
 
-  // Equipment & Spells
+  // Equipment
   const [equipmentOption, setEquipmentOption] = useState('A');
-  const [selectedSpells, setSelectedSpells] = useState([]);
 
   // Identity / Backstory
   const [details, setDetails] = useState({
@@ -104,22 +98,17 @@ export default function CharacterBuilderModal({
   const [allClasses, setAllClasses] = useState([]);
   const [allSpecies, setAllSpecies] = useState([]);
   const [allBackgrounds, setAllBackgrounds] = useState([]);
-  const [availableSpells, setAvailableSpells] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load datasets on mount
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    Promise.all([
-      loadBuilderData(),
-      fetch('/data/spells.json').then((r) => (r.ok ? r.json() : [])).catch(() => []),
-    ]).then(([builderData, spellsData]) => {
+    loadBuilderData().then((builderData) => {
       if (!active) return;
-      setAllClasses(builderData.classes || []);
-      setAllSpecies(builderData.species || []);
-      setAllBackgrounds(builderData.backgrounds || []);
-      setAvailableSpells(Array.isArray(spellsData) ? spellsData : []);
+      setAllClasses(builderData?.classes || []);
+      setAllSpecies(builderData?.species || []);
+      setAllBackgrounds(builderData?.backgrounds || []);
       setIsLoading(false);
     });
     return () => {
@@ -216,7 +205,6 @@ export default function CharacterBuilderModal({
     { key: 'species', label: 'Species' },
     { key: 'abilities', label: 'Abilities' },
     { key: 'equipment', label: 'Equipment' },
-    { key: 'spells', label: 'Spells & Features' },
     { key: 'review', label: 'Review' },
   ];
 
@@ -228,7 +216,6 @@ export default function CharacterBuilderModal({
     { key: 'abilities', label: 'Abilities' },
     { key: 'background', label: 'Background' },
     { key: 'equipment', label: 'Equipment' },
-    { key: 'spells', label: 'Spells & Features' },
     { key: 'review', label: 'Review' },
   ];
 
@@ -247,16 +234,6 @@ export default function CharacterBuilderModal({
       racialChoice,
     });
   }, [baseScores, ruleset, selectedSpecies, selectedSubrace, selectedBackground, bgBonusChoice, racialChoice]);
-
-  // Spells available for selected class at Level 1 (cantrips & 1st level)
-  const classLevel1Spells = useMemo(() => {
-    if (!selectedClass?.hasSpellcasting) return [];
-    const cName = selectedClass.name.toLowerCase();
-    return availableSpells.filter((s) => {
-      const cls = Array.isArray(s.classes) ? s.classes.map((c) => c.toLowerCase()) : [];
-      return cls.includes(cName) && (s.level === 0 || s.level === 1);
-    });
-  }, [selectedClass, availableSpells]);
 
   // Auto-scroll pill bar when active step index changes
   useEffect(() => {
@@ -351,7 +328,7 @@ export default function CharacterBuilderModal({
       racialChoice,
       chosenSkills,
       equipmentOption,
-      selectedSpells,
+      selectedSpells: [],
       details,
     });
     onCreate(finalProfile);
@@ -600,6 +577,48 @@ export default function CharacterBuilderModal({
                           </button>
                         );
                       })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Level 1 Capabilities Accordion */}
+                {selectedClass.level1Features?.length > 0 && (
+                  <div className="pt-2 border-t border-white/5 space-y-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowClassFeatures(!showClassFeatures)}
+                      className="flex items-center space-x-1.5 text-left group focus:outline-none cursor-pointer"
+                      aria-label={showClassFeatures ? 'Collapse Level 1 Capabilities' : 'Expand Level 1 Capabilities'}
+                    >
+                      <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                      <span className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
+                        Level 1 Capabilities ({selectedClass.level1Features.length})
+                      </span>
+                      <ChevronDown
+                        size={13}
+                        className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
+                          showClassFeatures ? '' : '-rotate-90'
+                        }`}
+                      />
+                    </button>
+
+                    <div
+                      className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+                        showClassFeatures ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="pt-1.5 space-y-2">
+                          {selectedClass.level1Features.map((f) => (
+                            <div key={f.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
+                              <div className="font-bold text-amber-400 text-xs">{f.name}</div>
+                              <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
+                                {f.description}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1090,72 +1109,6 @@ export default function CharacterBuilderModal({
                 </p>
               </button>
             </div>
-          </div>
-        );
-
-      case 'spells':
-        return (
-          <div className="space-y-4">
-            <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Configure your abilities &amp; spells
-              </h4>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Review Level 1 class capabilities and configure starting spells if applicable.
-              </p>
-            </div>
-
-            {/* Level 1 Features */}
-            <div className="p-3.5 rounded-xl bg-dnd-panel/60 space-y-2">
-              <div className="text-xs font-bold text-slate-200">
-                Level 1 {selectedClass?.name} Features:
-              </div>
-              <div className="space-y-1.5">
-                {selectedClass?.level1Features?.map((f) => (
-                  <div key={f.name} className="text-[11px]">
-                    <strong className="text-amber-400">{f.name}:</strong>{' '}
-                    <span className="text-slate-300">{f.description}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Spell selection if spellcaster */}
-            {selectedClass?.hasSpellcasting && classLevel1Spells.length > 0 && (
-              <div className="space-y-2 pt-1">
-                <div className="text-xs font-bold text-slate-200">
-                  Select Starting 1st-Level Spells &amp; Cantrips:
-                </div>
-                <div className="max-h-48 overflow-y-auto custom-scroll grid grid-cols-1 sm:grid-cols-2 gap-1.5 p-1">
-                  {classLevel1Spells.map((sp) => {
-                    const isSel = selectedSpells.some((s) => (s.id || s) === sp.id);
-                    return (
-                      <button
-                        key={sp.id}
-                        type="button"
-                        onClick={() => {
-                          if (isSel) {
-                            setSelectedSpells(selectedSpells.filter((s) => (s.id || s) !== sp.id));
-                          } else {
-                            setSelectedSpells([...selectedSpells, sp]);
-                          }
-                        }}
-                        className={`p-2 rounded-lg text-left text-xs transition-colors cursor-pointer flex items-center justify-between ${
-                          isSel
-                            ? 'bg-dnd-gold text-slate-950 font-bold'
-                            : 'bg-dnd-panel/70 text-slate-300 hover:bg-dnd-panel'
-                        }`}
-                      >
-                        <span>{sp.name}</span>
-                        <span className="text-[10px] opacity-80">
-                          {sp.level === 0 ? 'Cantrip' : 'Level 1'}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
           </div>
         );
 

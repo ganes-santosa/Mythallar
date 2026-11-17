@@ -179,11 +179,7 @@ describe('CharacterBuilderModal', () => {
     expect(await screen.findByRole('heading', { name: /Prepare your equipment/i })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
 
-    // Step 8: Spells & Features
-    expect(await screen.findByRole('heading', { name: /Configure your abilities/i })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Continue/i }));
-
-    // Step 9: Review
+    // Step 8: Review
     expect(await screen.findByRole('heading', { name: /Review your character/i })).toBeInTheDocument();
     expect(screen.getByText('Minsc and Boo')).toBeInTheDocument();
 
@@ -280,18 +276,35 @@ describe('CharacterBuilderModal', () => {
     expect(container.querySelector('#builder-section-species')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-abilities')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-equipment')).toBeInTheDocument();
-    expect(container.querySelector('#builder-section-spells')).toBeInTheDocument();
     expect(container.querySelector('#builder-section-review')).toBeInTheDocument();
 
     // Click on Review pill in top pill bar
-    const reviewPill = screen.getByRole('button', { name: /9\.\s*Review/i });
+    const reviewPill = screen.getByRole('button', { name: /8\.\s*Review/i });
     fireEvent.click(reviewPill);
 
-    // Header subtitle updates to section 9
-    expect(screen.getByText(/Section 9 of 9 — Review/i)).toBeInTheDocument();
+    // Header subtitle updates to section 8
+    expect(screen.getByText(/Section 8 of 8 — Review/i)).toBeInTheDocument();
 
     // Footer button changes to Create Character
     expect(screen.getByRole('button', { name: /Create Character/i })).toBeInTheDocument();
+  });
+
+  it('renders expandable Level 1 Capabilities accordion inside the class section', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Find Level 1 Capabilities accordion toggle
+    const toggleAccordion = screen.getByRole('button', { name: /Expand Level 1 Capabilities/i });
+    expect(toggleAccordion).toBeInTheDocument();
+
+    // Features like Second Wind should exist for Fighter
+    expect(screen.getByText('Second Wind')).toBeInTheDocument();
+    expect(screen.getByText('Regain HP')).toBeInTheDocument();
+
+    // Click to toggle
+    fireEvent.click(toggleAccordion);
+    expect(screen.getByRole('button', { name: /Collapse Level 1 Capabilities/i })).toBeInTheDocument();
   });
 
   it('displays skill proficiencies in Title Case with visual checkboxes', async () => {
