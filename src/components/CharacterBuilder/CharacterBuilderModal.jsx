@@ -70,21 +70,21 @@ export default function CharacterBuilderModal({
   // Ability Scores
   const [abilityMethod, setAbilityMethod] = useState('standard'); // 'standard' | 'pointbuy' | 'roll' | 'custom'
   const [baseScores, setBaseScores] = useState({
-    str: 15,
-    dex: 14,
-    con: 13,
-    int: 12,
-    wis: 10,
-    cha: 8,
+    str: null,
+    dex: null,
+    con: null,
+    int: null,
+    wis: null,
+    cha: null,
   });
   const [rollPool, setRollPool] = useState([]);
   const [rollAssignments, setRollAssignments] = useState({
-    str: 0,
-    dex: 1,
-    con: 2,
-    int: 3,
-    wis: 4,
-    cha: 5,
+    str: null,
+    dex: null,
+    con: null,
+    int: null,
+    wis: null,
+    cha: null,
   });
   const [bgBonusChoice, setBgBonusChoice] = useState({}); // e.g. { int: 2, con: 1 }
   const [racialChoice, setRacialChoice] = useState({});
@@ -353,16 +353,16 @@ export default function CharacterBuilderModal({
 
   const switchToStandard = () => {
     setAbilityMethod('standard');
-    setBaseScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
+    setBaseScores({ str: null, dex: null, con: null, int: null, wis: null, cha: null });
   };
 
   const switchToPointBuy = () => {
     setAbilityMethod('pointbuy');
     const isValidPB =
-      ABILITY_KEYS.every((k) => baseScores[k] >= 8 && baseScores[k] <= 15) &&
+      ABILITY_KEYS.every((k) => typeof baseScores[k] === 'number' && baseScores[k] >= 8 && baseScores[k] <= 15) &&
       calculatePointBuyCost(baseScores) <= POINT_BUY_TOTAL;
     if (!isValidPB) {
-      setBaseScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
+      setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 });
     }
   };
 
@@ -373,16 +373,8 @@ export default function CharacterBuilderModal({
       pool = generateRollPool();
       setRollPool(pool);
     }
-    const defaultAssign = { str: 0, dex: 1, con: 2, int: 3, wis: 4, cha: 5 };
-    setRollAssignments(defaultAssign);
-    setBaseScores({
-      str: pool[0]?.total ?? 10,
-      dex: pool[1]?.total ?? 10,
-      con: pool[2]?.total ?? 10,
-      int: pool[3]?.total ?? 10,
-      wis: pool[4]?.total ?? 10,
-      cha: pool[5]?.total ?? 10,
-    });
+    setRollAssignments({ str: null, dex: null, con: null, int: null, wis: null, cha: null });
+    setBaseScores({ str: null, dex: null, con: null, int: null, wis: null, cha: null });
   };
 
   const switchToCustom = () => {

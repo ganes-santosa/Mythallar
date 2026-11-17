@@ -363,9 +363,15 @@ describe('CharacterBuilderModal', () => {
 
     expect(screen.getByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
 
-    // Standard Array is default: STR=15, DEX=14, etc.
+    // Standard Array starts unassigned ('—')
     const strBaseBox = screen.getByLabelText(/Strength Base Score/i);
     const dexBaseBox = screen.getByLabelText(/Dexterity Base Score/i);
+    expect(strBaseBox).toHaveTextContent('—');
+    expect(dexBaseBox).toHaveTextContent('—');
+
+    // Assign 15 to STR and 14 to DEX
+    fireEvent.click(screen.getByRole('button', { name: /Assign 15 to Strength/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Assign 14 to Dexterity/i }));
     expect(strBaseBox).toHaveTextContent('15');
     expect(dexBaseBox).toHaveTextContent('14');
 
@@ -397,7 +403,7 @@ describe('CharacterBuilderModal', () => {
     expect(screen.queryByRole('button', { name: /All 10s/i })).not.toBeInTheDocument();
 
     const strInput = screen.getByRole('spinbutton', { name: /Strength Base Score/i });
-    expect(strInput.value).toBe('15');
+    expect(strInput.value).toBe('10');
 
     // Type 18 for STR
     fireEvent.change(strInput, { target: { value: '18' } });
