@@ -104,7 +104,7 @@ describe('ImageCropModal', () => {
     });
   });
 
-  it('renders image without transition-transform lag class and supports zooming below 1.0x to fit farthest side', () => {
+  it('renders image without transition-transform lag class and caps minimum zoom at 1.0x to cover crop frame', () => {
     render(
       <ImageCropModal
         isOpen={true}
@@ -119,7 +119,6 @@ describe('ImageCropModal', () => {
     expect(img.className).not.toContain('duration-75');
 
     const zoomInput = screen.getByLabelText(/Zoom/i);
-    const minVal = parseFloat(zoomInput.getAttribute('min'));
-    expect(minVal).toBeLessThanOrEqual(0.5);
+    expect(zoomInput).toHaveAttribute('min', '1');
   });
 });

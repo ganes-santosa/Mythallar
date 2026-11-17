@@ -41,11 +41,20 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
   const nw = naturalSize.width || 384;
   const nh = naturalSize.height || 512;
   const coverScale = Math.max(cropBoxW / nw, cropBoxH / nh);
-  const containScale = Math.min(cropBoxW / nw, cropBoxH / nh);
   const baseWidth = Math.round(nw * coverScale);
   const baseHeight = Math.round(nh * coverScale);
-  const minZoomRatio = coverScale > 0 ? +(containScale / coverScale).toFixed(2) : 0.5;
-  const minZoom = Math.max(0.2, Math.min(0.5, minZoomRatio));
+
+  // Clamp pan so image always fully covers the crop frame without black borders
+  const clampPan = useCallback((p, currentZoom, bWidth, bHeight, boxW, boxH) => {
+    const curW = (bWidth || boxW) * currentZoom;
+    const curH = (bHeight || boxH) * currentZoom;
+    const maxX = Math.max(0, (curW - boxW) / 2);
+    const maxY = Math.max(0, (curH - boxH) / 2);
+    return {
+      x: Math.min(maxX, Math.max(-maxX, p.x)),
+      y: Math.min(maxY, Math.max(-maxY, p.y)),
+    };
+  }, []);
 
   // Reset controls when a new image is loaded or modal opens
   useEffect(() => {
@@ -82,10 +91,11 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     if (!isDragging) return;
     const dx = e.clientX - dragStart.x;
     const dy = e.clientY - dragStart.y;
-    setPan({
+    const rawPan = {
       x: dragStart.panX + dx,
       y: dragStart.panY + dy,
-    });
+    };
+    setPan(clampPan(rawPan, zoom, baseWidth, baseHeight, cropBoxW, cropBoxH));
   };
 
   const handlePointerUp = (e) => {
@@ -97,10 +107,16 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
     }
   };
 
+  const handleZoomChange = (nextZoom) => {
+    const z = Math.min(3, Math.max(1, nextZoom));
+    setZoom(z);
+    setPan((prevPan) => clampPan(prevPan, z, baseWidth, baseHeight, cropBoxW, cropBoxH));
+  };
+
   const handleWheel = (e) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 0.05 : -0.05;
-    setZoom((prev) => Math.min(3, Math.max(minZoom, +(prev + delta).toFixed(2))));
+    handleZoomChange(+(zoom + delta).toFixed(2));
   };
 
   const handleApply = useCallback(async () => {
@@ -295,12 +311,12 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
               <ZoomOut size={14} className="text-slate-400 shrink-0" />
               <input
                 type="range"
-                min={minZoom}
+                min="1"
                 max="3"
                 step="0.05"
                 value={zoom}
                 aria-label="Zoom"
-                onChange={(e) => setZoom(parseFloat(e.target.value))}
+                onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
                 className="w-full accent-dnd-gold cursor-pointer h-1.5 bg-dnd-card rounded-lg appearance-none"
               />
               <ZoomIn size={14} className="text-slate-400 shrink-0" />
