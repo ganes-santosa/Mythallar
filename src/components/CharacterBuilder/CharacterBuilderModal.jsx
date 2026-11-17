@@ -9,6 +9,9 @@ import {
   Sparkles,
   RotateCcw,
   Search,
+  User,
+  Footprints,
+  Eye,
 } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import {
@@ -611,7 +614,7 @@ export default function CharacterBuilderModal({
                         <div className="pt-1.5 space-y-2">
                           {selectedClass.level1Features.map((f) => (
                             <div key={f.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
-                              <div className="font-bold text-amber-400 text-xs">{f.name}</div>
+                              <div className="font-bold text-white text-xs">{f.name}</div>
                               <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
                                 {f.description}
                               </p>
@@ -722,15 +725,28 @@ export default function CharacterBuilderModal({
             {/* Selected Species Preview */}
             {selectedSpecies && (
               <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-2 text-xs text-slate-300">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-slate-200 text-sm">
                     {selectedSubrace?.name || selectedSpecies.name}
                   </span>
-                  <span className="text-[10px] text-amber-400">
-                    {selectedSpecies.size} • {selectedSubrace?.speed || selectedSpecies.speed} ft Speed
-                    {(selectedSubrace?.darkvision || selectedSpecies.darkvision) > 0 &&
-                      ` • Darkvision ${selectedSubrace?.darkvision || selectedSpecies.darkvision} ft`}
-                  </span>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {selectedSpecies.size && (
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
+                        <User size={11} className="text-dnd-gold" />
+                        <span>{selectedSpecies.size}</span>
+                      </span>
+                    )}
+                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
+                      <Footprints size={11} className="text-emerald-400" />
+                      <span>{selectedSubrace?.speed || selectedSpecies.speed} ft Speed</span>
+                    </span>
+                    {(selectedSubrace?.darkvision || selectedSpecies.darkvision) > 0 && (
+                      <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-[10px] font-medium text-slate-300 shadow-sm">
+                        <Eye size={11} className="text-purple-400" />
+                        <span>Darkvision {selectedSubrace?.darkvision || selectedSpecies.darkvision} ft</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* 2014 Racial ASI */}
@@ -747,15 +763,17 @@ export default function CharacterBuilderModal({
                   </div>
                 )}
 
-                {/* Traits */}
-                <div className="space-y-1.5 pt-1 border-t border-white/5 max-h-40 overflow-y-auto custom-scroll pr-1">
+                {/* Traits / Starting Features */}
+                <div className="space-y-2 pt-1 border-t border-white/5 max-h-52 overflow-y-auto custom-scroll pr-1">
                   {[
                     ...(selectedSpecies.traits || []),
                     ...(selectedSubrace?.traits || []),
                   ].map((t) => (
-                    <div key={t.name} className="text-[11px]">
-                      <strong className="text-slate-200">{t.name}:</strong>{' '}
-                      <span className="text-slate-400">{t.description}</span>
+                    <div key={t.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
+                      <div className="font-bold text-white text-xs">{t.name}</div>
+                      <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
+                        {t.description}
+                      </p>
                     </div>
                   ))}
                 </div>

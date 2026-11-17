@@ -254,7 +254,9 @@ describe('CharacterBuilderModal', () => {
 
     // Click Tabaxi card
     fireEvent.click(screen.getByRole('button', { name: /Tabaxi/i }));
-    expect(screen.getByText("Cat's Claws:")).toBeInTheDocument();
+    expect(screen.getByText("Cat's Claws")).toBeInTheDocument();
+    expect(screen.getByText("30 ft Speed")).toBeInTheDocument();
+    expect(screen.getByText("Darkvision 60 ft")).toBeInTheDocument();
   });
 
   it('renders a long-form layout with stable modal height and interactive section pill bar', async () => {
