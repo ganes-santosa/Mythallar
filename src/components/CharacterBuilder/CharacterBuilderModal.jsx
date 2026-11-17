@@ -1214,7 +1214,7 @@ export default function CharacterBuilderModal({
                 >
                   <div className="overflow-hidden">
                     {displayedBannerMethod === 'roll' && (
-                      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300 min-h-[40px]">
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-slate-400">Rolled Pool:</span>
                           {rollPool.map((r, i) => {
@@ -1251,53 +1251,81 @@ export default function CharacterBuilderModal({
                     )}
 
                     {displayedBannerMethod === 'standard' && (
-                      <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                        <span className="text-slate-400">Standard Array Pool:</span>
-                        {STANDARD_ARRAY.map((num) => {
-                          const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
-                          return (
-                            <span
-                              key={num}
-                              className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
-                                assignedKey
-                                  ? 'bg-dnd-card text-slate-400'
-                                  : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
-                              }`}
-                            >
-                              <span>{num}</span>
-                              {assignedKey && (
-                                <span className="text-[10px] text-dnd-gold font-semibold">
-                                  ({assignedKey.toUpperCase()})
-                                </span>
-                              )}
-                            </span>
-                          );
-                        })}
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300 min-h-[40px]">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-slate-400">Standard Array Pool:</span>
+                          {STANDARD_ARRAY.map((num) => {
+                            const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
+                            return (
+                              <span
+                                key={num}
+                                className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
+                                  assignedKey
+                                    ? 'bg-dnd-card text-slate-400'
+                                    : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                                }`}
+                              >
+                                <span>{num}</span>
+                                {assignedKey && (
+                                  <span className="text-[10px] text-dnd-gold font-semibold">
+                                    ({assignedKey.toUpperCase()})
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBaseScores({ str: null, dex: null, con: null, int: null, wis: null, cha: null })}
+                          className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
+                        >
+                          <RotateCcw size={12} />
+                          <span>Reset</span>
+                        </button>
                       </div>
                     )}
 
                     {displayedBannerMethod === 'pointbuy' && (
-                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                        <div className="flex items-center space-x-2">
-                          <span>Point Buy Budget:</span>
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300 min-h-[40px]">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-slate-400">Point Buy Budget:</span>
                           <span
-                            className={`font-bold ${
+                            className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
                               pointBuyRemaining === 0
-                                ? 'text-emerald-400'
+                                ? 'bg-emerald-500/20 text-emerald-400 ring-1 ring-emerald-500/40'
                                 : pointBuyRemaining > 0
-                                ? 'text-amber-400'
-                                : 'text-red-400'
+                                ? 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                                : 'bg-red-500/20 text-red-400 ring-1 ring-red-500/40'
                             }`}
                           >
-                            {pointBuyRemaining} of {POINT_BUY_TOTAL} points remaining
+                            <span>{pointBuyRemaining}</span>
+                            <span
+                              className={`text-[10px] font-semibold ${
+                                pointBuyRemaining === 0
+                                  ? 'text-emerald-400'
+                                  : pointBuyRemaining > 0
+                                  ? 'text-dnd-gold'
+                                  : 'text-red-400'
+                              }`}
+                            >
+                              of {POINT_BUY_TOTAL} Remaining
+                            </span>
+                          </span>
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm bg-dnd-card text-slate-400">
+                            <span>{Math.max(0, POINT_BUY_TOTAL - pointBuyRemaining)}</span>
+                            <span className="text-[10px] text-slate-500 font-semibold">
+                              Spent
+                            </span>
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
-                          className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
+                          className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
                         >
-                          Reset
+                          <RotateCcw size={12} />
+                          <span>Reset</span>
                         </button>
                       </div>
                     )}

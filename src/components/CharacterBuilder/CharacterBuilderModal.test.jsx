@@ -491,6 +491,18 @@ describe('CharacterBuilderModal', () => {
     expect(screen.getByText(/Standard Array Pool:/i)).toBeInTheDocument();
     expect(stdWrapper).toHaveClass('grid-rows-[1fr]');
     expect(stdWrapper).toHaveClass('opacity-100');
+
+    // Reset button in Standard Array clears assignments
+    const stdResetBtn = screen.getByRole('button', { name: /Reset/i });
+    expect(stdResetBtn).toBeInTheDocument();
+    fireEvent.click(stdResetBtn);
+
+    // Switch back to Point Buy and check Point Buy Reset button and chip badges
+    fireEvent.click(screen.getByRole('button', { name: 'Point Buy' }));
+    expect(screen.getByText(/of 27 Remaining/i)).toBeInTheDocument();
+    expect(screen.getByText(/Spent/i)).toBeInTheDocument();
+    const pbResetBtn = screen.getByRole('button', { name: /Reset/i });
+    expect(pbResetBtn).toBeInTheDocument();
   });
 
   it('wraps dynamic panels and ability cards in SmoothSize to animate size changes', async () => {
