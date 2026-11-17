@@ -9,6 +9,8 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0, panX: 0, panY: 0 });
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeRef = useRef({ isResizing: false, edge: null, startY: 0, startH: 280 });
   const [naturalSize, setNaturalSize] = useState({ width: 0, height: 0 });
 
   const containerRef = useRef(null);
@@ -113,6 +115,59 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {
       // Ignore
+    }
+  };
+
+  const handleEdgePointerDown = (edge, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsResizing(true);
+    const clientY = e.clientY ?? e.nativeEvent?.clientY ?? 0;
+    resizeRef.current = {
+      isResizing: true,
+      edge,
+      startY: clientY,
+      startH: cropH,
+    };
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {
+      // In jsdom or unsupported environments
+    }
+  };
+
+  const handleEdgePointerMove = (e) => {
+    if (!resizeRef.current.isResizing || !resizeRef.current.edge) return;
+    const clientY = e.clientY ?? e.nativeEvent?.clientY ?? 0;
+    const deltaY = clientY - resizeRef.current.startY;
+    const sign = resizeRef.current.edge === 'bottom' ? 1 : -1;
+    const nextH = Math.min(280, Math.max(210, Math.round(resizeRef.current.startH + deltaY * 2 * sign)));
+    setCropH(nextH);
+
+    const nextCoverScale = Math.max(cropBoxW / nw, nextH / nh);
+    const nextBaseW = Math.round(nw * nextCoverScale);
+    const nextBaseH = Math.round(nh * nextCoverScale);
+    setPan((prevPan) => clampPan(prevPan, zoom, nextBaseW, nextBaseH, cropBoxW, nextH));
+  };
+
+  const handleEdgePointerUp = (e) => {
+    e.stopPropagation();
+    resizeRef.current.isResizing = false;
+    setIsResizing(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleEdgeKeyDown = (edge, e) => {
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const step = 10;
+      const expand = (edge === 'bottom' && e.key === 'ArrowDown') || (edge === 'top' && e.key === 'ArrowUp');
+      const nextH = Math.min(280, Math.max(210, cropH + (expand ? step : -step)));
+      setCropH(nextH);
     }
   };
 
@@ -264,8 +319,10 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
           {/* Centered Framing Guide with Dimmed Mask */}
           <div
             data-testid="crop-framing-box"
-            style={{ width: `${cropBoxW}px`, height: `${cropBoxH}px` }}
-            className="pointer-events-none absolute transition-all duration-150 rounded-lg ring-2 ring-dnd-gold shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]"
+            style={{ width: `${cropBoxW}px`, height: `${cropH}px` }}
+            className={`pointer-events-none absolute ${
+              isResizing ? 'transition-none' : 'transition-all duration-150'
+            } rounded-lg ring-2 ring-dnd-gold shadow-[0_0_0_9999px_rgba(0,0,0,0.65)]`}
           >
             {/* Rule of thirds grid lines inside crop frame */}
             <div className="w-full h-full grid grid-cols-3 grid-rows-3 pointer-events-none opacity-20">
@@ -279,10 +336,47 @@ export default function ImageCropModal({ isOpen, imageSrc, onClose, onApplyCrop 
               <div className="border-r border-white" />
               <div />
             </div>
+
+            {/* Custom Mode Symmetric Drag Handles */}
+            {cropMode === 'custom' && (
+              <>
+                <div
+                  role="separator"
+                  tabIndex={0}
+                  aria-label="Adjust top crop boundary"
+                  aria-orientation="horizontal"
+                  onPointerDown={(e) => handleEdgePointerDown('top', e)}
+                  onPointerMove={handleEdgePointerMove}
+                  onPointerUp={handleEdgePointerUp}
+                  onPointerCancel={handleEdgePointerUp}
+                  onKeyDown={(e) => handleEdgeKeyDown('top', e)}
+                  className="pointer-events-auto absolute -top-3 left-1/2 -translate-x-1/2 w-14 h-6 flex items-center justify-center cursor-ns-resize z-30 group touch-none outline-none focus-visible:ring-2 focus-visible:ring-dnd-gold rounded-full"
+                >
+                  <div className="w-8 h-1.5 rounded-full bg-dnd-gold shadow ring-1 ring-black/40 group-hover:scale-110 group-focus-visible:scale-110 transition-transform" />
+                </div>
+
+                <div
+                  role="separator"
+                  tabIndex={0}
+                  aria-label="Adjust bottom crop boundary"
+                  aria-orientation="horizontal"
+                  onPointerDown={(e) => handleEdgePointerDown('bottom', e)}
+                  onPointerMove={handleEdgePointerMove}
+                  onPointerUp={handleEdgePointerUp}
+                  onPointerCancel={handleEdgePointerUp}
+                  onKeyDown={(e) => handleEdgeKeyDown('bottom', e)}
+                  className="pointer-events-auto absolute -bottom-3 left-1/2 -translate-x-1/2 w-14 h-6 flex items-center justify-center cursor-ns-resize z-30 group touch-none outline-none focus-visible:ring-2 focus-visible:ring-dnd-gold rounded-full"
+                >
+                  <div className="w-8 h-1.5 rounded-full bg-dnd-gold shadow ring-1 ring-black/40 group-hover:scale-110 group-focus-visible:scale-110 transition-transform" />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="absolute bottom-2 left-2 text-[10px] text-slate-400 bg-black/60 px-2 py-0.5 rounded pointer-events-none">
-            Drag to pan • Scroll to zoom
+            {cropMode === 'custom'
+              ? 'Drag handles to adjust height • Drag image to pan'
+              : 'Drag to pan • Scroll to zoom'}
           </div>
         </div>
 

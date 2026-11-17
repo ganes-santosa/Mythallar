@@ -133,4 +133,57 @@ describe('ImageCropModal', () => {
     const zoomInput = screen.getByLabelText(/Zoom/i);
     expect(zoomInput).toHaveAttribute('min', '1');
   });
+
+  it('renders symmetric vertical drag handles only in Custom mode and clamps height to [210, 280]', () => {
+    render(
+      <ImageCropModal
+        isOpen={true}
+        imageSrc={sampleImage}
+        onClose={vi.fn()}
+        onApplyCrop={vi.fn()}
+      />
+    );
+
+    // In 3:4 default mode, handles should not exist
+    expect(screen.queryByLabelText(/Adjust top crop boundary/i)).not.toBeInTheDocument();
+    expect(screen.queryByLabelText(/Adjust bottom crop boundary/i)).not.toBeInTheDocument();
+
+    // Switch to Custom mode
+    fireEvent.click(screen.getByRole('button', { name: /^Custom$/i }));
+    const topHandle = screen.getByLabelText(/Adjust top crop boundary/i);
+    const bottomHandle = screen.getByLabelText(/Adjust bottom crop boundary/i);
+    expect(topHandle).toBeInTheDocument();
+    expect(bottomHandle).toBeInTheDocument();
+
+    const framingBox = screen.getByTestId('crop-framing-box');
+    expect(framingBox.style.height).toBe('280px');
+
+    // Drag bottom handle upwards by 20px -> height should reduce by 40px (symmetrical from center) -> 240px
+    fireEvent.pointerDown(bottomHandle, { clientY: 200, pointerId: 1 });
+    fireEvent.pointerMove(bottomHandle, { clientY: 180, pointerId: 1 });
+    fireEvent.pointerUp(bottomHandle, { pointerId: 1 });
+
+    expect(framingBox.style.height).toBe('240px');
+
+    // Drag bottom handle far up -> clamps at minimum 210px (1:1 square)
+    fireEvent.pointerDown(bottomHandle, { clientY: 180, pointerId: 1 });
+    fireEvent.pointerMove(bottomHandle, { clientY: 50, pointerId: 1 });
+    fireEvent.pointerUp(bottomHandle, { pointerId: 1 });
+
+    expect(framingBox.style.height).toBe('210px');
+
+    // Drag top handle far up -> clamps at maximum 280px (3:4 portrait)
+    fireEvent.pointerDown(topHandle, { clientY: 100, pointerId: 1 });
+    fireEvent.pointerMove(topHandle, { clientY: 0, pointerId: 1 });
+    fireEvent.pointerUp(topHandle, { pointerId: 1 });
+
+    expect(framingBox.style.height).toBe('280px');
+
+    // Arrow keys adjust height accessibility
+    fireEvent.keyDown(bottomHandle, { key: 'ArrowUp' });
+    expect(framingBox.style.height).toBe('270px');
+
+    fireEvent.keyDown(bottomHandle, { key: 'ArrowDown' });
+    expect(framingBox.style.height).toBe('280px');
+  });
 });

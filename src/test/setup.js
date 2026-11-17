@@ -23,4 +23,16 @@ if (typeof window !== 'undefined') {
     writable: true,
     configurable: true,
   });
+
+  if (!window.PointerEvent) {
+    class PointerEvent extends MouseEvent {
+      constructor(type, params = {}) {
+        super(type, params);
+        this.pointerId = params.pointerId || 0;
+        this.pointerType = params.pointerType || 'mouse';
+      }
+    }
+    window.PointerEvent = PointerEvent;
+    globalThis.PointerEvent = PointerEvent;
+  }
 }
