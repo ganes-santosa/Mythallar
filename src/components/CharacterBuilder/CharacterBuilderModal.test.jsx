@@ -482,9 +482,15 @@ describe('CharacterBuilderModal', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Point Buy' }));
     const pbLabel = screen.getByText(/Point Buy Budget:/i);
     const pbWrapper = pbLabel.closest('.grid');
+    expect(pbWrapper).toBe(stdWrapper);
     expect(pbWrapper).toHaveClass('grid-rows-[1fr]');
     expect(pbWrapper).toHaveClass('opacity-100');
-    expect(stdWrapper).toHaveClass('grid-rows-[0fr]');
+
+    // Switching between Point Buy and Standard Array keeps top banner open without collapse
+    fireEvent.click(screen.getByRole('button', { name: 'Standard Array' }));
+    expect(screen.getByText(/Standard Array Pool:/i)).toBeInTheDocument();
+    expect(stdWrapper).toHaveClass('grid-rows-[1fr]');
+    expect(stdWrapper).toHaveClass('opacity-100');
   });
 
   it('wraps dynamic panels and ability cards in SmoothSize to animate size changes', async () => {

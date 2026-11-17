@@ -190,6 +190,8 @@ export default function CharacterBuilderModal({
   if (hasSelectedBg) lastSelectedBgRef.current = selectedBackground;
   const displayedBackground = hasSelectedBg ? selectedBackground : lastSelectedBgRef.current;
 
+  const lastBannerMethodRef = useRef('standard');
+
   // Set default selections once loaded
   useEffect(() => {
     if (classesForRuleset.length > 0 && !selectedClassId) {
@@ -1197,126 +1199,119 @@ export default function CharacterBuilderModal({
             </div>
 
             {/* Method-specific helper banners with uniform opening & closing animations */}
-            <div className="space-y-0">
-              {/* Stat Roll Banner */}
-              <div
-                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-                  abilityMethod === 'roll'
-                    ? 'grid-rows-[1fr] opacity-100'
-                    : 'grid-rows-[0fr] opacity-0 pointer-events-none'
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-slate-400">Rolled Pool:</span>
-                      {rollPool.map((r, i) => {
-                        const assignedKey = ABILITY_KEYS.find((k) => rollAssignments[k] === i);
-                        return (
+            {(() => {
+              const hasTopCard = abilityMethod !== 'custom';
+              if (hasTopCard) lastBannerMethodRef.current = abilityMethod;
+              const displayedBannerMethod = hasTopCard ? abilityMethod : (lastBannerMethodRef.current || 'standard');
+
+              return (
+                <div
+                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                    hasTopCard
+                      ? 'grid-rows-[1fr] opacity-100'
+                      : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    {displayedBannerMethod === 'roll' && (
+                      <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-slate-400">Rolled Pool:</span>
+                          {rollPool.map((r, i) => {
+                            const assignedKey = ABILITY_KEYS.find((k) => rollAssignments[k] === i);
+                            return (
+                              <span
+                                key={i}
+                                title={`Dice: [${r.rolls.join(', ')}], dropped: ${r.dropped}`}
+                                className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
+                                  assignedKey
+                                    ? 'bg-dnd-card text-slate-400'
+                                    : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                                }`}
+                              >
+                                <span>{r.total}</span>
+                                {assignedKey && (
+                                  <span className="text-[10px] text-dnd-gold font-semibold">
+                                    ({assignedKey.toUpperCase()})
+                                  </span>
+                                )}
+                              </span>
+                            );
+                          })}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRollReroll}
+                          className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
+                        >
+                          <RotateCcw size={12} />
+                          <span>Re-roll Pool</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {displayedBannerMethod === 'standard' && (
+                      <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                        <span className="text-slate-400">Standard Array Pool:</span>
+                        {STANDARD_ARRAY.map((num) => {
+                          const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
+                          return (
+                            <span
+                              key={num}
+                              className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
+                                assignedKey
+                                  ? 'bg-dnd-card text-slate-400'
+                                  : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                              }`}
+                            >
+                              <span>{num}</span>
+                              {assignedKey && (
+                                <span className="text-[10px] text-dnd-gold font-semibold">
+                                  ({assignedKey.toUpperCase()})
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {displayedBannerMethod === 'pointbuy' && (
+                      <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                        <div className="flex items-center space-x-2">
+                          <span>Point Buy Budget:</span>
                           <span
-                            key={i}
-                            title={`Dice: [${r.rolls.join(', ')}], dropped: ${r.dropped}`}
-                            className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
-                              assignedKey
-                                ? 'bg-dnd-card text-slate-400'
-                                : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                            className={`font-bold ${
+                              pointBuyRemaining === 0
+                                ? 'text-emerald-400'
+                                : pointBuyRemaining > 0
+                                ? 'text-amber-400'
+                                : 'text-red-400'
                             }`}
                           >
-                            <span>{r.total}</span>
-                            {assignedKey && (
-                              <span className="text-[10px] text-dnd-gold font-semibold">
-                                ({assignedKey.toUpperCase()})
-                              </span>
-                            )}
+                            {pointBuyRemaining} of {POINT_BUY_TOTAL} points remaining
                           </span>
-                        );
-                      })}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleRollReroll}
-                      className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
-                    >
-                      <RotateCcw size={12} />
-                      <span>Re-roll Pool</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Standard Array Banner */}
-              <div
-                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-                  abilityMethod === 'standard'
-                    ? 'grid-rows-[1fr] opacity-100'
-                    : 'grid-rows-[0fr] opacity-0 pointer-events-none'
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                    <span className="text-slate-400">Standard Array Pool:</span>
-                    {STANDARD_ARRAY.map((num) => {
-                      const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
-                      return (
-                        <span
-                          key={num}
-                          className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
-                            assignedKey
-                              ? 'bg-dnd-card text-slate-400'
-                              : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
-                          }`}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
+                          className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
                         >
-                          <span>{num}</span>
-                          {assignedKey && (
-                            <span className="text-[10px] text-dnd-gold font-semibold">
-                              ({assignedKey.toUpperCase()})
-                            </span>
-                          )}
-                        </span>
-                      );
-                    })}
+                          Reset
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-
-              {/* Point Buy Banner */}
-              <div
-                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
-                  abilityMethod === 'pointbuy'
-                    ? 'grid-rows-[1fr] opacity-100'
-                    : 'grid-rows-[0fr] opacity-0 pointer-events-none'
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                    <div className="flex items-center space-x-2">
-                      <span>Point Buy Budget:</span>
-                      <span
-                        className={`font-bold ${
-                          pointBuyRemaining === 0
-                            ? 'text-emerald-400'
-                            : pointBuyRemaining > 0
-                            ? 'text-amber-400'
-                            : 'text-red-400'
-                        }`}
-                      >
-                        {pointBuyRemaining} of {POINT_BUY_TOTAL} points remaining
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
-                      className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              );
+            })()}
 
             {/* D&D Beyond-Style Unified Ability Score Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <SmoothSize
+              watchKey={abilityMethod}
+              duration={250}
+              className="grid grid-cols-2 sm:grid-cols-3 gap-3"
+            >
               {ABILITY_KEYS.map((k) => {
                 const rawBase = baseScores[k];
                 const isAssigned = rawBase !== null && rawBase !== undefined && rawBase !== '';
@@ -1326,10 +1321,8 @@ export default function CharacterBuilderModal({
                 const mod = isAssigned ? abilityCalculation.modifiers[k] : null;
 
                 return (
-                  <SmoothSize
+                  <div
                     key={k}
-                    watchKey={abilityMethod}
-                    duration={250}
                     className="p-3 rounded-xl bg-dnd-panel/70 shadow-sm flex flex-col items-center text-center space-y-2.5"
                   >
                     {/* Top: Ability Label */}
@@ -1523,10 +1516,10 @@ export default function CharacterBuilderModal({
                         )}
                       </div>
                     </div>
-                  </SmoothSize>
+                  </div>
                 );
               })}
-            </div>
+            </SmoothSize>
           </div>
         );
 
