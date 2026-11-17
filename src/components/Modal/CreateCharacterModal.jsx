@@ -50,7 +50,7 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate, onStar
           <button
             type="button"
             onClick={handleCharacterBuilder}
-            className="w-full text-left p-4 rounded-xl bg-dnd-panel/60 hover:bg-dnd-panel transition-all duration-150 group shadow-sm flex items-start space-x-3.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-dnd-gold/60"
+            className="w-full text-left p-4 rounded-xl bg-dnd-panel/60 hover:bg-dnd-panel transition-colors duration-150 group shadow-sm flex items-start space-x-3.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-dnd-gold/40"
             aria-label="Character Builder"
           >
             <div className="p-2.5 rounded-lg bg-dnd-gold/10 text-dnd-gold group-hover:bg-dnd-gold/20 transition-colors shrink-0">
@@ -75,7 +75,7 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate, onStar
           <button
             type="button"
             onClick={handleManualSetup}
-            className="w-full text-left p-4 rounded-xl bg-dnd-panel/60 hover:bg-dnd-panel transition-all duration-150 group shadow-sm flex items-start space-x-3.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-dnd-gold/60"
+            className="w-full text-left p-4 rounded-xl bg-dnd-panel/60 hover:bg-dnd-panel transition-colors duration-150 group shadow-sm flex items-start space-x-3.5 cursor-pointer focus:outline-none focus:ring-1 focus:ring-dnd-gold/40"
             aria-label="Manual Setup"
           >
             <div className="p-2.5 rounded-lg bg-white/5 text-slate-300 group-hover:text-slate-100 group-hover:bg-white/10 transition-colors shrink-0">

@@ -12,8 +12,17 @@ import {
   User,
   Footprints,
   Eye,
+  BookOpen,
+  UserRound,
+  Swords,
+  ScrollText,
+  Compass,
+  Zap,
+  Package,
+  Camera,
 } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { compressImageFile } from '../../utils/imageCompressor';
 import {
   loadBuilderData,
   getCachedClasses,
@@ -33,6 +42,7 @@ import {
 import { buildLevel1Character } from '../../utils/characterGenerator';
 import { formatModifier, SKILLS_DEFINITION } from '../../utils/dndCalculations';
 import SmoothSize from '../Common/SmoothSize';
+import ClassIcon from '../Common/ClassIcon';
 
 const SKILL_LABELS = Object.fromEntries(
   SKILLS_DEFINITION.map((s) => [s.key, s.label])
@@ -94,7 +104,9 @@ export default function CharacterBuilderModal({
   const [equipmentOption, setEquipmentOption] = useState('A');
 
   // Identity / Backstory
+  const portraitInputRef = useRef(null);
   const [details, setDetails] = useState({
+    portrait: '',
     appearance: '',
     age: '',
     gender: '',
@@ -105,6 +117,20 @@ export default function CharacterBuilderModal({
     bonds: '',
     flaws: '',
   });
+
+  const handlePortraitUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const compressedDataUrl = await compressImageFile(file, 256, 0.85);
+      if (compressedDataUrl) {
+        setDetails((prev) => ({ ...prev, portrait: compressedDataUrl }));
+      }
+    } catch (err) {
+      console.error('Failed to compress avatar image', err);
+    }
+    e.target.value = '';
+  };
 
   // Data catalogues
   const [allClasses, setAllClasses] = useState([]);
@@ -533,9 +559,12 @@ export default function CharacterBuilderModal({
         return (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Choose your ruleset
-              </h4>
+              <div className="flex items-center space-x-2">
+                <BookOpen size={14} className="text-dnd-gold shrink-0" />
+                <h4 className="text-sm font-bold text-slate-200 font-display">
+                  Choose Your Ruleset
+                </h4>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Select which version of D&amp;D 5th Edition you&apos;d like to use.
               </p>
@@ -549,9 +578,9 @@ export default function CharacterBuilderModal({
                   setStepIndex(0);
                   scrollToSection('ruleset', 0);
                 }}
-                className={`p-4 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                className={`p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                   ruleset === '2024'
-                    ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                    ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                     : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`}
               >
@@ -559,7 +588,7 @@ export default function CharacterBuilderModal({
                   <div className="text-sm font-semibold text-slate-100">
                     D&amp;D 5th Edition 2024
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-dnd-gold/20 text-dnd-gold font-bold">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-dnd-gold/15 text-dnd-gold">
                     Recommended
                   </span>
                 </div>
@@ -575,9 +604,9 @@ export default function CharacterBuilderModal({
                   setStepIndex(0);
                   scrollToSection('ruleset', 0);
                 }}
-                className={`p-4 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                className={`p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                   ruleset === '2014'
-                    ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                    ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                     : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`}
               >
@@ -596,69 +625,141 @@ export default function CharacterBuilderModal({
         return (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Character Identity
-              </h4>
+              <div className="flex items-center space-x-2">
+                <UserRound size={14} className="text-dnd-gold shrink-0" />
+                <h4 className="text-sm font-bold text-slate-200 font-display">
+                  Character Identity
+                </h4>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Bring your adventurer to life with a name, alignment, appearance, and personal backstory.
               </p>
             </div>
 
             <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Character Name <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Gale of Waterdeep"
-                  value={characterName}
-                  onChange={(e) => setCharacterName(e.target.value)}
-                  className="w-full bg-dnd-panel rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold"
-                />
+              <div className="character-profile-card w-full rounded-xl bg-dnd-card shadow-sm flex items-stretch overflow-hidden">
+                {/* Left: Prominent Portrait Column with Gradient Fade to Right */}
+                <div className="relative flex-shrink-0 w-28 sm:w-36 md:w-40 self-stretch overflow-hidden group select-none">
+                  {details.portrait ? (
+                    <img
+                      src={details.portrait}
+                      alt={characterName || 'Character Portrait'}
+                      className="w-full h-full object-cover object-center"
+                    />
+                  ) : (
+                    <div className="w-full h-full min-h-[110px] bg-dnd-panel/70 flex flex-col items-center justify-center text-slate-500 group-hover:text-dnd-gold transition-colors p-2 text-center">
+                      <User size={32} />
+                      <span className="text-[10px] mt-1 text-slate-400 font-medium">Add Portrait</span>
+                    </div>
+                  )}
+
+                  {/* Vertical gradient on the right edge of the portrait fading into card background */}
+                  <div className="absolute inset-y-0 right-0 w-12 sm:w-16 bg-gradient-to-r from-transparent via-dnd-card/50 to-dnd-card pointer-events-none z-10" />
+
+                  {/* Hover overlay to change avatar with soft right gradient */}
+                  <button
+                    type="button"
+                    onClick={() => portraitInputRef.current?.click()}
+                    aria-label="Upload character portrait"
+                    title="Click to upload portrait (auto-compressed to 256px WebP)"
+                    className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer focus:outline-none focus:opacity-100 z-20"
+                  >
+                    <div className="flex items-center space-x-1 px-2 py-1 rounded-md bg-black/75 text-slate-200 text-[10px] shadow">
+                      <Camera size={12} className="text-dnd-gold" />
+                      <span>{details.portrait ? 'Change' : 'Upload'}</span>
+                    </div>
+                  </button>
+
+                  {/* Remove portrait button */}
+                  {details.portrait && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDetails((prev) => ({ ...prev, portrait: '' }));
+                      }}
+                      aria-label="Remove portrait"
+                      title="Remove portrait"
+                      className="absolute top-1.5 right-1.5 p-1 rounded-md bg-black/60 hover:bg-black/80 text-slate-400 hover:text-red-400 transition-colors z-20 cursor-pointer"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+
+                  <input
+                    ref={portraitInputRef}
+                    type="file"
+                    accept="image/*"
+                    aria-label="Portrait file input"
+                    onChange={handlePortraitUpload}
+                    className="hidden"
+                  />
+                </div>
+
+                {/* Right: Info Fields Column */}
+                <div className="flex-1 p-3 sm:p-3.5 min-w-0 flex flex-col justify-between space-y-2.5">
+                  {/* Line 1: Character Name */}
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Character Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Gale of Waterdeep"
+                      value={characterName}
+                      onChange={(e) => setCharacterName(e.target.value)}
+                      className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                    />
+                  </div>
+
+                  {/* Line 2: Age, Gender, Alignment */}
+                  {/* Age (col-span-1 = 1/4), Gender (col-span-1 = 1/4), Alignment (col-span-2 = 2/4) */}
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="col-span-1">
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">Age</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 28"
+                        value={details.age}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, age: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+
+                    <div className="col-span-1">
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">Gender</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Male / Female / Non-binary"
+                        value={details.gender}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, gender: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">Alignment</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Chaotic Good"
+                        value={details.alignment}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, alignment: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Alignment</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Chaotic Good"
-                    value={details.alignment}
-                    onChange={(e) =>
-                      setDetails((prev) => ({ ...prev, alignment: e.target.value }))
-                    }
-                    className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Age</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 28"
-                    value={details.age}
-                    onChange={(e) =>
-                      setDetails((prev) => ({ ...prev, age: e.target.value }))
-                    }
-                    className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-400 mb-1">Gender</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Male / Female / Non-binary"
-                    value={details.gender}
-                    onChange={(e) =>
-                      setDetails((prev) => ({ ...prev, gender: e.target.value }))
-                    }
-                    className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold"
-                  />
-                </div>
-              </div>
-
+              {/* Backstory & Lore textarea below */}
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Backstory &amp; Lore</label>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Backstory &amp; Lore</label>
                 <textarea
                   rows={3}
                   placeholder="Write character background, origin, or personal history..."
@@ -666,7 +767,7 @@ export default function CharacterBuilderModal({
                   onChange={(e) =>
                     setDetails((prev) => ({ ...prev, backstory: e.target.value }))
                   }
-                  className="w-full bg-dnd-panel rounded-lg p-2.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold resize-none"
+                  className="w-full bg-dnd-panel rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 resize-none transition-colors"
                 />
               </div>
             </div>
@@ -677,9 +778,12 @@ export default function CharacterBuilderModal({
         return (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Choose your class
-              </h4>
+              <div className="flex items-center space-x-2">
+                <Swords size={14} className="text-dnd-gold shrink-0" />
+                <h4 className="text-sm font-bold text-slate-200 font-display">
+                  Choose Your Class
+                </h4>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Determine your character&apos;s role, combat style, and adventuring abilities.
               </p>
@@ -696,15 +800,28 @@ export default function CharacterBuilderModal({
                       setSelectedClassId(cls.id);
                       setChosenSkills([]);
                     }}
-                    className={`p-3 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                    className={`p-2.5 sm:p-3 rounded-xl text-left transition-colors cursor-pointer shadow-sm group ${
                       isSel
-                        ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                        ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                         : 'bg-dnd-panel/50 hover:bg-dnd-panel'
                     }`}
                   >
-                    <div className="text-xs font-bold text-slate-100">{cls.name}</div>
-                    <div className="text-[10px] text-slate-400 mt-0.5">
-                      Hit Die: {cls.hitDieString}
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isSel
+                            ? 'bg-dnd-gold/15 text-dnd-gold'
+                            : 'bg-white/5 text-slate-400 group-hover:text-slate-200 group-hover:bg-white/10'
+                        }`}
+                      >
+                        <ClassIcon name={cls.name} size={23} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-bold text-slate-100 truncate">{cls.name}</div>
+                        <div className="text-[10px] text-slate-400 mt-0.5 truncate">
+                          Hit Die: {cls.hitDieString}
+                        </div>
+                      </div>
                     </div>
                   </button>
                 );
@@ -726,9 +843,14 @@ export default function CharacterBuilderModal({
                     duration={300}
                     className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-200 text-sm">{displayedClass.name}</span>
-                      <span className="text-[11px] text-dnd-gold font-mono">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-lg bg-dnd-gold/15 text-dnd-gold flex items-center justify-center shrink-0">
+                          <ClassIcon name={displayedClass.name} size={24} />
+                        </div>
+                        <span className="font-bold text-slate-200 text-sm">{displayedClass.name}</span>
+                      </div>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-dnd-gold/15 text-dnd-gold font-semibold">
                         Hit Die: {displayedClass.hitDieString} • Saves:{' '}
                         {displayedClass.savingThrows?.map((s) => s.toUpperCase()).join(', ')}
                       </span>
@@ -760,9 +882,9 @@ export default function CharacterBuilderModal({
                                     setChosenSkills([...chosenSkills, sk]);
                                   }
                                 }}
-                                className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-sm ${
+                                className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer shadow-sm ${
                                   isPicked
-                                    ? 'bg-dnd-card ring-1 ring-dnd-gold text-slate-100 font-bold'
+                                    ? 'bg-dnd-card ring-1 ring-dnd-gold/40 text-slate-100 font-bold'
                                     : 'bg-dnd-card/70 text-slate-300 hover:bg-dnd-card'
                                 }`}
                               >
@@ -837,9 +959,12 @@ export default function CharacterBuilderModal({
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
-                <h4 className="text-sm font-bold text-slate-200 font-display">
-                  {key === 'species' ? 'Choose your species' : 'Choose your race & subrace'}
-                </h4>
+                <div className="flex items-center space-x-2">
+                  <Compass size={14} className="text-dnd-gold shrink-0" />
+                  <h4 className="text-sm font-bold text-slate-200 font-display">
+                    {key === 'species' ? 'Choose Your Species' : 'Choose Your Race & Subrace'}
+                  </h4>
+                </div>
                 <p className="text-xs text-slate-400 mt-0.5">
                   {key === 'species'
                     ? 'Determine your ancestry and innate traits.'
@@ -849,19 +974,19 @@ export default function CharacterBuilderModal({
 
               {/* Search bar */}
               <div className="relative w-full sm:w-64">
-                <Search size={13} className="absolute left-2.5 top-2.5 text-slate-500" />
+                <Search size={13} className="absolute left-2.5 top-2.5 text-slate-500 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search species (e.g. Tabaxi)..."
                   value={speciesSearch}
                   onChange={(e) => setSpeciesSearch(e.target.value)}
-                  className="w-full bg-dnd-panel rounded-lg pl-7 pr-12 py-1 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold"
+                  className="w-full bg-dnd-panel rounded-lg pl-7 pr-12 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
                 />
                 {speciesSearch && (
                   <button
                     type="button"
                     onClick={() => setSpeciesSearch('')}
-                    className="absolute right-2 top-1.5 text-[10px] text-slate-400 hover:text-slate-200"
+                    className="absolute right-2 top-2 text-[10px] text-slate-400 hover:text-slate-200 cursor-pointer"
                   >
                     Clear
                   </button>
@@ -878,9 +1003,9 @@ export default function CharacterBuilderModal({
                     key={sp.id}
                     type="button"
                     onClick={() => setSelectedSpeciesId(sp.id)}
-                    className={`p-3 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                    className={`p-3 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                       isSel
-                        ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                        ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                         : 'bg-dnd-panel/50 hover:bg-dnd-panel'
                     }`}
                   >
@@ -1015,9 +1140,12 @@ export default function CharacterBuilderModal({
         return (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Choose your background
-              </h4>
+              <div className="flex items-center space-x-2">
+                <ScrollText size={14} className="text-dnd-gold shrink-0" />
+                <h4 className="text-sm font-bold text-slate-200 font-display">
+                  Choose Your Background
+                </h4>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 {ruleset === '2024'
                   ? 'Background determines ability score increases (+2/+1 or +1/+1/+1) and an Origin Feat.'
@@ -1033,9 +1161,9 @@ export default function CharacterBuilderModal({
                     key={bg.id}
                     type="button"
                     onClick={() => setSelectedBackgroundId(bg.id)}
-                    className={`p-3 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                    className={`p-3 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                       isSel
-                        ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                        ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                         : 'bg-dnd-panel/50 hover:bg-dnd-panel'
                     }`}
                   >
@@ -1103,9 +1231,9 @@ export default function CharacterBuilderModal({
                               return (
                                 <div
                                   key={ab}
-                                  className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-xl transition-all shadow-sm ${
+                                  className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-xl transition-colors shadow-sm ${
                                     val > 0
-                                      ? 'bg-dnd-card ring-1 ring-dnd-gold'
+                                      ? 'bg-dnd-card ring-1 ring-dnd-gold/40'
                                       : 'bg-dnd-card'
                                   }`}
                                 >
@@ -1173,9 +1301,12 @@ export default function CharacterBuilderModal({
         return (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Determine your ability scores
-              </h4>
+              <div className="flex items-center space-x-2">
+                <Zap size={14} className="text-dnd-gold shrink-0" />
+                <h4 className="text-sm font-bold text-slate-200 font-display">
+                  Determine Your Ability Scores
+                </h4>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Establish your character&apos;s physical and mental capabilities.
               </p>
@@ -1261,7 +1392,9 @@ export default function CharacterBuilderModal({
                         <div className="flex flex-wrap items-center gap-1.5">
                           <span className="text-slate-400">Standard Array Pool:</span>
                           {STANDARD_ARRAY.map((num) => {
-                            const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
+                            const assignedKey = abilityMethod === 'standard'
+                              ? ABILITY_KEYS.find((k) => baseScores[k] === num)
+                              : null;
                             return (
                               <span
                                 key={num}
@@ -1394,12 +1527,12 @@ export default function CharacterBuilderModal({
                                       : `Assign ${val}`
                                   }
                                   onClick={() => handleStandardArrayChange(k, val)}
-                                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
                                     isThisSelected
                                       ? 'bg-dnd-gold text-slate-950 shadow-sm scale-105'
                                       : otherOwner
                                       ? 'bg-dnd-card/50 text-slate-500 hover:text-slate-200 hover:bg-dnd-card'
-                                      : 'bg-dnd-card text-slate-200 hover:bg-white/10 ring-1 ring-dnd-gold/30'
+                                      : 'bg-dnd-card text-slate-200 hover:bg-white/10 ring-1 ring-dnd-gold/40'
                                   }`}
                                 >
                                   {val}
@@ -1440,12 +1573,12 @@ export default function CharacterBuilderModal({
                                       : `Assign ${r.total} (Dice: ${r.rolls.join(', ')})`
                                   }
                                   onClick={() => handleRollAssignmentChange(k, idx)}
-                                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                                  className={`px-1.5 py-0.5 rounded text-[11px] font-bold transition-colors cursor-pointer ${
                                     isThisSelected
                                       ? 'bg-dnd-gold text-slate-950 shadow-sm scale-105'
                                       : otherOwner
                                       ? 'bg-dnd-card/50 text-slate-500 hover:text-slate-200 hover:bg-dnd-card'
-                                      : 'bg-dnd-card text-slate-200 hover:bg-white/10 ring-1 ring-dnd-gold/30'
+                                      : 'bg-dnd-card text-slate-200 hover:bg-white/10 ring-1 ring-dnd-gold/40'
                                   }`}
                                 >
                                   {r.total}
@@ -1503,7 +1636,7 @@ export default function CharacterBuilderModal({
                             aria-label={`${ABILITY_LABELS[k]} Base Score`}
                             value={base}
                             onChange={(e) => handleCustomScoreChange(k, e.target.value)}
-                            className="w-12 h-9 text-center rounded-lg bg-dnd-card text-slate-100 text-base font-black shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-1 focus:ring-dnd-gold"
+                            className="w-12 h-9 text-center rounded-lg bg-dnd-card text-slate-100 text-base font-black shadow-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-1 focus:ring-dnd-gold/40"
                           />
                           <button
                             type="button"
@@ -1559,9 +1692,12 @@ export default function CharacterBuilderModal({
         return (
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-bold text-slate-200 font-display">
-                Prepare your equipment
-              </h4>
+              <div className="flex items-center space-x-2">
+                <Package size={14} className="text-dnd-gold shrink-0" />
+                <h4 className="text-sm font-bold text-slate-200 font-display">
+                  Prepare Your Equipment
+                </h4>
+              </div>
               <p className="text-xs text-slate-400 mt-0.5">
                 Choose starting gear granted by your class and background.
               </p>
@@ -1571,9 +1707,9 @@ export default function CharacterBuilderModal({
               <button
                 type="button"
                 onClick={() => setEquipmentOption('A')}
-                className={`p-4 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                className={`p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                   equipmentOption === 'A'
-                    ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                    ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                     : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`}
               >
@@ -1586,9 +1722,9 @@ export default function CharacterBuilderModal({
               <button
                 type="button"
                 onClick={() => setEquipmentOption('B')}
-                className={`p-4 rounded-xl text-left transition-all cursor-pointer shadow-sm ${
+                className={`p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                   equipmentOption === 'B'
-                    ? 'bg-dnd-panel ring-1 ring-dnd-gold'
+                    ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
                     : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`}
               >
@@ -1675,18 +1811,12 @@ export default function CharacterBuilderModal({
               Loading ruleset data from 5etools...
             </div>
           ) : (
-            steps.map((st, idx) => (
+            steps.map((st) => (
               <section
                 key={st.key}
                 id={`builder-section-${st.key}`}
                 className="space-y-4 pt-6 first:pt-0 border-t border-white/5 first:border-0 scroll-mt-2"
               >
-                <div className="flex items-center space-x-2 text-xs font-semibold text-dnd-gold">
-                  <span className="px-1.5 py-0.5 rounded bg-dnd-gold/10 text-dnd-gold font-mono text-[10px]">
-                    {String(idx + 1).padStart(2, '0')}
-                  </span>
-                  <span className="tracking-wide uppercase text-[10px]">{st.label}</span>
-                </div>
                 {renderSectionContent(st.key)}
               </section>
             ))

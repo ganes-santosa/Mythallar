@@ -76,4 +76,17 @@ describe('CreateCharacterModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /Close modal/i }));
     expect(handleClose).toHaveBeenCalled();
   });
+
+  it('uses ring-dnd-gold/40 focus outline on selection cards matching AbilitiesCard save proficiency styling', () => {
+    render(
+      <CreateCharacterModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />
+    );
+    const builderBtn = screen.getByRole('button', { name: /Character Builder/i });
+    const manualBtn = screen.getByRole('button', { name: /Manual Setup/i });
+
+    expect(builderBtn.className).toContain('focus:ring-dnd-gold/40');
+    expect(builderBtn.className).not.toContain('focus:ring-dnd-gold/60');
+    expect(manualBtn.className).toContain('focus:ring-dnd-gold/40');
+    expect(manualBtn.className).not.toContain('focus:ring-dnd-gold/60');
+  });
 });

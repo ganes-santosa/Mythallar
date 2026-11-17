@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  *, ::before, ::after {
+    --tw-ring-offset-color: transparent !important;
+  }
+}
+
 :root {
   --color-bg: #17181B;
   --color-panel: #202227;

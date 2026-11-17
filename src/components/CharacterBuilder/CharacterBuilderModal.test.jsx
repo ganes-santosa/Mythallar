@@ -486,6 +486,9 @@ describe('CharacterBuilderModal', () => {
     expect(stdWrapper).toHaveClass('opacity-0');
     // Elements remain mounted in DOM to animate closing
     expect(screen.getByText(/Standard Array Pool:/i)).toBeInTheDocument();
+    // Custom scores default to 10 but must NOT bleed assignments into closing Standard Array pool banner chips
+    expect(screen.queryByText(/\(STR\)/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/\(DEX\)/i)).not.toBeInTheDocument();
 
     // Switch to Point Buy -> Point Buy expands with grid-rows-[1fr] opacity-100
     fireEvent.click(screen.getByRole('button', { name: 'Point Buy' }));
@@ -494,6 +497,11 @@ describe('CharacterBuilderModal', () => {
     expect(pbWrapper).toBe(stdWrapper);
     expect(pbWrapper).toHaveClass('grid-rows-[1fr]');
     expect(pbWrapper).toHaveClass('opacity-100');
+
+    // Method selector and ruleset buttons use uniform ring-dnd-gold/40 outline matching AbilitiesCard
+    const rulesetBtn = screen.getByRole('button', { name: /D&D 5th Edition 2024/i });
+    expect(rulesetBtn.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(rulesetBtn.className).not.toContain('ring-dnd-gold ');
 
     // Switching between Point Buy and Standard Array keeps top banner open without collapse
     fireEvent.click(screen.getByRole('button', { name: 'Standard Array' }));
@@ -537,5 +545,89 @@ describe('CharacterBuilderModal', () => {
     const strLabel = screen.getByText('Strength');
     const strCard = strLabel.closest('.rounded-xl');
     expect(strCard).toBeInTheDocument();
+  });
+
+  it('unifies active selection outline across all cards with ring-1 ring-dnd-gold/40 and transition-colors', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // 1. Ruleset card
+    const ruleset2024 = screen.getByRole('button', { name: /D&D 5th Edition 2024/i });
+    expect(ruleset2024.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(ruleset2024.className).toContain('transition-colors');
+
+    // 2. Class card
+    const fighterBtn = screen.getByRole('button', { name: /Fighter/i });
+    expect(fighterBtn.querySelector('svg')).toBeInTheDocument();
+    fireEvent.click(fighterBtn);
+    expect(fighterBtn.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(fighterBtn.className).toContain('transition-colors');
+
+    // 3. Equipment card
+    const equipA = screen.getByRole('button', { name: /Option A: Starting Equipment/i });
+    expect(equipA.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(equipA.className).toContain('transition-colors');
+  });
+
+  it('uses Title Case headers with gold category icons, non-uppercase Recommended badge, and non-monospace Class Detail badge', async () => {
+    const { container } = render(
+      <CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />
+    );
+
+    const rulesetHeading = await screen.findByRole('heading', { name: /Choose Your Ruleset/i });
+    expect(rulesetHeading.textContent).toBe('Choose Your Ruleset');
+    expect(rulesetHeading.parentElement.querySelector('svg.text-dnd-gold')).toBeInTheDocument();
+
+    // No 01 / 02 monospace section badges
+    expect(container.querySelector('.font-mono')).toBeNull();
+
+    // Recommended badge is Title Case without uppercase class
+    const recommendedBadge = screen.getByText('Recommended');
+    expect(recommendedBadge.className).not.toContain('uppercase');
+
+    // Class Detail Viewer Hit Die & Saves badge uses standard font and pill badge
+    const hitDieBadge = screen.getByText(/Hit Die: d10 • Saves: STR, CON/i);
+    expect(hitDieBadge.className).not.toContain('font-mono');
+    expect(hitDieBadge.className).toContain('bg-dnd-gold/15');
+    expect(hitDieBadge.className).toContain('text-dnd-gold');
+  });
+
+  it('renders portrait upload with gradient fade on left and structured 1-line name and 4-column age/gender/alignment grid on right', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    // Navigate to Identity step
+    fireEvent.click(screen.getByRole('button', { name: /2\.\s*Identity/i }));
+    expect(await screen.findByRole('heading', { name: /Character Identity/i })).toBeInTheDocument();
+
+    // Portrait upload container and button
+    const portraitBtn = screen.getByRole('button', { name: /Upload character portrait/i });
+    expect(portraitBtn).toBeInTheDocument();
+    expect(screen.getByText('Add Portrait')).toBeInTheDocument();
+
+    // Check gradient overlay element
+    const cardContainer = portraitBtn.closest('.character-profile-card');
+    expect(cardContainer).toBeInTheDocument();
+    const gradientOverlay = cardContainer.querySelector('.bg-gradient-to-r');
+    expect(gradientOverlay).toBeInTheDocument();
+
+    // File input for portrait
+    const fileInput = screen.getByLabelText('Portrait file input');
+    expect(fileInput).toBeInTheDocument();
+    expect(fileInput).toHaveAttribute('type', 'file');
+
+    // Name field is full width of info column (line 1)
+    const nameInput = screen.getByPlaceholderText(/e\.g\. Gale of Waterdeep/i);
+    expect(nameInput).toBeInTheDocument();
+
+    // Age, Gender, and Alignment are on line 2 in a 4-col grid:
+    // Age has col-span-1, Gender has col-span-1, Alignment has col-span-2
+    const ageInput = screen.getByPlaceholderText(/e\.g\. 28/i);
+    const genderInput = screen.getByPlaceholderText(/e\.g\. Male \/ Female \/ Non-binary/i);
+    const alignmentInput = screen.getByPlaceholderText(/e\.g\. Chaotic Good/i);
+
+    expect(ageInput.closest('div')).toHaveClass('col-span-1');
+    expect(genderInput.closest('div')).toHaveClass('col-span-1');
+    expect(alignmentInput.closest('div')).toHaveClass('col-span-2');
   });
 });
