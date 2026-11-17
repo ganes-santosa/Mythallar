@@ -386,7 +386,7 @@ describe('CharacterBuilderModal', () => {
     expect(totalLabels).toHaveLength(6);
   });
 
-  it('supports Manual / Custom ability method with clean direct score inputs and steppers', async () => {
+  it('supports Custom ability method with clean direct score inputs and steppers', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
@@ -395,8 +395,8 @@ describe('CharacterBuilderModal', () => {
     const abilitiesPill = screen.getByRole('button', { name: /6\.\s*Abilities/i });
     fireEvent.click(abilitiesPill);
 
-    // Switch to Manual / Custom
-    const customMethodBtn = screen.getByRole('button', { name: /Manual \/ Custom/i });
+    // Switch to Custom (methods: Stat Roll - Custom - Standard Array - Point Buy)
+    const customMethodBtn = screen.getByRole('button', { name: /^Custom$/i });
     fireEvent.click(customMethodBtn);
 
     // Clutter preset buttons should not exist

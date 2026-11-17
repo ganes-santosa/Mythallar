@@ -1098,10 +1098,10 @@ export default function CharacterBuilderModal({
             {/* Method selector buttons */}
             <div className="flex flex-wrap items-center gap-1.5 pb-1">
               {[
+                { id: 'roll', label: 'Stat Roll', handler: switchToRoll },
+                { id: 'custom', label: 'Custom', handler: switchToCustom },
                 { id: 'standard', label: 'Standard Array', handler: switchToStandard },
-                { id: 'pointbuy', label: 'Point Buy (27 pts)', handler: switchToPointBuy },
-                { id: 'roll', label: 'Roll (4d6 drop lowest)', handler: switchToRoll },
-                { id: 'custom', label: 'Manual / Custom', handler: switchToCustom },
+                { id: 'pointbuy', label: 'Point Buy', handler: switchToPointBuy },
               ].map((m) => (
                 <button
                   key={m.id}
@@ -1171,7 +1171,7 @@ export default function CharacterBuilderModal({
                   onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
                   className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
                 >
-                  Reset (All 8s)
+                  Reset
                 </button>
               </div>
             )}
@@ -1229,8 +1229,18 @@ export default function CharacterBuilderModal({
                     className="p-3 rounded-xl bg-dnd-panel/70 shadow-sm flex flex-col items-center text-center space-y-2.5"
                   >
                     {/* Top: Ability Label */}
-                    <div className="text-xs font-bold text-slate-100 tracking-wide">
-                      {ABILITY_LABELS[k]}
+                    <div className="flex items-center justify-between gap-1 w-full px-1">
+                      <div className="text-xs font-bold text-slate-100 tracking-wide truncate">
+                        {ABILITY_LABELS[k]}
+                      </div>
+                      {bonus !== 0 && (
+                        <span
+                          title={`+${bonus} ${ruleset === '2024' ? 'Background' : 'Species'} Bonus`}
+                          className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap"
+                        >
+                          +{bonus} {ruleset === '2024' ? 'Background' : 'Species'}
+                        </span>
+                      )}
                     </div>
 
                     {/* Middle: Base Score Input / Pool Assignment */}
@@ -1243,6 +1253,9 @@ export default function CharacterBuilderModal({
                           >
                             {isAssigned ? rawBase : '—'}
                           </div>
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                            Assign
+                          </span>
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             {STANDARD_ARRAY.map((val) => {
                               const isThisSelected = rawBase === val;
@@ -1286,6 +1299,9 @@ export default function CharacterBuilderModal({
                           >
                             {isAssigned ? rawBase : '—'}
                           </div>
+                          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+                            Assign
+                          </span>
                           <div className="flex flex-wrap items-center justify-center gap-1">
                             {rollPool.map((r, idx) => {
                               const isThisSelected = rollAssignments[k] === idx;
@@ -1401,7 +1417,10 @@ export default function CharacterBuilderModal({
                       <div className="text-[10px] text-slate-400">
                         {isAssigned && bonus !== 0 ? (
                           <span>
-                            Base {base} <span className="text-amber-400 font-semibold">+{bonus} {ruleset === '2024' ? 'Bg' : 'Race'}</span>
+                            Base {base}{' '}
+                            <span className="text-amber-400 font-semibold">
+                              +{bonus} {ruleset === '2024' ? 'Background' : 'Species'}
+                            </span>
                           </span>
                         ) : isAssigned ? (
                           <span>Base {base}</span>
