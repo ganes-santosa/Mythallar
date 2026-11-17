@@ -170,15 +170,15 @@ describe('CharacterSheetView', () => {
     expect(editResourcesBtn).toBeInTheDocument();
     expect(editResourcesBtn).toHaveAttribute('title', 'Edit features and resources');
     expect(editResourcesBtn.querySelector('svg')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^\+ Add$/i })[1]).toBeInTheDocument();
     fireEvent.click(editResourcesBtn);
 
     const doneResourcesBtn = screen.getByLabelText('Done editing features and resources');
     expect(doneResourcesBtn).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^\+ Add$/i })[1]).toBeInTheDocument();
     fireEvent.click(doneResourcesBtn);
     expect(screen.getByLabelText('Edit features and resources')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Add Resource/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /^\+ Add$/i })[1]).toBeInTheDocument();
   });
 
   it('renders fallback when no character is selected', () => {

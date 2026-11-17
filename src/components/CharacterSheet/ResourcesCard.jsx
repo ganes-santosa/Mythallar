@@ -1448,7 +1448,7 @@ export default function ResourcesCard({
       )}
 
       {/* 2. Feats Subdivision */}
-      <div data-testid="feats-subdivision" className="space-y-1">
+      <div data-testid="feats-subdivision" className={`${(shouldRenderViewer && activeViewerItem) ? 'pt-1.5 border-t border-white/5 ' : ''}space-y-1`}>
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
           <span className="flex items-center gap-1">
             <Award size={10} className="text-amber-400" /> Feats:
@@ -1562,37 +1562,33 @@ export default function ResourcesCard({
         )}
       </div>
 
-      <div data-testid="character-features-divider" className="border-t border-white/10 my-3" />
-
       {/* 3. Tracked Resources Subdivision */}
-      <div data-testid="tracked-resources-subdivision" className="space-y-1.5">
+      <div data-testid="tracked-resources-subdivision" className="pt-1.5 border-t border-white/5 space-y-1.5">
         <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
-          <span className="flex items-center gap-1 font-semibold text-slate-300">
-            <AirplaneHelix45degIcon size={11} className="text-dnd-gold" /> Tracked Resources:
+          <span className="flex items-center gap-1">
+            <AirplaneHelix45degIcon size={10} className="text-amber-400" /> Tracked Resources:
           </span>
-          {!hideHeaderActions && (
-            <div className="flex items-center space-x-2">
-              {trackedResources && trackedResources.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleResetAll}
-                  aria-label="Reset all resources"
-                  title="Reset all resources to max"
-                  className="text-[11px] text-slate-400 hover:text-slate-200 flex items-center space-x-1"
-                >
-                  <RotateCcw size={11} />
-                  <span>Reset</span>
-                </button>
-              )}
+          <div className="flex items-center space-x-2">
+            {trackedResources && trackedResources.length > 0 && (
               <button
                 type="button"
-                onClick={() => setIsAdding(!isAdding)}
-                className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-medium cursor-pointer"
+                onClick={handleResetAll}
+                aria-label="Reset all resources"
+                title="Reset all resources to max"
+                className="text-slate-400 hover:text-slate-200 flex items-center space-x-0.5 cursor-pointer"
               >
-                + Add Tracked Resource
+                <RotateCcw size={10} />
+                <span>Reset</span>
               </button>
-            </div>
-          )}
+            )}
+            <button
+              type="button"
+              onClick={() => setIsAdding(!isAdding)}
+              className="text-dnd-gold hover:text-dnd-gold-light cursor-pointer"
+            >
+              + Add
+            </button>
+          </div>
         </div>
 
         {/* Add resource inline drawer */}
@@ -1856,17 +1852,17 @@ export default function ResourcesCard({
         )}
       </div>
 
-      <div data-testid="character-features-divider" className="border-t border-white/10 my-3" />
-
       {/* 4. Freeform Notes Subdivision */}
-      <div data-testid="notes-subdivision" className="space-y-1">
-        <label htmlFor="features-notes" className="text-[10px] text-slate-400 font-medium">
-          Features & Freeform Notes
-        </label>
+      <div data-testid="notes-subdivision" className="pt-1.5 border-t border-white/5 space-y-1">
+        <div className="flex items-center justify-between text-[10px] text-slate-400 font-medium">
+          <label htmlFor="features-notes" className="cursor-pointer">
+            Feature Notes
+          </label>
+        </div>
         <textarea
           ref={textareaRef}
           id="features-notes"
-          aria-label="Features & Notes"
+          aria-label="Feature Notes"
           placeholder="Type or paste features, special items, math notes (e.g. Blackstones: 49 + 162 + 28), death ward status, etc..."
           value={featuresNotes || ''}
           onChange={(e) => {

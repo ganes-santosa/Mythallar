@@ -56,7 +56,7 @@ describe('ResourcesCard', () => {
         onUpdateNotes={handleNotes}
       />
     );
-    const textarea = screen.getByLabelText(/Features/i);
+    const textarea = screen.getByLabelText(/Feature Notes/i);
     fireEvent.change(textarea, { target: { value: 'New features note' } });
     expect(handleNotes).toHaveBeenCalledWith('New features note');
   });
@@ -78,8 +78,8 @@ describe('ResourcesCard', () => {
     expect(screen.queryByLabelText('Delete Lucky')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Remove feat War Caster')).not.toBeInTheDocument();
     // Add buttons should be drawn outside editing state
-    expect(screen.getByRole('button', { name: /\+ Add Tracked Resource/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^\+ Add$/i })).toBeInTheDocument();
+    const addButtons = screen.getAllByRole('button', { name: /^\+ Add$/i });
+    expect(addButtons).toHaveLength(2);
   });
 
   it('allows adding a new resource via inline form when isEditing is true', () => {
@@ -93,7 +93,7 @@ describe('ResourcesCard', () => {
         onUpdateNotes={() => {}}
       />
     );
-    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    const openAddBtn = within(screen.getByTestId('tracked-resources-subdivision')).getByRole('button', { name: /^\+ Add$/i });
     fireEvent.click(openAddBtn);
 
     const nameInput = screen.getByLabelText('Resource Name');
@@ -187,7 +187,7 @@ describe('ResourcesCard', () => {
     expect(screen.getByText('Alert')).toBeInTheDocument();
 
     // Click + Add to toggle form
-    const addBtn = screen.getByRole('button', { name: /^\+ Add$/i });
+    const addBtn = within(screen.getByTestId('feats-subdivision')).getByRole('button', { name: /^\+ Add$/i });
     fireEvent.click(addBtn);
 
     const input = screen.getByPlaceholderText(/War Caster, Alert/i);
@@ -316,7 +316,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^\+ Add$/i }));
+    fireEvent.click(within(screen.getByTestId('feats-subdivision')).getByRole('button', { name: /^\+ Add$/i }));
 
     // Wait for catalogue load
     const nameInput = screen.getByLabelText('Feat Name');
@@ -379,7 +379,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^\+ Add$/i }));
+    fireEvent.click(within(screen.getByTestId('feats-subdivision')).getByRole('button', { name: /^\+ Add$/i }));
     const nameInput = screen.getByLabelText('Feat Name');
     fireEvent.focus(nameInput);
     fireEvent.change(nameInput, { target: { value: 'Fey' } });
@@ -447,7 +447,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^\+ Add$/i }));
+    fireEvent.click(within(screen.getByTestId('feats-subdivision')).getByRole('button', { name: /^\+ Add$/i }));
     const form = screen.getByTestId('feat-add-form');
     expect(form).toBeInTheDocument();
 
@@ -515,7 +515,7 @@ describe('ResourcesCard', () => {
 
   it('renders freeform notes with 2 rows initially and auto-adjusts height style when content changes', () => {
     const { rerender } = render(<ResourcesCard featuresNotes="" />);
-    const textarea = screen.getByLabelText(/Features/i);
+    const textarea = screen.getByLabelText(/Feature Notes/i);
     expect(textarea).toHaveAttribute('rows', '2');
     expect(textarea.className).toContain('min-h-[59px]');
     expect(textarea.className).toContain('max-h-[215px]');
@@ -686,7 +686,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    const openAddBtn = within(screen.getByTestId('tracked-resources-subdivision')).getByRole('button', { name: /^\+ Add$/i });
     fireEvent.click(openAddBtn);
 
     const nameInput = screen.getByLabelText('Resource Name');
@@ -748,7 +748,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    const openAddBtn = within(screen.getByTestId('tracked-resources-subdivision')).getByRole('button', { name: /^\+ Add$/i });
     fireEvent.click(openAddBtn);
 
     const noteInput = screen.getByLabelText('Resource Description');
@@ -772,7 +772,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    const openAddBtn = within(screen.getByTestId('tracked-resources-subdivision')).getByRole('button', { name: /^\+ Add$/i });
     fireEvent.click(openAddBtn);
 
     // Open color dropdown and pick amber
@@ -876,7 +876,7 @@ describe('ResourcesCard', () => {
       />
     );
 
-    const openAddBtn = screen.getByRole('button', { name: /\+ Add Tracked Resource/i });
+    const openAddBtn = within(screen.getByTestId('tracked-resources-subdivision')).getByRole('button', { name: /^\+ Add$/i });
     fireEvent.click(openAddBtn);
 
     const colorDropdownBtn = screen.getByRole('button', { name: /select color tag/i });
@@ -985,7 +985,7 @@ describe('ResourcesCard', () => {
     );
 
     const featsHeading = screen.getByText(/^Feats/i);
-    const notesTextarea = screen.getByLabelText(/Features/i);
+    const notesTextarea = screen.getByLabelText(/Feature Notes/i);
 
     // Feats must appear BEFORE Freeform Notes in DOM tree
     expect(featsHeading.compareDocumentPosition(notesTextarea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -1031,7 +1031,7 @@ describe('ResourcesCard', () => {
     // 3. Clear subdivision headers
     expect(within(featsSection).getByText(/^Feats/i)).toBeInTheDocument();
     expect(within(resourcesSection).getByText(/^Tracked Resources/i)).toBeInTheDocument();
-    expect(within(notesSection).getByText(/^Features & Freeform Notes/i)).toBeInTheDocument();
+    expect(within(notesSection).getByText(/^Feature Notes/i)).toBeInTheDocument();
   });
 
   it('styles feat chips like Conditions/Defenses and renders subtle separator lines between subdivisions', () => {
@@ -1057,11 +1057,15 @@ describe('ResourcesCard', () => {
     const featsIcon = featsLabel.querySelector('svg');
     expect(featsIcon.getAttribute('class')).toContain('text-amber-400');
 
-    // Subtle divider lines like Inventory categories
-    const dividers = screen.getAllByTestId('character-features-divider');
-    expect(dividers.length).toBeGreaterThanOrEqual(2);
-    expect(dividers[0].className).toContain('border-t');
-    expect(dividers[0].className).toContain('border-white/10');
+    // Subdivision lines matching Conditions / Resistance & Immunities
+    const trackedResourcesSection = screen.getByTestId('tracked-resources-subdivision');
+    const notesSection = screen.getByTestId('notes-subdivision');
+    expect(trackedResourcesSection.className).toContain('border-t');
+    expect(trackedResourcesSection.className).toContain('border-white/5');
+    expect(trackedResourcesSection.className).toContain('pt-1.5');
+    expect(notesSection.className).toContain('border-t');
+    expect(notesSection.className).toContain('border-white/5');
+    expect(notesSection.className).toContain('pt-1.5');
 
     // Empty state matches Resistance & Immunities
     rerender(

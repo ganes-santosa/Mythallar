@@ -460,7 +460,7 @@ describe('ItemsCard', () => {
     const { container } = render(<ItemsCard items={customItems} maxAttunement={3} onUpdateItems={() => {}} />);
 
     // Horizontal divider exists between magic and consumable groups
-    const dividers = container.querySelectorAll('.border-t.border-white\\/10');
+    const dividers = container.querySelectorAll('.border-t.border-white\\/5');
     expect(dividers.length).toBeGreaterThanOrEqual(1);
 
     // In consumable group, slate (A-Elixir) comes before emerald (B-Flask), which comes before rose (Z-Potion)
@@ -675,7 +675,7 @@ describe('ItemsCard', () => {
       expect(screen.getByText('1 item')).toBeInTheDocument();
 
       // Divider exists between Currency and the matching item category
-      expect(container.querySelector('.border-t.border-white\\/10')).toBeInTheDocument();
+      expect(container.querySelector('.border-t.border-white\\/5')).toBeInTheDocument();
 
       // Search "dagger" -> Currency category is hidden, Iron Dagger appears
       fireEvent.change(searchInput, { target: { value: 'dagger' } });

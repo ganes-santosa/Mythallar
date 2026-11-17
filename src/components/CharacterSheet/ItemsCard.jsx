@@ -1477,15 +1477,10 @@ export default function ItemsCard({
       )}
 
       {/* Items Inventory List */}
-      <div className="space-y-3 min-h-[22px]">
+      <div className="space-y-2.5 min-h-[22px]">
         {/* Currency Category */}
         {isCurrencyVisible && (
           <CurrencyTracker currency={currency} onUpdateCurrency={onUpdateCurrency} />
-        )}
-
-        {/* Separation between Currency and subsequent item categories */}
-        {isCurrencyVisible && groupedItems.length > 0 && (
-          <div className="border-t border-white/10 my-3" />
         )}
 
         {/* Empty state when neither items nor currency matched */}
@@ -1513,16 +1508,17 @@ export default function ItemsCard({
 
         {/* If safeItems is empty and we're not searching, show note below Currency */}
         {isCurrencyVisible && safeItems.length === 0 && !isAdding && !searchQuery && selectedCategory === 'all' && (
-          <span className="text-[10px] text-slate-500 italic block">No items recorded</span>
+          <span className="text-[10px] text-slate-500 italic block pt-1.5 border-t border-white/5">No items recorded</span>
         )}
 
         {groupedItems.map((group, groupIdx) => {
           const CategoryIcon = group.config.icon;
 
           return (
-            <div key={group.category} className="space-y-1.5">
-              {groupIdx > 0 && <div className="border-t border-white/10 my-3" />}
-
+            <div
+              key={group.category}
+              className={`space-y-1.5 ${(isCurrencyVisible || groupIdx > 0) ? 'pt-1.5 border-t border-white/5' : ''}`}
+            >
               {/* Category Header */}
               <div className="flex items-center justify-between text-xs px-1 text-slate-400 font-medium">
                 <div className="flex items-center space-x-1.5">

@@ -7,7 +7,6 @@ import {
   Flame,
   Backpack,
   Search,
-  RotateCcw,
   Plus,
   Settings2,
   Check,
@@ -152,14 +151,6 @@ function CharacterSheetView({
         vitals: simVitals,
       },
     });
-  };
-
-  const handleResetAllResources = () => {
-    const updated = (sheet.trackedResources || []).map((res) => ({
-      ...res,
-      current: res.max ?? 0,
-    }));
-    updateSheet({ trackedResources: updated });
   };
 
   const handleSheetScroll = (e) => {
@@ -319,52 +310,30 @@ function CharacterSheetView({
           icon={Flame}
           defaultOpen={true}
           actions={
-            <div className="flex flex-wrap items-center gap-1.5">
-              {sheet.trackedResources && sheet.trackedResources.length > 0 && (
-                <button
-                  type="button"
-                  onClick={handleResetAllResources}
-                  aria-label="Reset all resources"
-                  title="Reset all resources to max"
-                  className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-slate-300 hover:text-white text-xs transition-colors cursor-pointer"
-                >
-                  <RotateCcw size={11} className="text-dnd-gold" />
-                  <span className="text-[11px]">Reset</span>
-                </button>
-              )}
+            isEditingResources ? (
               <button
                 type="button"
-                onClick={() => setIsAddingResource((prev) => !prev)}
-                className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors cursor-pointer"
+                aria-label="Done editing features and resources"
+                onClick={() => {
+                  setIsEditingResources(false);
+                  setIsAddingResource(false);
+                }}
+                className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
+                title="Done editing features and resources"
               >
-                <Plus size={11} />
-                <span className="text-[11px]">Add Resource</span>
+                <Check size={13} strokeWidth={2.5} />
               </button>
-              {isEditingResources ? (
-                <button
-                  type="button"
-                  aria-label="Done editing features and resources"
-                  onClick={() => {
-                    setIsEditingResources(false);
-                    setIsAddingResource(false);
-                  }}
-                  className="p-1 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light transition-colors shadow-sm cursor-pointer"
-                  title="Done editing features and resources"
-                >
-                  <Check size={13} strokeWidth={2.5} />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  aria-label="Edit features and resources"
-                  onClick={() => setIsEditingResources(true)}
-                  className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
-                  title="Edit features and resources"
-                >
-                  <Settings2 size={13} />
-                </button>
-              )}
-            </div>
+            ) : (
+              <button
+                type="button"
+                aria-label="Edit features and resources"
+                onClick={() => setIsEditingResources(true)}
+                className="p-1 rounded-md bg-dnd-card hover:bg-dnd-hover text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
+                title="Edit features and resources"
+              >
+                <Settings2 size={13} />
+              </button>
+            )
           }
         >
           <ResourcesCard
@@ -374,7 +343,7 @@ function CharacterSheetView({
             isEditing={isEditingResources}
             isAdding={isAddingResource}
             onSetIsAdding={setIsAddingResource}
-            hideHeaderActions={true}
+            hideHeaderActions={false}
             onUpdateResources={(trackedResources) => updateSheet({ trackedResources })}
             onUpdateNotes={(featuresNotes) => updateSheet({ featuresNotes })}
             onUpdateFeats={(feats) => updateSheet({ feats })}
