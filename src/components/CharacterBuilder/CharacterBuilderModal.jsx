@@ -1120,33 +1120,28 @@ export default function CharacterBuilderModal({
 
             {/* Method-specific helper banners */}
             {abilityMethod === 'standard' && (
-              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-slate-400">Standard Array Pool:</span>
-                  {STANDARD_ARRAY.map((num) => {
-                    const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
-                    return (
-                      <span
-                        key={num}
-                        className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
-                          assignedKey
-                            ? 'bg-dnd-card text-slate-400'
-                            : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
-                        }`}
-                      >
-                        <span>{num}</span>
-                        {assignedKey && (
-                          <span className="text-[10px] text-dnd-gold font-semibold">
-                            ({assignedKey.toUpperCase()})
-                          </span>
-                        )}
-                      </span>
-                    );
-                  })}
-                </div>
-                <span className="text-[11px] text-slate-400">
-                  Tap a score on any ability card to assign or swap
-                </span>
+              <div className="flex flex-wrap items-center gap-1.5 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                <span className="text-slate-400">Standard Array Pool:</span>
+                {STANDARD_ARRAY.map((num) => {
+                  const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
+                  return (
+                    <span
+                      key={num}
+                      className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-xs font-bold shadow-sm transition-colors ${
+                        assignedKey
+                          ? 'bg-dnd-card text-slate-400'
+                          : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
+                      }`}
+                    >
+                      <span>{num}</span>
+                      {assignedKey && (
+                        <span className="text-[10px] text-dnd-gold font-semibold">
+                          ({assignedKey.toUpperCase()})
+                        </span>
+                      )}
+                    </span>
+                  );
+                })}
               </div>
             )}
 
