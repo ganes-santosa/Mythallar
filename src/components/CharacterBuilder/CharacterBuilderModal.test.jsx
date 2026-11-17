@@ -486,4 +486,29 @@ describe('CharacterBuilderModal', () => {
     expect(pbWrapper).toHaveClass('opacity-100');
     expect(stdWrapper).toHaveClass('grid-rows-[0fr]');
   });
+
+  it('wraps dynamic panels and ability cards in SmoothSize to animate size changes', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // 1. Class Detail Viewer
+    fireEvent.click(screen.getByRole('button', { name: /3\.\s*Class/i }));
+    expect(await screen.findByRole('heading', { name: /Choose your class/i })).toBeInTheDocument();
+    const classDetail = screen.getByText(/Hit Die: d10 • Saves: STR, CON/i).closest('.rounded-xl');
+    expect(classDetail).toBeInTheDocument();
+
+    // 2. Species Detail Viewer
+    fireEvent.click(screen.getByRole('button', { name: /5\.\s*Species/i }));
+    expect(await screen.findByRole('heading', { name: /Choose your species/i })).toBeInTheDocument();
+    const speciesDetail = screen.getByText(/30 ft Speed/i).closest('.rounded-xl');
+    expect(speciesDetail).toBeInTheDocument();
+
+    // 3. Ability Score Cards
+    fireEvent.click(screen.getByRole('button', { name: /6\.\s*Abilities/i }));
+    expect(await screen.findByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
+    const strLabel = screen.getByText('Strength');
+    const strCard = strLabel.closest('.rounded-xl');
+    expect(strCard).toBeInTheDocument();
+  });
 });

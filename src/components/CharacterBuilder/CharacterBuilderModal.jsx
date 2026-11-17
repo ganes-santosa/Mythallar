@@ -32,6 +32,7 @@ import {
 } from '../../utils/abilityScoreGenerator';
 import { buildLevel1Character } from '../../utils/characterGenerator';
 import { formatModifier, SKILLS_DEFINITION } from '../../utils/dndCalculations';
+import SmoothSize from '../Common/SmoothSize';
 
 const SKILL_LABELS = Object.fromEntries(
   SKILLS_DEFINITION.map((s) => [s.key, s.label])
@@ -712,7 +713,11 @@ export default function CharacterBuilderModal({
             >
               <div className="overflow-hidden">
                 {displayedClass && (
-                  <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300">
+                  <SmoothSize
+                    watchKey={[displayedClass.id, showClassFeatures, chosenSkills.length]}
+                    duration={300}
+                    className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-200 text-sm">{displayedClass.name}</span>
                       <span className="text-[11px] text-dnd-gold font-mono">
@@ -811,7 +816,7 @@ export default function CharacterBuilderModal({
                         </div>
                       </div>
                     )}
-                  </div>
+                  </SmoothSize>
                 )}
               </div>
             </div>
@@ -892,7 +897,11 @@ export default function CharacterBuilderModal({
             >
               <div className="overflow-hidden">
                 {subracesSpeciesToDisplay?.subraces?.length > 0 && (
-                  <div className="p-3 rounded-xl bg-dnd-panel/60 space-y-2">
+                  <SmoothSize
+                    watchKey={subracesSpeciesToDisplay.id}
+                    duration={250}
+                    className="p-3 rounded-xl bg-dnd-panel/60 space-y-2"
+                  >
                     <div className="text-xs font-semibold text-slate-300">
                       {ruleset === '2024' ? 'Choose Lineage / Ancestry for' : 'Choose Subrace for'} {subracesSpeciesToDisplay.name}:
                     </div>
@@ -915,7 +924,7 @@ export default function CharacterBuilderModal({
                         );
                       })}
                     </div>
-                  </div>
+                  </SmoothSize>
                 )}
               </div>
             </div>
@@ -930,7 +939,11 @@ export default function CharacterBuilderModal({
             >
               <div className="overflow-hidden">
                 {displayedSpecies && (
-                  <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-2 text-xs text-slate-300">
+                  <SmoothSize
+                    watchKey={[displayedSpecies.id, selectedSubrace?.id, ruleset]}
+                    duration={300}
+                    className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-2 text-xs text-slate-300"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-bold text-slate-200 text-sm">
                         {selectedSubrace?.name || displayedSpecies.name}
@@ -983,7 +996,7 @@ export default function CharacterBuilderModal({
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </SmoothSize>
                 )}
               </div>
             </div>
@@ -1039,7 +1052,11 @@ export default function CharacterBuilderModal({
             >
               <div className="overflow-hidden">
                 {displayedBackground && (
-                  <div className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300">
+                  <SmoothSize
+                    watchKey={[displayedBackground.id, ruleset]}
+                    duration={300}
+                    className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300"
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-200 text-sm">{displayedBackground.name}</span>
                       {displayedBackground.originFeat && (
@@ -1137,7 +1154,7 @@ export default function CharacterBuilderModal({
                         </p>
                       </div>
                     )}
-                  </div>
+                  </SmoothSize>
                 )}
               </div>
             </div>
@@ -1309,8 +1326,10 @@ export default function CharacterBuilderModal({
                 const mod = isAssigned ? abilityCalculation.modifiers[k] : null;
 
                 return (
-                  <div
+                  <SmoothSize
                     key={k}
+                    watchKey={abilityMethod}
+                    duration={250}
                     className="p-3 rounded-xl bg-dnd-panel/70 shadow-sm flex flex-col items-center text-center space-y-2.5"
                   >
                     {/* Top: Ability Label */}
@@ -1321,7 +1340,7 @@ export default function CharacterBuilderModal({
                     {/* Middle: Base Score Input / Pool Assignment */}
                     <div className="w-full flex flex-col items-center justify-center min-h-[48px]">
                       {abilityMethod === 'standard' && (
-                        <div className="space-y-1.5 w-full flex flex-col items-center">
+                        <div className="space-y-1.5 w-full flex flex-col items-center animate-in fade-in duration-200">
                           <div
                             aria-label={`${ABILITY_LABELS[k]} Base Score`}
                             className="w-16 h-9 rounded-lg bg-dnd-card shadow-sm flex items-center justify-center text-base font-black text-slate-100"
@@ -1367,7 +1386,7 @@ export default function CharacterBuilderModal({
                       )}
 
                       {abilityMethod === 'roll' && (
-                        <div className="space-y-1.5 w-full flex flex-col items-center">
+                        <div className="space-y-1.5 w-full flex flex-col items-center animate-in fade-in duration-200">
                           <div
                             aria-label={`${ABILITY_LABELS[k]} Base Score`}
                             className="w-16 h-9 rounded-lg bg-dnd-card shadow-sm flex items-center justify-center text-base font-black text-slate-100"
@@ -1413,7 +1432,7 @@ export default function CharacterBuilderModal({
                       )}
 
                       {abilityMethod === 'pointbuy' && (
-                        <div className="flex items-center space-x-1.5">
+                        <div className="flex items-center space-x-1.5 animate-in fade-in duration-200">
                           <button
                             type="button"
                             aria-label={`Decrease base ${ABILITY_LABELS[k]}`}
@@ -1442,7 +1461,7 @@ export default function CharacterBuilderModal({
                       )}
 
                       {abilityMethod === 'custom' && (
-                        <div className="flex items-center space-x-1.5">
+                        <div className="flex items-center space-x-1.5 animate-in fade-in duration-200">
                           <button
                             type="button"
                             aria-label={`Decrease base ${ABILITY_LABELS[k]}`}
@@ -1504,7 +1523,7 @@ export default function CharacterBuilderModal({
                         )}
                       </div>
                     </div>
-                  </div>
+                  </SmoothSize>
                 );
               })}
             </div>
