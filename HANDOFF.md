@@ -3,7 +3,7 @@
 ## Current state (v3.2.0 - master)
 - **v3.2.0 (minor)**:
   - Character Builder modal (`CharacterBuilderModal.jsx`) for guided Level 1 creation (2024 & 2014): long-form scroll layout with stable modal height, scroll spy, pinned header/footer.
-  - Refined layout & flow: Character Identity at step 2 after Ruleset; subclass and spells sections removed from Level 1 builder; expandable Level 1 Capabilities accordion inside Class card; Title Case skill proficiency chips with checkboxes; point-buy stepper budget (+/-) for 2024 background ASI.
+  - Refined layout & flow: Character Identity at step 2 after Ruleset; subclass and spells sections removed from Level 1 builder; expandable Starting Features accordion inside Class card; Title Case skill proficiency chips with checkboxes; point-buy stepper budget (+/-) for 2024 background ASI; 3-row species chooser grid with expanded trait reading container.
   - Creation entry prompt (`CreateCharacterModal.jsx`): "Character Builder" (Recommended) vs "Manual Setup" (blank sheet).
   - 5e catalogues generated from 5etools mirror: species (164 entries), classes (26 entries), backgrounds (26 entries).
   - Full suite green: 61 test files, 536 tests passed. Build clean.

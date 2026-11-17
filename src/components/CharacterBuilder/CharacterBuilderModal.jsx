@@ -669,7 +669,7 @@ export default function CharacterBuilderModal({
             </div>
 
             {/* Species Grid */}
-            <div className="max-h-60 overflow-y-auto custom-scroll pr-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="max-h-48 overflow-y-auto custom-scroll pr-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {filteredSpecies.map((sp) => {
                 const isSel = selectedSpecies?.id === sp.id;
                 return (
@@ -764,7 +764,7 @@ export default function CharacterBuilderModal({
                 )}
 
                 {/* Traits / Starting Features */}
-                <div className="space-y-2 pt-1 border-t border-white/5 max-h-52 overflow-y-auto custom-scroll pr-1">
+                <div className="space-y-2 pt-1 border-t border-white/5 max-h-72 overflow-y-auto custom-scroll pr-1">
                   {[
                     ...(selectedSpecies.traits || []),
                     ...(selectedSubrace?.traits || []),
