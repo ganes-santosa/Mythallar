@@ -352,7 +352,7 @@ describe('CharacterBuilderModal', () => {
     expect(increaseCon).toBeDisabled();
   });
 
-  it('allows swapping Standard Array values between abilities and renders balanced Base and Total containers', async () => {
+  it('allows assigning and swapping Standard Array values via tactile chips with unified Total display', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
@@ -364,24 +364,23 @@ describe('CharacterBuilderModal', () => {
     expect(screen.getByRole('heading', { name: /Determine your ability scores/i })).toBeInTheDocument();
 
     // Standard Array is default: STR=15, DEX=14, etc.
-    const strSelect = screen.getByRole('combobox', { name: /Strength Base Score/i });
-    const dexSelect = screen.getByRole('combobox', { name: /Dexterity Base Score/i });
-    expect(strSelect.value).toBe('15');
-    expect(dexSelect.value).toBe('14');
+    const strBaseBox = screen.getByLabelText(/Strength Base Score/i);
+    const dexBaseBox = screen.getByLabelText(/Dexterity Base Score/i);
+    expect(strBaseBox).toHaveTextContent('15');
+    expect(dexBaseBox).toHaveTextContent('14');
 
-    // Change DEX from 14 to 15 -> should swap, so STR becomes 14 and DEX becomes 15
-    fireEvent.change(dexSelect, { target: { value: '15' } });
-    expect(dexSelect.value).toBe('15');
-    expect(strSelect.value).toBe('14');
+    // Click "Assign 15 to Dexterity" chip -> swaps DEX to 15 and STR to 14
+    const assign15ToDex = screen.getByRole('button', { name: /Assign 15 to Dexterity/i });
+    fireEvent.click(assign15ToDex);
+    expect(dexBaseBox).toHaveTextContent('15');
+    expect(strBaseBox).toHaveTextContent('14');
 
-    // Both "Base" and "Total" container headers should be rendered across the 6 cards
-    const baseHeaders = screen.getAllByText(/^Base$/i);
-    const totalHeaders = screen.getAllByText(/^Total$/i);
-    expect(baseHeaders).toHaveLength(6);
-    expect(totalHeaders).toHaveLength(6);
+    // Unified "Total:" labels rendered across the 6 cards
+    const totalLabels = screen.getAllByText(/Total:/i);
+    expect(totalLabels).toHaveLength(6);
   });
 
-  it('supports Manual / Custom ability method with direct score inputs and presets', async () => {
+  it('supports Manual / Custom ability method with clean direct score inputs and steppers', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
@@ -394,14 +393,11 @@ describe('CharacterBuilderModal', () => {
     const customMethodBtn = screen.getByRole('button', { name: /Manual \/ Custom/i });
     fireEvent.click(customMethodBtn);
 
-    expect(screen.getByText(/Manual \/ Custom: Enter base scores directly/i)).toBeInTheDocument();
-
-    // Click All 10s preset
-    const all10sBtn = screen.getByRole('button', { name: /All 10s/i });
-    fireEvent.click(all10sBtn);
+    // Clutter preset buttons should not exist
+    expect(screen.queryByRole('button', { name: /All 10s/i })).not.toBeInTheDocument();
 
     const strInput = screen.getByRole('spinbutton', { name: /Strength Base Score/i });
-    expect(strInput.value).toBe('10');
+    expect(strInput.value).toBe('15');
 
     // Type 18 for STR
     fireEvent.change(strInput, { target: { value: '18' } });
