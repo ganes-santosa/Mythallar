@@ -68,7 +68,7 @@ export default function CharacterBuilderModal({
   const [showClassFeatures, setShowClassFeatures] = useState(false);
 
   // Ability Scores
-  const [abilityMethod, setAbilityMethod] = useState('standard'); // 'standard' | 'pointbuy' | 'roll'
+  const [abilityMethod, setAbilityMethod] = useState('standard'); // 'standard' | 'pointbuy' | 'roll' | 'custom'
   const [baseScores, setBaseScores] = useState({
     str: 15,
     dex: 14,
@@ -78,6 +78,14 @@ export default function CharacterBuilderModal({
     cha: 8,
   });
   const [rollPool, setRollPool] = useState([]);
+  const [rollAssignments, setRollAssignments] = useState({
+    str: 0,
+    dex: 1,
+    con: 2,
+    int: 3,
+    wis: 4,
+    cha: 5,
+  });
   const [bgBonusChoice, setBgBonusChoice] = useState({}); // e.g. { int: 2, con: 1 }
   const [racialChoice, setRacialChoice] = useState({});
 
@@ -237,6 +245,137 @@ export default function CharacterBuilderModal({
       racialChoice,
     });
   }, [baseScores, ruleset, selectedSpecies, selectedSubrace, selectedBackground, bgBonusChoice, racialChoice]);
+
+  // Ability score assignment & calculation helpers
+  const handleStandardArrayChange = (targetKey, newScore) => {
+    const currentTargetVal = baseScores[targetKey];
+    if (currentTargetVal === newScore) return;
+
+    const otherKey = ABILITY_KEYS.find(
+      (key) => key !== targetKey && baseScores[key] === newScore
+    );
+
+    setBaseScores((prev) => {
+      const next = { ...prev, [targetKey]: newScore };
+      if (otherKey) {
+        next[otherKey] = currentTargetVal;
+      }
+      return next;
+    });
+  };
+
+  const pointBuyCost = useMemo(() => calculatePointBuyCost(baseScores), [baseScores]);
+  const pointBuyRemaining = POINT_BUY_TOTAL - pointBuyCost;
+
+  const canPointBuyPlus = (key) => {
+    const val = baseScores[key] ?? 8;
+    if (val >= 15) return false;
+    const costDiff = (POINT_BUY_COSTS[val + 1] ?? 99) - (POINT_BUY_COSTS[val] ?? 0);
+    return pointBuyRemaining >= costDiff;
+  };
+
+  const canPointBuyMinus = (key) => {
+    const val = baseScores[key] ?? 8;
+    return val > 8;
+  };
+
+  const handlePointBuyChange = (key, delta) => {
+    if (delta > 0 && canPointBuyPlus(key)) {
+      setBaseScores((prev) => ({ ...prev, [key]: (prev[key] || 8) + 1 }));
+    } else if (delta < 0 && canPointBuyMinus(key)) {
+      setBaseScores((prev) => ({ ...prev, [key]: (prev[key] || 8) - 1 }));
+    }
+  };
+
+  const handleRollReroll = () => {
+    const newPool = generateRollPool();
+    setRollPool(newPool);
+    setBaseScores({
+      str: newPool[rollAssignments.str]?.total ?? 10,
+      dex: newPool[rollAssignments.dex]?.total ?? 10,
+      con: newPool[rollAssignments.con]?.total ?? 10,
+      int: newPool[rollAssignments.int]?.total ?? 10,
+      wis: newPool[rollAssignments.wis]?.total ?? 10,
+      cha: newPool[rollAssignments.cha]?.total ?? 10,
+    });
+  };
+
+  const handleRollAssignmentChange = (targetKey, newIndex) => {
+    const currentTargetIndex = rollAssignments[targetKey];
+    if (currentTargetIndex === newIndex) return;
+
+    const otherKey = ABILITY_KEYS.find(
+      (key) => key !== targetKey && rollAssignments[key] === newIndex
+    );
+
+    const nextAssignments = { ...rollAssignments, [targetKey]: newIndex };
+    if (otherKey) {
+      nextAssignments[otherKey] = currentTargetIndex;
+    }
+    setRollAssignments(nextAssignments);
+
+    setBaseScores((prev) => {
+      const next = { ...prev, [targetKey]: rollPool[newIndex]?.total ?? 10 };
+      if (otherKey) {
+        next[otherKey] = rollPool[currentTargetIndex]?.total ?? 10;
+      }
+      return next;
+    });
+  };
+
+  const handleCustomScoreChange = (key, rawVal) => {
+    const num = parseInt(rawVal, 10);
+    setBaseScores((prev) => ({
+      ...prev,
+      [key]: isNaN(num) ? 10 : Math.max(1, Math.min(30, num)),
+    }));
+  };
+
+  const handleCustomStepper = (key, delta) => {
+    setBaseScores((prev) => {
+      const cur = Number(prev[key]) || 10;
+      return {
+        ...prev,
+        [key]: Math.max(1, Math.min(30, cur + delta)),
+      };
+    });
+  };
+
+  const switchToStandard = () => {
+    setAbilityMethod('standard');
+    setBaseScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
+  };
+
+  const switchToPointBuy = () => {
+    setAbilityMethod('pointbuy');
+    const isValidPB =
+      ABILITY_KEYS.every((k) => baseScores[k] >= 8 && baseScores[k] <= 15) &&
+      calculatePointBuyCost(baseScores) <= POINT_BUY_TOTAL;
+    if (!isValidPB) {
+      setBaseScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
+    }
+  };
+
+  const switchToRoll = () => {
+    setAbilityMethod('roll');
+    let pool = rollPool;
+    if (!pool || pool.length < 6) {
+      pool = generateRollPool();
+      setRollPool(pool);
+    }
+    setBaseScores({
+      str: pool[rollAssignments.str]?.total ?? 10,
+      dex: pool[rollAssignments.dex]?.total ?? 10,
+      con: pool[rollAssignments.con]?.total ?? 10,
+      int: pool[rollAssignments.int]?.total ?? 10,
+      wis: pool[rollAssignments.wis]?.total ?? 10,
+      cha: pool[rollAssignments.cha]?.total ?? 10,
+    });
+  };
+
+  const switchToCustom = () => {
+    setAbilityMethod('custom');
+  };
 
   // Auto-scroll pill bar when active step index changes
   useEffect(() => {
@@ -937,75 +1076,135 @@ export default function CharacterBuilderModal({
               </p>
             </div>
 
-            {/* Method selector */}
-            <div className="flex items-center space-x-2 pb-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setAbilityMethod('standard');
-                  setBaseScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 });
-                }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
-                  abilityMethod === 'standard'
-                    ? 'bg-dnd-gold text-slate-950 font-bold'
-                    : 'bg-dnd-panel text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                Standard Array
-              </button>
-              <button
-                type="button"
-                onClick={() => setAbilityMethod('pointbuy')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
-                  abilityMethod === 'pointbuy'
-                    ? 'bg-dnd-gold text-slate-950 font-bold'
-                    : 'bg-dnd-panel text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                Point Buy (27 pts)
-              </button>
-              <button
-                type="button"
-                onClick={() => setAbilityMethod('roll')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
-                  abilityMethod === 'roll'
-                    ? 'bg-dnd-gold text-slate-950 font-bold'
-                    : 'bg-dnd-panel text-slate-300 hover:bg-white/10'
-                }`}
-              >
-                Roll (4d6 drop lowest)
-              </button>
+            {/* Method selector buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 pb-1">
+              {[
+                { id: 'standard', label: 'Standard Array', handler: switchToStandard },
+                { id: 'pointbuy', label: 'Point Buy (27 pts)', handler: switchToPointBuy },
+                { id: 'roll', label: 'Roll (4d6 drop lowest)', handler: switchToRoll },
+                { id: 'custom', label: 'Manual / Custom', handler: switchToCustom },
+              ].map((m) => (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={m.handler}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                    abilityMethod === m.id
+                      ? 'bg-dnd-gold text-slate-950 font-bold'
+                      : 'bg-dnd-panel text-slate-300 hover:bg-white/10'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
             </div>
 
-            {/* Point buy budget display */}
-            {abilityMethod === 'pointbuy' && (
-              <div className="text-xs text-slate-300 bg-dnd-panel/60 p-2.5 rounded-lg flex items-center justify-between">
-                <span>Point Buy Budget:</span>
-                <span className="font-bold text-amber-400">
-                  {POINT_BUY_TOTAL - calculatePointBuyCost(baseScores)} points remaining
+            {/* Method-specific helper banners */}
+            {abilityMethod === 'standard' && (
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-slate-400">Standard Array:</span>
+                  {STANDARD_ARRAY.map((num) => {
+                    const assignedKey = ABILITY_KEYS.find((k) => baseScores[k] === num);
+                    return (
+                      <span
+                        key={num}
+                        className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-dnd-card text-xs font-bold text-slate-200 shadow-sm"
+                      >
+                        <span>{num}</span>
+                        {assignedKey && (
+                          <span className="text-[10px] text-dnd-gold font-normal uppercase">
+                            ({assignedKey})
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+                <span className="text-[11px] text-slate-400">
+                  Select values below to assign or swap stats
                 </span>
               </div>
             )}
 
-            {/* Roll re-roll button */}
-            {abilityMethod === 'roll' && (
-              <div className="flex items-center justify-between text-xs text-slate-300 bg-dnd-panel/60 p-2.5 rounded-lg">
-                <span>Rolled pool: {rollPool.map((r) => r.total).join(', ')}</span>
+            {abilityMethod === 'pointbuy' && (
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                <div className="flex items-center space-x-2">
+                  <span>Point Buy Budget:</span>
+                  <span
+                    className={`font-bold ${
+                      pointBuyRemaining === 0
+                        ? 'text-emerald-400'
+                        : pointBuyRemaining > 0
+                        ? 'text-amber-400'
+                        : 'text-red-400'
+                    }`}
+                  >
+                    {pointBuyRemaining} of {POINT_BUY_TOTAL} points remaining
+                  </span>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setRollPool(generateRollPool())}
-                  className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer"
+                  onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
+                  className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
                 >
-                  <RotateCcw size={12} />
-                  <span>Re-roll</span>
+                  Reset (All 8s)
                 </button>
               </div>
             )}
 
-            {/* Ability Score Grid */}
+            {abilityMethod === 'roll' && (
+              <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-slate-400">Rolled Pool:</span>
+                  {rollPool.map((r, i) => (
+                    <span
+                      key={i}
+                      title={`Dice: [${r.rolls.join(', ')}], dropped: ${r.dropped}`}
+                      className="inline-flex items-center px-2 py-0.5 rounded-md bg-dnd-card text-xs font-bold text-slate-200 shadow-sm"
+                    >
+                      {r.total}
+                    </span>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRollReroll}
+                  className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
+                >
+                  <RotateCcw size={12} />
+                  <span>Re-roll Pool</span>
+                </button>
+              </div>
+            )}
+
+            {abilityMethod === 'custom' && (
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-dnd-panel/60 text-xs text-slate-300">
+                <span>Manual / Custom: Enter base scores directly (1–30).</span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setBaseScores({ str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 })}
+                    className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
+                  >
+                    All 10s
+                  </button>
+                  <span className="text-slate-600">•</span>
+                  <button
+                    type="button"
+                    onClick={() => setBaseScores({ str: 15, dex: 14, con: 13, int: 12, wis: 10, cha: 8 })}
+                    className="text-[11px] text-dnd-gold hover:text-dnd-gold-light font-bold cursor-pointer"
+                  >
+                    Standard Array
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Ability Score Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
               {ABILITY_KEYS.map((k) => {
-                const base = baseScores[k] || 10;
+                const base = baseScores[k] ?? 10;
                 const bonus = abilityCalculation.bonuses[k] || 0;
                 const finalVal = abilityCalculation.finalScores[k] || 10;
                 const mod = abilityCalculation.modifiers[k] || 0;
@@ -1013,70 +1212,148 @@ export default function CharacterBuilderModal({
                 return (
                   <div
                     key={k}
-                    className="p-3 rounded-xl bg-dnd-panel/60 space-y-2 flex flex-col justify-between"
+                    className="p-3 rounded-xl bg-dnd-panel/70 shadow-sm space-y-2 flex flex-col justify-between"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-200">
-                        {ABILITY_LABELS[k]}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-dnd-gold">
-                        {formatModifier(mod)}
-                      </span>
+                    {/* Card Header: Stat Name + Bonus Pill */}
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center space-x-1.5 min-w-0 truncate">
+                        <span className="text-xs font-bold text-slate-100 truncate">
+                          {ABILITY_LABELS[k]}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
+                          {k.toUpperCase()}
+                        </span>
+                      </div>
+                      {bonus !== 0 && (
+                        <span
+                          title={`+${bonus} ${ruleset === '2024' ? 'Background' : 'Racial'} Bonus`}
+                          className="text-[9px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded shrink-0 whitespace-nowrap"
+                        >
+                          +{bonus} {ruleset === '2024' ? 'Bg' : 'Race'}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[11px] text-slate-400">Score:</span>
-                      <div className="flex items-center space-x-1.5">
-                        {abilityMethod === 'pointbuy' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setBaseScores((prev) => ({
-                                  ...prev,
-                                  [k]: Math.max(8, (prev[k] || 8) - 1),
-                                }))
-                              }
-                              className="w-5 h-5 rounded bg-dnd-card text-slate-300 hover:text-white flex items-center justify-center cursor-pointer text-xs"
+                    {/* Equal-Hierarchy Split: Base Box vs Total Box */}
+                    <div className="grid grid-cols-2 gap-2 items-stretch pt-0.5">
+                      {/* Base Score Container */}
+                      <div className="flex flex-col items-center justify-between p-2 rounded-lg bg-dnd-card shadow-sm min-h-[68px]">
+                        <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                          Base
+                        </span>
+                        <div className="my-auto flex items-center justify-center w-full">
+                          {abilityMethod === 'standard' && (
+                            <select
+                              aria-label={`${ABILITY_LABELS[k]} Base Score`}
+                              value={base}
+                              onChange={(e) => handleStandardArrayChange(k, Number(e.target.value))}
+                              className="w-full text-center bg-dnd-panel text-slate-100 font-bold text-xs sm:text-sm rounded py-1 px-1 focus:outline-none focus:ring-1 focus:ring-dnd-gold cursor-pointer"
                             >
-                              -
-                            </button>
-                            <span className="font-bold text-xs text-slate-100">{base}</span>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setBaseScores((prev) => ({
-                                  ...prev,
-                                  [k]: Math.min(15, (prev[k] || 8) + 1),
-                                }))
-                              }
-                              className="w-5 h-5 rounded bg-dnd-card text-slate-300 hover:text-white flex items-center justify-center cursor-pointer text-xs"
+                              {STANDARD_ARRAY.map((val) => (
+                                <option key={val} value={val} className="bg-slate-900 text-slate-100 text-xs">
+                                  {val}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+
+                          {abilityMethod === 'pointbuy' && (
+                            <div className="flex items-center space-x-1">
+                              <button
+                                type="button"
+                                aria-label={`Decrease base ${ABILITY_LABELS[k]}`}
+                                disabled={!canPointBuyMinus(k)}
+                                onClick={() => handlePointBuyChange(k, -1)}
+                                className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
+                              >
+                                -
+                              </button>
+                              <span className="font-bold text-xs sm:text-sm text-slate-100 w-6 text-center">
+                                {base}
+                              </span>
+                              <button
+                                type="button"
+                                aria-label={`Increase base ${ABILITY_LABELS[k]}`}
+                                disabled={!canPointBuyPlus(k)}
+                                onClick={() => handlePointBuyChange(k, 1)}
+                                className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+
+                          {abilityMethod === 'roll' && (
+                            <select
+                              aria-label={`${ABILITY_LABELS[k]} Base Score`}
+                              value={rollAssignments[k]}
+                              onChange={(e) => handleRollAssignmentChange(k, Number(e.target.value))}
+                              className="w-full text-center bg-dnd-panel text-slate-100 font-bold text-xs sm:text-sm rounded py-1 px-1 focus:outline-none focus:ring-1 focus:ring-dnd-gold cursor-pointer"
                             >
-                              +
-                            </button>
-                          </>
-                        )}
-                        {abilityMethod !== 'pointbuy' && (
-                          <input
-                            type="number"
-                            min={3}
-                            max={20}
-                            value={base}
-                            onChange={(e) => {
-                              const val = parseInt(e.target.value, 10) || 10;
-                              setBaseScores((prev) => ({ ...prev, [k]: val }));
-                            }}
-                            className="w-12 text-center py-0.5 rounded bg-dnd-card text-slate-100 text-xs font-bold"
-                          />
-                        )}
+                              {rollPool.map((r, idx) => (
+                                <option key={idx} value={idx} className="bg-slate-900 text-slate-100 text-xs">
+                                  {r.total} (Roll #{idx + 1})
+                                </option>
+                              ))}
+                            </select>
+                          )}
+
+                          {abilityMethod === 'custom' && (
+                            <div className="flex items-center space-x-1">
+                              <button
+                                type="button"
+                                aria-label={`Decrease base ${ABILITY_LABELS[k]}`}
+                                disabled={base <= 1}
+                                onClick={() => handleCustomStepper(k, -1)}
+                                className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
+                              >
+                                -
+                              </button>
+                              <input
+                                type="number"
+                                min={1}
+                                max={30}
+                                aria-label={`${ABILITY_LABELS[k]} Base Score`}
+                                value={base}
+                                onChange={(e) => handleCustomScoreChange(k, e.target.value)}
+                                className="w-8 text-center py-0.5 rounded bg-dnd-panel text-slate-100 text-xs font-bold [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:outline-none focus:ring-1 focus:ring-dnd-gold"
+                              />
+                              <button
+                                type="button"
+                                aria-label={`Increase base ${ABILITY_LABELS[k]}`}
+                                disabled={base >= 30}
+                                onClick={() => handleCustomStepper(k, 1)}
+                                className="w-5 h-5 rounded bg-dnd-panel text-slate-300 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer text-xs font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Total Score Container: Mirrors AbilitiesCard */}
+                      <div className="flex flex-col items-center justify-between p-2 rounded-lg bg-dnd-card shadow-sm min-h-[68px]">
+                        <div className="flex items-center justify-between w-full px-0.5">
+                          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                            Total
+                          </span>
+                          {bonus !== 0 ? (
+                            <span className="text-[9px] font-bold text-amber-400">
+                              +{bonus}
+                            </span>
+                          ) : (
+                            <span className="text-[9px] text-slate-500">—</span>
+                          )}
+                        </div>
+                        <div className="text-xl sm:text-2xl font-black text-slate-100 leading-none">
+                          {finalVal}
+                        </div>
+                        <div className="text-xs font-bold text-dnd-gold leading-none">
+                          {formatModifier(mod)}
+                        </div>
                       </div>
                     </div>
-
-                    {bonus !== 0 && (
-                      <div className="text-[10px] text-amber-400 text-right">
-                        +{bonus} bonus = {finalVal} total
-                      </div>
-                    )}
                   </div>
                 );
               })}
