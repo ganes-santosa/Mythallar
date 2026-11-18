@@ -475,8 +475,20 @@ describe('App End-to-End Integration', () => {
     fireEvent.click(screen.getByRole('button', { name: /Create First Character/i }));
     expect(screen.getByRole('heading', { name: /Create your character/i })).toBeInTheDocument();
 
-    // Click Manual Setup to bypass builder
+    // Start Character Builder
+    fireEvent.click(screen.getByRole('button', { name: /Character Builder/i }));
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Click Back on initial Ruleset step to return to creation choices
+    fireEvent.click(screen.getByRole('button', { name: /Back to options/i }));
+    expect(await screen.findByRole('heading', { name: /Create your character/i })).toBeInTheDocument();
+
+    // Click Manual Setup
     fireEvent.click(screen.getByRole('button', { name: /Manual Setup/i }));
+
+    // Fill in manual form and submit
+    fireEvent.change(screen.getByLabelText(/Character Name/i), { target: { value: 'New Adventurer' } });
+    fireEvent.click(screen.getByRole('button', { name: /Create Character/i }));
 
     // Character created and active
     expect(await screen.findByRole('heading', { level: 2, name: 'New Adventurer' })).toBeInTheDocument();

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints, AlertCircle, Snowflake } from 'lucide-react';
+import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound, Users, Camera, User, FingerprintPattern, Footprints, AlertCircle, Snowflake, Pencil, Shell } from 'lucide-react';
 import CharacterManagerModal from '../Header/CharacterManagerModal';
 import NumericDraftInput from '../Common/NumericDraftInput';
+import SmoothSize from '../Common/SmoothSize';
 import LevelUpModal from '../Modal/LevelUpModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import { getPendingLevelUpTasks } from '../../utils/levelUpRules';
@@ -54,6 +55,7 @@ function CharacterSheetHeader({
   onDeleteProfile,
   onExport,
   onImport,
+  onShowToast,
 }) {
   const portraitInputRef = useRef(null);
 
@@ -129,15 +131,47 @@ function CharacterSheetHeader({
     setCustomSpeedLabel('');
   };
 
-  const [isLoreCollapsed, setIsLoreCollapsed] = useState(true);
-  const loreRef = useAutoScrollOnExpand(!isLoreCollapsed);
+  const [activeSubPanel, setActiveSubPanel] = useState(null); // null | 'lore' | 'traits'
+  const lastSubPanelRef = useRef('lore');
+  if (activeSubPanel) {
+    lastSubPanelRef.current = activeSubPanel;
+  }
+  const displayedSubPanel = activeSubPanel || lastSubPanelRef.current;
+  const isLoreOpen = activeSubPanel === 'lore';
+  const isTraitsOpen = activeSubPanel === 'traits';
+
+  const loreRef = useAutoScrollOnExpand(activeSubPanel !== null);
   const [isEditingLore, setIsEditingLore] = useState(false);
   const [loreDraft, setLoreDraft] = useState(identity.lore || '');
+
+  const [isEditingTraits, setIsEditingTraits] = useState(false);
+  const [traitsDraft, setTraitsDraft] = useState({
+    personalityTraits: identity.personalityTraits || '',
+    ideals: identity.ideals || '',
+    bonds: identity.bonds || '',
+    flaws: identity.flaws || '',
+  });
 
   useEffect(() => {
     setLoreDraft(identity.lore || '');
     setIsEditingLore(false);
   }, [character?.id, identity.lore]);
+
+  useEffect(() => {
+    setTraitsDraft({
+      personalityTraits: identity.personalityTraits || '',
+      ideals: identity.ideals || '',
+      bonds: identity.bonds || '',
+      flaws: identity.flaws || '',
+    });
+    setIsEditingTraits(false);
+  }, [
+    character?.id,
+    identity.personalityTraits,
+    identity.ideals,
+    identity.bonds,
+    identity.flaws,
+  ]);
 
   const handleSaveLore = () => {
     handleIdentityChange('lore', loreDraft);
@@ -149,9 +183,37 @@ function CharacterSheetHeader({
     setIsEditingLore(false);
   };
 
+  const handleSaveTraits = () => {
+    onUpdateCharacter?.({
+      ...character,
+      sheet: {
+        ...sheet,
+        identity: {
+          ...identity,
+          personalityTraits: traitsDraft.personalityTraits,
+          ideals: traitsDraft.ideals,
+          bonds: traitsDraft.bonds,
+          flaws: traitsDraft.flaws,
+        },
+      },
+    });
+    setIsEditingTraits(false);
+  };
+
+  const handleCancelTraits = () => {
+    setTraitsDraft({
+      personalityTraits: identity.personalityTraits || '',
+      ideals: identity.ideals || '',
+      bonds: identity.bonds || '',
+      flaws: identity.flaws || '',
+    });
+    setIsEditingTraits(false);
+  };
+
   useEffect(() => {
     setNameDraft(character?.name || '');
     setIsEditingLore(false);
+    setIsEditingTraits(false);
     setIsEditing(false);
   }, [character?.id]);
 
@@ -221,7 +283,7 @@ function CharacterSheetHeader({
   };
 
   const handleIdentityChange = (field, value) => {
-    onUpdateCharacter?.({
+    const nextChar = {
       ...character,
       sheet: {
         ...sheet,
@@ -230,7 +292,12 @@ function CharacterSheetHeader({
           [field]: value,
         },
       },
-    });
+    };
+    if (field === 'subclass') {
+      const newClasses = classes.map((c, i) => (i === 0 ? { ...c, subclass: value } : c));
+      nextChar.classes = newClasses;
+    }
+    onUpdateCharacter?.(nextChar);
   };
 
   const [cropModalState, setCropModalState] = useState({ isOpen: false, imageSrc: '' });
@@ -347,6 +414,24 @@ function CharacterSheetHeader({
       level: newTotal,
       classes: newClasses,
     });
+  };
+
+  const handleSetClassSubclass = (index, val) => {
+    const newClasses = classes.map((c, i) => (i === index ? { ...c, subclass: val } : c));
+    const nextChar = {
+      ...character,
+      classes: newClasses,
+    };
+    if (index === 0 && nextChar.sheet) {
+      nextChar.sheet = {
+        ...nextChar.sheet,
+        identity: {
+          ...(nextChar.sheet.identity || {}),
+          subclass: val,
+        },
+      };
+    }
+    onUpdateCharacter?.(nextChar);
   };
 
   const handleAddClass = () => {
@@ -640,6 +725,15 @@ function CharacterSheetHeader({
                               </select>
                             </div>
 
+                            <input
+                              type="text"
+                              placeholder="Subclass..."
+                              value={clsItem.subclass || ''}
+                              onChange={(e) => handleSetClassSubclass(idx, e.target.value)}
+                              className="w-20 bg-dnd-panel/70 rounded px-1.5 py-0.5 text-[11px] text-slate-100 placeholder:text-slate-500 font-normal focus:outline-none focus:ring-1 focus:ring-white/20 ml-1"
+                              aria-label={`Subclass for ${clsItem.className}`}
+                            />
+
                             {classes.length > 1 && (
                               <ClassDeleteButton
                                 className={clsItem.className}
@@ -669,6 +763,9 @@ function CharacterSheetHeader({
                         className="flex items-center space-x-1.5 bg-dnd-panel/70 rounded-md px-2 py-0.5 text-xs text-slate-200"
                       >
                         <span className="font-normal text-slate-200">{clsItem.className}</span>
+                        {clsItem.subclass ? (
+                          <span className="text-[11px] text-slate-300 font-normal">({clsItem.subclass})</span>
+                        ) : null}
                         <span className="text-[11px] text-dnd-gold font-normal">Lvl {clsItem.level}</span>
                       </div>
                     ))
@@ -864,138 +961,277 @@ function CharacterSheetHeader({
               </div>
             </div>
 
-            {/* Sub-accordion Card: Character Lore */}
-            <div ref={loreRef} className="character-lore-card w-full rounded-lg bg-dnd-card px-3 py-1.5 shadow-sm">
-              <div className="flex items-center justify-between min-h-[26px]">
-                <button
-                  type="button"
-                  onClick={() => setIsLoreCollapsed(!isLoreCollapsed)}
-                  className="flex items-center space-x-1.5 text-left group focus:outline-none"
-                  aria-label={isLoreCollapsed ? 'Expand Character Lore' : 'Collapse Character Lore'}
-                  title={isLoreCollapsed ? 'Click to expand character lore' : 'Click to collapse character lore'}
+            {/* Sub-accordion Row: Character Lore & Character Traits (pills when closed, connected tabs when open) */}
+            <div ref={loreRef} className="character-lore-card w-full">
+              <div className="grid grid-cols-2 gap-1.5">
+                {/* Left Pill / Tab: Character Lore */}
+                <div
+                  className={`px-3 py-1.5 flex items-center justify-between min-h-[30px] transition-colors duration-150 ${
+                    isLoreOpen
+                      ? 'rounded-t-lg rounded-b-none bg-dnd-card'
+                      : isTraitsOpen
+                        ? 'rounded-t-lg rounded-b-none bg-dnd-card/45 hover:bg-dnd-card/75 opacity-75 hover:opacity-100'
+                        : 'rounded-lg bg-dnd-card shadow-sm'
+                  }`}
                 >
-                  <FingerprintPattern size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
-                  <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
-                    Character Lore
-                  </h4>
-                  {identity.background && (
-                    <span className="text-[10px] text-slate-400 font-normal">
-                      • {identity.background}
-                    </span>
-                  )}
-                  <ChevronDown
-                    size={12}
-                    className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 ${
-                      isLoreCollapsed ? '-rotate-90' : ''
-                    }`}
-                  />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubPanel(isLoreOpen ? null : 'lore')}
+                    className="flex items-center space-x-1.5 text-left group focus:outline-none min-w-0 flex-1 cursor-pointer"
+                    aria-label={isLoreOpen ? 'Collapse Character Lore' : 'Expand Character Lore'}
+                    title={isLoreOpen ? 'Click to collapse character lore' : 'Click to expand character lore'}
+                  >
+                    <FingerprintPattern size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                    <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors truncate">
+                      Character Lore
+                    </h4>
+                    <ChevronDown
+                      size={12}
+                      className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 flex-shrink-0 ${
+                        !isLoreOpen ? '-rotate-90' : ''
+                      }`}
+                    />
+                  </button>
 
-                {/* Edit Lore Action Button */}
-                <div className="flex items-center space-x-1.5">
-                  {isEditingLore ? (
-                    <>
-                      <button
-                        type="button"
-                        aria-label="Save Character Lore"
-                        onClick={handleSaveLore}
-                        className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm cursor-pointer"
-                        title="Done editing lore"
-                      >
-                        <Check size={12} className="mr-1" />
-                        Done
-                      </button>
-                      <button
-                        type="button"
-                        aria-label="Cancel Editing Character Lore"
-                        onClick={handleCancelLore}
-                        className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
-                        title="Cancel editing lore"
-                      >
-                        <X size={12} />
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      type="button"
-                      aria-label="Edit Character Lore"
-                      onClick={() => {
-                        setIsLoreCollapsed(false);
-                        setLoreDraft(identity.lore || '');
-                        setIsEditingLore(true);
-                      }}
-                      className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
-                      title="Edit character lore"
-                    >
-                      <UserPen size={11} />
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Sub-accordion collapsible body */}
-              <div
-                className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
-                  !isLoreCollapsed ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="pt-2 mt-2 border-t border-white/5 space-y-2">
-                    {/* Background Field */}
-                    <div>
-                      <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
-                        Background
-                      </label>
-                      {isEditing || isEditingLore ? (
-                        <input
-                          id="sheet-id-background"
-                          type="text"
-                          placeholder="e.g. Sage"
-                          value={identity.background || ''}
-                          onChange={(e) => handleIdentityChange('background', e.target.value)}
-                          className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
-                        />
-                      ) : (
-                        <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
-                          {identity.background || <span className="text-slate-500 italic">None</span>}
-                        </div>
-                      )}
-                    </div>
-
-                    {isEditingLore ? (
-                      <div className="space-y-1.5">
-                        <textarea
-                          value={loreDraft}
-                          onChange={(e) => setLoreDraft(e.target.value)}
-                          placeholder="Write character backstory, personality traits, appearance, or campaign lore..."
-                          rows={4}
-                          autoFocus
-                          spellCheck={false}
-                          aria-label="Character Lore Text Editor"
-                          className="w-full bg-dnd-panel/70 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 resize-y leading-relaxed font-sans min-h-[80px]"
-                        />
-                      </div>
+                  {/* Edit Lore Action Button */}
+                  <div className="flex items-center space-x-1 ml-1.5 flex-shrink-0">
+                    {isEditingLore && isLoreOpen ? (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Save Character Lore"
+                          onClick={handleSaveLore}
+                          className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                          title="Done editing lore"
+                        >
+                          <Check size={12} className="mr-1" />
+                          Done
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Cancel Editing Character Lore"
+                          onClick={handleCancelLore}
+                          className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Cancel editing lore"
+                        >
+                          <X size={12} />
+                        </button>
+                      </>
                     ) : (
-                      <div
+                      <button
+                        type="button"
+                        aria-label="Edit Character Lore"
                         onClick={() => {
-                          setIsLoreCollapsed(false);
+                          setActiveSubPanel('lore');
                           setLoreDraft(identity.lore || '');
                           setIsEditingLore(true);
                         }}
-                        className="cursor-pointer group/lore"
+                        className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
+                        title="Edit character lore"
                       >
-                        {identity.lore && identity.lore.trim().length > 0 ? (
-                          <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed px-0.5 py-1">
-                            {identity.lore}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-slate-500 italic px-0.5 py-1 hover:text-slate-400 transition-colors">
-                            No character lore written yet. Click to write backstory, personality traits, or notes...
-                          </div>
-                        )}
-                      </div>
+                        <Pencil size={11} />
+                      </button>
                     )}
                   </div>
+                </div>
+
+                {/* Right Pill / Tab: Character Traits */}
+                <div
+                  className={`px-3 py-1.5 flex items-center justify-between min-h-[30px] transition-colors duration-150 ${
+                    isTraitsOpen
+                      ? 'rounded-t-lg rounded-b-none bg-dnd-card'
+                      : isLoreOpen
+                        ? 'rounded-t-lg rounded-b-none bg-dnd-card/45 hover:bg-dnd-card/75 opacity-75 hover:opacity-100'
+                        : 'rounded-lg bg-dnd-card shadow-sm'
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveSubPanel(isTraitsOpen ? null : 'traits')}
+                    className="flex items-center space-x-1.5 text-left group focus:outline-none min-w-0 flex-1 cursor-pointer"
+                    aria-label={isTraitsOpen ? 'Collapse Character Traits' : 'Expand Character Traits'}
+                    title={isTraitsOpen ? 'Click to collapse character traits' : 'Click to expand character traits'}
+                  >
+                    <Shell size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                    <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors truncate">
+                      Character Traits
+                    </h4>
+                    <ChevronDown
+                      size={12}
+                      className={`text-slate-400 group-hover:text-slate-200 transition-transform duration-200 flex-shrink-0 ${
+                        !isTraitsOpen ? '-rotate-90' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {/* Edit Traits Action Button */}
+                  <div className="flex items-center space-x-1 ml-1.5 flex-shrink-0">
+                    {isEditingTraits && isTraitsOpen ? (
+                      <>
+                        <button
+                          type="button"
+                          aria-label="Save Character Traits"
+                          onClick={handleSaveTraits}
+                          className="flex items-center px-2 py-0.5 rounded-md bg-dnd-gold text-slate-950 hover:bg-dnd-gold-light text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                          title="Done editing traits"
+                        >
+                          <Check size={12} className="mr-1" />
+                          Done
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Cancel Editing Character Traits"
+                          onClick={handleCancelTraits}
+                          className="p-1 rounded-md bg-dnd-panel hover:bg-white/5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+                          title="Cancel editing traits"
+                        >
+                          <X size={12} />
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        aria-label="Edit Character Traits"
+                        onClick={() => {
+                          setActiveSubPanel('traits');
+                          setTraitsDraft({
+                            personalityTraits: identity.personalityTraits || '',
+                            ideals: identity.ideals || '',
+                            bonds: identity.bonds || '',
+                            flaws: identity.flaws || '',
+                          });
+                          setIsEditingTraits(true);
+                        }}
+                        className="p-1 rounded-md bg-dnd-panel/60 hover:bg-dnd-panel text-slate-400 hover:text-dnd-gold transition-colors cursor-pointer"
+                        title="Edit character traits"
+                      >
+                        <Pencil size={11} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Shared Sub-accordion Collapsible Body */}
+              <div
+                className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+                  activeSubPanel !== null ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <SmoothSize
+                    watchKey={[displayedSubPanel, isEditingLore, isEditingTraits]}
+                    duration={220}
+                  >
+                    <div className="bg-dnd-card px-3 pt-2 pb-2.5 shadow-sm rounded-b-lg rounded-t-none">
+                      {displayedSubPanel === 'lore' ? (
+                        <div key="lore" className="space-y-2 animate-fade-in">
+                          {/* Background Field */}
+                          <div>
+                            <label htmlFor="sheet-id-background" className="block text-[9px] text-slate-400 mb-0.5">
+                              Background
+                            </label>
+                            {isEditing || isEditingLore ? (
+                              <input
+                                id="sheet-id-background"
+                                type="text"
+                                placeholder="e.g. Sage"
+                                value={identity.background || ''}
+                                onChange={(e) => handleIdentityChange('background', e.target.value)}
+                                className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs focus:outline-none focus:ring-1 focus:ring-white/20"
+                              />
+                            ) : (
+                              <div className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs truncate min-h-[24px] flex items-center">
+                                {identity.background || <span className="text-slate-500 italic">None</span>}
+                              </div>
+                            )}
+                          </div>
+
+                          {isEditingLore ? (
+                            <div className="space-y-1.5">
+                              <textarea
+                                value={loreDraft}
+                                onChange={(e) => setLoreDraft(e.target.value)}
+                                placeholder="Write character backstory, personality traits, appearance, or campaign lore..."
+                                rows={4}
+                                autoFocus
+                                spellCheck={false}
+                                aria-label="Character Lore Text Editor"
+                                className="w-full bg-dnd-panel/70 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 resize-y leading-relaxed font-sans min-h-[80px]"
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              onClick={() => {
+                                setActiveSubPanel('lore');
+                                setLoreDraft(identity.lore || '');
+                                setIsEditingLore(true);
+                              }}
+                              className="cursor-pointer group/lore"
+                            >
+                              {identity.lore && identity.lore.trim().length > 0 ? (
+                                <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed px-0.5 py-1">
+                                  {identity.lore}
+                                </div>
+                              ) : (
+                                <div className="text-xs text-slate-500 italic px-0.5 py-1 hover:text-slate-400 transition-colors">
+                                  No character lore written yet. Click to write backstory, personality traits, or notes...
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div key="traits" className="grid grid-cols-2 gap-2 text-[11px] animate-fade-in">
+                          {[
+                            { key: 'personalityTraits', label: 'Personality Traits', placeholder: 'e.g. Curious and soft-spoken...' },
+                            { key: 'ideals', label: 'Ideals', placeholder: 'e.g. Knowledge. The path to power...' },
+                            { key: 'bonds', label: 'Bonds', placeholder: 'e.g. An ancient tome I must protect...' },
+                            { key: 'flaws', label: 'Flaws', placeholder: 'e.g. Overconfident in arcane mastery...' },
+                          ].map(({ key, label, placeholder }) => (
+                            <div key={key}>
+                              <label htmlFor={`sheet-id-${key}`} className="block text-[9px] text-slate-400 mb-0.5">
+                                {label}
+                              </label>
+                              {isEditingTraits ? (
+                                <input
+                                  id={`sheet-id-${key}`}
+                                  type="text"
+                                  aria-label={label}
+                                  placeholder={placeholder}
+                                  value={traitsDraft[key] || ''}
+                                  onChange={(e) =>
+                                    setTraitsDraft((prev) => ({ ...prev, [key]: e.target.value }))
+                                  }
+                                  className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-white/20"
+                                />
+                              ) : (
+                                <div
+                                  onClick={() => {
+                                    setActiveSubPanel('traits');
+                                    setTraitsDraft({
+                                      personalityTraits: identity.personalityTraits || '',
+                                      ideals: identity.ideals || '',
+                                      bonds: identity.bonds || '',
+                                      flaws: identity.flaws || '',
+                                    });
+                                    setIsEditingTraits(true);
+                                  }}
+                                  className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs min-h-[24px] flex items-center cursor-pointer hover:bg-dnd-panel transition-colors"
+                                >
+                                  {identity[key] && identity[key].trim().length > 0 ? (
+                                    <span className="whitespace-pre-wrap leading-snug">{identity[key]}</span>
+                                  ) : (
+                                    <span className="text-slate-500 italic">None</span>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </SmoothSize>
                 </div>
               </div>
             </div>
@@ -1024,6 +1260,7 @@ function CharacterSheetHeader({
         initialMode={levelUpModalMode}
         onConfirmLevelUp={onUpdateCharacter}
         onUpdateCharacter={onUpdateCharacter}
+        onShowToast={onShowToast}
       />
 
       {/* Image Crop Modal */}

@@ -34,7 +34,13 @@ export function sanitizeRichNoteHtml(html) {
     let isStrike = ['s', 'strike', 'del'].includes(tagName);
     const preservesDel = tagName === 'del';
     const isBr = tagName === 'br';
+    const isHeading = ['h1', 'h2'].includes(tagName);
+    const isSubheading = ['h3', 'h4', 'h5', 'h6'].includes(tagName);
     const isBlock = ['div', 'p', 'li', 'ul', 'ol', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName);
+
+    const dataSize = node.getAttribute ? node.getAttribute('data-size') : null;
+    const isDataHeading = dataSize === 'heading';
+    const isDataSubheading = dataSize === 'subheading';
 
     // Check inline styles if present
     const styleAttr = node.getAttribute('style') || '';
@@ -86,6 +92,32 @@ export function sanitizeRichNoteHtml(html) {
       const bTag = document.createElement(preservesStrong ? 'strong' : 'b');
       bTag.appendChild(currentContainer);
       currentContainer = bTag;
+    }
+
+    if (isHeading) {
+      const h2 = document.createElement('h2');
+      h2.appendChild(currentContainer);
+      return h2;
+    }
+
+    if (isSubheading) {
+      const h3 = document.createElement('h3');
+      h3.appendChild(currentContainer);
+      return h3;
+    }
+
+    if (isDataHeading) {
+      const span = document.createElement('span');
+      span.setAttribute('data-size', 'heading');
+      span.appendChild(currentContainer);
+      return span;
+    }
+
+    if (isDataSubheading) {
+      const span = document.createElement('span');
+      span.setAttribute('data-size', 'subheading');
+      span.appendChild(currentContainer);
+      return span;
     }
 
     if (isBlock) {

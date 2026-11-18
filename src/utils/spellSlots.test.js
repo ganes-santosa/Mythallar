@@ -9,6 +9,7 @@ import {
   getTotalCharacterLevel,
   getMaxArcaneRecoveryLevels,
   getMaxCastableSlotLevel,
+  getCharacterClasses,
 } from './spellSlots';
 
 describe('calculateDefaultSlots', () => {
@@ -76,6 +77,36 @@ describe('Multiclass Spell Slots Calculation', () => {
       level: 2,
       slots: { 1: 2 },
     });
+  });
+
+  it('calculates 1/3 caster contribution for Eldritch Knight and Arcane Trickster', () => {
+    const character = {
+      classes: [
+        { className: 'Wizard', level: 3 },
+        { className: 'Fighter', level: 3, subclass: 'Eldritch Knight' },
+      ],
+    };
+    const res = calculateMulticlassSpellSlots(character);
+    // Wizard 3 (3) + Fighter EK 3 (floor(3/3) = 1) = Caster Level 4
+    expect(res.casterLevel).toBe(4);
+    expect(res.sharedSlots).toEqual({ 1: 4, 2: 3 });
+    expect(res.sources).toEqual([
+      { className: 'Wizard', level: 3, contribution: 3, type: 'Full Caster' },
+      { className: 'Fighter (Eldritch Knight)', level: 3, contribution: 1, type: '1/3 Caster' },
+    ]);
+  });
+
+  it('normalizes subclass on getCharacterClasses', () => {
+    const multi = {
+      sheet: { identity: { subclass: 'Evoker' } },
+      classes: [
+        { className: 'Wizard', level: 5 },
+        { className: 'Rogue', level: 3, subclass: 'Arcane Trickster' },
+      ],
+    };
+    const classes = getCharacterClasses(multi);
+    expect(classes[0]).toEqual({ className: 'Wizard', level: 5, subclass: 'Evoker' });
+    expect(classes[1]).toEqual({ className: 'Rogue', level: 3, subclass: 'Arcane Trickster' });
   });
 
   it('calculates total character level correctly', () => {

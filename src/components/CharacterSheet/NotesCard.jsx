@@ -13,6 +13,8 @@ import {
   Italic,
   Underline,
   Strikethrough,
+  Heading,
+  Check,
 } from 'lucide-react';
 import useTwoClickConfirm from '../../hooks/useTwoClickConfirm';
 import useClickOutside from '../../hooks/useClickOutside';
@@ -26,6 +28,12 @@ const SORT_MODES = [
   { id: 'recent', label: 'Recent' },
   { id: 'date', label: 'Date' },
   { id: 'alpha', label: 'Alphabetical' },
+];
+
+const TEXT_SIZES = [
+  { id: 'heading', label: 'Heading', previewClass: 'text-sm text-slate-200' },
+  { id: 'subheading', label: 'Subheading', previewClass: 'text-xs text-slate-200' },
+  { id: 'body', label: 'Body', previewClass: 'text-[11px] text-slate-300' },
 ];
 
 /**
@@ -95,6 +103,11 @@ export default function NotesCard({
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const sortMenuRef = useRef(null);
   useClickOutside(sortMenuRef, () => setIsSortMenuOpen(false), isSortMenuOpen);
+
+  const [activeTextSize, setActiveTextSize] = useState('body');
+  const [isTextSizeMenuOpen, setIsTextSizeMenuOpen] = useState(false);
+  const textSizeMenuRef = useRef(null);
+  useClickOutside(textSizeMenuRef, () => setIsTextSizeMenuOpen(false), isTextSizeMenuOpen);
 
   // Prune any legacy empty clutter notes from storage on load
   useEffect(() => {
@@ -323,6 +336,261 @@ export default function NotesCard({
 
     if (typeof document !== 'undefined' && typeof document.execCommand === 'function') {
       document.execCommand(command, false, null);
+      if (editorRef.current) {
+        handleUpdateActiveField('content', editorRef.current.innerHTML);
+      }
+    }
+  };
+
+  const getSelectedTextSize = () => {
+    if (typeof window === 'undefined' || !window.getSelection) return 'body';
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return 'body';
+    let node = sel.anchorNode;
+    if (!node) return 'body';
+    if (node.nodeType === Node.TEXT_NODE) {
+      node = node.parentElement;
+    }
+    while (node && node !== editorRef.current) {
+      const size = node.getAttribute?.('data-size');
+      if (size === 'heading') return 'heading';
+      if (size === 'subheading') return 'subheading';
+      const tag = node.tagName?.toLowerCase();
+      if (tag === 'h1' || tag === 'h2') return 'heading';
+      if (tag === 'h3' || tag === 'h4' || tag === 'h5' || tag === 'h6') return 'subheading';
+      node = node.parentElement;
+    }
+    return 'body';
+  };
+
+  const applyTextSize = (sizeId) => {
+    let range = null;
+    let sel = null;
+    if (typeof window !== 'undefined' && window.getSelection) {
+      sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        range = sel.getRangeAt(0);
+      }
+    }
+
+    if (editorRef.current) {
+      editorRef.current.focus({ preventScroll: true });
+    }
+
+    if (range && sel) {
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    if (!range || !editorRef.current || !editorRef.current.contains(range.commonAncestorContainer)) {
+      setActiveTextSize(sizeId);
+      setIsTextSizeMenuOpen(false);
+      return;
+    }
+
+    // Expand collapsed range to the word at cursor if possible
+    let effectiveRange = range;
+    if (range.collapsed) {
+      const node = range.startContainer;
+      if (node && node.nodeType === 3) {
+        const text = node.textContent || '';
+        let start = range.startOffset;
+        let end = range.startOffset;
+        while (start > 0 && /\S/.test(text[start - 1])) start--;
+        while (end < text.length && /\S/.test(text[end])) end++;
+        if (start < end) {
+          const r = document.createRange();
+          r.setStart(node, start);
+          r.setEnd(node, end);
+          effectiveRange = r;
+        }
+      }
+    }
+
+    const cleanSizes = (node) => {
+      if (!node) return;
+      if (node.nodeType === 1) {
+        node.removeAttribute?.('data-size');
+        if (/^h[1-6]$/i.test(node.tagName)) {
+          const span = document.createElement('span');
+          while (node.firstChild) span.appendChild(node.firstChild);
+          node.parentNode?.replaceChild(span, node);
+        }
+      }
+      if (node.childNodes) {
+        Array.from(node.childNodes).forEach(cleanSizes);
+      }
+    };
+
+    let parentSizeElem = null;
+    let curr = effectiveRange.commonAncestorContainer;
+    while (curr && curr !== editorRef.current) {
+      if (curr.nodeType === 1 && (curr.hasAttribute('data-size') || /^h[1-6]$/i.test(curr.tagName))) {
+        parentSizeElem = curr;
+        break;
+      }
+      curr = curr.parentNode;
+    }
+
+    let targetElement = null;
+
+    if (parentSizeElem) {
+      const isFull = effectiveRange.toString() === parentSizeElem.textContent || effectiveRange.collapsed;
+      if (isFull) {
+        if (sizeId === 'body') {
+          const parent = parentSizeElem.parentNode;
+          while (parentSizeElem.firstChild) {
+            parent.insertBefore(parentSizeElem.firstChild, parentSizeElem);
+          }
+          parentSizeElem.remove();
+        } else {
+          if (/^h[1-6]$/i.test(parentSizeElem.tagName)) {
+            const span = document.createElement('span');
+            span.setAttribute('data-size', sizeId);
+            while (parentSizeElem.firstChild) {
+              span.appendChild(parentSizeElem.firstChild);
+            }
+            parentSizeElem.parentNode?.replaceChild(span, parentSizeElem);
+            targetElement = span;
+          } else {
+            parentSizeElem.setAttribute('data-size', sizeId);
+            targetElement = parentSizeElem;
+          }
+        }
+      } else {
+        const existingSize = parentSizeElem.getAttribute?.('data-size') ||
+          (/^h[1-2]$/i.test(parentSizeElem.tagName) ? 'heading' : 'subheading');
+
+        if (effectiveRange.startContainer === effectiveRange.endContainer && effectiveRange.startContainer.nodeType === Node.TEXT_NODE) {
+          const textNode = effectiveRange.startContainer;
+          const start = effectiveRange.startOffset;
+          const end = effectiveRange.endOffset;
+
+          const mid = textNode.splitText(start);
+          const post = mid.splitText(end - start);
+
+          const parent = parentSizeElem.parentNode;
+          const nextSibling = parentSizeElem.nextSibling;
+
+          if (post.textContent) {
+            const postSpan = document.createElement('span');
+            postSpan.setAttribute('data-size', existingSize);
+            postSpan.appendChild(post);
+            parent.insertBefore(postSpan, nextSibling);
+          }
+
+          if (sizeId === 'body') {
+            parent.insertBefore(mid, post.parentNode ? post.parentNode : nextSibling);
+          } else {
+            const midSpan = document.createElement('span');
+            midSpan.setAttribute('data-size', sizeId);
+            midSpan.appendChild(mid);
+            parent.insertBefore(midSpan, post.parentNode ? post.parentNode : nextSibling);
+            targetElement = midSpan;
+          }
+
+          if (!textNode.textContent) {
+            parentSizeElem.remove();
+          }
+        } else {
+          const frag = effectiveRange.extractContents();
+          cleanSizes(frag);
+          if (sizeId === 'body') {
+            effectiveRange.insertNode(frag);
+          } else {
+            const span = document.createElement('span');
+            span.setAttribute('data-size', sizeId);
+            span.appendChild(frag);
+            effectiveRange.insertNode(span);
+            targetElement = span;
+          }
+        }
+      }
+    } else {
+      if (sizeId === 'body') {
+        const frag = effectiveRange.extractContents();
+        cleanSizes(frag);
+        effectiveRange.insertNode(frag);
+      } else {
+        const frag = effectiveRange.extractContents();
+        cleanSizes(frag);
+        const span = document.createElement('span');
+        span.setAttribute('data-size', sizeId);
+        span.appendChild(frag);
+        effectiveRange.insertNode(span);
+        targetElement = span;
+      }
+    }
+
+    if (editorRef.current) {
+      const emptySpans = editorRef.current.querySelectorAll('span:empty');
+      emptySpans.forEach((s) => s.remove());
+      handleUpdateActiveField('content', editorRef.current.innerHTML);
+    }
+
+    if (sel && targetElement) {
+      try {
+        const newRange = document.createRange();
+        newRange.selectNodeContents(targetElement);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      } catch {
+        // Range restoration optional
+      }
+    }
+
+    setActiveTextSize(sizeId);
+    setIsTextSizeMenuOpen(false);
+  };
+
+  const handleEditorKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      if (typeof window === 'undefined' || !window.getSelection) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+
+      // Check if cursor is inside a data-size or heading element
+      let sizeElem = null;
+      let curr = range.startContainer;
+      while (curr && curr !== editorRef.current) {
+        if (curr.nodeType === 1 && (curr.hasAttribute?.('data-size') || /^h[1-6]$/i.test(curr.tagName))) {
+          sizeElem = curr;
+          break;
+        }
+        curr = curr.parentNode;
+      }
+
+      if (!sizeElem) return; // Normal text, let browser handle naturally
+
+      e.preventDefault();
+
+      const isAtEnd = (range.startContainer === sizeElem.lastChild || range.startContainer === sizeElem) &&
+        (range.startOffset === (range.startContainer.textContent?.length || 0));
+
+      if (isAtEnd) {
+        const br = document.createElement('br');
+        sizeElem.parentNode.insertBefore(br, sizeElem.nextSibling);
+
+        const newRange = document.createRange();
+        newRange.setStartAfter(br);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      } else if (range.startContainer.nodeType === Node.TEXT_NODE) {
+        const textNode = range.startContainer;
+        const postText = textNode.splitText(range.startOffset);
+        const br = document.createElement('br');
+        sizeElem.parentNode.insertBefore(br, sizeElem.nextSibling);
+        sizeElem.parentNode.insertBefore(postText, br.nextSibling);
+
+        const newRange = document.createRange();
+        newRange.setStart(postText, 0);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
+
       if (editorRef.current) {
         handleUpdateActiveField('content', editorRef.current.innerHTML);
       }
@@ -630,7 +898,7 @@ export default function NotesCard({
           </div>
 
           {/* 2. Note Title Container (Dark Inset bg-dnd-panel/60) */}
-          <div className="w-full px-3 py-2 rounded-lg bg-dnd-panel/60 shadow-sm flex items-center justify-between gap-2">
+          <div className="w-full px-3 py-2.5 rounded-lg bg-dnd-panel/60 shadow-sm flex items-center justify-between gap-2">
             <input
               type="text"
               id="note-title"
@@ -639,7 +907,7 @@ export default function NotesCard({
               onChange={(e) => handleUpdateActiveField('title', e.target.value)}
               placeholder="Note Title"
               tabIndex={viewMode === 'editor' ? 0 : -1}
-              className="w-full bg-transparent text-sm font-bold text-dnd-ivory placeholder-slate-500 focus:outline-none transition-colors"
+              className="w-full bg-transparent text-[1.05rem] font-bold text-dnd-ivory placeholder-slate-500 focus:outline-none transition-colors"
             />
           </div>
 
@@ -647,6 +915,54 @@ export default function NotesCard({
           <div className="w-full p-3 rounded-lg bg-dnd-panel/60 shadow-sm space-y-2">
             {/* Formatting Toolbar */}
             <div className="flex items-center gap-1 pb-1 border-b border-white/5">
+              {/* Text Size Dropdown (Heading, Subheading, Body) */}
+              <div className="relative" ref={textSizeMenuRef}>
+                <button
+                  type="button"
+                  aria-label="Text size"
+                  title="Text size"
+                  tabIndex={viewMode === 'editor' ? 0 : -1}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setActiveTextSize(getSelectedTextSize());
+                    setIsTextSizeMenuOpen((prev) => !prev);
+                  }}
+                  className="flex items-center gap-1 px-1.5 py-0.5 rounded text-slate-300 hover:text-dnd-ivory hover:bg-white/5 text-[11px] font-medium transition-colors cursor-pointer"
+                >
+                  <Heading size={12} className="text-dnd-gold shrink-0" />
+                  <span className="text-slate-200">Text Size</span>
+                  <ChevronDown size={10} className={`text-slate-400 transition-transform ${isTextSizeMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {isTextSizeMenuOpen && (
+                  <div className="absolute left-0 top-full mt-1.5 py-1 rounded-lg bg-dnd-card shadow-lg z-30 min-w-[125px]">
+                    {TEXT_SIZES.map((size) => {
+                      const isSelected = activeTextSize === size.id;
+                      return (
+                        <button
+                          key={size.id}
+                          type="button"
+                          aria-label={`Format as ${size.label}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            applyTextSize(size.id);
+                          }}
+                          className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                            isSelected ? 'text-dnd-gold bg-dnd-panel/80 font-bold' : 'text-slate-300 hover:text-dnd-ivory hover:bg-dnd-hover'
+                          }`}
+                        >
+                          <span className={size.previewClass}>{size.label}</span>
+                          {isSelected && <Check size={11} className="text-dnd-gold shrink-0 ml-1" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Vertical Divider */}
+              <div className="h-3 w-px bg-white/10 mx-0.5" />
+
               <button
                 type="button"
                 aria-label="Bold"
@@ -717,6 +1033,7 @@ export default function NotesCard({
                 handleUpdateActiveField('content', html);
               }}
               onPaste={handlePasteContent}
+              onKeyDown={handleEditorKeyDown}
               data-placeholder="Start writing campaign notes, quest logs, NPC details, reminders, or session recaps..."
               className="w-full bg-transparent text-xs font-light text-slate-200 leading-relaxed focus:outline-none custom-scroll min-h-[140px] max-h-[500px] overflow-y-auto whitespace-pre-wrap break-words empty:before:content-[attr(data-placeholder)] empty:before:text-slate-500 empty:before:pointer-events-none select-text"
             />

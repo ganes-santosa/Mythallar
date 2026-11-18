@@ -47,7 +47,7 @@ describe('CreateCharacterModal', () => {
     expect(handleStartBuilder).toHaveBeenCalled();
   });
 
-  it('calls onCreate with Level 1 character and closes modal when Manual Setup is clicked', () => {
+  it('opens manual creation form when Manual Setup is clicked and creates character on submit', () => {
     const handleCreate = vi.fn();
     const handleClose = vi.fn();
     render(
@@ -59,13 +59,41 @@ describe('CreateCharacterModal', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /Manual Setup/i }));
-    expect(handleCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'New Adventurer',
-        className: 'Wizard',
-      })
-    );
+
+    // Now in manual setup form
+    expect(screen.getByRole('heading', { name: /Create Character/i })).toBeInTheDocument();
+    const nameInput = screen.getByLabelText(/Character Name/i);
+    const classSelect = screen.getByLabelText(/Starting Class/i);
+    const submitBtn = screen.getByRole('button', { name: /Create Character/i });
+
+    expect(submitBtn).toBeDisabled();
+
+    // Type character name and change class
+    fireEvent.change(nameInput, { target: { value: 'Elminster' } });
+    fireEvent.change(classSelect, { target: { value: 'Cleric' } });
+
+    expect(submitBtn).not.toBeDisabled();
+
+    fireEvent.click(submitBtn);
+
+    expect(handleCreate).toHaveBeenCalledWith({
+      name: 'Elminster',
+      className: 'Cleric',
+    });
     expect(handleClose).toHaveBeenCalled();
+  });
+
+  it('navigates back to choose screen when Back button is clicked in manual form', () => {
+    render(
+      <CreateCharacterModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Manual Setup/i }));
+    expect(screen.getByRole('heading', { name: /Create Character/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /Back to options/i }));
+    expect(screen.getByRole('heading', { name: /Create your character/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Character Builder/i })).toBeInTheDocument();
   });
 
   it('calls onClose when close icon button is clicked', () => {

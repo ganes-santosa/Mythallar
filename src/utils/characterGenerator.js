@@ -135,20 +135,8 @@ export function buildLevel1Character({
   // Full casters get 2 slots at level 1; Warlock gets 1; non-casters get 0
   const slotsUsed = {};
 
-  // 11. Personality Notes
+  // 11. Notes
   const notes = [];
-  if (details.personalityTraits) {
-    notes.push({ id: `note_1`, title: 'Personality Traits', content: details.personalityTraits });
-  }
-  if (details.ideals) {
-    notes.push({ id: `note_2`, title: 'Ideals', content: details.ideals });
-  }
-  if (details.bonds) {
-    notes.push({ id: `note_3`, title: 'Bonds', content: details.bonds });
-  }
-  if (details.flaws) {
-    notes.push({ id: `note_4`, title: 'Flaws', content: details.flaws });
-  }
 
   return {
     id: `char_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
@@ -168,7 +156,13 @@ export function buildLevel1Character({
         background: selectedBackground?.name || '',
         portrait: details.portrait || '',
         lore: details.backstory || '',
+        age: details.age || '',
+        gender: details.gender || '',
         alignment: details.alignment || '',
+        personalityTraits: details.personalityTraits || '',
+        ideals: details.ideals || '',
+        bonds: details.bonds || '',
+        flaws: details.flaws || '',
       },
       vitals: {
         ...defaultSheet.vitals,

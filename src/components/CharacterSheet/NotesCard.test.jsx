@@ -312,15 +312,56 @@ describe('NotesCard', () => {
     expect(restoredInnerScroller.scrollTop).toBe(180);
   });
 
-  it('renders Bold, Italic, Underline, and Strikethrough formatting buttons', () => {
+  it('renders Text size selector and Bold, Italic, Underline, and Strikethrough formatting buttons', () => {
     const handleUpdate = vi.fn();
     render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
     fireEvent.click(screen.getByText('Quests'));
 
+    expect(screen.getByRole('button', { name: 'Text size' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Bold' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Italic' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Underline' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Strikethrough' })).toBeInTheDocument();
+  });
+
+  it('allows selecting text sizes (Heading, Subheading, Body) via dropdown and applies inline size formatting to selection', () => {
+    const handleUpdate = vi.fn();
+    render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+    fireEvent.click(screen.getByText('Quests'));
+
+    const editor = screen.getByRole('textbox', { name: 'Note Content' });
+    editor.innerHTML = 'Some transmuters are tinkerers and pranksters.';
+
+    // Create selection on "Some transmuters"
+    const textNode = editor.firstChild;
+    const range = document.createRange();
+    range.setStart(textNode, 0);
+    range.setEnd(textNode, 16);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    const sizeBtn = screen.getByRole('button', { name: 'Text size' });
+    fireEvent.mouseDown(sizeBtn);
+
+    expect(screen.getByRole('button', { name: 'Format as Heading' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Format as Subheading' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Format as Body' })).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Format as Heading' }));
+    expect(editor.innerHTML).toContain('<span data-size="heading">Some transmuters</span>');
+    expect(editor.innerHTML).toContain('are tinkerers and pranksters.');
+
+    // Change to Subheading
+    fireEvent.mouseDown(sizeBtn);
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Format as Subheading' }));
+    expect(editor.innerHTML).toContain('<span data-size="subheading">Some transmuters</span>');
+
+    // Change to Body
+    fireEvent.mouseDown(sizeBtn);
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Format as Body' }));
+    expect(editor.innerHTML).not.toContain('data-size');
+    expect(editor.innerHTML).toContain('Some transmuters are tinkerers and pranksters.');
   });
 
   it('sanitizes pasted rich HTML into bold, italic, underline, strikethrough tags without dangerous attributes', () => {
@@ -345,5 +386,82 @@ describe('NotesCard', () => {
         }),
       ])
     );
+  });
+
+  it('renders rich subclass feature note properly in list and editor view', () => {
+    const subclassNote = {
+      id: 'sub-1',
+      title: 'Evocation Wizard',
+      content: '<p><i>Source: PHB</i></p><br><p><b>Evocation Savant</b> <i>(Level 2)</i><br>Half gold cost.</p><br><p><b>Sculpt Spells</b> <i>(Level 2)</i><br>Protect allies.</p>',
+      updatedAt: '2026-11-04T10:00:00.000Z',
+      pinned: false,
+    };
+
+    render(<NotesCard notes={[subclassNote]} onUpdateNotes={() => {}} />);
+
+    expect(screen.getByText('Evocation Wizard')).toBeInTheDocument();
+    // Snippet preview extracts plain text
+    expect(screen.getByText(/Source: PHB/i)).toBeInTheDocument();
+
+    // Open editor
+    fireEvent.click(screen.getByText('Evocation Wizard'));
+
+    const editor = screen.getByLabelText('Note Content');
+    expect(editor.innerHTML).toContain('Evocation Savant');
+    expect(editor.innerHTML).toContain('Sculpt Spells');
+  });
+
+  it('keeps Text Size button label static and allows partial text sizing inside an existing heading', () => {
+    const handleUpdate = vi.fn();
+    render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+    fireEvent.click(screen.getByText('Quests'));
+
+    const sizeBtn = screen.getByRole('button', { name: 'Text size' });
+    expect(sizeBtn).toHaveTextContent('Text Size');
+
+    const editor = screen.getByRole('textbox', { name: 'Note Content' });
+    editor.innerHTML = '<span data-size="heading">Some transmuters are tinkerers</span>';
+
+    // Select "transmuters" inside the heading span
+    const span = editor.querySelector('span');
+    const textNode = span.firstChild;
+    const range = document.createRange();
+    range.setStart(textNode, 5); // "transmuters"
+    range.setEnd(textNode, 16);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // Open menu: button text stays "Text Size"
+    fireEvent.mouseDown(sizeBtn);
+    expect(sizeBtn).toHaveTextContent('Text Size');
+
+    // Change "transmuters" to subheading
+    fireEvent.mouseDown(screen.getByRole('button', { name: 'Format as Subheading' }));
+    expect(editor.innerHTML).toBe('<span data-size="heading">Some </span><span data-size="subheading">transmuters</span><span data-size="heading"> are tinkerers</span>');
+    expect(sizeBtn).toHaveTextContent('Text Size');
+  });
+
+  it('breaks out of heading span when pressing Enter at the end of a heading', () => {
+    const handleUpdate = vi.fn();
+    render(<NotesCard notes={mockNotes} onUpdateNotes={handleUpdate} />);
+    fireEvent.click(screen.getByText('Quests'));
+
+    const editor = screen.getByRole('textbox', { name: 'Note Content' });
+    editor.innerHTML = '<span data-size="heading">Evocation Savant</span>';
+
+    const span = editor.querySelector('span');
+    const textNode = span.firstChild;
+
+    const range = document.createRange();
+    range.setStart(textNode, 16); // end of "Evocation Savant"
+    range.setEnd(textNode, 16);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    fireEvent.keyDown(editor, { key: 'Enter', shiftKey: false });
+
+    expect(editor.innerHTML).toBe('<span data-size="heading">Evocation Savant</span><br>');
   });
 });

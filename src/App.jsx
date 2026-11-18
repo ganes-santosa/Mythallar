@@ -708,6 +708,11 @@ export default function App() {
     setIsCharacterBuilderModalOpen(true);
   }, []);
 
+  const handleBackToCreateOptions = useCallback(() => {
+    setIsCharacterBuilderModalOpen(false);
+    setIsCreateCharacterModalOpen(true);
+  }, []);
+
   const handleOpenHomebrewModal = useCallback(() => {
     setIsHomebrewSpellModalOpen(true);
   }, []);
@@ -1984,6 +1989,7 @@ export default function App() {
                     onDeleteProfile={handleDeleteCharacter}
                     onExport={handleExport}
                     onImport={handleImport}
+                    onShowToast={showToast}
                   />
                 </div>
               </div>
@@ -2084,6 +2090,7 @@ export default function App() {
           isOpen={isCharacterBuilderModalOpen}
           onClose={() => setIsCharacterBuilderModalOpen(false)}
           onCreate={handleSaveNewCharacter}
+          onBack={handleBackToCreateOptions}
         />
       )}
 

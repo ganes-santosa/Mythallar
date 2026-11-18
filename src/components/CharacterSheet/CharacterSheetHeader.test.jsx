@@ -51,6 +51,8 @@ describe('CharacterSheetHeader', () => {
     // Identity metadata fields displayed as static text when not editing
     expect(screen.getByText('High Elf')).toBeInTheDocument();
     expect(screen.getByText('Divination')).toBeInTheDocument();
+    // Background is inside Character Lore body, not duplicated in the pill title
+    expect(screen.queryByText('• Sage')).not.toBeInTheDocument();
     expect(screen.getByText('Sage')).toBeInTheDocument();
   });
 
@@ -216,6 +218,65 @@ describe('CharacterSheetHeader', () => {
     // Click to collapse
     fireEvent.click(screen.getByLabelText('Collapse Character Lore'));
     expect(screen.getByLabelText('Expand Character Lore')).toBeInTheDocument();
+  });
+
+  it('switches shared collapsible panel between Character Lore and Character Traits and edits traits', () => {
+    const handleUpdate = vi.fn();
+    const charWithLoreAndTraits = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        identity: {
+          ...mockCharacter.sheet.identity,
+          lore: 'Born in Silverymoon under an eclipse.',
+          personalityTraits: 'Curious and soft-spoken.',
+          ideals: 'Knowledge.',
+          bonds: 'Ancient tome.',
+          flaws: 'Hubris.',
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={charWithLoreAndTraits}
+        profiles={[charWithLoreAndTraits]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // Expand Lore first
+    fireEvent.click(screen.getByLabelText('Expand Character Lore'));
+    expect(screen.getByLabelText('Collapse Character Lore')).toBeInTheDocument();
+    expect(screen.getByText('Born in Silverymoon under an eclipse.')).toBeInTheDocument();
+
+    // Click Character Traits pill while Lore is open -> closes Lore and opens Traits in shared panel
+    fireEvent.click(screen.getByLabelText('Expand Character Traits'));
+    expect(screen.getByLabelText('Expand Character Lore')).toBeInTheDocument();
+    expect(screen.getByLabelText('Collapse Character Traits')).toBeInTheDocument();
+    expect(screen.getByText('Curious and soft-spoken.')).toBeInTheDocument();
+    expect(screen.getByText('Knowledge.')).toBeInTheDocument();
+    expect(screen.getByText('Ancient tome.')).toBeInTheDocument();
+    expect(screen.getByText('Hubris.')).toBeInTheDocument();
+
+    // Edit traits and save
+    fireEvent.click(screen.getByLabelText('Edit Character Traits'));
+    const flawsInput = screen.getByLabelText('Flaws');
+    fireEvent.change(flawsInput, { target: { value: 'Overconfident in arcane mastery.' } });
+    fireEvent.click(screen.getByLabelText('Save Character Traits'));
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        sheet: expect.objectContaining({
+          identity: expect.objectContaining({
+            personalityTraits: 'Curious and soft-spoken.',
+            ideals: 'Knowledge.',
+            bonds: 'Ancient tome.',
+            flaws: 'Overconfident in arcane mastery.',
+          }),
+        }),
+      })
+    );
   });
 
   it('renders background inside Character Lore section and updates background on edit', () => {
@@ -531,5 +592,44 @@ describe('CharacterSheetHeader', () => {
         })
       );
     });
+  });
+
+  it('renders per-class subclasses and allows inline editing of per-class subclass', () => {
+    const handleUpdate = vi.fn();
+    const multiSubChar = {
+      ...mockCharacter,
+      classes: [
+        { className: 'Wizard', level: 3, subclass: 'Diviner' },
+        { className: 'Cleric', level: 2, subclass: 'Life Domain' },
+      ],
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={multiSubChar}
+        profiles={[multiSubChar]}
+        onUpdateCharacter={handleUpdate}
+      />
+    );
+
+    // View mode renders per-class subclass badges
+    expect(screen.getByText('(Diviner)')).toBeInTheDocument();
+    expect(screen.getByText('(Life Domain)')).toBeInTheDocument();
+
+    // Enter edit mode
+    fireEvent.click(screen.getByLabelText('Edit Profile'));
+
+    const wizardSubInput = screen.getByLabelText('Subclass for Wizard');
+    expect(wizardSubInput).toHaveValue('Diviner');
+    fireEvent.change(wizardSubInput, { target: { value: 'Abjurer' } });
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        classes: [
+          expect.objectContaining({ className: 'Wizard', subclass: 'Abjurer' }),
+          expect.objectContaining({ className: 'Cleric', subclass: 'Life Domain' }),
+        ],
+      })
+    );
   });
 });

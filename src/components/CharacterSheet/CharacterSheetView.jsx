@@ -203,6 +203,7 @@ function CharacterSheetView({
               onDeleteProfile={onDeleteProfile}
               onExport={onExport}
               onImport={onImport}
+              onShowToast={onShowToast}
             />
           </div>
         </div>

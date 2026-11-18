@@ -307,3 +307,50 @@ input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
+
+/* Note Content (Windows Notepad clean line spacing & pure text sizing without weight override) */
+#note-content,
+#note-content * {
+  margin: 0;
+  padding: 0;
+  line-height: inherit;
+  color: inherit;
+}
+
+#note-content b,
+#note-content strong {
+  font-weight: 700;
+}
+
+#note-content i,
+#note-content em {
+  font-style: italic;
+}
+
+#note-content u {
+  text-decoration: underline;
+}
+
+#note-content s,
+#note-content strike,
+#note-content del {
+  text-decoration: line-through;
+}
+
+#note-content [data-size="heading"],
+#note-content h1,
+#note-content h2 {
+  font-family: 'Funnel Display', system-ui, -apple-system, sans-serif;
+  font-size: 1.05rem;
+  font-weight: inherit;
+}
+
+#note-content [data-size="subheading"],
+#note-content h3,
+#note-content h4,
+#note-content h5,
+#note-content h6 {
+  font-family: 'Funnel Display', system-ui, -apple-system, sans-serif;
+  font-size: 0.875rem;
+  font-weight: inherit;
+}

@@ -79,17 +79,23 @@ export const HALF_CASTERS = new Set(['Paladin', 'Ranger']);
 export function getCharacterClasses(character) {
   if (!character) return [{ className: 'Wizard', level: 1 }];
   if (Array.isArray(character.classes) && character.classes.length > 0) {
-    return character.classes.map((c) => ({
-      className: c.className || 'Wizard',
-      level: Math.max(1, Number(c.level) || 1),
-    }));
+    return character.classes.map((c, idx) => {
+      const subclass = c.subclass || (idx === 0 ? character?.sheet?.identity?.subclass : '') || '';
+      const obj = {
+        className: c.className || 'Wizard',
+        level: Math.max(1, Number(c.level) || 1),
+      };
+      if (subclass) obj.subclass = subclass;
+      return obj;
+    });
   }
-  return [
-    {
-      className: character.className || 'Wizard',
-      level: Math.max(1, Number(character.level) || 1),
-    },
-  ];
+  const subclass = character?.sheet?.identity?.subclass || '';
+  const obj = {
+    className: character.className || 'Wizard',
+    level: Math.max(1, Number(character.level) || 1),
+  };
+  if (subclass) obj.subclass = subclass;
+  return [obj];
 }
 
 export function isWizardCharacter(character) {
@@ -184,6 +190,13 @@ export function calculateMulticlassSpellSlots(character) {
     } else if (className === 'Warlock') {
       pactSlots = { ...WARLOCK_TABLE[level] };
       pactSource = { className: 'Warlock', level, slots: pactSlots };
+    } else if (
+      (className === 'Fighter' && /eldritch/i.test(c.subclass || '')) ||
+      (className === 'Rogue' && /trickster/i.test(c.subclass || ''))
+    ) {
+      const contrib = Math.floor(level / 3);
+      totalCasterLevel += contrib;
+      sources.push({ className: `${className} (${c.subclass})`, level, contribution: contrib, type: '1/3 Caster' });
     } else {
       sources.push({ className, level, contribution: 0, type: 'Non-Caster' });
     }

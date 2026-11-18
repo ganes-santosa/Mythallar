@@ -8,7 +8,25 @@ import {
 } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
-import { getLevelUpChecklist } from '../../utils/levelUpRules';
+import { getLevelUpChecklist, getSubclassLevel, getSubclassLabel } from '../../utils/levelUpRules';
+import { loadBuilderData } from '../../utils/builderData';
+import { autoAddSubclassNote } from '../../utils/subclassNotes';
+
+function CompassRoseIcon({ size = 13, className = '', ...props }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 256 256"
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M249.94,120.24l-27.05-6.76a95.86,95.86,0,0,0-80.37-80.37l-6.76-27a8,8,0,0,0-15.52,0l-6.76,27.05a95.86,95.86,0,0,0-80.37,80.37l-27,6.76a8,8,0,0,0,0,15.52l27.05,6.76a95.86,95.86,0,0,0,80.37,80.37l6.76,27.05a8,8,0,0,0,15.52,0l6.76-27.05a95.86,95.86,0,0,0,80.37-80.37l27.05-6.76a8,8,0,0,0,0-15.52Zm-95.49,22.9L139.31,128l15.14-15.14L215,128Zm-52.9,0L41,128l60.57-15.14L116.69,128ZM205.77,109.2,158.6,97.4,146.8,50.23A79.88,79.88,0,0,1,205.77,109.2Zm-62.63-7.65L128,116.69l-15.14-15.14L128,41ZM109.2,50.23,97.4,97.4,50.23,109.2A79.88,79.88,0,0,1,109.2,50.23Zm-59,96.57L97.4,158.6l11.8,47.17A79.88,79.88,0,0,1,50.23,146.8Zm62.63,7.65L128,139.31l15.14,15.14L128,215Zm33.94,51.32,11.8-47.17,47.17-11.8A79.88,79.88,0,0,1,146.8,205.77Z" />
+    </svg>
+  );
+}
 
 const ALL_CLASSES = [
   'Artificer',
@@ -33,6 +51,7 @@ export default function LevelUpModal({
   initialMode = 'levelup',
   onConfirmLevelUp,
   onUpdateCharacter,
+  onShowToast,
 }) {
   useScrollLock(isOpen);
 
@@ -51,6 +70,56 @@ export default function LevelUpModal({
   const [guideClass, setGuideClass] = useState(classes[0]?.className || 'Wizard');
   const [guideClassLevel, setGuideClassLevel] = useState(classes[0]?.level || 1);
 
+  const [allClasses, setAllClasses] = useState([]);
+  const [chosenSubclass, setChosenSubclass] = useState('');
+  const [isCustomSubclass, setIsCustomSubclass] = useState(false);
+  const [customSubclassText, setCustomSubclassText] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    loadBuilderData()
+      .then((data) => {
+        if (!active) return;
+        if (data?.classes && data.classes.length > 0) {
+          setAllClasses(data.classes);
+        } else {
+          import('../../../public/data/classes.json')
+            .then((m) => {
+              if (active && m.default) setAllClasses(m.default);
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {
+        if (active) {
+          import('../../../public/data/classes.json')
+            .then((m) => {
+              if (active && m.default) setAllClasses(m.default);
+            })
+            .catch(() => {});
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const ruleset = character?.ruleset || '2024';
+  const targetClassName = levelUpTarget === '__new_class__' ? newMulticlassChoice : levelUpTarget;
+  const targetClassIdx = classes.findIndex((c) => c.className === targetClassName);
+  const currentLevel = targetClassIdx >= 0 ? classes[targetClassIdx].level : 0;
+  const nextLevel = targetClassIdx >= 0 ? currentLevel + 1 : 1;
+  const reqSubclassLevel = getSubclassLevel(targetClassName, ruleset);
+  const isSubclassEligible = nextLevel >= reqSubclassLevel;
+  const currentClassSubclass = (targetClassIdx >= 0 ? classes[targetClassIdx]?.subclass : '')
+    || (targetClassIdx === 0 ? character?.sheet?.identity?.subclass : '')
+    || '';
+
+  // Class data and subclasses for target class
+  const classRecord = allClasses.find((c) => c.name === targetClassName && (!ruleset || c.edition === ruleset))
+    || allClasses.find((c) => c.name === targetClassName);
+  const availableSubclasses = classRecord?.subclasses || [];
+
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
@@ -59,8 +128,19 @@ export default function LevelUpModal({
       setGuideClass(defaultTarget);
       setGuideClassLevel(classes[0]?.level || 1);
       setNewMulticlassChoice(unselectedClasses[0] || 'Fighter');
+      setChosenSubclass(currentClassSubclass || '');
+      setIsCustomSubclass(false);
+      setCustomSubclassText('');
     }
   }, [isOpen, initialMode, character?.id]);
+
+  useEffect(() => {
+    if (isOpen) {
+      setChosenSubclass(currentClassSubclass || '');
+      setIsCustomSubclass(false);
+      setCustomSubclassText('');
+    }
+  }, [levelUpTarget, newMulticlassChoice, currentClassSubclass]);
 
   if (!isOpen || !character) return null;
 
@@ -77,31 +157,94 @@ export default function LevelUpModal({
     let leveledClassName = '';
     let leveledClassLevel = 1;
 
+    const userPickedSubclass = Boolean(
+      isCustomSubclass ? customSubclassText.trim() : chosenSubclass.trim()
+    );
+
+    const finalSubclass = isCustomSubclass
+      ? customSubclassText.trim()
+      : (chosenSubclass || currentClassSubclass || '');
+
     if (levelUpTarget === '__new_class__') {
       if (!newMulticlassChoice) return;
       leveledClassName = newMulticlassChoice;
       leveledClassLevel = 1;
-      updatedClasses = [...classes, { className: newMulticlassChoice, level: 1 }];
+      const newCls = { className: newMulticlassChoice, level: 1 };
+      if (finalSubclass) newCls.subclass = finalSubclass;
+      updatedClasses = [...classes, newCls];
     } else {
       leveledClassName = levelUpTarget;
       updatedClasses = classes.map((c) => {
         if (c.className === levelUpTarget) {
           leveledClassLevel = c.level + 1;
-          return { ...c, level: c.level + 1 };
+          const updated = { ...c, level: c.level + 1 };
+          if (finalSubclass) {
+            updated.subclass = finalSubclass;
+          }
+          return updated;
         }
         return c;
       });
     }
 
     const nextTotalLevel = updatedClasses.reduce((sum, c) => sum + c.level, 0);
+
+    const updatedChecklist = {
+      ...(character.levelUpChecklist || {}),
+    };
+
+    if (isSubclassEligible) {
+      const targetReqSubclassLevel = getSubclassLevel(leveledClassName, ruleset);
+      const subclassTaskId = `subclass-${leveledClassName}-${targetReqSubclassLevel}`;
+      if (userPickedSubclass) {
+        updatedChecklist[subclassTaskId] = true;
+      } else {
+        delete updatedChecklist[subclassTaskId];
+      }
+    }
+
     const updatedChar = {
       ...character,
       className: updatedClasses[0].className,
       level: nextTotalLevel,
       classes: updatedClasses,
+      levelUpChecklist: updatedChecklist,
     };
 
-    onConfirmLevelUp(updatedChar);
+    if (character.sheet) {
+      const updatedSheet = {
+        ...character.sheet,
+        identity: {
+          ...(character.sheet.identity || {}),
+        },
+      };
+      if (targetClassIdx === 0 || classes.length === 1) {
+        if (finalSubclass) {
+          updatedSheet.identity.subclass = finalSubclass;
+        }
+      }
+      updatedChar.sheet = updatedSheet;
+    }
+
+    let finalChar = updatedChar;
+    if (finalSubclass) {
+      const subObj = availableSubclasses.find(
+        (s) => s.name === finalSubclass || s.shortName === finalSubclass
+      );
+      const prevNotesCount = Array.isArray(updatedChar.sheet?.notes) ? updatedChar.sheet.notes.length : 0;
+      finalChar = autoAddSubclassNote({
+        character: updatedChar,
+        className: leveledClassName,
+        subclassName: finalSubclass,
+        subclassObj: subObj,
+      });
+      const nextNotesCount = Array.isArray(finalChar.sheet?.notes) ? finalChar.sheet.notes.length : 0;
+      if (nextNotesCount > prevNotesCount) {
+        onShowToast?.(`Added ${finalSubclass} features to Notes`, 'success');
+      }
+    }
+
+    onConfirmLevelUp(finalChar);
     onClose();
   };
 
@@ -115,6 +258,7 @@ export default function LevelUpModal({
     classLevel: guideClassLevel,
     totalLevel,
     conMod,
+    ruleset,
   });
 
   const checklistState = character.levelUpChecklist || {};
@@ -251,6 +395,62 @@ export default function LevelUpModal({
                 </label>
               )}
             </div>
+
+            {/* Subclass Selection Prompt when leveling to or beyond subclass level */}
+            {isSubclassEligible && (
+              <div className="p-3 rounded-xl bg-dnd-panel/60 space-y-2 animate-in fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-1.5">
+                    <CompassRoseIcon size={13} className="text-dnd-gold shrink-0" />
+                    <span className="text-xs font-bold text-dnd-gold">
+                      Choose {getSubclassLabel(targetClassName)}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium bg-dnd-card/80 px-1.5 py-0.5 rounded shadow-sm">
+                    Level {reqSubclassLevel}+
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-300 leading-snug">
+                  {currentClassSubclass
+                    ? `Current: ${currentClassSubclass}. Select below to change your archetype.`
+                    : `You've unlocked your subclass! Select your ${getSubclassLabel(targetClassName)}:`}
+                </p>
+
+                <select
+                  aria-label={`Select ${getSubclassLabel(targetClassName)}`}
+                  value={isCustomSubclass ? '__custom__' : (chosenSubclass || '')}
+                  onChange={(e) => {
+                    if (e.target.value === '__custom__') {
+                      setIsCustomSubclass(true);
+                    } else {
+                      setIsCustomSubclass(false);
+                      setChosenSubclass(e.target.value);
+                    }
+                  }}
+                  className="w-full bg-dnd-card rounded-lg px-2.5 py-1.5 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 cursor-pointer shadow-sm"
+                >
+                  <option value="" className="bg-dnd-panel">-- Select Subclass --</option>
+                  {availableSubclasses.map((s) => (
+                    <option key={s.id || `${s.name}-${s.source}`} value={s.name} className="bg-dnd-panel">
+                      {s.name} {s.source ? `(${s.source})` : ''}
+                    </option>
+                  ))}
+                  <option value="__custom__" className="bg-dnd-panel">+ Custom / Other Subclass</option>
+                </select>
+
+                {isCustomSubclass && (
+                  <input
+                    type="text"
+                    placeholder="Custom subclass name..."
+                    value={customSubclassText}
+                    onChange={(e) => setCustomSubclassText(e.target.value)}
+                    className="w-full bg-dnd-card rounded-lg px-2.5 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 placeholder:text-slate-500"
+                    aria-label="Custom Subclass Name"
+                  />
+                )}
+              </div>
+            )}
 
             <div className="flex items-center justify-end space-x-2 pt-2">
               <button

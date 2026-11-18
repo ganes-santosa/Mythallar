@@ -57,6 +57,10 @@ const CLASS_DESCRIPTIONS = {
   Artificer: 'A master of invention, utilizing ingenuity and magic to unlock wondrous capabilities in objects.',
 };
 
+const ALLOWED_SUBCLASS_SOURCES = new Set([
+  'XPHB', 'PHB', 'DMG', 'SCAG', 'XGE', 'TCE', 'BGG', 'VRGR', 'EGW', 'FTD', 'DSotDQ', 'PSA', 'PSK',
+]);
+
 async function fetchJSON(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
@@ -73,23 +77,7 @@ async function run() {
       const rawClasses = data.class || [];
       const rawFeatures = data.classFeature || [];
       const rawSubclasses = data.subclass || [];
-
-      // Parse subclasses
-      const uniqueSubclasses = [];
-      const seenSubs = new Set();
-      for (const s of rawSubclasses) {
-        if (!s.name) continue;
-        const key = `${s.name}|${s.source}`;
-        if (seenSubs.has(key)) continue;
-        seenSubs.add(key);
-        uniqueSubclasses.push({
-          id: `${slug}-${s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${s.source.toLowerCase()}`,
-          name: clean5eText(s.name),
-          shortName: s.shortName ? clean5eText(s.shortName) : clean5eText(s.name),
-          source: s.source,
-          edition: s.source === 'XPHB' ? '2024' : '2014',
-        });
-      }
+      const rawSubclassFeatures = data.subclassFeature || [];
 
       // Look for 2024 (XPHB) and 2014 (PHB/TCE)
       for (const cls of rawClasses) {
@@ -128,12 +116,55 @@ async function run() {
           .map((p) => (typeof p === 'string' ? p.toLowerCase() : Object.keys(p)[0]?.toLowerCase()))
           .filter(Boolean);
 
-        // Filter subclasses appropriate for this edition
-        const classSubs = uniqueSubclasses.filter((s) => {
+        // Filter subclasses appropriate for this class and edition from official sources
+        const targetClassSource = edition === '2024'
+          ? (slug === 'artificer' ? 'TCE' : 'XPHB')
+          : (slug === 'artificer' ? 'TCE' : 'PHB');
+
+        const classSubs = [];
+        const seenSubsForEdition = new Set();
+        for (const s of rawSubclasses) {
+          if (!s.name || !ALLOWED_SUBCLASS_SOURCES.has(s.source)) continue;
+          if (s.classSource !== targetClassSource) continue;
+          const key = `${s.name}|${s.source}`;
+          if (seenSubsForEdition.has(key)) continue;
+          seenSubsForEdition.add(key);
+
+          const subFeatures = rawSubclassFeatures
+            .filter((f) => {
+              if (f.subclassShortName !== s.shortName) return false;
+              if (f.subclassSource && f.subclassSource !== s.source) return false;
+              if (!f.subclassSource && s.source !== 'PHB') return false;
+              if (f.isClassFeatureVariant) return false;
+              return true;
+            })
+            .map((f) => ({
+              name: clean5eText(f.name),
+              level: f.level,
+              description: clean5eText(parseEntries(f.entries).join('\n\n')),
+            }))
+            .filter((f) => f.description.trim().length > 0);
+
+          classSubs.push({
+            id: `${slug}-${s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${s.source.toLowerCase()}`,
+            name: clean5eText(s.name),
+            shortName: s.shortName ? clean5eText(s.shortName) : clean5eText(s.name),
+            source: s.source,
+            edition: s.source === 'XPHB' ? '2024' : '2014',
+            isLegacy: s.source !== 'XPHB',
+            spellcastingAbility: s.spellcastingAbility?.toLowerCase() || null,
+            casterProgression: s.casterProgression || null,
+            features: subFeatures,
+          });
+        }
+
+        // Sort: modern (2024 / XPHB) first if 2024 edition, then alphabetical by name
+        classSubs.sort((a, b) => {
           if (edition === '2024') {
-            return s.edition === '2024' || s.source === 'TCE' || s.source === 'XGE' || s.source === 'EGW';
+            if (a.source === 'XPHB' && b.source !== 'XPHB') return -1;
+            if (b.source === 'XPHB' && a.source !== 'XPHB') return 1;
           }
-          return s.edition === '2014';
+          return a.name.localeCompare(b.name);
         });
 
         const classRecord = {

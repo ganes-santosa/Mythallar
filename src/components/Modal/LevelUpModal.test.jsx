@@ -210,4 +210,279 @@ describe('LevelUpModal', () => {
       })
     );
   });
+
+  it('prompts for subclass selection when leveling to subclass level', async () => {
+    const lvl2Fighter = {
+      id: 'c2',
+      name: 'Fighter Guy',
+      className: 'Fighter',
+      level: 2,
+      ruleset: '2024',
+      classes: [{ className: 'Fighter', level: 2 }],
+      abilities: { con: 14 },
+    };
+
+    const handleConfirm = vi.fn();
+    render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={lvl2Fighter}
+        initialMode="levelup"
+        onConfirmLevelUp={handleConfirm}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    // Wait for async class/subclass dataset to load options into select
+    await screen.findAllByRole('option', { name: /Battle Master/i });
+
+    const subclassSelect = screen.getByLabelText(/Select Martial Archetype/i);
+    expect(subclassSelect).toBeInTheDocument();
+
+    fireEvent.change(subclassSelect, { target: { value: 'Battle Master' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Level Up' }));
+
+    expect(handleConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 3,
+        className: 'Fighter',
+        classes: [{ className: 'Fighter', level: 3, subclass: 'Battle Master' }],
+      })
+    );
+  });
+
+  it('preserves distinct per-class subclasses when leveling a multiclass character', async () => {
+    const multiChar = {
+      id: 'c3',
+      name: 'Eldritch Scholar',
+      className: 'Wizard',
+      level: 5,
+      ruleset: '2024',
+      classes: [
+        { className: 'Wizard', level: 3, subclass: 'Diviner' },
+        { className: 'Fighter', level: 2 },
+      ],
+      abilities: { con: 12 },
+    };
+
+    const handleConfirm = vi.fn();
+    render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={multiChar}
+        initialMode="levelup"
+        onConfirmLevelUp={handleConfirm}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    // Pick Fighter radio button to level Fighter 2 -> 3
+    const fighterRadio = screen.getByRole('radio', { name: /Fighter/i });
+    fireEvent.click(fighterRadio);
+
+    // Wait for async class/subclass options for Fighter to appear
+    await screen.findAllByRole('option', { name: /Eldritch Knight/i });
+
+    const subclassSelect = screen.getByLabelText(/Select Martial Archetype/i);
+    expect(subclassSelect).toBeInTheDocument();
+    fireEvent.change(subclassSelect, { target: { value: 'Eldritch Knight' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Level Up' }));
+
+    expect(handleConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 6,
+        classes: [
+          { className: 'Wizard', level: 3, subclass: 'Diviner' },
+          { className: 'Fighter', level: 3, subclass: 'Eldritch Knight' },
+        ],
+      })
+    );
+  });
+
+  it('supports custom subclass text input in subclass prompt', async () => {
+    const lvl2Barbarian = {
+      id: 'c4',
+      name: 'Rage Monster',
+      className: 'Barbarian',
+      level: 2,
+      ruleset: '2024',
+      classes: [{ className: 'Barbarian', level: 2 }],
+      abilities: { con: 16 },
+    };
+
+    const handleConfirm = vi.fn();
+    render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={lvl2Barbarian}
+        initialMode="levelup"
+        onConfirmLevelUp={handleConfirm}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    const subclassSelect = await screen.findByLabelText(/Select Primal Path/i);
+    expect(subclassSelect).toBeInTheDocument();
+    fireEvent.change(subclassSelect, { target: { value: '__custom__' } });
+
+    const customInput = screen.getByLabelText(/Custom Subclass Name/i);
+    fireEvent.change(customInput, { target: { value: 'Path of the Stormherald Homebrew' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Level Up' }));
+
+    expect(handleConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: 3,
+        classes: [{ className: 'Barbarian', level: 3, subclass: 'Path of the Stormherald Homebrew' }],
+      })
+    );
+  });
+
+  it('automatically adds a formatted note with subclass features when picking a subclass', async () => {
+    const lvl1Wizard = {
+      id: 'c4',
+      name: 'Evocation Apprentice',
+      className: 'Wizard',
+      level: 1,
+      ruleset: '2014',
+      classes: [{ className: 'Wizard', level: 1 }],
+      sheet: {
+        notes: [{ id: 'n1', title: 'Spellbook Recipe', content: 'Ink and parchment' }],
+      },
+    };
+
+    const handleConfirm = vi.fn();
+    const handleShowToast = vi.fn();
+    render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={lvl1Wizard}
+        initialMode="levelup"
+        onConfirmLevelUp={handleConfirm}
+        onUpdateCharacter={vi.fn()}
+        onShowToast={handleShowToast}
+      />
+    );
+
+    // Wait for async options to load
+    await screen.findAllByRole('option', { name: /School of Evocation/i });
+
+    const subclassSelect = screen.getByLabelText(/Select Arcane Tradition/i);
+    fireEvent.change(subclassSelect, { target: { value: 'School of Evocation' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Level Up' }));
+
+    expect(handleConfirm).toHaveBeenCalledTimes(1);
+    const confirmedChar = handleConfirm.mock.calls[0][0];
+
+    expect(confirmedChar.classes[0].subclass).toBe('School of Evocation');
+    expect(confirmedChar.sheet.notes).toHaveLength(2);
+    expect(confirmedChar.levelUpChecklist['subclass-Wizard-2']).toBe(true);
+    expect(handleShowToast).toHaveBeenCalledWith('Added School of Evocation features to Notes', 'success');
+
+    const subclassNote = confirmedChar.sheet.notes[0];
+    expect(subclassNote.title).toBe('School of Evocation');
+    expect(subclassNote.content).toContain('Source:');
+    expect(subclassNote.content).toContain('Evocation Savant');
+    expect(subclassNote.content).toContain('Sculpt Spells');
+  });
+
+  it('keeps Choose Subclass checklist entry active and does not toast if user ignores subclass dropdown', async () => {
+    const lvl1Wizard = {
+      id: 'c-wiz-1',
+      name: 'Raistlin',
+      className: 'Wizard',
+      level: 1,
+      ruleset: '2014',
+      classes: [{ className: 'Wizard', level: 1 }],
+      sheet: {
+        notes: [{ id: 'n1', title: 'Spellbook Recipe', content: 'Ink and parchment' }],
+      },
+    };
+
+    const handleConfirm = vi.fn();
+    const handleShowToast = vi.fn();
+    const { rerender } = render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={lvl1Wizard}
+        initialMode="levelup"
+        onConfirmLevelUp={handleConfirm}
+        onUpdateCharacter={vi.fn()}
+        onShowToast={handleShowToast}
+      />
+    );
+
+    await screen.findAllByRole('option', { name: /School of Evocation/i });
+
+    // User does not change subclass dropdown and clicks Level Up
+    fireEvent.click(screen.getByRole('button', { name: 'Level Up' }));
+
+    expect(handleConfirm).toHaveBeenCalledTimes(1);
+    const confirmedChar = handleConfirm.mock.calls[0][0];
+
+    expect(confirmedChar.classes[0].subclass).toBeFalsy();
+    expect(confirmedChar.sheet.notes).toHaveLength(1);
+    expect(confirmedChar.levelUpChecklist?.['subclass-Wizard-2']).toBeFalsy();
+    expect(handleShowToast).not.toHaveBeenCalled();
+
+    // In Guide mode, Choose Subclass is active and NOT crossed out
+    rerender(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={{
+          ...confirmedChar,
+          classes: [{ className: 'Wizard', level: 2 }],
+        }}
+        initialMode="guide"
+        onConfirmLevelUp={vi.fn()}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    const subclassCheckbox = screen.getByRole('checkbox', { name: /Choose Subclass/i });
+    expect(subclassCheckbox).not.toBeChecked();
+    const subclassLabel = screen.getByText(/Choose Subclass/i);
+    expect(subclassLabel).not.toHaveClass('line-through');
+  });
+
+  it('renders Choose Subclass crossed out in Guide mode when user picked subclass via prompt', async () => {
+    const leveledChar = {
+      id: 'c-wiz-2',
+      name: 'Raistlin',
+      className: 'Wizard',
+      level: 2,
+      ruleset: '2014',
+      classes: [{ className: 'Wizard', level: 2, subclass: 'School of Evocation' }],
+      levelUpChecklist: {
+        'subclass-Wizard-2': true,
+      },
+      sheet: {
+        notes: [],
+      },
+    };
+
+    render(
+      <LevelUpModal
+        isOpen={true}
+        onClose={vi.fn()}
+        character={leveledChar}
+        initialMode="guide"
+        onConfirmLevelUp={vi.fn()}
+        onUpdateCharacter={vi.fn()}
+      />
+    );
+
+    const subclassCheckbox = screen.getByRole('checkbox', { name: /Choose Subclass/i });
+    expect(subclassCheckbox).toBeChecked();
+    const subclassLabel = screen.getByText(/Choose Subclass/i);
+    expect(subclassLabel).toHaveClass('line-through');
+  });
 });

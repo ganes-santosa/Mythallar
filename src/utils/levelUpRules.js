@@ -34,7 +34,8 @@ export function isAsiLevel(className, classLevel) {
   return [4, 8, 12, 16, 19].includes(classLevel);
 }
 
-export function getSubclassLevel(className) {
+export function getSubclassLevel(className, ruleset = '2014') {
+  if (ruleset === '2024') return 3;
   if (['Cleric', 'Sorcerer', 'Warlock'].includes(className)) return 1;
   if (['Druid', 'Wizard'].includes(className)) return 2;
   return 3;
@@ -67,6 +68,7 @@ export function getLevelUpChecklist({
   classLevel = 1,
   totalLevel = 1,
   conMod = 0,
+  ruleset = '2014',
 }) {
   const tasks = [];
   const hitDie = getClassHitDie(className);
@@ -108,7 +110,7 @@ export function getLevelUpChecklist({
   }
 
   // 3. Subclass Archetype Choice
-  if (classLevel === getSubclassLevel(className)) {
+  if (classLevel === getSubclassLevel(className, ruleset)) {
     const label = getSubclassLabel(className);
     tasks.push({
       id: `subclass-${className}-${classLevel}`,

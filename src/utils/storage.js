@@ -263,6 +263,13 @@ export function createDefaultSheet(className = 'Wizard') {
       background: '',
       portrait: '',
       lore: '',
+      age: '',
+      gender: '',
+      alignment: '',
+      personalityTraits: '',
+      ideals: '',
+      bonds: '',
+      flaws: '',
     },
     vitals: {
       hpCurrent: 10,

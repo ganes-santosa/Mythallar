@@ -50,6 +50,7 @@ function CharacterHeader({
   onDeleteProfile,
   onExport,
   onImport,
+  onShowToast,
 }) {
   // Single card edit mode
   const [isEditing, setIsEditing] = useState(false);
@@ -523,6 +524,9 @@ function CharacterHeader({
                 className="flex items-center space-x-1.5 bg-dnd-panel/60 rounded-md px-2 py-0.5 text-xs text-slate-200"
               >
                 <span className="font-normal text-slate-200">{clsItem.className}</span>
+                {clsItem.subclass ? (
+                  <span className="text-[11px] text-slate-300 font-normal">({clsItem.subclass})</span>
+                ) : null}
                 <span className="text-[11px] text-dnd-gold font-normal">Lvl {clsItem.level}</span>
               </div>
             ))
@@ -554,6 +558,7 @@ function CharacterHeader({
         initialMode={levelUpModalMode}
         onConfirmLevelUp={onUpdateCharacter}
         onUpdateCharacter={onUpdateCharacter}
+        onShowToast={onShowToast}
       />
     </div>
   );

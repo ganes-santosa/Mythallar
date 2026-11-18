@@ -224,6 +224,25 @@ describe('CharacterBuilderModal', () => {
     expect(screen.getByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
   });
 
+  it('triggers onBack from the initial ruleset step to return to creation options', async () => {
+    const handleBack = vi.fn();
+    render(
+      <CharacterBuilderModal
+        isOpen={true}
+        onClose={vi.fn()}
+        onCreate={vi.fn()}
+        onBack={handleBack}
+      />
+    );
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+    const backBtn = screen.getByRole('button', { name: /Back to options/i });
+    expect(backBtn).not.toBeDisabled();
+
+    fireEvent.click(backBtn);
+    expect(handleBack).toHaveBeenCalledTimes(1);
+  });
+
   it('allows searching and selecting expanded races like Tabaxi with their traits', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
@@ -629,6 +648,12 @@ describe('CharacterBuilderModal', () => {
     expect(ageInput.closest('div')).toHaveClass('col-span-1');
     expect(genderInput.closest('div')).toHaveClass('col-span-1');
     expect(alignmentInput.closest('div')).toHaveClass('col-span-2');
+
+    // Personality Traits, Ideals, Bonds, and Flaws are in the identity card right column
+    expect(screen.getByPlaceholderText(/e\.g\. Curious and soft-spoken/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/e\.g\. Knowledge\. The path to power/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/e\.g\. An ancient tome I must protect/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/e\.g\. Overconfident in arcane mastery/i)).toBeInTheDocument();
   });
 
   it('opens ImageCropModal upon file selection in Identity step and sets portrait on apply', async () => {

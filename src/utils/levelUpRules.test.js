@@ -109,6 +109,14 @@ describe('levelUpRules', () => {
       });
       expect(wizardLvl2.some((t) => t.title.includes('Subclass'))).toBe(true);
 
+      const wizardLvl3_2024 = getLevelUpChecklist({
+        className: 'Wizard',
+        classLevel: 3,
+        totalLevel: 3,
+        ruleset: '2024',
+      });
+      expect(wizardLvl3_2024.some((t) => t.title.includes('Subclass'))).toBe(true);
+
       const fighterLvl3 = getLevelUpChecklist({
         className: 'Fighter',
         classLevel: 3,

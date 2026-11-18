@@ -43,6 +43,28 @@ describe('richNoteUtils', () => {
       expect(output).toMatch(/Line 1.*Line 2.*Line 3/);
       expect(output).toContain('<br');
     });
+
+    it('preserves heading (h2) and subheading (h3) semantic tags', () => {
+      const input = '<h2>Main Title</h2><p>Intro text</p><h3>Feature Section</h3><p>Details</p>';
+      const output = sanitizeRichNoteHtml(input);
+      expect(output).toContain('<h2>Main Title</h2>');
+      expect(output).toContain('<h3>Feature Section</h3>');
+    });
+
+    it('preserves inline data-size heading and subheading spans', () => {
+      const input = '<span data-size="heading">Main Title</span><br><span data-size="subheading">Feature Section</span>';
+      const output = sanitizeRichNoteHtml(input);
+      expect(output).toContain('<span data-size="heading">Main Title</span>');
+      expect(output).toContain('<span data-size="subheading">Feature Section</span>');
+    });
+
+    it('normalizes h1 to h2 and h4-h6 to h3 while stripping dangerous attributes', () => {
+      const input = '<h1 onclick="steal()">Large Heading</h1><h4 style="color:red">Deep Heading</h4>';
+      const output = sanitizeRichNoteHtml(input);
+      expect(output).toBe('<h2>Large Heading</h2><h3>Deep Heading</h3>');
+      expect(output).not.toContain('onclick');
+      expect(output).not.toContain('style');
+    });
   });
 
   describe('extractPlainTextFromHtml', () => {

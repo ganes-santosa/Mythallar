@@ -6,7 +6,7 @@ import {
   ChevronDown,
   Check,
   Wand2,
-  Sparkles,
+  Flame,
   RotateCcw,
   Search,
   User,
@@ -42,6 +42,7 @@ import {
 import { buildLevel1Character } from '../../utils/characterGenerator';
 import { formatModifier, SKILLS_DEFINITION } from '../../utils/dndCalculations';
 import SmoothSize from '../Common/SmoothSize';
+import SlotNumber from '../Common/SlotNumber';
 import ClassIcon from '../Common/ClassIcon';
 import ImageCropModal from '../Modal/ImageCropModal';
 
@@ -54,6 +55,7 @@ export default function CharacterBuilderModal({
   isOpen,
   onClose,
   onCreate,
+  onBack,
 }) {
   useScrollLock(isOpen);
 
@@ -90,6 +92,7 @@ export default function CharacterBuilderModal({
     cha: null,
   });
   const [rollPool, setRollPool] = useState([]);
+  const [spinToken, setSpinToken] = useState(0);
   const [rollAssignments, setRollAssignments] = useState({
     str: null,
     dex: null,
@@ -353,6 +356,7 @@ export default function CharacterBuilderModal({
 
   const handleRollReroll = () => {
     const newPool = generateRollPool();
+    setSpinToken((t) => t + 1);
     setRollPool(newPool);
     setBaseScores({
       str: rollAssignments.str !== null ? (newPool[rollAssignments.str]?.total ?? 10) : null,
@@ -533,6 +537,8 @@ export default function CharacterBuilderModal({
     if (stepIndex > 0) {
       const prevIdx = stepIndex - 1;
       scrollToSection(steps[prevIdx].key, prevIdx);
+    } else if (onBack) {
+      onBack();
     }
   };
 
@@ -704,7 +710,7 @@ export default function CharacterBuilderModal({
                 </div>
 
                 {/* Right: Info Fields Column */}
-                <div className="flex-1 p-3 sm:p-3.5 min-w-0 flex flex-col justify-between space-y-2.5">
+                <div className="flex-1 p-3 sm:p-3.5 min-w-0 flex flex-col justify-center space-y-2.5">
                   {/* Line 1: Character Name */}
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">
@@ -758,6 +764,69 @@ export default function CharacterBuilderModal({
                           setDetails((prev) => ({ ...prev, alignment: e.target.value }))
                         }
                         className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Line 3 & 4: Personality Traits, Ideals, Bonds, Flaws */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">
+                        Personality Traits
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Curious and soft-spoken..."
+                        value={details.personalityTraits}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, personalityTraits: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">
+                        Ideals
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Knowledge. The path to power..."
+                        value={details.ideals}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, ideals: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">
+                        Bonds
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. An ancient tome I must protect..."
+                        value={details.bonds}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, bonds: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-slate-300 mb-1 truncate">
+                        Flaws
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Overconfident in arcane mastery..."
+                        value={details.flaws}
+                        onChange={(e) =>
+                          setDetails((prev) => ({ ...prev, flaws: e.target.value }))
+                        }
+                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
                       />
                     </div>
                   </div>
@@ -846,7 +915,7 @@ export default function CharacterBuilderModal({
               <div className="overflow-hidden">
                 {displayedClass && (
                   <SmoothSize
-                    watchKey={[displayedClass.id, showClassFeatures, chosenSkills.length]}
+                    watchKey={[displayedClass.id, chosenSkills.length]}
                     duration={300}
                     className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-3 text-xs text-slate-300"
                   >
@@ -921,7 +990,7 @@ export default function CharacterBuilderModal({
                           className="flex items-center space-x-1.5 text-left group focus:outline-none cursor-pointer"
                           aria-label={showClassFeatures ? 'Collapse Starting Features' : 'Expand Starting Features'}
                         >
-                          <Sparkles size={14} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
+                          <Flame size={14} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
                           <span className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors">
                             Starting Features
                           </span>
@@ -1373,7 +1442,7 @@ export default function CharacterBuilderModal({
                                     : 'bg-dnd-gold/20 text-dnd-gold ring-1 ring-dnd-gold/40'
                                 }`}
                               >
-                                <span>{r.total}</span>
+                                <span className="inline-flex justify-center min-w-[2ch] tabular-nums"><SlotNumber value={r.total} spinToken={spinToken} /></span>
                                 {assignedKey && (
                                   <span className="text-[10px] text-dnd-gold font-semibold">
                                     ({assignedKey.toUpperCase()})
@@ -1467,7 +1536,10 @@ export default function CharacterBuilderModal({
                         </div>
                         <button
                           type="button"
-                          onClick={() => setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 })}
+                          onClick={() => {
+                            setSpinToken((t) => t + 1);
+                            setBaseScores({ str: 8, dex: 8, con: 8, int: 8, wis: 8, cha: 8 });
+                          }}
                           className="text-dnd-gold hover:text-dnd-gold-light font-bold flex items-center space-x-1 cursor-pointer text-xs"
                         >
                           <RotateCcw size={12} />
@@ -1556,7 +1628,7 @@ export default function CharacterBuilderModal({
                             aria-label={`${ABILITY_LABELS[k]} Base Score`}
                             className="w-16 h-9 rounded-lg bg-dnd-card shadow-sm flex items-center justify-center text-base font-black text-slate-100"
                           >
-                            {isAssigned ? rawBase : '—'}
+                            {isAssigned ? <SlotNumber value={rawBase} spinToken={spinToken} /> : '—'}
                           </div>
                           <span className="text-[10px] text-slate-500 font-medium">
                             Assign :
@@ -1588,7 +1660,9 @@ export default function CharacterBuilderModal({
                                       : 'bg-dnd-card text-slate-200 hover:bg-white/10 ring-1 ring-dnd-gold/40'
                                   }`}
                                 >
-                                  {r.total}
+                                  <span className="inline-flex justify-center min-w-[2ch] tabular-nums">
+                                    <SlotNumber value={r.total} spinToken={spinToken} />
+                                  </span>
                                 </button>
                               );
                             })}
@@ -1611,7 +1685,7 @@ export default function CharacterBuilderModal({
                             aria-label={`${ABILITY_LABELS[k]} Base Score`}
                             className="w-12 h-9 rounded-lg bg-dnd-card shadow-sm flex items-center justify-center font-black text-base text-slate-100"
                           >
-                            {base}
+                            <SlotNumber value={base} spinToken={spinToken} />
                           </div>
                           <button
                             type="button"
@@ -1664,7 +1738,7 @@ export default function CharacterBuilderModal({
                         <span className="text-xs font-semibold text-slate-300">
                           Total:{' '}
                           <strong className="text-sm font-black text-slate-100">
-                            {isAssigned ? finalVal : '—'}
+                            {isAssigned ? <SlotNumber value={finalVal} spinToken={spinToken} /> : '—'}
                           </strong>
                         </span>
                         {isAssigned && (
@@ -1834,8 +1908,8 @@ export default function CharacterBuilderModal({
         <div className="px-5 py-3.5 border-t border-white/5 flex items-center justify-between bg-dnd-card shrink-0">
           <button
             type="button"
-            aria-label="Previous step"
-            disabled={stepIndex === 0}
+            aria-label={stepIndex === 0 ? 'Back to options' : 'Previous step'}
+            disabled={stepIndex === 0 && !onBack}
             onClick={handleBack}
             className="flex items-center space-x-1 px-3.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/5 transition-colors cursor-pointer"
           >
