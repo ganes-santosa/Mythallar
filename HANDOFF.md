@@ -1,6 +1,15 @@
 # HANDOFF
 
-## Current state (v3.2.1 - master)
+## Current state (v3.2.2 - master)
+- **v3.2.2 (patch)**:
+  - Character portrait cropper modal (`ImageCropModal.jsx`) integrated across Character Sheet and Character Builder:
+    - 3-way ratio switcher (`3:4 Portrait`, `1:1 Square`, `Custom`).
+    - Custom mode symmetric vertical drag handles on top/bottom edges bounded strictly between 210px (1:1) and 280px (3:4).
+    - Decoupled image scale so resizing crop boundary never zooms or shifts image.
+    - Pan clamped to crop frame boundaries; min zoom capped at 1.0x cover fit to prevent black borders.
+    - Vector class icons rendered in Character Builder class selector.
+  - Full suite green: 64 test files, 564 tests passed. Build clean.
+
 - **v3.2.1 (patch)**:
   - Character Builder ability score generation polish: synchronized individual ability card expand/shrink transitions (`SmoothSize`) in lockstep across methods (e.g. Point Buy to Standard Array) with grid row alignment protection.
   - 2024 Background ASI defaults: ability boost cards default to 0/unfilled (`+0`, no active ring, 3 points remaining) rather than pre-allocating +2/+1; resets on background change.
