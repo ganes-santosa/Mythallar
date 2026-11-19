@@ -1,6 +1,6 @@
 # HANDOFF
 
-## Release v3.2.3 - subclasses, builder starting wealth & equipment, notes & sheet polish
+## Release v3.2.4 - builder starting wealth & equipment, notes & sheet polish
 
 ## Current state (master)
 - Official 5e subclasses: 296 entries with full feature text in `public/data/classes.json`.
