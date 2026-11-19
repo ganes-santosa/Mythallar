@@ -16,12 +16,20 @@ describe('SlotNumber', () => {
     expect(Element.prototype.animate).not.toHaveBeenCalled();
   });
 
-  it('spins only changed digits when spinToken bumps', () => {
+  it('spins all digits when spinToken bumps, even digits that stay the same (e.g. 10 -> 18)', () => {
     Element.prototype.animate = vi.fn(() => ({ cancel() {} }));
-    const { rerender } = render(<SlotNumber value={12} spinToken={0} />);
-    rerender(<SlotNumber value={15} spinToken={1} />);
+    const { rerender } = render(<SlotNumber value={10} spinToken={0} />);
+    rerender(<SlotNumber value={18} spinToken={1} />);
     expect(screen.getByTestId('slot-spinning')).toBeInTheDocument();
-    expect(Element.prototype.animate).toHaveBeenCalledTimes(1);
+    expect(Element.prototype.animate).toHaveBeenCalledTimes(2);
+  });
+
+  it('spins all digits for a full cycle even when the rolled number lands on the same value (e.g. 14 -> 14)', () => {
+    Element.prototype.animate = vi.fn(() => ({ cancel() {} }));
+    const { rerender } = render(<SlotNumber value={14} spinToken={0} />);
+    rerender(<SlotNumber value={14} spinToken={1} />);
+    expect(screen.getByTestId('slot-spinning')).toBeInTheDocument();
+    expect(Element.prototype.animate).toHaveBeenCalledTimes(2);
   });
 
   it('scrolls downward when value decreases and upward when it increases', () => {
@@ -42,5 +50,18 @@ describe('SlotNumber', () => {
     const { rerender } = render(<SlotNumber value={12} spinToken={0} />);
     rerender(<SlotNumber value={15} spinToken={1} />);
     expect(screen.getByText('15')).toBeInTheDocument();
+  });
+
+  it('maintains consistent wrapper classes and height between idle and spinning states to prevent vertical jumping', () => {
+    Element.prototype.animate = vi.fn(() => ({ cancel() {} }));
+    const { container, rerender } = render(<SlotNumber value={100} spinToken={0} className="custom-class" />);
+    const idleWrapper = container.firstElementChild;
+    expect(idleWrapper).toHaveClass('inline-flex', 'leading-none', 'custom-class');
+    expect(idleWrapper).not.toHaveClass('align-[-0.2em]');
+
+    rerender(<SlotNumber value={180} spinToken={1} className="custom-class" />);
+    const spinWrapper = screen.getByTestId('slot-spinning');
+    expect(spinWrapper).toHaveClass('inline-flex', 'leading-none', 'custom-class');
+    expect(spinWrapper).not.toHaveClass('align-[-0.2em]');
   });
 });

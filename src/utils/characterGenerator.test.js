@@ -121,4 +121,64 @@ describe('characterGenerator', () => {
     expect(char.spells).toHaveLength(3);
     expect(char.spells.map((s) => s.id)).toEqual(['firebolt', 'mage-armor', 'shield']);
   });
+
+  describe('starting equipment and gold', () => {
+    const cls2024 = {
+      name: 'Fighter',
+      equipmentText:
+        'Choose A, B, or C: (A) Chain Mail, Greatsword, and 4 GP; (B) Longbow, Arrows (20), and 11 GP; or (C) 155 GP',
+    };
+    const bg2024 = {
+      name: 'Soldier',
+      equipmentText: 'Choose A or B: (A) Spear, 2 Pouch, 14 GP; or (B) 50 GP',
+    };
+    const cls2014 = { name: 'Fighter', equipmentText: 'Standard class starting equipment or starting wealth.' };
+    const bg2014 = { name: 'Soldier', equipmentText: 'An insignia of rank, and a belt pouch containing 10 gp' };
+
+    it('2024: class gear + background gear adds both packages and GP', () => {
+      const char = buildLevel1Character({
+        ruleset: '2024', selectedClass: cls2024, selectedBackground: bg2024,
+        classEquipmentOption: 'A', backgroundEquipmentOption: 'A',
+      });
+      expect(char.sheet.currency.gp).toBe(18);
+      const names = char.sheet.items.map((i) => i.name);
+      expect(names).toEqual(expect.arrayContaining(['Chain Mail', 'Greatsword', 'Spear', 'Pouch']));
+      expect(char.sheet.items.find((i) => i.name === 'Pouch').quantity).toBe(2);
+    });
+
+    it('2024: gold for both is 205 GP with no items', () => {
+      const char = buildLevel1Character({
+        ruleset: '2024', selectedClass: cls2024, selectedBackground: bg2024,
+        classEquipmentOption: 'C', backgroundEquipmentOption: 'B',
+      });
+      expect(char.sheet.currency.gp).toBe(205);
+      expect(char.sheet.items).toHaveLength(0);
+    });
+
+    it('2024: mixes class gear with background gold', () => {
+      const char = buildLevel1Character({
+        ruleset: '2024', selectedClass: cls2024, selectedBackground: bg2024,
+        classEquipmentOption: 'B', backgroundEquipmentOption: 'B',
+      });
+      expect(char.sheet.currency.gp).toBe(61);
+      expect(char.sheet.items.map((i) => i.name)).toContain('Longbow');
+    });
+
+    it('2014: standard gear grants background gear and its pouch gold', () => {
+      const char = buildLevel1Character({
+        ruleset: '2014', selectedClass: cls2014, selectedBackground: bg2014, startingWealthMode: 'gear',
+      });
+      expect(char.sheet.currency.gp).toBe(10);
+      expect(char.sheet.items.length).toBeGreaterThan(0);
+    });
+
+    it('2014: starting wealth replaces ALL gear and uses rolled gold', () => {
+      const char = buildLevel1Character({
+        ruleset: '2014', selectedClass: cls2014, selectedBackground: bg2014,
+        startingWealthMode: 'wealth', rolledGold: 140,
+      });
+      expect(char.sheet.currency.gp).toBe(140);
+      expect(char.sheet.items).toHaveLength(0);
+    });
+  });
 });

@@ -13,6 +13,8 @@ describe('CharacterBuilderModal', () => {
       hitDieString: 'd10',
       savingThrows: ['str', 'con'],
       description: 'Martial warrior',
+      equipmentText:
+        'Choose A, B, or C: (A) Chain Mail, Greatsword, and 4 GP; (B) Longbow, and 11 GP; or (C) 155 GP',
       level1Features: [{ name: 'Second Wind', description: 'Regain HP' }],
       skillChoices: { count: 2, from: ['athletics', 'perception'] },
     },
@@ -455,6 +457,58 @@ describe('CharacterBuilderModal', () => {
     expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 0, behavior: 'smooth' });
   });
 
+  it('scrolls to bottom when clicking either equipment option in Equipment step', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Switch to 2014 ruleset
+    fireEvent.click(screen.getByText(/D&D 5th Edition 2014 \(Legacy\)/i));
+
+    const equipSection = document.getElementById('builder-section-equipment');
+    const scrollContainer = equipSection.parentElement;
+    Object.defineProperty(scrollContainer, 'scrollHeight', { value: 3200, configurable: true });
+    scrollContainer.scrollTo = vi.fn();
+
+    // Click "Starting Wealth"
+    const wealthOption = screen.getByRole('button', { name: /Starting Wealth/i });
+    fireEvent.click(wealthOption);
+    expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 3200, behavior: 'smooth' });
+
+    // Click "Class & Background Equipment"
+    const gearOption = screen.getByRole('button', { name: /Class & Background Equipment/i });
+    fireEvent.click(gearOption);
+    expect(scrollContainer.scrollTo).toHaveBeenLastCalledWith({ top: 3200, behavior: 'smooth' });
+  });
+
+  it('applies opening and closing grid transitions to Starting Wealth card when toggling equipment options in 2014', async () => {
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
+
+    expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
+
+    // Switch to 2014 ruleset
+    fireEvent.click(screen.getByText(/D&D 5th Edition 2014 \(Legacy\)/i));
+
+    // Initially startingWealthMode is 'gear' -> wrapper has grid-rows-[0fr] opacity-0
+    const wealthHeading = screen.getByText(/Starting Wealth \(/i);
+    const transitionWrapper = wealthHeading.closest('.grid');
+    expect(transitionWrapper).toHaveClass('grid-rows-[0fr]');
+    expect(transitionWrapper).toHaveClass('opacity-0');
+    expect(transitionWrapper).toHaveClass('transition-[grid-template-rows,opacity]');
+
+    // Click "Starting Wealth" -> wrapper transitions to open: grid-rows-[1fr] opacity-100
+    const wealthOption = screen.getByRole('button', { name: /Starting Wealth/i });
+    fireEvent.click(wealthOption);
+    expect(transitionWrapper).toHaveClass('grid-rows-[1fr]');
+    expect(transitionWrapper).toHaveClass('opacity-100');
+
+    // Click "Class & Background Equipment" -> wrapper transitions to closed: grid-rows-[0fr] opacity-0
+    const gearOption = screen.getByRole('button', { name: /Class & Background Equipment/i });
+    fireEvent.click(gearOption);
+    expect(transitionWrapper).toHaveClass('grid-rows-[0fr]');
+    expect(transitionWrapper).toHaveClass('opacity-0');
+  });
+
   it('applies uniform opening and closing transition classes to Lineage panel when switching species', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
@@ -584,9 +638,11 @@ describe('CharacterBuilderModal', () => {
     expect(fighterBtn.className).toContain('transition-colors');
 
     // 3. Equipment card
-    const equipA = screen.getByRole('button', { name: /Option A: Starting Equipment/i });
+    const equipA = screen.getAllByRole('button', { name: /Class Equipment/i })[0];
     expect(equipA.className).toContain('ring-1 ring-dnd-gold/40');
     expect(equipA.className).toContain('transition-colors');
+    expect(screen.getByText('Total Starting Gold')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Starting Wealth/i }).length).toBeGreaterThan(0);
   });
 
   it('uses Title Case headers with gold category icons, non-uppercase Recommended badge, and non-monospace Class Detail badge', async () => {
@@ -612,7 +668,7 @@ describe('CharacterBuilderModal', () => {
     expect(hitDieBadge.className).toContain('text-dnd-gold');
   });
 
-  it('renders portrait upload with gradient fade on left and structured 1-line name and 4-column age/gender/alignment grid on right', async () => {
+  it('renders decoupled intrinsic-aspect portrait card alongside identity and traits form card with Character Lore card below', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     // Navigate to Identity step
@@ -624,11 +680,11 @@ describe('CharacterBuilderModal', () => {
     expect(portraitBtn).toBeInTheDocument();
     expect(screen.getByText('Add Portrait')).toBeInTheDocument();
 
-    // Check gradient overlay element
-    const cardContainer = portraitBtn.closest('.character-profile-card');
-    expect(cardContainer).toBeInTheDocument();
-    const gradientOverlay = cardContainer.querySelector('.bg-gradient-to-r');
-    expect(gradientOverlay).toBeInTheDocument();
+    // Top profile card pairs the intrinsic-aspect portrait with Character Name, Age, Gender, and Alignment
+    const portraitCard = portraitBtn.closest('.character-profile-card');
+    expect(portraitCard).toBeInTheDocument();
+    expect(portraitCard).toHaveClass('sm:items-stretch');
+    expect(portraitCard.querySelector('.bg-gradient-to-r')).toBeInTheDocument();
 
     // File input for portrait
     const fileInput = screen.getByLabelText('Portrait file input');
@@ -649,14 +705,21 @@ describe('CharacterBuilderModal', () => {
     expect(genderInput.closest('div')).toHaveClass('col-span-1');
     expect(alignmentInput.closest('div')).toHaveClass('col-span-2');
 
-    // Personality Traits, Ideals, Bonds, and Flaws are in the identity card right column
+    // No Appearance input exists
+    expect(screen.queryByPlaceholderText(/Silver hair/i)).toBeNull();
+
+    // All 4 Character Traits (Personality Traits, Ideals, Bonds, Flaws) are directly visible in the 2x2 grid
     expect(screen.getByPlaceholderText(/e\.g\. Curious and soft-spoken/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. Knowledge\. The path to power/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. An ancient tome I must protect/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. Overconfident in arcane mastery/i)).toBeInTheDocument();
+
+    // Character Lore textarea card is directly visible below
+    expect(screen.getByText('Character Lore')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Write character background, origin, or personal history/i)).toBeInTheDocument();
   });
 
-  it('opens ImageCropModal upon file selection in Identity step and sets portrait on apply', async () => {
+  it('opens ImageCropModal upon file selection in Identity step and sets portrait on apply without forcing aspect ratio', async () => {
     // Mock canvas methods for jsdom
     HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
       drawImage: vi.fn(),
@@ -684,11 +747,12 @@ describe('CharacterBuilderModal', () => {
     // Click Apply Crop
     fireEvent.click(screen.getByRole('button', { name: /Apply Crop/i }));
 
-    // Crop modal closes and portrait image is rendered in the identity card
+    // Crop modal closes and portrait image is rendered with w-full h-auto block (intrinsic aspect ratio)
     await waitFor(() => {
       expect(screen.queryByRole('heading', { name: /Crop Character Portrait/i })).toBeNull();
     });
     const portraitImg = screen.getByAltText(/Character Portrait/i);
     expect(portraitImg).toBeInTheDocument();
+    expect(portraitImg).toHaveClass('w-full', 'h-auto', 'block');
   });
 });

@@ -6,6 +6,7 @@
 import { getAbilityModifier, getProficiencyBonus } from './dndCalculations';
 import { calculateFinalAbilities } from './abilityScoreGenerator';
 import { createDefaultSheet } from './storage';
+import { parseEquipmentOptions2024, parseBackgroundGp2014, itemFromString } from './startingWealth';
 
 export function buildLevel1Character({
   name = 'New Adventurer',
@@ -19,7 +20,10 @@ export function buildLevel1Character({
   bgBonusChoice = {}, // 2024 background ASI
   racialChoice = {}, // 2014 racial custom choice (e.g. Half-Elf)
   chosenSkills = [], // array of skill keys (e.g. 'athletics', 'perception')
-  equipmentOption = 'A', // 'A' or 'B'
+  startingWealthMode = 'gear', // 2014: 'gear' | 'wealth'
+  rolledGold = 0, // 2014 rolled starting wealth
+  classEquipmentOption = 'A', // 2024 class package key (or gold option)
+  backgroundEquipmentOption = 'A', // 2024 background package key (or 50 GP)
   selectedSpells = [], // array of spell ids or objects
   details = {},
 }) {
@@ -86,11 +90,27 @@ export function buildLevel1Character({
   let items = [];
   let startingGold = 0;
 
-  if (equipmentOption === 'B') {
-    // Starting gold option
-    startingGold = 100;
+  const seed = Date.now();
+  let seq = 0;
+  const addPackage = (opt) => {
+    if (!opt) return;
+    for (const s of opt.items) items.push(itemFromString(s, `${seed}_${seq++}`));
+    startingGold += opt.gp;
+  };
+
+  if (ruleset === '2024') {
+    // Class and background choose independently: package or flat gold
+    const pick = (src, key) => {
+      const opts = parseEquipmentOptions2024(src?.equipmentText);
+      return opts.find((o) => o.key === key) || opts[0];
+    };
+    addPackage(pick(selectedClass, classEquipmentOption));
+    addPackage(pick(selectedBackground, backgroundEquipmentOption));
+  } else if (startingWealthMode === 'wealth') {
+    // 2014 starting wealth replaces ALL class and background equipment
+    startingGold = Math.max(0, Number(rolledGold) || 0);
   } else {
-    // Standard equipment: add common items to inventory
+    startingGold = parseBackgroundGp2014(selectedBackground?.equipmentText);
     const basicPack = [
       { id: `item_${Date.now()}_1`, name: 'Backpack', category: 'Gear', quantity: 1, weight: 5 },
       { id: `item_${Date.now()}_2`, name: 'Bedroll', category: 'Gear', quantity: 1, weight: 7 },
@@ -99,7 +119,6 @@ export function buildLevel1Character({
       { id: `item_${Date.now()}_5`, name: 'Torches', category: 'Gear', quantity: 10, weight: 10 },
     ];
     items = basicPack;
-    startingGold = 10;
   }
 
   // 8. Class & Racial Features Notes

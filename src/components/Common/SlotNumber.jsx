@@ -33,9 +33,9 @@ function Strip({ from, digit, down, duration, onDone }) {
 
 /**
  * SlotNumber
- * Renders `value` as plain text. When `spinToken` changes together with `value`, digits that
- * changed spin into place like a slot machine (left to right stagger). Unchanged digits stay still.
- * ponytail: spins only on explicit token bump (reroll/reset), not every value change.
+ * Renders `value` as plain text. When `spinToken` changes, all digits spin into place
+ * like a slot machine (left to right stagger) from their previous digits into their new digits.
+ * Spins only on explicit token bump (reroll/reset), not every value change.
  */
 export default function SlotNumber({ value, spinToken = 0, className = '' }) {
   const str = String(value ?? '');
@@ -45,14 +45,14 @@ export default function SlotNumber({ value, spinToken = 0, className = '' }) {
   useIsomorphicLayoutEffect(() => {
     const p = prev.current;
     prev.current = { str, token: spinToken };
-    if (p.token === spinToken || p.str === str) return;
+    if (p.token === spinToken) return;
     if (typeof Element === 'undefined' || !Element.prototype.animate) return;
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
 
     const next = [...str].map((ch, i) => {
       if (!isDigit(ch)) return null;
       const old = p.str[p.str.length - str.length + i];
-      return old === ch ? null : isDigit(old) ? Number(old) : 0;
+      return isDigit(old) ? Number(old) : 0;
     });
     setSpin(
       next.some((f) => f !== null)
@@ -62,12 +62,20 @@ export default function SlotNumber({ value, spinToken = 0, className = '' }) {
   }, [str, spinToken]);
 
   // Ignore stale spin state from a previous token (e.g. rapid second click)
-  if (!spin || spin.token !== spinToken) return <span className={className}>{str}</span>;
+  if (!spin || spin.token !== spinToken) {
+    return (
+      <span className={`inline-flex leading-none ${className}`}>
+        <span className="inline-block h-[1em] overflow-hidden leading-none">
+          <span className="block h-[1em] leading-none">{str}</span>
+        </span>
+      </span>
+    );
+  }
   const { froms, down } = spin;
 
   const lastSpun = froms.reduce((acc, f, i) => (f !== null ? i : acc), -1);
   return (
-    <span data-testid="slot-spinning" className={`inline-flex align-[-0.2em] ${className}`}>
+    <span data-testid="slot-spinning" className={`inline-flex leading-none ${className}`}>
       {[...str].map((ch, i) =>
         froms[i] !== null && isDigit(ch) ? (
           <Strip
@@ -79,7 +87,9 @@ export default function SlotNumber({ value, spinToken = 0, className = '' }) {
             onDone={i === lastSpun ? () => setSpin(null) : undefined}
           />
         ) : (
-          <span key={i} className="inline-block h-[1em] overflow-hidden leading-none">{ch}</span>
+          <span key={i} className="inline-block h-[1em] overflow-hidden leading-none">
+            <span className="block h-[1em] leading-none">{ch}</span>
+          </span>
         )
       )}
     </span>
