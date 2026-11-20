@@ -666,7 +666,7 @@ export default function CharacterBuilderModal({
                 }}
                 className={`p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                   ruleset === '2024'
-                    ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
+                    ? 'bg-dnd-panel ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                     : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`}
               >
@@ -692,7 +692,7 @@ export default function CharacterBuilderModal({
                 }}
                 className={`p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                   ruleset === '2014'
-                    ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
+                    ? 'bg-dnd-panel ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                     : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`}
               >
@@ -845,7 +845,7 @@ export default function CharacterBuilderModal({
               </div>
 
               {/* Middle Row: Character Traits Card (Personality Traits, Ideals, Bonds, Flaws) */}
-              <div className="rounded-xl bg-dnd-card shadow-sm p-3 sm:p-3.5">
+              <div className="rounded-xl bg-dnd-card shadow-sm px-3 pt-3 pb-0 sm:px-3.5 sm:pt-3.5 sm:pb-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1 truncate">
@@ -912,22 +912,22 @@ export default function CharacterBuilderModal({
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Bottom Row: Character Lore Card */}
-              <div className="rounded-xl bg-dnd-card shadow-sm p-3 sm:p-3.5">
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Character Lore
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Write character background, origin, or personal history..."
-                  value={details.backstory}
-                  onChange={(e) =>
-                    setDetails((prev) => ({ ...prev, backstory: e.target.value }))
-                  }
-                  className="w-full bg-dnd-panel rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 resize-y leading-relaxed transition-colors"
-                />
-              </div>
+            {/* Bottom Row: Character Lore */}
+            <div className="!mt-10">
+              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                Character Lore
+              </label>
+              <textarea
+                rows={3}
+                placeholder="Write character background, origin, or personal history..."
+                value={details.backstory}
+                onChange={(e) =>
+                  setDetails((prev) => ({ ...prev, backstory: e.target.value }))
+                }
+                className="w-full block bg-dnd-panel rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 resize-y leading-relaxed transition-colors"
+              />
             </div>
           </div>
         );
@@ -960,7 +960,7 @@ export default function CharacterBuilderModal({
                     }}
                     className={`p-2.5 sm:p-3 rounded-xl text-left transition-colors cursor-pointer shadow-sm group ${
                       isSel
-                        ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
+                        ? 'bg-dnd-panel ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                         : 'bg-dnd-panel/50 hover:bg-dnd-panel'
                     }`}
                   >
@@ -1042,7 +1042,7 @@ export default function CharacterBuilderModal({
                                 }}
                                 className={`flex items-center space-x-2 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer shadow-sm ${
                                   isPicked
-                                    ? 'bg-dnd-card ring-1 ring-dnd-gold/40 text-slate-100 font-bold'
+                                    ? 'bg-dnd-card ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)] text-slate-100 font-bold'
                                     : 'bg-dnd-card/70 text-slate-300 hover:bg-dnd-card'
                                 }`}
                               >
@@ -1153,7 +1153,7 @@ export default function CharacterBuilderModal({
             </div>
 
             {/* Species Grid */}
-            <div className="max-h-48 overflow-y-auto custom-scroll pr-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            <div className="max-h-48 overflow-y-auto custom-scroll p-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {filteredSpecies.map((sp) => {
                 const isSel = selectedSpecies?.id === sp.id;
                 return (
@@ -1163,7 +1163,7 @@ export default function CharacterBuilderModal({
                     onClick={() => setSelectedSpeciesId(sp.id)}
                     className={`p-3 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                       isSel
-                        ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
+                        ? 'bg-dnd-panel ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                         : 'bg-dnd-panel/50 hover:bg-dnd-panel'
                     }`}
                   >
@@ -1321,13 +1321,13 @@ export default function CharacterBuilderModal({
                     onClick={() => setSelectedBackgroundId(bg.id)}
                     className={`p-3 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
                       isSel
-                        ? 'bg-dnd-panel ring-1 ring-dnd-gold/40'
+                        ? 'bg-dnd-panel ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                         : 'bg-dnd-panel/50 hover:bg-dnd-panel'
                     }`}
                   >
                     <div className="text-xs font-bold text-slate-100">{bg.name}</div>
                     {bg.originFeat && (
-                      <div className="text-[10px] text-dnd-gold mt-0.5 truncate">
+                      <div className="text-[10px] text-slate-400 mt-0.5 truncate">
                         Feat: {bg.originFeat}
                       </div>
                     )}
@@ -1374,7 +1374,7 @@ export default function CharacterBuilderModal({
                             <span>
                               Ability Score Boost (Eligible: {displayedBackground.eligibleAbilities.map((a) => a.toUpperCase()).join(', ')}):
                             </span>
-                            <span className="font-bold text-amber-400">
+                            <span className="font-bold text-dnd-gold">
                               {remainingPoints} of 3 points remaining
                             </span>
                           </div>
@@ -1391,7 +1391,7 @@ export default function CharacterBuilderModal({
                                   key={ab}
                                   className={`flex items-center space-x-2.5 px-3 py-1.5 rounded-xl transition-colors shadow-sm ${
                                     val > 0
-                                      ? 'bg-dnd-card ring-1 ring-dnd-gold/40'
+                                      ? 'bg-dnd-card ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                                       : 'bg-dnd-card'
                                   }`}
                                 >
@@ -1869,7 +1869,7 @@ export default function CharacterBuilderModal({
             {(() => {
               const cardCls = (active) =>
                 `p-4 rounded-xl text-left transition-colors cursor-pointer shadow-sm ${
-                  active ? 'bg-dnd-panel ring-1 ring-dnd-gold/40' : 'bg-dnd-panel/60 hover:bg-dnd-panel'
+                  active ? 'bg-dnd-panel ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]' : 'bg-dnd-panel/60 hover:bg-dnd-panel'
                 }`;
 
               if (ruleset === '2014') {

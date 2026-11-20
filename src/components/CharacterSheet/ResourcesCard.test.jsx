@@ -1077,4 +1077,49 @@ describe('ResourcesCard', () => {
     );
     expect(screen.getByText('None recorded')).toBeInTheDocument();
   });
+
+  it('applies subtle glow ring tokens ring-white/30 on selected feat chips and tracked resource cards', () => {
+    const luckyResource = { id: 'res_lucky', name: 'Lucky', current: 3, max: 3, resetOn: 'LR', linkedFeatId: 'feat_lucky' };
+    const luckyFeat = { id: 'feat_lucky', name: 'Lucky', note: 'Luck points' };
+
+    render(
+      <ResourcesCard
+        trackedResources={[luckyResource]}
+        featuresNotes=""
+        feats={[luckyFeat]}
+      />
+    );
+
+    const featChip = screen.getByTestId('feat-chip-feat_lucky');
+    const resCard = screen.getByTestId('tracked-resource-item');
+
+    // Initially not selected
+    expect(featChip.className).not.toContain('ring-white/30');
+    expect(resCard.className).not.toContain('ring-white/30');
+
+    // Click feat chip -> active selected state with subtle glow ring on both linked feat chip and resource card
+    fireEvent.click(featChip);
+    expect(featChip.className).toContain('ring-1 ring-white/30');
+    expect(featChip.className).toContain('shadow-[0_0_14px_rgba(255,255,255,0.09)]');
+    expect(featChip.className).not.toContain('ring-dnd-gold');
+
+    expect(resCard.className).toContain('ring-1 ring-white/30');
+    expect(resCard.className).toContain('shadow-[0_0_14px_rgba(255,255,255,0.09)]');
+    expect(resCard.className).not.toContain('ring-dnd-gold');
+
+    // Click tracked resource card -> toggles off
+    fireEvent.click(resCard);
+    expect(resCard.className).not.toContain('ring-white/30');
+
+    // Click tracked resource card again -> re-opens with subtle glow ring
+    fireEvent.click(resCard);
+    expect(resCard.className).toContain('ring-1 ring-white/30');
+    expect(resCard.className).toContain('shadow-[0_0_14px_rgba(255,255,255,0.09)]');
+    expect(resCard.className).not.toContain('ring-dnd-gold');
+
+    // Detail viewer pane rendered without perimeter outline
+    const viewerCard = screen.getByTestId('resource-viewer-card');
+    expect(viewerCard.className).not.toContain('ring-1 ring-white/10');
+    expect(viewerCard.className).not.toContain('border');
+  });
 });

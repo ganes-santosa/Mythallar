@@ -652,7 +652,7 @@ export default function VitalsCard({
 
               <div className="flex items-center gap-1.5 my-0.5">
                 {/* Sub-container 1: Current & Max */}
-                <div className="bg-dnd-panel/70 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between">
+                <div className="bg-dnd-panel/70 hover:bg-dnd-panel/90 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between shadow-sm">
                   <div className="flex justify-between items-center text-[8px] font-semibold text-slate-400 px-0.5 mb-0.5">
                     <span>Current</span>
                     <span>Max</span>
@@ -696,7 +696,7 @@ export default function VitalsCard({
                 </div>
 
                 {/* Sub-container 2: Temp HP */}
-                <div className="bg-dnd-panel/70 hover:bg-dnd-panel/90 border border-white/5 hover:border-white/20 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between self-stretch min-w-[2.75rem]">
+                <div className="bg-dnd-panel/70 hover:bg-dnd-panel/90 transition-all rounded-md px-2.5 py-1 flex flex-col justify-between self-stretch min-w-[2.75rem] shadow-sm">
                   <div className="text-[8px] font-semibold text-blue-400 text-center mb-0.5">
                     Temp
                   </div>
@@ -767,12 +767,12 @@ export default function VitalsCard({
 
             {/* Right: Treatment A Capsule */}
             <div className="flex flex-col justify-center">
-              <div className="bg-dnd-panel/70 border border-white/5 rounded-md p-1 flex flex-col gap-1 w-16 box-border">
+              <div className="bg-dnd-panel/70 rounded-md p-1 flex flex-col gap-1 w-16 box-border shadow-sm">
                 <button
                   type="button"
                   aria-label="Apply Damage"
                   onClick={handleQuickDamage}
-                  className="w-full bg-red-950/40 hover:bg-red-900/50 border border-red-500/20 text-red-400 rounded py-0.5 text-[10px] font-bold transition-colors cursor-pointer"
+                  className="w-full bg-red-950/60 hover:bg-red-900/70 text-red-400 rounded py-0.5 text-[10px] font-bold transition-colors cursor-pointer"
                 >
                   Damage
                 </button>
@@ -782,13 +782,13 @@ export default function VitalsCard({
                   placeholder="0"
                   value={quickHpAmount}
                   onChange={(e) => setQuickHpAmount(e.target.value)}
-                  className="w-full text-center bg-dnd-panel/70 border border-white/10 rounded text-[10px] font-bold text-slate-100 py-0.5 outline-none focus:border-dnd-gold/60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full text-center bg-dnd-panel/90 rounded text-[10px] font-bold text-slate-100 py-0.5 outline-none focus:ring-1 focus:ring-dnd-gold/60 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
                 <button
                   type="button"
                   aria-label="Apply Heal"
                   onClick={handleQuickHeal}
-                  className="w-full bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/20 text-emerald-400 rounded py-0.5 text-[10px] font-bold transition-colors cursor-pointer"
+                  className="w-full bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-400 rounded py-0.5 text-[10px] font-bold transition-colors cursor-pointer"
                 >
                   Heal
                 </button>
@@ -1079,7 +1079,7 @@ export default function VitalsCard({
         {!isSimulacrum && (
           <div className={`col-span-1 sm:col-span-2 ${!isHpCrowded ? 'min-[1300px]:col-span-3 min-[1300px]:grid-cols-subgrid' : ''} grid grid-cols-1 sm:grid-cols-2 sm:gap-x-2 text-xs items-stretch relative`}>
             {/* Unified Card Background */}
-            <div className="absolute inset-0 bg-dnd-card/60 border border-white/5 rounded-lg pointer-events-none -z-0" />
+            <div className="absolute inset-0 bg-dnd-card/60 rounded-lg pointer-events-none -z-0 shadow-sm" />
 
             {/* Subdivision 1: Hit Dice */}
             <div className={`relative z-10 flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 min-w-0 sm:col-span-2 ${!isHpCrowded ? 'min-[1300px]:col-span-1 min-[1300px]:border-b-0' : ''} border-b border-white/5 py-1.5 pl-2 pr-1.5`}>
@@ -1109,7 +1109,7 @@ export default function VitalsCard({
                   {Object.entries(hitDice.pools || {}).map(([dieKey, pool]) => (
                     <div
                       key={dieKey}
-                      className="flex items-center space-x-1 bg-dnd-panel/70 px-1.5 py-0.5 rounded border border-white/5 flex-shrink-0"
+                      className="flex items-center space-x-1 bg-dnd-panel/70 px-1.5 py-0.5 rounded flex-shrink-0 shadow-sm"
                     >
                       <button
                         type="button"
@@ -1271,7 +1271,7 @@ export default function VitalsCard({
                   placeholder="e.g. Paralyzed, Blinded, Exhausted 1"
                   value={newCondition}
                   onChange={(e) => setNewCondition(e.target.value)}
-                  className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
+                  className="flex-1 px-2.5 py-1 rounded-lg bg-dnd-card text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/60 shadow-sm"
                 />
                 <button
                   type="submit"
@@ -1363,7 +1363,7 @@ export default function VitalsCard({
 
             {isAddingDefense && (
               <form noValidate onSubmit={handleAddDefense} className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 pt-1 px-0.5">
-                <div className="inline-flex rounded-lg bg-dnd-panel/70 p-0.5 shrink-0 text-xs">
+                <div className="inline-flex rounded-lg bg-dnd-card p-0.5 shrink-0 text-xs shadow-sm">
                   <button
                     type="button"
                     onClick={() => setDefenseType('resistance')}
@@ -1393,7 +1393,7 @@ export default function VitalsCard({
                   placeholder={defenseType === 'resistance' ? 'e.g. Fire, Cold' : 'e.g. Poison, Charmed'}
                   value={newDefense}
                   onChange={(e) => setNewDefense(e.target.value)}
-                  className="flex-1 min-w-[120px] px-2 py-0.5 rounded bg-dnd-card border border-white/20 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 focus:border-white/20 shadow-inner"
+                  className="flex-1 min-w-[120px] px-2 py-0.5 rounded-lg bg-dnd-card text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/60 shadow-sm"
                 />
                 <button
                   type="submit"
@@ -1418,7 +1418,7 @@ export default function VitalsCard({
               {defenses.map((def) => (
                 <span
                   key={def}
-                  className="group inline-flex items-center px-1.5 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm border border-white/5"
+                  className="group inline-flex items-center px-1.5 py-0.5 rounded-lg bg-dnd-card text-[11px] text-slate-300 shadow-sm"
                 >
                   <span>{def}</span>
                   {isEditing && (

@@ -510,7 +510,7 @@ function ItemDetailViewer({
         <div
           data-testid="item-viewer-card"
           style={{ height: `${totalViewerHeight}px` }}
-          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
+          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
         >
           <div className="flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center space-x-2 min-w-0">
@@ -1141,6 +1141,12 @@ export default function ItemsCard({
     setIsAdding(false);
   };
 
+  useEffect(() => {
+    if (editingItemId && editingItemId !== viewingItemId) {
+      handleCancel();
+    }
+  }, [viewingItemId, editingItemId]);
+
   const handleDeleteItem = (itemId, e) => {
     e?.stopPropagation?.();
     if (viewingItemId === itemId) setViewingItemId(null);
@@ -1347,7 +1353,10 @@ export default function ItemsCard({
             <button
               type="button"
               aria-label="Add Item"
-              onClick={() => setIsAdding(!isAdding)}
+              onClick={() => {
+                if (editingItemId) handleCancel();
+                setIsAdding(!isAdding);
+              }}
               className="flex items-center space-x-1 px-2 py-0.5 rounded-lg bg-dnd-card hover:bg-dnd-hover text-dnd-gold hover:text-dnd-gold-light text-xs transition-colors"
             >
               <Plus size={11} />
@@ -1592,6 +1601,9 @@ export default function ItemsCard({
                         if (isAttuneMode) {
                           toggleAttune(item.id);
                         } else {
+                          if (editingItemId) {
+                            handleCancel();
+                          }
                           setViewingItemId((prev) => (prev === item.id ? null : item.id));
                         }
                       }}
@@ -1601,13 +1613,16 @@ export default function ItemsCard({
                           if (isAttuneMode) {
                             toggleAttune(item.id);
                           } else {
+                            if (editingItemId) {
+                              handleCancel();
+                            }
                             setViewingItemId((prev) => (prev === item.id ? null : item.id));
                           }
                         }
                       }}
                       className={`group relative flex items-center justify-between py-1.5 px-2.5 rounded-lg text-xs select-none transition-all shadow-sm cursor-pointer overflow-hidden ${
                         isViewing
-                          ? 'bg-dnd-card ring-2 ring-white/80 shadow-[0_0_12px_rgba(255,255,255,0.18)] brightness-110'
+                          ? 'bg-dnd-card ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)]'
                           : isAttuned
                           ? 'bg-dnd-card hover:bg-dnd-hover'
                           : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'

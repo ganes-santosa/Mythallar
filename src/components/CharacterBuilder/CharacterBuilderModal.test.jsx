@@ -351,8 +351,11 @@ describe('CharacterBuilderModal', () => {
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
 
     // Soldier background has eligible abilities: ['str', 'dex', 'con']
-    // Defaults to 0/unfilled -> 3 points remaining
-    expect(screen.getByText(/3 of 3 points remaining/i)).toBeInTheDocument();
+    // Defaults to 0/unfilled -> 3 points remaining with theme accent color
+    const remainingBadge = screen.getByText(/3 of 3 points remaining/i);
+    expect(remainingBadge).toBeInTheDocument();
+    expect(remainingBadge.className).toContain('text-dnd-gold');
+    expect(remainingBadge.className).not.toContain('text-amber-400');
 
     // Increase STR to +1 and then +2
     const increaseStr = screen.getByRole('button', { name: /Increase STR/i });
@@ -571,10 +574,10 @@ describe('CharacterBuilderModal', () => {
     expect(pbWrapper).toHaveClass('grid-rows-[1fr]');
     expect(pbWrapper).toHaveClass('opacity-100');
 
-    // Method selector and ruleset buttons use uniform ring-dnd-gold/40 outline matching AbilitiesCard
+    // Method selector and ruleset buttons use uniform ring-white/30 outline matching prepared cards
     const rulesetBtn = screen.getByRole('button', { name: /D&D 5th Edition 2024/i });
-    expect(rulesetBtn.className).toContain('ring-1 ring-dnd-gold/40');
-    expect(rulesetBtn.className).not.toContain('ring-dnd-gold ');
+    expect(rulesetBtn.className).toContain('ring-1 ring-white/30');
+    expect(rulesetBtn.className).not.toContain('ring-dnd-gold');
 
     // Switching between Point Buy and Standard Array keeps top banner open without collapse
     fireEvent.click(screen.getByRole('button', { name: 'Standard Array' }));
@@ -620,29 +623,40 @@ describe('CharacterBuilderModal', () => {
     expect(strCard).toBeInTheDocument();
   });
 
-  it('unifies active selection outline across all cards with ring-1 ring-dnd-gold/40 and transition-colors', async () => {
+  it('unifies active selection outline across all cards with ring-1 ring-white/30 and transition-colors', async () => {
     render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={vi.fn()} />);
 
     expect(await screen.findByRole('heading', { name: /Choose your ruleset/i })).toBeInTheDocument();
 
     // 1. Ruleset card
     const ruleset2024 = screen.getByRole('button', { name: /D&D 5th Edition 2024/i });
-    expect(ruleset2024.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(ruleset2024.className).toContain('ring-1 ring-white/30');
     expect(ruleset2024.className).toContain('transition-colors');
 
     // 2. Class card
     const fighterBtn = screen.getByRole('button', { name: /Fighter/i });
     expect(fighterBtn.querySelector('svg')).toBeInTheDocument();
     fireEvent.click(fighterBtn);
-    expect(fighterBtn.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(fighterBtn.className).toContain('ring-1 ring-white/30');
     expect(fighterBtn.className).toContain('transition-colors');
 
     // 3. Equipment card
     const equipA = screen.getAllByRole('button', { name: /Class Equipment/i })[0];
-    expect(equipA.className).toContain('ring-1 ring-dnd-gold/40');
+    expect(equipA.className).toContain('ring-1 ring-white/30');
     expect(equipA.className).toContain('transition-colors');
     expect(screen.getByText('Total Starting Gold')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Starting Wealth/i }).length).toBeGreaterThan(0);
+
+    // 4. Species grid scroll container uses p-1 so glowing ring-1 outlines are not clipped
+    const humanBtn = screen.getByRole('button', { name: /Human Speed/i });
+    expect(humanBtn.parentElement.className).toContain('p-1');
+    expect(humanBtn.parentElement.className).not.toContain('pr-1 ');
+
+    // 5. Background card origin feat text matches class card hit die text (text-slate-400)
+    const soldierBtn = screen.getByRole('button', { name: /Soldier/i });
+    const soldierFeatText = soldierBtn.querySelector('.text-slate-400');
+    expect(soldierFeatText).toBeInTheDocument();
+    expect(soldierFeatText.textContent).toContain('Feat: Savage Attacker');
   });
 
   it('uses Title Case headers with gold category icons, non-uppercase Recommended badge, and non-monospace Class Detail badge', async () => {
@@ -714,9 +728,13 @@ describe('CharacterBuilderModal', () => {
     expect(screen.getByPlaceholderText(/e\.g\. An ancient tome I must protect/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/e\.g\. Overconfident in arcane mastery/i)).toBeInTheDocument();
 
-    // Character Lore textarea card is directly visible below
-    expect(screen.getByText('Character Lore')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText(/Write character background, origin, or personal history/i)).toBeInTheDocument();
+    // Character Lore textarea is directly visible below with uniform 40px spacing rhythm
+    const loreLabel = screen.getByText('Character Lore');
+    expect(loreLabel).toBeInTheDocument();
+    expect(loreLabel.closest('.\\!mt-10')).toBeInTheDocument();
+    const loreTextarea = screen.getByPlaceholderText(/Write character background, origin, or personal history/i);
+    expect(loreTextarea).toBeInTheDocument();
+    expect(loreTextarea).toHaveClass('block');
   });
 
   it('opens ImageCropModal upon file selection in Identity step and sets portrait on apply without forcing aspect ratio', async () => {

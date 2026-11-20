@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import React from 'react';
 import ItemsCard, {
   getLineBucket,
@@ -430,18 +430,18 @@ describe('ItemsCard', () => {
     render(<ItemsCard items={customItems} maxAttunement={3} onUpdateItems={() => {}} />);
 
     const chip = screen.getByTestId('item-chip-itm_view');
-    expect(chip.className).not.toContain('ring-2');
+    expect(chip.className).not.toContain('ring-white/30');
 
     // Click chip: viewer opens, chip gets highlighted ring
     fireEvent.click(chip);
     expect(screen.getByTestId('item-viewer-card')).toBeInTheDocument();
-    expect(chip.className).toContain('ring-2');
+    expect(chip.className).toContain('ring-white/30');
 
     // Click close button on viewer: closes viewer and clears highlight
     const closeBtn = screen.getByRole('button', { name: 'Close Bag of Holding details' });
     fireEvent.click(closeBtn);
     expect(screen.queryByTestId('item-viewer-card')).not.toBeInTheDocument();
-    expect(chip.className).not.toContain('ring-2');
+    expect(chip.className).not.toContain('ring-white/30');
 
     // Re-clicking chip opens and then toggles closed
     fireEvent.click(chip);
@@ -823,12 +823,14 @@ describe('ItemsCard', () => {
       ]);
     });
 
-    it('does not submit form or exit editing state when pressing Enter in Item Name', () => {
+    it('does not submit form or exit editing state when pressing Enter in Item Name', async () => {
       const handleUpdate = vi.fn();
       render(<ItemsCard items={[]} onUpdateItems={handleUpdate} />);
 
       // Open Add Form
-      fireEvent.click(screen.getByRole('button', { name: /Add Item/i }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Add Item/i }));
+      });
       const form = screen.getByTestId('item-add-form');
       expect(form).toBeInTheDocument();
 
@@ -840,6 +842,50 @@ describe('ItemsCard', () => {
       expect(handleUpdate).not.toHaveBeenCalled();
       expect(screen.getByTestId('item-add-form')).toBeInTheDocument();
       expect(nameInput.value).toBe('Lucky Charm');
+    });
+
+    it('cancels item editing state when clicking another item chip or closing viewer', async () => {
+      const customItems = [
+        { id: 'itm_a', name: 'Item A', category: 'gear', quantity: 1, note: 'Note A' },
+        { id: 'itm_b', name: 'Item B', category: 'gear', quantity: 1, note: 'Note B' },
+      ];
+      render(<ItemsCard items={customItems} onUpdateItems={() => {}} />);
+
+      // 1. Click Item A chip to view
+      fireEvent.click(screen.getByTestId('item-chip-itm_a'));
+      expect(screen.getByTestId('item-viewer-card')).toBeInTheDocument();
+
+      // 2. Click Edit button in Item A viewer
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Edit Item A' }));
+      });
+      expect(screen.getByTestId('item-edit-form')).toBeInTheDocument();
+
+      // 3. Click Item B chip
+      fireEvent.click(screen.getByTestId('item-chip-itm_b'));
+      expect(screen.queryByTestId('item-edit-form')).not.toBeInTheDocument();
+      expect(screen.getByText('Note B')).toBeInTheDocument();
+
+      // 4. Click Item A chip again
+      fireEvent.click(screen.getByTestId('item-chip-itm_a'));
+      expect(screen.queryByTestId('item-edit-form')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit Item A' })).toBeInTheDocument();
+      expect(screen.getByText('Note A')).toBeInTheDocument();
+
+      // 5. Enter edit mode on Item A again
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Edit Item A' }));
+      });
+      expect(screen.getByTestId('item-edit-form')).toBeInTheDocument();
+
+      // 6. Click Item A chip again to close viewer
+      fireEvent.click(screen.getByTestId('item-chip-itm_a'));
+      expect(screen.queryByTestId('item-edit-form')).not.toBeInTheDocument();
+
+      // 7. Click Item A chip again to reopen
+      fireEvent.click(screen.getByTestId('item-chip-itm_a'));
+      expect(screen.queryByTestId('item-edit-form')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Edit Item A' })).toBeInTheDocument();
     });
   });
 });

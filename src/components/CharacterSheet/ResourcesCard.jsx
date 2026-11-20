@@ -363,7 +363,7 @@ function ResourceDetailViewer({
         <div
           data-testid={isFeat ? 'feat-viewer-card' : 'resource-viewer-card'}
           style={{ height: `${totalViewerHeight}px` }}
-          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
+          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
         >
           <div className="flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center space-x-2 min-w-0">
@@ -757,7 +757,7 @@ function FeatDetailViewer({
         <div
           data-testid="feat-viewer-card"
           style={{ height: `${totalViewerHeight}px` }}
-          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ring-1 ring-white/10 ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
+          className={`p-3 rounded-lg flex flex-col justify-between text-xs shadow-sm ${viewerColorCfg.bg} ${viewerColorCfg.text} transition-[height,background-color] duration-300 ease-in-out overflow-hidden`}
         >
           <div className="flex items-center justify-between gap-2 shrink-0">
             <div className="flex items-center space-x-2 min-w-0">
@@ -1519,7 +1519,7 @@ export default function ResourcesCard({
                   }}
                   className={`group inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] select-none transition-colors shadow-sm cursor-pointer ${
                     isViewing
-                      ? 'ring-1 ring-dnd-gold bg-dnd-card/90 shadow-md text-white'
+                      ? 'ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)] bg-dnd-card/90 text-white'
                       : 'bg-dnd-card hover:bg-dnd-hover text-slate-300'
                   }`}
                 >
@@ -1739,9 +1739,11 @@ export default function ResourcesCard({
           {trackedResources.map((res) => {
             const isDraggingThis = draggedResId === res.id;
             const isOverThis = dragOverResId === res.id;
-            const isViewing = viewingResourceId === res.id;
-            const colorCfg = getColorConfig(res.color || 'none');
             const linkedFeat = findLinkedFeat(res);
+            const isViewing =
+              viewingResourceId === res.id ||
+              (linkedFeat && viewingFeatId === linkedFeat.id);
+            const colorCfg = getColorConfig(res.color || 'none');
 
             return (
               <div
@@ -1768,7 +1770,7 @@ export default function ResourcesCard({
                   isEditing ? 'cursor-grab active:cursor-grabbing' : 'hover:bg-dnd-hover/60'
                 } ${isDraggingThis ? 'opacity-40 scale-95' : ''} ${
                   isOverThis ? 'ring-1 ring-dnd-gold shadow-md' : ''
-                } ${isViewing ? 'ring-1 ring-dnd-gold bg-dnd-card/90 shadow-md' : ''}`}
+                } ${isViewing ? 'ring-1 ring-white/30 shadow-[0_0_14px_rgba(255,255,255,0.09)] bg-dnd-card/90' : ''}`}
               >
                 {/* Ease-out gradient originating from the right side and ending at the 2/3 mark */}
                 <div

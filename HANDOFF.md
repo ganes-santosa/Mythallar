@@ -1,16 +1,15 @@
 # HANDOFF
 
-## Release v3.2.4 - builder starting wealth & equipment, notes & sheet polish
+## Release v3.2.5 - builder uniform vertical spacing rhythm & visual polish
 
 ## Current state (master)
-- Official 5e subclasses: 296 entries with full feature text in `public/data/classes.json`.
-  - Ruleset-aware unlock levels (`getSubclassLevel`), 1/3-caster multiclass spell slots.
-  - `LevelUpModal` subclass prompt (official dropdown + custom input), auto-adds feature notes.
+- Builder Identity Spacing: Unified visual gap rhythm above and below Character Lore to exactly 40px, matching the standard section divider spacing across Character Builder.
+- Subclass picker & features: 296 entries with full feature text in `public/data/classes.json`.
 - Character creation: `CreateCharacterModal` choice screen (Builder vs Manual Setup).
 - Builder equipment: starting gear & gold for 2014 (rolled wealth vs gear) and 2024 (Class & Background Equipment or Starting Wealth), parsing inventory and currency.
-- Smooth UX: dynamic tracking auto-scroll over 380ms grid transitions; stable `SlotNumber` digit alignment (0.0px shift during/after spin).
+- Smooth UX: dynamic tracking auto-scroll over 380ms grid transitions; stable `SlotNumber` digit alignment.
 - Notes: 3 text sizes (Heading/Subheading/Body) via toolbar dropdown with cursor block detection.
-- Full suite green: 67 test files, 611 tests passed. Production build clean.
+- Full suite green: 67 test files, 613 tests passed. Production build clean.
 
 ## Next up
 - Deeper subclass feature integration into character sheet traits/features.
