@@ -1,15 +1,14 @@
 # HANDOFF
 
-## Release v3.2.5 - builder uniform vertical spacing rhythm & visual polish
+## Release v3.2.6 - builder starting feats, vitals 2-digit min width, header mobile labels, hand-eye icon
 
 ## Current state (master)
-- Builder Identity Spacing: Unified visual gap rhythm above and below Character Lore to exactly 40px, matching the standard section divider spacing across Character Builder.
-- Subclass picker & features: 296 entries with full feature text in `public/data/classes.json`.
-- Character creation: `CreateCharacterModal` choice screen (Builder vs Manual Setup).
-- Builder equipment: starting gear & gold for 2014 (rolled wealth vs gear) and 2024 (Class & Background Equipment or Starting Wealth), parsing inventory and currency.
-- Smooth UX: dynamic tracking auto-scroll over 380ms grid transitions; stable `SlotNumber` digit alignment.
-- Notes: 3 text sizes (Heading/Subheading/Body) via toolbar dropdown with cursor block detection.
-- Full suite green: 67 test files, 613 tests passed. Production build clean.
+- Builder Starting Feats: Background origin feats & species feats (Variant/Standard Human, Custom Lineage) populate `sheet.feats` with descriptions & linked `trackedResources`. Feat traits sort first with floating searchable dropdown and expandable description.
+- Subrace catalogue: Added explicit `Standard` Human options for 2014 (+1 all stats) and 2024 (Resourceful, Skillful, Versatile).
+- Vitals HP digit alignment: Current/Max HP containers reserve 2ch min-width to avoid label crowding on 1-digit values; digits align on uniform baseline.
+- Character Sheet Lore & Traits: Click-to-edit removed from view state; edit restricted to pencil buttons; labels collapse to "Lore" and "Traits" on mobile (`sm:`).
+- HandEye Icon: Custom normalized Phosphor HandEye component replaces Wand2 in modals.
+- Full suite green: 67 test files, 614 tests passed. Production build clean.
 
 ## Next up
 - Deeper subclass feature integration into character sheet traits/features.

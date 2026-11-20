@@ -1,0 +1,55 @@
+import React from 'react';
+
+/**
+ * HandEye icon from Phosphor Icons.
+ * ViewBox normalized from 256x256 with 48px padding to tight 40 16 176 224
+ * to match visual weight & optical bounding box of standard 24x24 Lucide icons.
+ */
+export default function HandEye({ size = 20, className = '', ...props }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="40 16 176 224"
+      width={size}
+      height={size}
+      fill="currentColor"
+      className={className}
+      aria-hidden="true"
+      {...props}
+    >
+      <path
+        d="M88,76V44a20,20,0,0,1,40,0v60"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+      <path
+        d="M128,60a20,20,0,0,1,40,0v60"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+      <path
+        d="M168,120v-4a20,20,0,0,1,40,0v36a80,80,0,0,1-160,0V76a20,20,0,0,1,40,0v36"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+      <circle cx="128" cy="168" r="12" />
+      <path
+        d="M80,168s16-32,48-32,48,32,48,32-16,32-48,32S80,168,80,168Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="16"
+      />
+    </svg>
+  );
+}

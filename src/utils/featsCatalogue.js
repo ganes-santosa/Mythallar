@@ -82,6 +82,84 @@ export function matchFeatSuggestions(query, feats, limit = 8) {
   return [...starts, ...contains].slice(0, limit);
 }
 
+/**
+ * Resolves a feat name (or object) against the feats catalogue, preferring the active ruleset source
+ * ('XPHB' for 2024, 'PHB' for 2014). Also matches parameterized names like "Magic Initiate (Wizard)"
+ * to base catalogue entries like "Magic Initiate".
+ */
+export function findCatalogFeat(featNameOrObj, feats = [], ruleset = '2024') {
+  if (!featNameOrObj) return null;
+  if (typeof featNameOrObj === 'object' && featNameOrObj.name) {
+    // If already a rich catalog entry with description or trackedResource, return it or enrich it
+    if (featNameOrObj.description || featNameOrObj.trackedResource) return featNameOrObj;
+    featNameOrObj = featNameOrObj.name;
+  }
+  if (typeof featNameOrObj !== 'string' || !Array.isArray(feats) || feats.length === 0) return null;
+
+  const trimmed = featNameOrObj.trim();
+  if (!trimmed) return null;
+  const lower = trimmed.toLowerCase();
+  const baseLower = lower.replace(/\s*\([^)]*\)\s*$/, '').trim();
+  const preferredSource = ruleset === '2024' ? 'XPHB' : 'PHB';
+
+  const exactMatches = feats.filter((f) => f?.name?.toLowerCase() === lower);
+  if (exactMatches.length > 0) {
+    return exactMatches.find((f) => f.source === preferredSource) || exactMatches[0];
+  }
+
+  if (baseLower && baseLower !== lower) {
+    const baseMatches = feats.filter((f) => f?.name?.toLowerCase() === baseLower);
+    if (baseMatches.length > 0) {
+      return baseMatches.find((f) => f.source === preferredSource) || baseMatches[0];
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Returns true if a single trait grants a starting feat choice
+ * (e.g. Variant Human / Custom Lineage "Feat", 2024 Human "Versatile").
+ */
+export function traitGrantsFeat(trait) {
+  if (!trait) return false;
+  return (
+    /^feat$/i.test(trait.name?.trim() || '') ||
+    /\bgain (?:one|an|a) (?:origin )?feat of your choice\b/i.test(trait.description || '')
+  );
+}
+
+/**
+ * Returns the active traits for a species + subrace selection.
+ * For Human, picking a subrace/lineage (e.g. Mark of Passage, Variant Human, Keldon)
+ * replaces base Human traits rather than stacking on top of them.
+ * Any trait that grants a starting feat is sorted first so it appears at the top.
+ */
+export function getActiveSpeciesTraits(species, subrace) {
+  if (!species) return subrace?.traits || [];
+  const isHumanWithSubrace =
+    species.name?.toLowerCase() === 'human' && subrace?.traits?.length > 0;
+  const rawTraits = isHumanWithSubrace
+    ? subrace.traits
+    : [...(species.traits || []), ...(subrace?.traits || [])];
+  const featTraits = [];
+  const otherTraits = [];
+  for (const t of rawTraits) {
+    if (traitGrantsFeat(t)) featTraits.push(t);
+    else otherTraits.push(t);
+  }
+  return [...featTraits, ...otherTraits];
+}
+
+/**
+ * Returns true if the given species or subrace grants a starting feat choice
+ * (e.g. Variant Human, Custom Lineage, 2024 Human "Versatile").
+ */
+export function speciesGrantsFeat(species, subrace) {
+  return getActiveSpeciesTraits(species, subrace).some(traitGrantsFeat);
+}
+
+
 const ALL_STAT_OPTIONS = [
   { value: 'str:1', label: '+1 STR' },
   { value: 'dex:1', label: '+1 DEX' },

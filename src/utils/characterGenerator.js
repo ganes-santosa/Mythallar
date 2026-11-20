@@ -7,6 +7,13 @@ import { getAbilityModifier, getProficiencyBonus } from './dndCalculations';
 import { calculateFinalAbilities } from './abilityScoreGenerator';
 import { createDefaultSheet } from './storage';
 import { parseEquipmentOptions2024, parseBackgroundGp2014, itemFromString } from './startingWealth';
+import {
+  getCachedFeatsCatalogue,
+  findCatalogFeat,
+  getFeatStatChoiceConfig,
+  statChoiceToModifiers,
+  getActiveSpeciesTraits,
+} from './featsCatalogue';
 
 export function buildLevel1Character({
   name = 'New Adventurer',
@@ -16,6 +23,8 @@ export function buildLevel1Character({
   selectedSpecies = null,
   selectedSubrace = null,
   selectedBackground = null,
+  selectedSpeciesFeat = null,
+  featsCatalogue = null,
   baseScores = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
   bgBonusChoice = {}, // 2024 background ASI
   racialChoice = {}, // 2014 racial custom choice (e.g. Half-Elf)
@@ -72,17 +81,76 @@ export function buildLevel1Character({
     }
   }
 
-  // 6. Starting Feats
+  // 6. Starting Feats & Linked Tracked Resources
   // In 2024: background grants an Origin Feat!
+  // Plus species/subrace feat choice when applicable (Variant Human, Custom Lineage, 2024 Human).
+  const activeFeatsCatalogue = Array.isArray(featsCatalogue)
+    ? featsCatalogue
+    : getCachedFeatsCatalogue();
   const feats = [];
+  const trackedResources = [];
+
+  const addStartingFeat = (rawFeat, { isOriginFeat = false, fallbackNote = '' } = {}) => {
+    const featName = typeof rawFeat === 'string' ? rawFeat.trim() : rawFeat?.name?.trim();
+    if (!featName) return;
+
+    const catalogMatch = findCatalogFeat(rawFeat, activeFeatsCatalogue, ruleset);
+    const featId = `feat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${feats.length}`;
+    const noteText =
+      (typeof rawFeat === 'object' && (rawFeat.note || rawFeat.description)) ||
+      catalogMatch?.description ||
+      fallbackNote;
+
+    let statModifiers = typeof rawFeat === 'object' ? rawFeat.statModifiers : undefined;
+    if (!statModifiers && catalogMatch) {
+      const statCfg = getFeatStatChoiceConfig(catalogMatch);
+      if (statCfg.hasCatalogAsi) {
+        statModifiers = statChoiceToModifiers(statCfg.defaultChoice);
+      }
+    }
+
+    const featObj = {
+      id: featId,
+      name: featName,
+      source: catalogMatch?.source || (ruleset === '2024' ? 'XPHB' : 'PHB'),
+      typeLine: catalogMatch?.typeLine || (isOriginFeat ? 'Origin Feat' : 'Feat'),
+      note: noteText,
+      description: noteText,
+      color: 'none',
+      ...(isOriginFeat ? { isOriginFeat: true } : {}),
+      ...(statModifiers ? { statModifiers } : {}),
+    };
+    feats.push(featObj);
+
+    const trackedCfg =
+      (typeof rawFeat === 'object' && rawFeat.trackedResource) ||
+      catalogMatch?.trackedResource;
+    if (trackedCfg) {
+      const maxVal = Math.max(1, Number(trackedCfg.max) || 1);
+      trackedResources.push({
+        id: `res_${Date.now()}_${Math.random().toString(36).slice(2, 6)}_${trackedResources.length}`,
+        linkedFeatId: featId,
+        name: featName,
+        max: maxVal,
+        current: maxVal,
+        resetOn: trackedCfg.resetOn || 'LR',
+        note: noteText,
+        color: 'none',
+      });
+    }
+  };
+
   if (ruleset === '2024' && selectedBackground?.originFeat) {
-    feats.push({
-      id: `feat_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-      name: selectedBackground.originFeat,
-      source: 'XPHB',
-      typeLine: 'Origin Feat',
-      description: `Granted by the ${selectedBackground.name} background.`,
+    addStartingFeat(selectedBackground.originFeat, {
       isOriginFeat: true,
+      fallbackNote: `Granted by the ${selectedBackground.name} background.`,
+    });
+  }
+
+  if (selectedSpeciesFeat) {
+    addStartingFeat(selectedSpeciesFeat, {
+      isOriginFeat: ruleset === '2024',
+      fallbackNote: `Granted by ${raceName || 'species'}.`,
     });
   }
 
@@ -123,15 +191,8 @@ export function buildLevel1Character({
 
   // 8. Class & Racial Features Notes
   const featureList = [];
-  if (selectedSpecies?.traits) {
-    for (const t of selectedSpecies.traits) {
-      featureList.push(`• ${t.name}: ${t.description}`);
-    }
-  }
-  if (selectedSubrace?.traits) {
-    for (const t of selectedSubrace.traits) {
-      featureList.push(`• ${t.name}: ${t.description}`);
-    }
+  for (const t of getActiveSpeciesTraits(selectedSpecies, selectedSubrace)) {
+    featureList.push(`• ${t.name}: ${t.description}`);
   }
   if (selectedClass?.level1Features) {
     for (const f of selectedClass.level1Features) {
@@ -228,7 +289,7 @@ export function buildLevel1Character({
         tools: selectedBackground?.toolProficiencies || [],
         languages: ['Common'],
       },
-      trackedResources: [],
+      trackedResources,
       featuresNotes,
       feats,
       currency: { cp: 0, sp: 0, ep: 0, gp: startingGold, pp: 0 },

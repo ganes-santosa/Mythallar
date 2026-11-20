@@ -121,6 +121,32 @@ describe('CharacterBuilderModal', () => {
       if (url.includes('classes.json')) return Promise.resolve({ ok: true, json: async () => mockClasses });
       if (url.includes('species.json')) return Promise.resolve({ ok: true, json: async () => mockSpecies });
       if (url.includes('backgrounds.json')) return Promise.resolve({ ok: true, json: async () => mockBackgrounds });
+      if (url.includes('feats.json'))
+        return Promise.resolve({
+          ok: true,
+          json: async () => [
+            {
+              name: 'Lucky',
+              source: 'XPHB',
+              typeLine: 'Origin Feat',
+              trackedResource: { max: 3, resetOn: 'LR' },
+              description: 'Origin Feat\n\nYou have Luck Points.',
+            },
+            {
+              name: 'Lucky',
+              source: 'PHB',
+              typeLine: 'Feat',
+              trackedResource: { max: 3, resetOn: 'LR' },
+              description: 'Feat\n\nYou have 3 luck points.',
+            },
+            {
+              name: 'Savage Attacker',
+              source: 'XPHB',
+              typeLine: 'Origin Feat',
+              description: 'Origin Feat\n\nReroll weapon damage dice once per turn.',
+            },
+          ],
+        });
       if (url.includes('spells.json')) return Promise.resolve({ ok: true, json: async () => [] });
       return Promise.resolve({ ok: false });
     });
@@ -731,7 +757,7 @@ describe('CharacterBuilderModal', () => {
     // Character Lore textarea is directly visible below with uniform 40px spacing rhythm
     const loreLabel = screen.getByText('Character Lore');
     expect(loreLabel).toBeInTheDocument();
-    expect(loreLabel.closest('.\\!mt-10')).toBeInTheDocument();
+    expect(loreLabel.closest('.\\!mt-5')).toBeInTheDocument();
     const loreTextarea = screen.getByPlaceholderText(/Write character background, origin, or personal history/i);
     expect(loreTextarea).toBeInTheDocument();
     expect(loreTextarea).toHaveClass('block');
@@ -772,5 +798,157 @@ describe('CharacterBuilderModal', () => {
     const portraitImg = screen.getByAltText(/Character Portrait/i);
     expect(portraitImg).toBeInTheDocument();
     expect(portraitImg).toHaveClass('w-full', 'h-auto', 'block');
+  });
+
+  it('displays Select Feat dropdown inside the Feat trait card when species or subrace grants a feat, transforms into an A-Z searchable field on click, and does NOT show it for non-feat Human subraces like Mark of Passage', async () => {
+    const speciesWithFeat = [
+      ...mockSpecies.filter((s) => s.id !== 'human-2024'),
+      {
+        id: 'human-2024',
+        name: 'Human',
+        edition: '2024',
+        speed: 30,
+        size: 'Small or Medium',
+        darkvision: 0,
+        traits: [
+          { name: 'Versatile', description: 'You gain an Origin feat of your choice.' },
+        ],
+        subraces: [
+          {
+            id: 'human-mark-of-passage-2024',
+            name: 'Mark of Passage Human',
+            subraceName: 'Mark of Passage',
+            traits: [{ name: 'Magical Passage', description: 'You can cast misty step.' }],
+            speed: 35,
+            darkvision: 0,
+          },
+          {
+            id: 'human-variant-2024',
+            name: 'Variant Human',
+            subraceName: 'Variant',
+            traits: [
+              { name: 'Skills', description: 'You gain proficiency in one skill of your choice.' },
+              { name: 'Feat', description: 'You gain one feat of your choice.' },
+            ],
+            speed: 30,
+            darkvision: 0,
+          },
+        ],
+      },
+      {
+        id: 'custom-lineage-2024',
+        name: 'Custom Lineage',
+        edition: '2024',
+        speed: 30,
+        size: 'Small or Medium',
+        darkvision: 60,
+        traits: [{ name: 'Feat', description: 'You gain one feat of your choice for which you qualify.' }],
+        subraces: [],
+      },
+    ];
+    global.fetch = vi.fn().mockImplementation((url) => {
+      if (url.includes('classes.json')) return Promise.resolve({ ok: true, json: async () => mockClasses });
+      if (url.includes('species.json')) return Promise.resolve({ ok: true, json: async () => speciesWithFeat });
+      if (url.includes('backgrounds.json'))
+        return Promise.resolve({
+          ok: true,
+          json: async () => [
+            {
+              id: 'wayfarer-2024',
+              name: 'Wayfarer',
+              edition: '2024',
+              eligibleAbilities: ['dex', 'wis', 'cha'],
+              originFeat: 'Lucky',
+              skillProficiencies: ['insight', 'stealth'],
+            },
+          ],
+        });
+      if (url.includes('feats.json'))
+        return Promise.resolve({
+          ok: true,
+          json: async () => [
+            {
+              name: 'Lucky',
+              source: 'XPHB',
+              typeLine: 'Origin Feat',
+              trackedResource: { max: 3, resetOn: 'LR' },
+              description: 'Origin Feat\n\nYou have Luck Points.',
+            },
+            {
+              name: 'Alert',
+              source: 'XPHB',
+              typeLine: 'Origin Feat',
+              description: 'Origin Feat\n\nInitiative Proficiency.',
+            },
+          ],
+        });
+      return Promise.resolve({ ok: false });
+    });
+
+    const { resetBuilderDataCache } = await import('../../utils/builderData');
+    const { resetFeatsCatalogueCache } = await import('../../utils/featsCatalogue');
+    resetBuilderDataCache();
+    resetFeatsCatalogueCache();
+
+    const onCreate = vi.fn();
+    render(<CharacterBuilderModal isOpen={true} onClose={vi.fn()} onCreate={onCreate} />);
+
+    await screen.findByRole('heading', { name: /Choose your ruleset/i });
+
+    // Select Human -> defaults to first subrace (Mark of Passage), which does NOT grant a feat
+    fireEvent.click(screen.getByRole('button', { name: /^Human/i }));
+    expect(screen.queryByRole('button', { name: /Select Feat/i })).toBeNull();
+
+    // Switch subrace to Variant Human -> grants a feat, so Select Feat dropdown appears inside the Feat trait card
+    fireEvent.click(screen.getByRole('button', { name: /^Variant$/i }));
+    const selectFeatBtn = await screen.findByRole('button', { name: /Select Feat/i });
+    expect(selectFeatBtn).toBeInTheDocument();
+
+    // Feat trait card must be displayed FIRST before Skills trait card
+    const featCard = selectFeatBtn.closest('.bg-dnd-card');
+    const traitsContainer = featCard.parentElement;
+    expect(traitsContainer.firstElementChild).toBe(featCard);
+
+    // Click Select Feat dropdown -> transforms into searchable input and immediately shows A-Z options as floating overlay
+    fireEvent.click(selectFeatBtn);
+    const featInput = await screen.findByLabelText(/Species Starting Feat/i);
+    expect(featInput).toBeInTheDocument();
+
+    const listbox = screen.getByRole('listbox', { name: /Feat options/i });
+    expect(listbox).toHaveClass('absolute', 'z-50', 'overflow-y-auto', 'custom-scroll');
+
+    // All A-Z feats appear immediately without typing
+    const options = screen.getAllByRole('option');
+    expect(options.map((o) => o.textContent)).toEqual([
+      expect.stringContaining('Alert'),
+      expect.stringContaining('Lucky'),
+    ]);
+
+    // Pick Alert from the dropdown list
+    fireEvent.mouseDown(options[0]);
+
+    // Dropdown closes and button now shows Alert
+    expect(screen.getByRole('button', { name: /Select Feat/i })).toHaveTextContent('Alert');
+
+    // Feat card expands below the dropdown with a border-t border-white/5 subdivision line and displays the feat description
+    const featDescriptionEl = screen.getByTestId('selected-species-feat-description');
+    expect(featDescriptionEl).toHaveClass('border-t', 'border-white/5');
+    expect(featDescriptionEl).toHaveTextContent('Origin Feat Initiative Proficiency.');
+
+    // Navigate to final step and click Create Character
+    fireEvent.click(screen.getByRole('button', { name: /7\.\s*Equipment/i }));
+    const finishBtn = screen.getByRole('button', { name: /Create Character/i });
+    fireEvent.click(finishBtn);
+
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    const created = onCreate.mock.calls[0][0];
+
+    // Background Origin Feat (Lucky) + Species Starting Feat (Alert)
+    expect(created.sheet.feats.map((f) => f.name)).toEqual(['Lucky', 'Alert']);
+    // Lucky is tracked, so trackedResources has Lucky linked to the Lucky feat
+    expect(created.sheet.trackedResources).toHaveLength(1);
+    expect(created.sheet.trackedResources[0].name).toBe('Lucky');
+    expect(created.sheet.trackedResources[0].max).toBe(3);
+    expect(created.sheet.trackedResources[0].linkedFeatId).toBe(created.sheet.feats[0].id);
   });
 });

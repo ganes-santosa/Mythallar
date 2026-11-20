@@ -1151,5 +1151,25 @@ describe('VitalsCard', () => {
       expect(combatGrid.getAttribute('data-hp-crowded')).toBeNull();
       expect(combatGrid.className).toContain('min-[1300px]:grid-cols-[27fr_12fr_17fr]');
     });
+
+    it('reserves at least 2ch width for Current HP and Max HP when values are 1-digit and expands for 3-digit values', () => {
+      const { rerender } = render(
+        <VitalsCard vitals={{ ...mockVitals, hpCurrent: 8, hpMax: 8 }} onUpdateVitals={() => {}} />
+      );
+      const currentHpInput = screen.getByLabelText('Current HP');
+      const maxHpEl = screen.getByText('8');
+
+      // 1-digit values reserve 2ch so Current and Max labels match 2-digit proportions
+      expect(currentHpInput.style.width).toBe('2ch');
+      expect(maxHpEl).toHaveClass('min-w-[2ch]');
+      // Max HP and Current HP share baseline alignment without self-center offset
+      expect(maxHpEl).not.toHaveClass('self-center');
+      expect(maxHpEl.parentElement).toHaveClass('items-baseline');
+
+      // 3-digit values expand naturally beyond 2ch
+      rerender(<VitalsCard vitals={{ ...mockVitals, hpCurrent: 125, hpMax: 150 }} onUpdateVitals={() => {}} />);
+      expect(screen.getByLabelText('Current HP').style.width).toBe('3ch');
+      expect(screen.getByText('150')).toHaveClass('min-w-[2ch]');
+    });
   });
 });

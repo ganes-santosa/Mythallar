@@ -662,7 +662,7 @@ export default function VitalsCard({
                       type="number"
                       aria-label="Current HP"
                       value={currentHpDraft}
-                      style={{ width: `${Math.max(1, String(currentHpDraft).length)}ch` }}
+                      style={{ width: `${Math.max(2, String(currentHpDraft).length)}ch` }}
                       onFocus={(e) => e.target.select()}
                       onChange={(e) => setCurrentHpDraft(e.target.value)}
                       onBlur={handleCommitCurrentHp}
@@ -677,11 +677,11 @@ export default function VitalsCard({
                           e.target.blur();
                         }
                       }}
-                      className="text-right text-xl font-black text-slate-100 hover:text-dnd-gold bg-transparent outline-none focus:ring-1 focus:ring-dnd-gold/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
+                      className="min-w-[2ch] p-0 text-right text-xl font-black text-slate-100 hover:text-dnd-gold bg-transparent outline-none focus:ring-1 focus:ring-dnd-gold/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
                     />
-                    <span className="text-base text-slate-600 font-bold self-center px-1.5 select-none">/</span>
+                    <span className="text-base text-slate-600 font-bold leading-none px-1.5 select-none">/</span>
                     <div
-                      className={`text-xl font-black leading-none self-center text-left ${
+                      className={`min-w-[2ch] text-xl font-black leading-none text-left ${
                         hpMaxBuff > 0 ? 'text-amber-400' : hpMaxBuff < 0 ? 'text-rose-400' : 'text-slate-400'
                       }`}
                       title={
@@ -700,7 +700,7 @@ export default function VitalsCard({
                   <div className="text-[8px] font-semibold text-blue-400 text-center mb-0.5">
                     Temp
                   </div>
-                  <div className="flex items-baseline justify-center flex-1 items-center">
+                  <div className="flex items-baseline justify-center">
                     <input
                       type="number"
                       aria-label="Temp HP"
@@ -720,7 +720,7 @@ export default function VitalsCard({
                           e.target.blur();
                         }
                       }}
-                      className="text-center text-xl font-black text-blue-300 hover:text-blue-200 bg-transparent outline-none focus:ring-1 focus:ring-blue-400/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
+                      className="p-0 text-center text-xl font-black text-blue-300 hover:text-blue-200 bg-transparent outline-none focus:ring-1 focus:ring-blue-400/60 rounded leading-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text transition-colors"
                     />
                   </div>
                 </div>

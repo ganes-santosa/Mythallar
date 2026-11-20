@@ -243,6 +243,25 @@ async function run() {
           speed: 30,
           darkvision: 60,
         }));
+      } else if (raceName === 'Human' && parsed2014Subraces.length > 0) {
+        const standardHuman2024 = {
+          id: 'human-standard-2024',
+          name: 'Standard Human',
+          subraceName: 'Standard',
+          source: xphbVariant ? 'XPHB' : 'PHB',
+          abilityBonuses: {},
+          traits: traits.length > 0 ? traits : [{ name: 'Human Traits', description: 'Innate traits of Human.' }],
+          speed,
+          darkvision,
+        };
+        subraces2024 = [
+          standardHuman2024,
+          ...parsed2014Subraces.map((s) => ({
+            ...s,
+            id: s.id.replace('-2014', '-2024'),
+            abilityBonuses: {}, // in 2024 background grants ASI
+          })),
+        ];
       } else if (parsed2014Subraces.length > 0) {
         // Reuse subraces for species that have subraces
         subraces2024 = parsed2014Subraces.map((s) => ({
@@ -282,6 +301,28 @@ async function run() {
       const darkvision = target2014.darkvision || 0;
       const sizes = Array.isArray(target2014.size) ? target2014.size.map((s) => (s === 'M' ? 'Medium' : s === 'S' ? 'Small' : s)) : ['Medium'];
 
+      const subraces2014 =
+        raceName === 'Human' && parsed2014Subraces.length > 0
+          ? [
+              {
+                id: 'human-standard-2014',
+                name: 'Standard Human',
+                subraceName: 'Standard',
+                source: 'PHB',
+                abilityBonuses: { str: 1, dex: 1, con: 1, int: 1, wis: 1, cha: 1 },
+                traits: [
+                  {
+                    name: 'Ability Score Increase',
+                    description: 'Your ability scores each increase by 1.',
+                  },
+                ],
+                speed,
+                darkvision,
+              },
+              ...parsed2014Subraces,
+            ]
+          : parsed2014Subraces;
+
       results.push({
         id: `${raceName.toLowerCase().replace(/\s+/g, '-')}-2014`,
         name: raceName,
@@ -292,7 +333,7 @@ async function run() {
         darkvision,
         abilityBonuses: baseBonuses,
         traits: traits.length > 0 ? traits : [{ name: `${raceName} Traits`, description: `Racial traits of ${raceName}.` }],
-        subraces: parsed2014Subraces,
+        subraces: subraces2014,
         description: clean5eText(parseEntries(target2014.entries?.slice(0, 2) || []).join(' ')),
       });
     }

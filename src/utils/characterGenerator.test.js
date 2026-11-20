@@ -181,4 +181,118 @@ describe('characterGenerator', () => {
       expect(char.sheet.items).toHaveLength(0);
     });
   });
+
+  describe('starting feats and linked tracked resources', () => {
+    const sampleFeatsCatalogue = [
+      {
+        name: 'Lucky',
+        source: 'XPHB',
+        typeLine: 'Origin Feat',
+        trackedResource: { max: 3, resetOn: 'LR' },
+        description: 'Origin Feat\n\nYou have Luck Points.',
+      },
+      {
+        name: 'Lucky',
+        source: 'PHB',
+        typeLine: 'Feat',
+        trackedResource: { max: 3, resetOn: 'LR' },
+        description: 'Feat\n\nYou have 3 luck points.',
+      },
+      {
+        name: 'Magic Initiate',
+        source: 'XPHB',
+        typeLine: 'Origin Feat',
+        trackedResource: { max: 1, resetOn: 'LR' },
+        description: 'Origin Feat\n\nTwo Cantrips and a Level 1 Spell.',
+      },
+      {
+        name: 'Alert',
+        source: 'XPHB',
+        typeLine: 'Origin Feat',
+        description: 'Origin Feat\n\nInitiative Proficiency.',
+      },
+    ];
+
+    it('2024: populates origin feat from background with full description and creates linked trackedResource when tracked (e.g. Lucky)', () => {
+      const char = buildLevel1Character({
+        ruleset: '2024',
+        selectedBackground: { name: 'Wayfarer', originFeat: 'Lucky' },
+        featsCatalogue: sampleFeatsCatalogue,
+      });
+
+      expect(char.sheet.feats).toHaveLength(1);
+      const feat = char.sheet.feats[0];
+      expect(feat.name).toBe('Lucky');
+      expect(feat.isOriginFeat).toBe(true);
+      expect(feat.note).toContain('You have Luck Points.');
+
+      expect(char.sheet.trackedResources).toHaveLength(1);
+      const res = char.sheet.trackedResources[0];
+      expect(res.name).toBe('Lucky');
+      expect(res.max).toBe(3);
+      expect(res.current).toBe(3);
+      expect(res.resetOn).toBe('LR');
+      expect(res.linkedFeatId).toBe(feat.id);
+    });
+
+    it('2024: matches parameterized origin feat like Magic Initiate (Wizard) to base Magic Initiate catalogue entry and creates trackedResource', () => {
+      const char = buildLevel1Character({
+        ruleset: '2024',
+        selectedBackground: { name: 'Sage', originFeat: 'Magic Initiate (Wizard)' },
+        featsCatalogue: sampleFeatsCatalogue,
+      });
+
+      expect(char.sheet.feats).toHaveLength(1);
+      expect(char.sheet.feats[0].name).toBe('Magic Initiate (Wizard)');
+      expect(char.sheet.feats[0].note).toContain('Two Cantrips and a Level 1 Spell.');
+      expect(char.sheet.trackedResources).toHaveLength(1);
+      expect(char.sheet.trackedResources[0].name).toBe('Magic Initiate (Wizard)');
+      expect(char.sheet.trackedResources[0].max).toBe(1);
+      expect(char.sheet.trackedResources[0].linkedFeatId).toBe(char.sheet.feats[0].id);
+    });
+
+    it('adds species/racial chosen feat (e.g. Variant Human / Custom Lineage / 2024 Human) and its linked trackedResource if tracked', () => {
+      const char = buildLevel1Character({
+        ruleset: '2014',
+        selectedSpecies: { name: 'Human' },
+        selectedSubrace: {
+          name: 'Variant Human',
+          traits: [{ name: 'Feat', description: 'You gain one feat of your choice.' }],
+        },
+        selectedSpeciesFeat: 'Lucky',
+        featsCatalogue: sampleFeatsCatalogue,
+      });
+
+      expect(char.sheet.feats).toHaveLength(1);
+      const feat = char.sheet.feats[0];
+      expect(feat.name).toBe('Lucky');
+      expect(feat.note).toContain('You have 3 luck points.');
+
+      expect(char.sheet.trackedResources).toHaveLength(1);
+      const res = char.sheet.trackedResources[0];
+      expect(res.name).toBe('Lucky');
+      expect(res.max).toBe(3);
+      expect(res.current).toBe(3);
+      expect(res.resetOn).toBe('LR');
+      expect(res.linkedFeatId).toBe(feat.id);
+    });
+
+    it('combines both 2024 background origin feat and 2024 Human versatile feat with their respective trackedResources', () => {
+      const char = buildLevel1Character({
+        ruleset: '2024',
+        selectedSpecies: {
+          name: 'Human',
+          traits: [{ name: 'Versatile', description: 'You gain an Origin feat of your choice.' }],
+        },
+        selectedBackground: { name: 'Criminal', originFeat: 'Alert' },
+        selectedSpeciesFeat: 'Lucky',
+        featsCatalogue: sampleFeatsCatalogue,
+      });
+
+      expect(char.sheet.feats.map((f) => f.name)).toEqual(['Alert', 'Lucky']);
+      expect(char.sheet.trackedResources).toHaveLength(1);
+      expect(char.sheet.trackedResources[0].name).toBe('Lucky');
+      expect(char.sheet.trackedResources[0].linkedFeatId).toBe(char.sheet.feats[1].id);
+    });
+  });
 });

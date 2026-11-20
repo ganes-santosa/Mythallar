@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Wand2, Feather, User, ChevronLeft } from 'lucide-react';
+import { X, Feather, User, ChevronLeft } from 'lucide-react';
+import HandEye from '../Common/HandEye';
 import { useScrollLock } from '../../hooks/useScrollLock';
 
 export const DND_CLASSES = [
@@ -87,7 +88,7 @@ export default function CreateCharacterModal({ isOpen, onClose, onCreate, onStar
                 aria-label="Character Builder"
               >
                 <div className="p-2.5 rounded-lg bg-dnd-gold/10 text-dnd-gold group-hover:bg-dnd-gold/20 transition-colors shrink-0">
-                  <Wand2 size={20} />
+                  <HandEye size={20} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2">

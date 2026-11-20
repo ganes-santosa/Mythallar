@@ -73,3 +73,4 @@ CSS Grid Template Rows for buttery-smooth expand/collapse without JS height meas
 1. **Destructive Actions**: Use `useTwoClickConfirm` hook. Armed state keeps text and icon unchanged; turns red/green with ring indicator.
 2. **Search Inputs**: Compact rounded inputs (`px-2 py-0.5 text-[11px] bg-black/20 border border-white/5 text-slate-300 placeholder-slate-500 focus:outline-none focus:border-dnd-gold/40`).
 3. **Scrollable Panes**: All scroll containers containing highlighted or ringed elements must include padding on all sides (`p-1`) to avoid clipping glow effects.
+4. **Subdivision Lines**: Internal section dividers and expanded detail blocks inside modals, builder sections, and cards must use `border-t border-white/5` (matching the section dividers in `CharacterBuilderModal`: `pt-2 mt-2 border-t border-white/5` inside cards, `pt-6 border-t border-white/5` between major sections).

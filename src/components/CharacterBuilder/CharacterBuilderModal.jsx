@@ -5,7 +5,6 @@ import {
   ChevronRight,
   ChevronDown,
   Check,
-  Wand2,
   Flame,
   RotateCcw,
   Search,
@@ -22,6 +21,7 @@ import {
   Camera,
 } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import HandEye from '../Common/HandEye';
 import { compressImageFile } from '../../utils/imageCompressor';
 import {
   loadBuilderData,
@@ -52,6 +52,14 @@ import {
 } from '../../utils/startingWealth';
 import ClassIcon from '../Common/ClassIcon';
 import ImageCropModal from '../Modal/ImageCropModal';
+import useClickOutside from '../../hooks/useClickOutside';
+import {
+  loadFeatsCatalogue,
+  findCatalogFeat,
+  speciesGrantsFeat,
+  getActiveSpeciesTraits,
+  traitGrantsFeat,
+} from '../../utils/featsCatalogue';
 
 const SKILL_LABELS = Object.fromEntries(
   SKILLS_DEFINITION.map((s) => [s.key, s.label])
@@ -91,6 +99,14 @@ export default function CharacterBuilderModal({
   const [selectedSubraceId, setSelectedSubraceId] = useState('');
   const [selectedBackgroundId, setSelectedBackgroundId] = useState('');
   const [speciesSearch, setSpeciesSearch] = useState('');
+  const [selectedSpeciesFeat, setSelectedSpeciesFeat] = useState('');
+  const [isSpeciesFeatOpen, setIsSpeciesFeatOpen] = useState(false);
+  const [speciesFeatQuery, setSpeciesFeatQuery] = useState('');
+  const speciesFeatInputRef = useRef(null);
+  const speciesFeatDropdownRef = useClickOutside(isSpeciesFeatOpen, () => {
+    setIsSpeciesFeatOpen(false);
+    setSpeciesFeatQuery('');
+  });
 
   // Class skill picks & feature preview
   const [chosenSkills, setChosenSkills] = useState([]);
@@ -164,17 +180,19 @@ export default function CharacterBuilderModal({
   const [allClasses, setAllClasses] = useState([]);
   const [allSpecies, setAllSpecies] = useState([]);
   const [allBackgrounds, setAllBackgrounds] = useState([]);
+  const [featsCatalogue, setFeatsCatalogue] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Load datasets on mount
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    loadBuilderData().then((builderData) => {
+    Promise.all([loadBuilderData(), loadFeatsCatalogue()]).then(([builderData, featsData]) => {
       if (!active) return;
       setAllClasses(builderData?.classes || []);
       setAllSpecies(builderData?.species || []);
       setAllBackgrounds(builderData?.backgrounds || []);
+      setFeatsCatalogue(featsData || []);
       setIsLoading(false);
     });
     return () => {
@@ -243,6 +261,54 @@ export default function CharacterBuilderModal({
   const lastSelectedBgRef = useRef(null);
   if (hasSelectedBg) lastSelectedBgRef.current = selectedBackground;
   const displayedBackground = hasSelectedBg ? selectedBackground : lastSelectedBgRef.current;
+
+  const canPickSpeciesFeat = useMemo(
+    () => speciesGrantsFeat(selectedSpecies, selectedSubrace),
+    [selectedSpecies, selectedSubrace]
+  );
+
+  // Deduplicated A-Z feat catalogue for the active ruleset, filtered by search query when typing
+  const speciesFeatOptions = useMemo(() => {
+    const preferredSource = ruleset === '2024' ? 'XPHB' : 'PHB';
+    const byName = new Map();
+    for (const f of featsCatalogue) {
+      if (!f?.name) continue;
+      const key = f.name.toLowerCase();
+      const existing = byName.get(key);
+      if (!existing || f.source === preferredSource) {
+        byName.set(key, f);
+      }
+    }
+    const sorted = Array.from(byName.values()).sort((a, b) => a.name.localeCompare(b.name));
+    const q = speciesFeatQuery.trim().toLowerCase();
+    if (!q) return sorted;
+    const starts = [];
+    const contains = [];
+    for (const f of sorted) {
+      const lower = f.name.toLowerCase();
+      if (lower.startsWith(q)) starts.push(f);
+      else if (lower.includes(q)) contains.push(f);
+    }
+    return [...starts, ...contains];
+  }, [featsCatalogue, ruleset, speciesFeatQuery]);
+
+  const selectedSpeciesFeatEntry = useMemo(
+    () => findCatalogFeat(selectedSpeciesFeat, featsCatalogue, ruleset),
+    [selectedSpeciesFeat, featsCatalogue, ruleset]
+  );
+
+  // Focus input when feat dropdown transforms into a search field
+  useEffect(() => {
+    if (isSpeciesFeatOpen) {
+      speciesFeatInputRef.current?.focus();
+    }
+  }, [isSpeciesFeatOpen]);
+
+  // Close feat dropdown when species or subrace changes
+  useEffect(() => {
+    setIsSpeciesFeatOpen(false);
+    setSpeciesFeatQuery('');
+  }, [selectedSpeciesId, selectedSubraceId]);
 
   const lastBannerMethodRef = useRef('standard');
 
@@ -621,6 +687,8 @@ export default function CharacterBuilderModal({
       selectedSpecies,
       selectedSubrace,
       selectedBackground,
+      selectedSpeciesFeat: canPickSpeciesFeat ? selectedSpeciesFeat : null,
+      featsCatalogue,
       baseScores,
       bgBonusChoice,
       racialChoice,
@@ -785,7 +853,7 @@ export default function CharacterBuilderModal({
                 </div>
 
                 {/* Right: Core Identity Fields (evenly distributed beside any portrait aspect ratio) */}
-                <div className="flex-1 min-w-0 p-3.5 sm:p-4 flex flex-col justify-evenly gap-3">
+                <div className="flex-1 min-w-0 py-3.5 pl-3.5 sm:py-4 sm:pl-4 pr-0 flex flex-col justify-evenly gap-3">
                   {/* Line 1: Character Name */}
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">
@@ -811,7 +879,7 @@ export default function CharacterBuilderModal({
                         onChange={(e) =>
                           setDetails((prev) => ({ ...prev, age: e.target.value }))
                         }
-                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                        className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
                       />
                     </div>
 
@@ -824,7 +892,7 @@ export default function CharacterBuilderModal({
                         onChange={(e) =>
                           setDetails((prev) => ({ ...prev, gender: e.target.value }))
                         }
-                        className="w-full bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
+                        className="w-full bg-dnd-panel rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 transition-colors"
                       />
                     </div>
 
@@ -844,9 +912,9 @@ export default function CharacterBuilderModal({
                 </div>
               </div>
 
-              {/* Middle Row: Character Traits Card (Personality Traits, Ideals, Bonds, Flaws) */}
-              <div className="rounded-xl bg-dnd-card shadow-sm px-3 pt-3 pb-0 sm:px-3.5 sm:pt-3.5 sm:pb-0">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* Middle Row: Character Traits (Personality Traits, Ideals, Bonds, Flaws) */}
+              <div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-2 gap-y-2.5">
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1 truncate">
                       Personality Traits
@@ -915,8 +983,8 @@ export default function CharacterBuilderModal({
             </div>
 
             {/* Bottom Row: Character Lore */}
-            <div className="!mt-10">
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <div className="!mt-5">
+              <label className="block text-xs font-medium text-slate-300 mb-1">
                 Character Lore
               </label>
               <textarea
@@ -1228,10 +1296,10 @@ export default function CharacterBuilderModal({
                   : 'grid-rows-[0fr] opacity-0 pointer-events-none'
               }`}
             >
-              <div className="overflow-hidden">
+              <div className={isSpeciesFeatOpen ? 'overflow-visible' : 'overflow-hidden'}>
                 {displayedSpecies && (
                   <SmoothSize
-                    watchKey={[displayedSpecies.id, selectedSubrace?.id, ruleset]}
+                    watchKey={[displayedSpecies.id, selectedSubrace?.id, ruleset, selectedSpeciesFeat]}
                     duration={300}
                     className="p-3.5 rounded-xl bg-dnd-panel/70 space-y-2 text-xs text-slate-300"
                   >
@@ -1274,18 +1342,142 @@ export default function CharacterBuilderModal({
                     )}
 
                     {/* Traits / Starting Features */}
-                    <div className="space-y-2 pt-1 border-t border-white/5 max-h-72 overflow-y-auto custom-scroll pr-1">
-                      {[
-                        ...(displayedSpecies.traits || []),
-                        ...(selectedSubrace?.traits || []),
-                      ].map((t) => (
-                        <div key={t.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1">
-                          <div className="font-bold text-white text-xs">{t.name}</div>
-                          <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
-                            {t.description}
-                          </p>
-                        </div>
-                      ))}
+                    <div className="space-y-2 pt-1 border-t border-white/5">
+                      {getActiveSpeciesTraits(displayedSpecies, selectedSubrace).map((t) => {
+                        const isFeatTrait = traitGrantsFeat(t);
+                        return (
+                          <div key={t.name} className="p-2.5 rounded-lg bg-dnd-card shadow-sm space-y-1.5">
+                            <div className="font-bold text-white text-xs">{t.name}</div>
+                            <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
+                              {t.description}
+                            </p>
+                            {isFeatTrait && (
+                              <div ref={speciesFeatDropdownRef} className="relative pt-1 max-w-xs">
+                                {!isSpeciesFeatOpen ? (
+                                  <button
+                                    type="button"
+                                    aria-label="Select Feat"
+                                    onClick={() => {
+                                      setSpeciesFeatQuery('');
+                                      setIsSpeciesFeatOpen(true);
+                                    }}
+                                    className="w-full flex items-center justify-between gap-2 bg-dnd-panel rounded-lg px-2.5 py-1.5 text-xs text-left hover:bg-dnd-panel/80 transition-colors cursor-pointer shadow-sm"
+                                  >
+                                    <span
+                                      className={`truncate font-medium ${
+                                        selectedSpeciesFeat ? 'text-dnd-gold font-bold' : 'text-slate-300'
+                                      }`}
+                                    >
+                                      {selectedSpeciesFeat || 'Select Feat'}
+                                    </span>
+                                    <ChevronDown size={13} className="text-slate-400 shrink-0" />
+                                  </button>
+                                ) : (
+                                  <div className="relative">
+                                    <input
+                                      ref={speciesFeatInputRef}
+                                      type="text"
+                                      aria-label="Species Starting Feat"
+                                      value={speciesFeatQuery}
+                                      onChange={(e) => setSpeciesFeatQuery(e.target.value)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Escape') {
+                                          e.preventDefault();
+                                          setIsSpeciesFeatOpen(false);
+                                          setSpeciesFeatQuery('');
+                                        } else if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          if (speciesFeatOptions.length > 0) {
+                                            setSelectedSpeciesFeat(speciesFeatOptions[0].name);
+                                          } else if (speciesFeatQuery.trim()) {
+                                            setSelectedSpeciesFeat(speciesFeatQuery.trim());
+                                          }
+                                          setIsSpeciesFeatOpen(false);
+                                          setSpeciesFeatQuery('');
+                                        }
+                                      }}
+                                      placeholder={selectedSpeciesFeat || 'Type or select a feat...'}
+                                      className="w-full bg-dnd-panel rounded-lg pl-2.5 pr-7 py-1.5 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-dnd-gold/40 shadow-sm"
+                                    />
+                                    <ChevronDown
+                                      size={13}
+                                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-dnd-gold rotate-180 pointer-events-none"
+                                    />
+                                  </div>
+                                )}
+
+                                {isSpeciesFeatOpen && (
+                                  <ul
+                                    role="listbox"
+                                    aria-label="Feat options"
+                                    className="absolute left-0 right-0 top-full mt-1 z-50 max-h-[244px] overflow-y-auto rounded-lg bg-dnd-card shadow-2xl divide-y divide-white/5 py-1 text-xs custom-scroll"
+                                  >
+                                    {speciesFeatOptions.length > 0 ? (
+                                      speciesFeatOptions.map((item) => {
+                                        const isSelected =
+                                          selectedSpeciesFeat.trim().toLowerCase() ===
+                                          item.name.toLowerCase();
+                                        const subtitle = [item.typeLine, item.source]
+                                          .filter(Boolean)
+                                          .join(' · ');
+                                        return (
+                                          <li
+                                            key={`${item.name}-${item.source}`}
+                                            role="option"
+                                            aria-selected={isSelected}
+                                            onMouseDown={(e) => {
+                                              e.preventDefault();
+                                              setSelectedSpeciesFeat(item.name);
+                                              setIsSpeciesFeatOpen(false);
+                                              setSpeciesFeatQuery('');
+                                            }}
+                                            className={`px-2.5 py-1.5 cursor-pointer flex items-center justify-between gap-2 transition-colors ${
+                                              isSelected
+                                                ? 'bg-dnd-hover text-dnd-gold'
+                                                : 'text-slate-200 hover:bg-dnd-hover'
+                                            }`}
+                                          >
+                                            <div className="min-w-0 flex-1">
+                                              <div className="font-semibold text-slate-100 truncate">
+                                                {item.name}
+                                              </div>
+                                              {subtitle && (
+                                                <div className="text-[10px] text-slate-400 truncate">
+                                                  {subtitle}
+                                                </div>
+                                              )}
+                                            </div>
+                                            {item.trackedResource && (
+                                              <span className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded bg-dnd-gold/15 text-dnd-gold">
+                                                {item.trackedResource.max} /{' '}
+                                                {item.trackedResource.resetOn || 'LR'}
+                                              </span>
+                                            )}
+                                          </li>
+                                        );
+                                      })
+                                    ) : (
+                                      <li className="px-2.5 py-2 text-[11px] text-slate-400 italic">
+                                        No matching feats found
+                                      </li>
+                                    )}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+                            {isFeatTrait && selectedSpeciesFeatEntry?.description && (
+                              <div
+                                data-testid="selected-species-feat-description"
+                                className="pt-2 mt-2 border-t border-white/5 space-y-1"
+                              >
+                                <p className="text-slate-300 text-[11px] leading-relaxed whitespace-pre-line">
+                                  {selectedSpeciesFeatEntry.description}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </SmoothSize>
                 )}
@@ -2039,11 +2231,11 @@ export default function CharacterBuilderModal({
         <div className="px-5 py-3.5 border-b border-white/5 flex items-center justify-between bg-dnd-card shrink-0">
           <div className="flex items-center space-x-2.5">
             <span className="p-1.5 rounded-lg bg-dnd-gold/10 text-dnd-gold">
-              <Wand2 size={17} />
+              <HandEye size={17} />
             </span>
             <div>
               <h3 className="text-base font-bold text-dnd-ivory tracking-tight font-display">
-                Character Builder (Level 1)
+                Character Builder
               </h3>
               <p className="text-xs text-slate-400">
                 Section {stepIndex + 1} of {steps.length} — {currentStep.label}
@@ -2070,22 +2262,26 @@ export default function CharacterBuilderModal({
             const isActive = idx === stepIndex;
             const isCompleted = idx < stepIndex;
             return (
-              <button
-                key={st.key}
-                type="button"
-                data-step-index={idx}
-                onClick={() => scrollToSection(st.key, idx)}
-                className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap cursor-pointer ${
-                  isActive
-                    ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
-                    : isCompleted
-                    ? 'bg-white/5 text-slate-300 hover:bg-white/10'
-                    : 'text-slate-500 hover:text-slate-400'
-                }`}
-              >
-                <span className="opacity-60 mr-1">{idx + 1}.</span>
-                {st.label}
-              </button>
+              <React.Fragment key={st.key}>
+                {idx > 0 && (
+                  <ChevronRight size={11} className="text-slate-600 shrink-0 select-none" />
+                )}
+                <button
+                  type="button"
+                  data-step-index={idx}
+                  onClick={() => scrollToSection(st.key, idx)}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-all whitespace-nowrap cursor-pointer ${
+                    isActive
+                      ? 'bg-dnd-gold text-slate-950 font-bold shadow-sm'
+                      : isCompleted
+                      ? 'bg-white/5 text-slate-300 hover:bg-white/10'
+                      : 'text-slate-500 hover:text-slate-400'
+                  }`}
+                >
+                  <span className="opacity-60 mr-1">{idx + 1}.</span>
+                  {st.label}
+                </button>
+              </React.Fragment>
             );
           })}
         </div>

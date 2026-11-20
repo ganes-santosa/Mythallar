@@ -279,6 +279,51 @@ describe('CharacterSheetHeader', () => {
     );
   });
 
+  it('renders "No character lore written yet..." when empty and only allows editing via edit button', () => {
+    const emptyLoreChar = {
+      ...mockCharacter,
+      sheet: {
+        ...mockCharacter.sheet,
+        identity: {
+          ...mockCharacter.sheet.identity,
+          lore: '',
+          personalityTraits: '',
+        },
+      },
+    };
+
+    render(
+      <CharacterSheetHeader
+        character={emptyLoreChar}
+        profiles={[emptyLoreChar]}
+        onUpdateCharacter={() => {}}
+      />
+    );
+
+    // Expand lore sub-accordion
+    fireEvent.click(screen.getByLabelText('Expand Character Lore'));
+
+    const emptyLoreText = screen.getByText('No character lore written yet...');
+    expect(emptyLoreText).toBeInTheDocument();
+
+    // Clicking the empty text does NOT enter edit mode
+    fireEvent.click(emptyLoreText);
+    expect(screen.queryByLabelText('Character Lore Text Editor')).not.toBeInTheDocument();
+
+    // Switch to traits sub-accordion
+    fireEvent.click(screen.getByLabelText('Expand Character Traits'));
+    const noneTraits = screen.getAllByText('None');
+    expect(noneTraits.length).toBeGreaterThan(0);
+
+    // Clicking traits display box does NOT enter edit mode
+    fireEvent.click(noneTraits[0]);
+    expect(screen.queryByLabelText('Personality Traits')).not.toBeInTheDocument();
+
+    // Editing only opens via edit button
+    fireEvent.click(screen.getByLabelText('Edit Character Traits'));
+    expect(screen.getByLabelText('Personality Traits')).toBeInTheDocument();
+  });
+
   it('renders background inside Character Lore section and updates background on edit', () => {
     const handleUpdate = vi.fn();
     render(

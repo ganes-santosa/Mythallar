@@ -983,7 +983,8 @@ function CharacterSheetHeader({
                   >
                     <FingerprintPattern size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
                     <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors truncate">
-                      Character Lore
+                      <span className="inline sm:hidden">Lore</span>
+                      <span className="hidden sm:inline">Character Lore</span>
                     </h4>
                     <ChevronDown
                       size={12}
@@ -1054,7 +1055,8 @@ function CharacterSheetHeader({
                   >
                     <Shell size={13} className="text-dnd-gold group-hover:scale-110 transition-transform flex-shrink-0" />
                     <h4 className="text-xs font-semibold text-slate-200 group-hover:text-dnd-gold-light transition-colors truncate">
-                      Character Traits
+                      <span className="inline sm:hidden">Traits</span>
+                      <span className="hidden sm:inline">Character Traits</span>
                     </h4>
                     <ChevronDown
                       size={12}
@@ -1161,21 +1163,14 @@ function CharacterSheetHeader({
                               />
                             </div>
                           ) : (
-                            <div
-                              onClick={() => {
-                                setActiveSubPanel('lore');
-                                setLoreDraft(identity.lore || '');
-                                setIsEditingLore(true);
-                              }}
-                              className="cursor-pointer group/lore"
-                            >
+                            <div>
                               {identity.lore && identity.lore.trim().length > 0 ? (
                                 <div className="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed px-0.5 py-1">
                                   {identity.lore}
                                 </div>
                               ) : (
-                                <div className="text-xs text-slate-500 italic px-0.5 py-1 hover:text-slate-400 transition-colors">
-                                  No character lore written yet. Click to write backstory, personality traits, or notes...
+                                <div className="text-xs text-slate-500 italic px-0.5 py-1">
+                                  No character lore written yet...
                                 </div>
                               )}
                             </div>
@@ -1207,17 +1202,7 @@ function CharacterSheetHeader({
                                 />
                               ) : (
                                 <div
-                                  onClick={() => {
-                                    setActiveSubPanel('traits');
-                                    setTraitsDraft({
-                                      personalityTraits: identity.personalityTraits || '',
-                                      ideals: identity.ideals || '',
-                                      bonds: identity.bonds || '',
-                                      flaws: identity.flaws || '',
-                                    });
-                                    setIsEditingTraits(true);
-                                  }}
-                                  className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs min-h-[24px] flex items-center cursor-pointer hover:bg-dnd-panel transition-colors"
+                                  className="w-full px-2 py-0.5 rounded-lg bg-dnd-panel/70 text-slate-200 text-xs min-h-[24px] flex items-center"
                                 >
                                   {identity[key] && identity[key].trim().length > 0 ? (
                                     <span className="whitespace-pre-wrap leading-snug">{identity[key]}</span>

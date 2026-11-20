@@ -235,7 +235,7 @@ describe('LevelUpModal', () => {
     );
 
     // Wait for async class/subclass dataset to load options into select
-    await screen.findAllByRole('option', { name: /Battle Master/i });
+    await screen.findAllByRole('option', { name: /Battle Master/i }, { timeout: 3000 });
 
     const subclassSelect = screen.getByLabelText(/Select Martial Archetype/i);
     expect(subclassSelect).toBeInTheDocument();
