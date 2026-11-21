@@ -313,11 +313,12 @@ export default function VitalsCard({
   const [newCondition, setNewCondition] = useState('');
   const [isAddingCondition, setIsAddingCondition] = useState(false);
 
-  const initMod =
+  const initBase =
     typeof currentVitals.initiativeOverride === 'number' &&
     !isNaN(currentVitals.initiativeOverride)
       ? currentVitals.initiativeOverride
       : getAbilityModifier(dexScore);
+  const initMod = initBase + (Number(currentVitals.initiativeBonus) || 0);
 
   const handleFieldChange = (field, value) => {
     onUpdateVitals?.({
@@ -1053,17 +1054,27 @@ export default function VitalsCard({
             </div>
             {isEditing ? (
               <div className="flex items-center gap-1">
-                <span className="text-xs font-bold text-slate-100 pr-1">
-                  {formatModifier(initMod)}
-                </span>
-                <NumericDraftInput
-                  aria-label="Initiative Override"
-                  placeholder="Over"
-                  value={currentVitals.initiativeOverride ?? ''}
-                  emptyValue={null}
-                  onCommit={(value) => handleFieldChange('initiativeOverride', value)}
-                  className="w-11 px-1 py-0.5 rounded bg-dnd-panel/70 text-[10px] text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20"
-                />
+                <div>
+                  <label className="text-[8px] text-slate-400 font-semibold block mb-0.5 text-center">Base</label>
+                  <NumericDraftInput
+                    aria-label="Initiative Override"
+                    placeholder={formatModifier(getAbilityModifier(dexScore))}
+                    value={currentVitals.initiativeOverride ?? ''}
+                    emptyValue={null}
+                    onCommit={(value) => handleFieldChange('initiativeOverride', value)}
+                    className="w-11 px-1 py-0.5 rounded bg-dnd-panel/70 text-xs font-bold text-slate-100 text-center outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[8px] text-dnd-gold font-semibold block mb-0.5 text-center">Bonus</label>
+                  <NumericDraftInput
+                    aria-label="Initiative Misc Bonus"
+                    placeholder="+0"
+                    value={currentVitals.initiativeBonus ?? 0}
+                    onCommit={(value) => handleFieldChange('initiativeBonus', value)}
+                    className="w-11 px-0.5 py-0.5 rounded bg-dnd-panel text-xs font-bold text-center text-dnd-gold focus:outline-none focus:ring-1 focus:ring-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
               </div>
             ) : (
               <div className="flex items-center">

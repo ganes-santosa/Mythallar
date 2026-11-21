@@ -3,6 +3,7 @@ import { UserPen, Check, X, Plus, Trash2, ArrowUpCircle, ChevronDown, UserRound,
 import CharacterManagerModal from '../Header/CharacterManagerModal';
 import NumericDraftInput from '../Common/NumericDraftInput';
 import SmoothSize from '../Common/SmoothSize';
+import { SteppedTextarea, getLineBucket } from './ItemsCard';
 import LevelUpModal from '../Modal/LevelUpModal';
 import { getCharacterClasses, getTotalCharacterLevel } from '../../utils/spellSlots';
 import { getPendingLevelUpTasks } from '../../utils/levelUpRules';
@@ -258,6 +259,7 @@ function CharacterSheetHeader({
         acBonus: casterVitals.acBonus ?? 0,
         acFormula: casterVitals.acFormula ?? '',
         initiativeOverride: casterVitals.initiativeOverride ?? null,
+        initiativeBonus: casterVitals.initiativeBonus ?? 0,
         spellcastingAbility: casterVitals.spellcastingAbility || 'int',
         spellAttackOverride: casterVitals.spellAttackOverride ?? null,
         spellAttackBonus: casterVitals.spellAttackBonus ?? 0,
@@ -1151,15 +1153,12 @@ function CharacterSheetHeader({
 
                           {isEditingLore ? (
                             <div className="space-y-1.5">
-                              <textarea
+                              <SteppedTextarea
+                                bucket={getLineBucket(loreDraft)}
                                 value={loreDraft}
                                 onChange={(e) => setLoreDraft(e.target.value)}
                                 placeholder="Write character backstory, personality traits, appearance, or campaign lore..."
-                                rows={4}
-                                autoFocus
-                                spellCheck={false}
                                 aria-label="Character Lore Text Editor"
-                                className="w-full bg-dnd-panel/70 rounded-lg p-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-0 resize-y leading-relaxed font-sans min-h-[80px]"
                               />
                             </div>
                           ) : (

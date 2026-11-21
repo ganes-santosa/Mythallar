@@ -284,6 +284,7 @@ export function createDefaultSheet(className = 'Wizard') {
       speed: 30,
       speeds: { walk: 30 },
       initiativeOverride: null,
+      initiativeBonus: 0,
       hitDice: {
         current: 1,
         max: 1,

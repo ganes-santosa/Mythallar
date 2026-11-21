@@ -689,6 +689,35 @@ describe('VitalsCard', () => {
     );
   });
 
+  it('adds initiativeBonus on top of DEX or override and edits it via Base and Bonus fields', () => {
+    const onUpdateVitals = vi.fn();
+    const { rerender } = render(
+      <VitalsCard
+        vitals={{ ...mockVitals, initiativeOverride: null, initiativeBonus: 3 }}
+        dexScore={14}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={false}
+      />
+    );
+    // DEX 14 (+2) + 3 = +5
+    expect(screen.getByText('+5')).toBeInTheDocument();
+
+    rerender(
+      <VitalsCard
+        vitals={{ ...mockVitals, initiativeOverride: 4, initiativeBonus: 3 }}
+        dexScore={14}
+        onUpdateVitals={onUpdateVitals}
+        isEditing={true}
+      />
+    );
+    const bonus = screen.getByLabelText('Initiative Misc Bonus');
+    expect(bonus).toHaveValue(3);
+    fireEvent.change(bonus, { target: { value: '1' } });
+    fireEvent.blur(bonus);
+    expect(onUpdateVitals).toHaveBeenCalledWith(expect.objectContaining({ initiativeBonus: 1 }));
+    expect(screen.getByLabelText('Initiative Override')).toHaveValue(4);
+  });
+
   it('allows changing spellcasting ability in edit mode', () => {
     const onUpdateVitals = vi.fn();
     render(

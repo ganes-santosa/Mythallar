@@ -1,13 +1,13 @@
 # HANDOFF
 
-## Release v3.2.7 - builder proficiency labels normalized to Title Case
+## Release v3.2.8 - initiative base + misc bonus, stepped lore editor
 
 ## Current state (master)
-- Builder Proficiencies: `buildLevel1Character` now normalizes armor, weapon and tool entries. `light`/`medium`/`heavy` become `Light Armor`/`Medium Armor`/`Heavy Armor`, `shield` becomes `Shield`, `simple`/`martial` become `Simple Weapons`/`Martial Weapons`, and tools are Title Cased (`Calligrapher's Supplies`, `Vehicles (Land)`). Existing saved characters keep their stored text.
-- Builder Starting Feats: Background origin feats & species feats (Variant/Standard Human, Custom Lineage) populate `sheet.feats` with descriptions & linked `trackedResources`.
-- Subrace catalogue: Explicit `Standard` Human options for 2014 (+1 all stats) and 2024 (Resourceful, Skillful, Versatile).
+- Initiative in edit mode: split into `Base` (override, placeholder = DEX mod) and gold `Bonus` (`vitals.initiativeBonus`, default 0), matching the AC and Spellcasting chips. Total = base + bonus; `initiativeBonus` carried through the simulacrum vitals copies in `CharacterSheetHeader`, `CharacterSheetView` and `CharacterHeader`.
+- Character Lore editor: now uses the shared `SteppedTextarea` (4/8/12/16 stepped height, scrolls past 16 lines) for parity with the feat Description / Notes field. No auto-focus on open.
+- Builder Proficiencies: `buildLevel1Character` normalizes armor, weapon and tool entries (`Light Armor`, `Shield`, `Simple Weapons`, `Calligrapher's Supplies`). Existing saved characters keep their stored text.
 - Character Sheet Lore & Traits: Click-to-edit removed from view state; edit restricted to pencil buttons; labels collapse to "Lore" and "Traits" on mobile (`sm:`).
-- Full suite green: 68 test files, 622 tests passed. Production build clean.
+- Full suite green: 68 test files, 623 tests passed. Production build clean.
 
 ## Next up
 - Deeper subclass feature integration into character sheet traits/features.

@@ -131,6 +131,7 @@ function CharacterHeader({
         acBonus: casterVitals.acBonus ?? 0,
         acFormula: casterVitals.acFormula ?? '',
         initiativeOverride: casterVitals.initiativeOverride ?? null,
+        initiativeBonus: casterVitals.initiativeBonus ?? 0,
         spellcastingAbility: casterVitals.spellcastingAbility || 'int',
         spellAttackOverride: casterVitals.spellAttackOverride ?? null,
         spellAttackBonus: casterVitals.spellAttackBonus ?? 0,

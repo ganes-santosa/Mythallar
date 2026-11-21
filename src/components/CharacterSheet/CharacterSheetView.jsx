@@ -65,6 +65,7 @@ function CharacterSheetView({
     acBonus: character?.sheet?.vitals?.acBonus ?? 0,
     acFormula: character?.sheet?.vitals?.acFormula ?? '',
     initiativeOverride: character?.sheet?.vitals?.initiativeOverride ?? null,
+    initiativeBonus: character?.sheet?.vitals?.initiativeBonus ?? 0,
     spellcastingAbility: character?.sheet?.vitals?.spellcastingAbility || 'int',
     spellAttackOverride: character?.sheet?.vitals?.spellAttackOverride ?? null,
     spellAttackBonus: character?.sheet?.vitals?.spellAttackBonus ?? 0,
