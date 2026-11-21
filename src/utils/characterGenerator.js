@@ -284,9 +284,9 @@ export function buildLevel1Character({
         darkvision,
       },
       proficiencies: {
-        armor: selectedClass?.armorProficiencies || [],
-        weapons: selectedClass?.weaponProficiencies || [],
-        tools: selectedBackground?.toolProficiencies || [],
+        armor: (selectedClass?.armorProficiencies || []).map(cleanArmor),
+        weapons: (selectedClass?.weaponProficiencies || []).map(cleanWeapon),
+        tools: (selectedBackground?.toolProficiencies || []).map(titleCase),
         languages: ['Common'],
       },
       trackedResources,
@@ -297,4 +297,23 @@ export function buildLevel1Character({
       notes,
     },
   };
+}
+
+const SMALL_WORDS = new Set(['the', 'or', 'of', 'a', 'and']);
+export function titleCase(str) {
+  return String(str)
+    .trim()
+    .toLowerCase()
+    .replace(/(^|[\s(])([a-z])/g, (m, p, c, off, all) => {
+      const word = all.slice(off + p.length).split(/[\s)]/)[0];
+      return off > 0 && SMALL_WORDS.has(word) ? m : p + c.toUpperCase();
+    });
+}
+function cleanArmor(s) {
+  const t = titleCase(s);
+  return /^(Light|Medium|Heavy)$/.test(t) ? t + ' Armor' : t;
+}
+function cleanWeapon(s) {
+  const t = titleCase(s);
+  return /^(Simple|Martial)$/.test(t) ? t + ' Weapons' : t;
 }

@@ -1,14 +1,13 @@
 # HANDOFF
 
-## Release v3.2.6 - builder starting feats, vitals 2-digit min width, header mobile labels, hand-eye icon
+## Release v3.2.7 - builder proficiency labels normalized to Title Case
 
 ## Current state (master)
-- Builder Starting Feats: Background origin feats & species feats (Variant/Standard Human, Custom Lineage) populate `sheet.feats` with descriptions & linked `trackedResources`. Feat traits sort first with floating searchable dropdown and expandable description.
-- Subrace catalogue: Added explicit `Standard` Human options for 2014 (+1 all stats) and 2024 (Resourceful, Skillful, Versatile).
-- Vitals HP digit alignment: Current/Max HP containers reserve 2ch min-width to avoid label crowding on 1-digit values; digits align on uniform baseline.
+- Builder Proficiencies: `buildLevel1Character` now normalizes armor, weapon and tool entries. `light`/`medium`/`heavy` become `Light Armor`/`Medium Armor`/`Heavy Armor`, `shield` becomes `Shield`, `simple`/`martial` become `Simple Weapons`/`Martial Weapons`, and tools are Title Cased (`Calligrapher's Supplies`, `Vehicles (Land)`). Existing saved characters keep their stored text.
+- Builder Starting Feats: Background origin feats & species feats (Variant/Standard Human, Custom Lineage) populate `sheet.feats` with descriptions & linked `trackedResources`.
+- Subrace catalogue: Explicit `Standard` Human options for 2014 (+1 all stats) and 2024 (Resourceful, Skillful, Versatile).
 - Character Sheet Lore & Traits: Click-to-edit removed from view state; edit restricted to pencil buttons; labels collapse to "Lore" and "Traits" on mobile (`sm:`).
-- HandEye Icon: Custom normalized Phosphor HandEye component replaces Wand2 in modals.
-- Full suite green: 67 test files, 614 tests passed. Production build clean.
+- Full suite green: 68 test files, 622 tests passed. Production build clean.
 
 ## Next up
 - Deeper subclass feature integration into character sheet traits/features.

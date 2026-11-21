@@ -2,6 +2,31 @@ import { describe, it, expect } from 'vitest';
 import { buildLevel1Character } from './characterGenerator';
 
 describe('characterGenerator', () => {
+  it('cleans proficiency labels', () => {
+    const char = buildLevel1Character({
+      name: 'X',
+      ruleset: '2014',
+      selectedClass: {
+        name: 'Fighter',
+        hitDie: 10,
+        hitDieString: 'd10',
+        savingThrows: ['str'],
+        armorProficiencies: ['light', 'shield'],
+        weaponProficiencies: ['simple', 'hand crossbow'],
+        level1Features: [],
+      },
+      selectedSpecies: { name: 'Human', speed: 30 },
+      selectedBackground: {
+        name: 'Sage',
+        toolProficiencies: ["calligrapher's supplies", 'vehicles (land)'],
+      },
+    });
+    const p = char.sheet.proficiencies;
+    expect(p.armor).toEqual(['Light Armor', 'Shield']);
+    expect(p.weapons).toEqual(['Simple Weapons', 'Hand Crossbow']);
+    expect(p.tools).toEqual(["Calligrapher's Supplies", 'Vehicles (Land)']);
+  });
+
   it('generates a complete Level 1 Fighter under 2014 rules', () => {
     const char = buildLevel1Character({
       name: 'Bruenor Battlehammer',
