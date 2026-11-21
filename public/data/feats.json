@@ -1828,16 +1828,76 @@
     "description": "General Feat (Prerequisite: Level 4+) • +1 Any Ability\n\nYou gain the following benefits.\n\nRadiant Strike: When you make a damage roll that deals Radiant damage, you can cause one Huge or smaller creature taking the damage to have the Prone condition. Once you use this benefit, you can't use it again until you finish a Short Rest or Long Rest."
   },
   {
-    "name": "Resilient",
+    "name": "Resilient (CHA)",
     "source": "XPHB",
-    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 Any Ability",
-    "description": "General Feat (Prerequisite: Level 4+) • +1 Any Ability\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with the chosen ability."
+    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 CHA",
+    "description": "General Feat (Prerequisite: Level 4+) • +1 CHA\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with CHA."
   },
   {
-    "name": "Resilient",
+    "name": "Resilient (CHA)",
     "source": "PHB",
-    "typeLine": "Feat • +1 Any Ability",
-    "description": "Feat • +1 Any Ability\n\nChoose one ability score. You gain the following benefits:\n\n• You gain proficiency in saving throws using the chosen ability."
+    "typeLine": "Feat • +1 CHA",
+    "description": "Feat • +1 CHA\n\nYou gain the following benefits:\n\n• You gain proficiency in saving throws using CHA."
+  },
+  {
+    "name": "Resilient (CON)",
+    "source": "XPHB",
+    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 CON",
+    "description": "General Feat (Prerequisite: Level 4+) • +1 CON\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with CON."
+  },
+  {
+    "name": "Resilient (CON)",
+    "source": "PHB",
+    "typeLine": "Feat • +1 CON",
+    "description": "Feat • +1 CON\n\nYou gain the following benefits:\n\n• You gain proficiency in saving throws using CON."
+  },
+  {
+    "name": "Resilient (DEX)",
+    "source": "XPHB",
+    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 DEX",
+    "description": "General Feat (Prerequisite: Level 4+) • +1 DEX\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with DEX."
+  },
+  {
+    "name": "Resilient (DEX)",
+    "source": "PHB",
+    "typeLine": "Feat • +1 DEX",
+    "description": "Feat • +1 DEX\n\nYou gain the following benefits:\n\n• You gain proficiency in saving throws using DEX."
+  },
+  {
+    "name": "Resilient (INT)",
+    "source": "XPHB",
+    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 INT",
+    "description": "General Feat (Prerequisite: Level 4+) • +1 INT\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with INT."
+  },
+  {
+    "name": "Resilient (INT)",
+    "source": "PHB",
+    "typeLine": "Feat • +1 INT",
+    "description": "Feat • +1 INT\n\nYou gain the following benefits:\n\n• You gain proficiency in saving throws using INT."
+  },
+  {
+    "name": "Resilient (STR)",
+    "source": "XPHB",
+    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 STR",
+    "description": "General Feat (Prerequisite: Level 4+) • +1 STR\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with STR."
+  },
+  {
+    "name": "Resilient (STR)",
+    "source": "PHB",
+    "typeLine": "Feat • +1 STR",
+    "description": "Feat • +1 STR\n\nYou gain the following benefits:\n\n• You gain proficiency in saving throws using STR."
+  },
+  {
+    "name": "Resilient (WIS)",
+    "source": "XPHB",
+    "typeLine": "General Feat (Prerequisite: Level 4+) • +1 WIS",
+    "description": "General Feat (Prerequisite: Level 4+) • +1 WIS\n\nYou gain the following benefits.\n\nSaving Throw Proficiency: You gain saving throw proficiency with WIS."
+  },
+  {
+    "name": "Resilient (WIS)",
+    "source": "PHB",
+    "typeLine": "Feat • +1 WIS",
+    "description": "Feat • +1 WIS\n\nYou gain the following benefits:\n\n• You gain proficiency in saving throws using WIS."
   },
   {
     "name": "Revenant Blade",

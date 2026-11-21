@@ -187,6 +187,26 @@ async function run() {
 
     const trackedResource = detectTrackedResource(f, bodyDesc);
 
+    // Resilient's ASI + save proficiency depend on the chosen ability: one catalogue entry per ability.
+    if (name === 'Resilient') {
+      for (const [key, label] of Object.entries(ABILITY_LABELS)) {
+        const fix = (s) =>
+          s
+            .replace('+1 Any Ability', `+1 ${label}`)
+            .replace(/the chosen ability/g, `${label}`)
+            .replace(/using the chosen ability/g, `using ${label}`)
+            .replace(/Choose one ability score\.\s*/, '');
+        cleaned.push({
+          name: `Resilient (${label})`,
+          source: f.source || '',
+          typeLine: fix(typeLine),
+          trackedResource,
+          description: fix(fullDesc),
+        });
+      }
+      continue;
+    }
+
     cleaned.push({
       name,
       source: f.source || '',
